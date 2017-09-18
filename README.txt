@@ -1,0 +1,324 @@
+STRUCTURE:
+
+process.R
+lib
+  schema.R (with defaults)
+  loaders.R
+  parsers.R
+  contract.R
+  utils.R
+  states
+    tx
+      austin.R
+    ...
+    wa
+      seattle.R
+data
+  states
+    ca
+      sacramento.data
+stats
+  stat_a.R
+  stat_b.R
+tests
+  test_a.R
+  test_b.R
+
+STYLE:
+
+Use package lintr (packages.install("lintr"))
+Add to syntastic for vim syntax checking (.vundle and .vimrc)
+Use tidyverse style guide: http://style.tidyverse.org/code-documentation.html
+
+Plus:
+  Two spaces between functions
+  Once space max between lines in the same function
+  Indent 2 spaces
+  80 character line max
+  Two spaces after last library/source before code
+  library-s before sources
+
+Nashville, TN - 2010-2016 accdb
+Fort Worth, TX - 2006-2016 xml
+Dallas, TX - 2016 mdb
+Seattle, WA - 2007 - 2014 xlsx
+  RIN
+  DATE/TIME
+  TYPE
+  PRI
+  MIR & DESCRIPTION
+  DISPOSITION DESCRIPTION
+  VEHICLE
+  SUBJ RACE & SEX
+  SUBJ DOB
+  OFFICER NO. 1
+  OFFICER NO. 2
+Sacramento, CA 2006-2016 csv
+  Index
+  StopDTS
+  StopCause
+  ViolationNumber
+  SpecialCondition
+  Race
+  Gender
+  BirthYear
+  IDState
+  ExitVehicle
+  PassengerCount
+  SearchDriver
+  SearchPassenger
+  SearchVehicle
+  Authority
+  ConsentRequested
+  ConsentGranted
+  FSWeapons
+  FSDrugs
+  FSCash
+  FSVehicle
+  FSAlcohol
+  FSOtherProperty
+  FSNothing
+  ResultCitation
+  ResultArrest
+  ResultReport
+  ResultAdvised
+  ResultFC
+  CadCallNumber
+  DetentionDuration
+  OfficerAbra
+  LimitedLanguage
+San Francisco, CA pdf (asked for update)
+Plano, TX 2012 - 2015 xlsx
+  STOPS:
+    Incident #
+    Date
+    Time
+    Initial CT
+    Problem Nature
+    Disposition
+    Group
+    Priority
+    Reopened
+    Call Sign
+    Name
+    RD
+    Beat
+    Sector
+    Time Phone Picked Up
+    Time Call Entered in Queue
+    Time Call Taking Completed
+    Time First Unit Assigned
+    Time First Unit Arrived
+    Time Unit Cleared
+    Time Call Closed
+    Location Name
+    Address
+    Apt #
+    City
+    Postal Code
+  PROFILING:
+    Source
+    cNumber
+    Incident #
+    Date
+    Time
+    Officer
+    Badge
+    R-Prtcp Type
+    Offense #{1-8}
+    Result #{1-8}
+    DL State
+    Sex
+    Race
+    Mod Race
+    Ethnicity
+    Accident
+    MV Stop
+    MDVR
+    Arrested
+    Searched
+    Consent
+    KnewRaceB4
+    Hair
+    Eyes
+    Height
+    Weight
+    Home City
+    R-Home State
+    Home Zip Code
+    Plano resident
+    Family Vio
+    Pers Obs
+    Contraband Found
+    Notes
+    Offense Date
+    Officer #2
+    Badge #2
+    Unit
+    Court Date
+    Speed
+    Speed Limit
+    Make
+    Model
+    Color
+    Vehicle TYpe
+    commercialveh
+    CDL
+    Haz
+    Filler
+    Signed
+    Citation Date
+    Citation Time
+    Download Date
+    R-Type
+    R-Prtcp ID
+    R-Prtcp Type
+    R-Warning
+    R-Citation
+    R-Offense Location
+    R-Arrest Location
+    R-Arrest City
+    R-Violation Section
+    R-Class Code
+    R-Class Desc
+    R-Primary Vio
+    R-Occur Beat
+    Sector
+    R-RD
+    R-POB
+    R-Age
+    R-Juv
+    R-FN?
+    R-ICE/IAQ
+    R-Citizen
+    R-Residental Status
+Chicago, IL 2012 - 2016 xlsx
+  Contact Card ID
+  Contact Date
+  Time of Day
+  Street No
+  Street Direction
+  Street
+  Name
+  Statute
+  Statute
+  Description
+  Citation_I
+  Driver
+  Gender
+  Driver
+  Race
+  Officer
+  Last Name
+  Officer
+  First Name
+  Officer Gender
+  Officer Race
+  Officer Position
+  Officer Years of Service
+Saint Paul, MN 2005 - 2016 csv
+  YEAR OF STOP
+  DATE OF STOP
+  RACE OF DRIVER
+  GENDER OF DRIVER
+  DRIVER FRISKED?
+  VEHICLE SEARCHED?
+  CITATION ISSUED?
+  AGE OF DRIVER
+  POLICE GRID NUMBER
+  LOCATION OF STOP BY POLICE GRID (lat & long)
+  COUNT
+Austin, TX - 2006 - 2016 xlsx
+  Strett Check Case #
+  OCCURRED DATE
+  OFFICER
+  REASON_CHECKED
+  STREET_CHECKED_TYPE
+  SEX
+  RACE
+  ETHNICITY
+  YOB
+  Person Search: RACE_KNOWN
+  Person Search: REASON_FOR_STOP
+  Person Search: SEARCH_BASED_ON
+  Person Search: SEARCH_DISCOVERED
+  PERSON_SEARCHED
+  VEH_TYPE
+  VEH_YEAR
+  VEH_MAKE
+  VEH_MODEL
+  VEH_STYLE
+  SOI
+  Vehicle Search: RACE_KNOWN
+  Vehicle Search: REASON_FOR_STOP
+  Vehicle Search: SEARCH_BASED_ON
+  Vehicle Search: SEARCH_DISCOVERED
+Los Angeles, CA - pdf
+St. Louiis, MO - 2011 - 2015 mdb
+San Diego, CA 2-14-2015 xlsx
+  VehicleStopID
+  StopDate
+  StopTime
+  StopCause
+  Race
+  Sex
+  Age
+  Arrested
+  Searched
+  ObtainedConsent
+  ContrabandFound
+  PropertySeized
+  SDResident
+  ServArea
+  Agency
+Columbus, OH 2012 - 2016 xlsx
+  Incident Number
+  Stop Date
+  Contact End Date
+  System Entry Date
+  TypeOfStop
+  Cruiser District
+  Stop Reason
+  EnforcementTaken
+  Gender
+  Ethnicity
+  TrafficeStopStreet
+  TrafficStopCrossStreet
+  ViolationStreet
+Aurora, CO 2013 xlsx
+  Ticket Date
+  Ticket Time
+  Ticket Location
+  Incident Violation
+  Last Name
+  First Name
+  Date of Birth
+  sex
+  Race
+  Ethnicity
+Stockton, CA 2012 - 2016 xlsx
+  Original_Call
+  Call_type
+  Received_Date
+  Received_Time
+  Call_No
+  DR
+  Location
+  Map_Coordinates
+  Unit_ID
+  Dept_ID_1
+  Race Officer1
+  Gender Officer1
+  Age Officer1
+  Dept_ID_2
+  Race Officer2
+  Gender Officer2
+  Age Officer2
+Anaheim, CA 2012 - 2016 xlsx
+  Evt Reference
+  Occ Date
+  Year
+  Case Type
+  Case Type D
+  Final Case Type D
+
