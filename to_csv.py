@@ -28,11 +28,11 @@ def xls_to_csv(in_file):
     require('ssconvert', "try installing 'gnumeric' package on linux")
     out_file = to_csv_ext(in_file)
     run(['ssconvert', '--export-file-per-sheet', in_file, out_file])
-    for filename in os.listdir('.'):
-        if '.csv.' in filename:
-            basename, index = filename.split('.csv.')
-            new_out_filename = '%s_sheet_%d.csv' % (basename, int(index) + 1)
-            os.rename(filename, new_out_filename)
+    # for filename in os.listdir('.'):
+    #     if '.csv.' in filename:
+    #         basename, index = filename.split('.csv.')
+    #         new_out_filename = '%s_sheet_%d.csv' % (basename, int(index) + 1)
+    #         os.rename(filename, new_out_filename)
     return
 
 
