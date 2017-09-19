@@ -31,7 +31,7 @@ def xls_to_csv(in_file):
     for filename in os.listdir('.'):
         if '.csv.' in filename:
             basename, index = filename.split('.csv.')
-            new_out_filename = '%s_sheet_%s.csv' % (basename, index)
+            new_out_filename = '%s_sheet_%d.csv' % (basename, int(index) + 1)
             os.rename(filename, new_out_filename)
     return
 
@@ -42,28 +42,27 @@ def xlsx_to_csv(in_file):
 
 ###############################################################################
 
-def convert(filenames, dirs):
-    if filenames:
-        convert_files(filenames)
-    if dirs:
-        for d in dirs:
-            if not os.path.exists(d):
-                perr(d + " doesn't exist!")
-                continue
-            convert_files(list(os.listdir(d)))
+def convert(files_or_dirs):
+    for f_or_d in files_or_dirs:
+        if not os.path.exists(f_or_d):
+            perr(f_or_d + " doesn't exist!")
+        elif os.path.isfile(f_or_d):
+            convert_file(f_or_d)
+        elif os.path.isdir(f_or_d):
+            for f in os.listdir(f_or_d):
+                convert_file(f)
+        else:
+            perr(f_or_d + " isn't a file or directory!")
     return
 
 
-def convert_files(filenames):
-    for filename in filenames:
-        perr('converting %s...' % filename)
-        if not os.path.exists(filename):
-            perr(filename + " doesn't exist!")
-            continue
-        if not is_supported(get_file_type(filename)):
-            perr(filename + "isn't a supported file type!")
-            continue
+def convert_file(filename):
+    perr('converting %s...' % filename, end='')
+    if is_supported(get_file_type(filename)):
         get_converter(filename)(filename)
+        perr('done')
+        return
+    perr(" it's not a supported file type!")
     return
 
 
@@ -85,6 +84,8 @@ def get_to_csv_funcs():
 
 def perr(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+    sys.stderr.flush()
+    return
 
 
 def get_converter(filename):
@@ -153,11 +154,11 @@ def filename_without_ext(filename):
 def parse_args(argv):
     desc = 'supported file types: ' + ', '.join(supported_file_types())
     parser = argparse.ArgumentParser(prog=argv[0], description=desc)
-    parser.add_argument('-f', '--files', nargs='+', help='a.xlsx b.xls c.mdb')
-    parser.add_argument('-d', '--dirs', nargs='+', help='directories of files')
+    parser.add_argument('files_or_dirs', nargs='+',
+                        help='a.xlsx b.xls c.mdb data/')
     return parser.parse_args(argv[1:])
 
 
 if __name__ == '__main__':
     ARGS = parse_args(sys.argv)
-    convert(ARGS.files, ARGS.dirs)
+    convert(ARGS.files_or_dirs)
