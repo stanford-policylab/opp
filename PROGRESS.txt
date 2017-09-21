@@ -1,10 +1,10 @@
 STRUCTURE:
 
 process.R
+summarize.R
+to_csv.py
 lib
-  schema.R (with defaults)
-  loaders.R
-  parsers.R
+  schema.R
   contract.R
   utils.R
   states

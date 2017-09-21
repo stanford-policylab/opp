@@ -1,0 +1,84 @@
+#!/usr/bin/env Rscript
+
+suppressPackageStartupMessages(source("lib/utils.R"))
+source("lib/schema.R")
+
+
+main <- function() {
+  args <- get_args()
+  opp_summarize(args$state, args$city)
+  q(status = 0)
+}
+
+
+get_args <- function() {
+  usage <- "./summarize.R [-h] -s <state_name> -c <city_name>"
+  spec <- tribble(
+    ~long_name, ~short_name,  ~argument_type, ~data_type,
+    "help",     "h",          "none",         "logical",
+    "state",    "s",          "required",     "character",
+    "city",     "c",          "required",     "character"
+  )
+  args <- parse_args(spec)
+
+  if (not_null(args$help)) {
+    print(usage)
+    q(status = 0)
+  }
+
+  if (is.null(args$state) || is.null(args$city)) {
+    print(usage)
+    q(status = 1)
+  }
+
+  args
+}
+
+
+opp_summarize <- function(state, city) {
+  source_opp_funcs_for(state, city)
+  raw_data <- opp_load()
+  plots <- lapply(names(raw_data), function (col) { plot_col(raw_data, col) })
+  pdf(str_c(state, city, "plots.pdf", sep = "_"), onefile = TRUE)
+  lapply(plots, print)
+  dev.off()
+}
+
+
+plot_col <- function(tbl, col) {
+  plot_map <- c(
+    "integer"   = plot_numeric,
+    "numeric"   = plot_numeric,
+    "factor"    = plot_factor,
+    "character" = plot_character,
+    "Date"      = plot_date
+  )
+  plot_map[[class(tbl[[col]])]](tbl, col)
+}
+
+
+plot_numeric <- function (tbl, col) {
+  ggplot(tbl) + geom_histogram(aes(tbl[[col]])) + xlab(col)
+}
+
+
+plot_factor <- function (tbl, col) {
+  ggplot(tbl) + geom_bar(aes(tbl[[col]])) +
+    xlab(col) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1))
+}
+
+
+plot_character <- function (tbl, col) {
+  ggplot(tbl) +
+    geom_bar(aes(sapply(tbl[[col]], function (v) { v == "" || is.na(v) }))) +
+    xlab(paste(col, "is empty"))
+}
+
+
+plot_date <- function(tbl, col) {
+  plot_factor(tbl, col)
+}
+
+
+main()
