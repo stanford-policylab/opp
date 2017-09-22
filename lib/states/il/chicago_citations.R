@@ -30,7 +30,7 @@ opp_load <- function() {
       street_name                   = col_character(),
       statute                       = col_character(),
       statute_description           = col_character(),
-      citation                      = col_character(),
+      citation                      = col_integer(),
       driver_gender                 = col_factor(NULL, include_na = TRUE),
       driver_race                   = col_factor(NULL, include_na = TRUE),
       officer_last_name             = col_character(),
