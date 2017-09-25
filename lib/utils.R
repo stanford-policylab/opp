@@ -1,4 +1,5 @@
 library("tidyverse")
+library("lubridate")
 library("getopt")
 library("stringr")
 
@@ -36,4 +37,34 @@ source_opp_funcs_for <- function(state, city) {
 
 named_vector_from_list_firsts <- function(lst) {
   unlist(lapply(lst, `[[`, 1), recursive = FALSE)
+}
+
+
+top_n_by_year <- function(tbl, date_col, col_to_rank, top_n = 10) {
+  stopifnot(is.data.frame(tbl) || is.list(tbl) || is.environment(tbl))
+
+  date_enquo <- enquo(date_col)
+  rank_enquo <- enquo(col_to_rank)
+
+  d <- tbl %>%
+    mutate(yr = year(!!date_enquo)) %>%
+    group_by(yr, !!rank_enquo) %>%
+    count() %>%
+    group_by(yr) %>%
+    mutate(yr_rank = row_number(-n)) %>%
+    filter(yr_rank <= top_n) %>%
+    arrange(yr, yr_rank)
+}
+
+
+plot_top_n_by_year <- function(tbl, date_col, col_to_rank, top_n = 10) {
+
+  date_enquo <- enquo(date_col)
+  rank_enquo <- enquo(col_to_rank)
+
+  d <- top_n_by_year(tbl, !!date_enquo, !!rank_enquo, top_n)
+  ggplot(d) +
+    geom_bar(aes(x = eval(rlang::UQE(rank_enquo)), y = n), stat = "identity") +
+    facet_grid(yr ~ .) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1))
 }
