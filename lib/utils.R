@@ -66,5 +66,6 @@ plot_top_n_by_year <- function(tbl, date_col, col_to_rank, top_n = 10) {
   ggplot(d) +
     geom_bar(aes(x = eval(rlang::UQE(rank_enquo)), y = n), stat = "identity") +
     facet_grid(yr ~ .) +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1))
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+    xlab(enquo(col_to_rank))
 }

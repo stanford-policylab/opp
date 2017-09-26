@@ -90,7 +90,11 @@ opp_load <- function() {
     ),
     skip = 1
   )
-  arrests
+  full_join(arrests, citations,
+            by = c("arrest_date" = "contact_date",
+                   "arrest_hour" = "time_of_day",
+                   "officer_first_name" = "officer_first_name",
+                   "officer_last_name" = "officer_last_name"))
 }
 
 opp_clean <- function(tbl) {
