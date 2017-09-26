@@ -38,7 +38,8 @@ get_args <- function() {
 opp_summarize <- function(state, city) {
   source_opp_funcs_for(state, city)
   raw_data <- opp_load()
-  plots <- lapply(names(raw_data), function (col) { plot_col(raw_data, col) })
+  clean_data <- opp_clean(raw_data)
+  plots <- lapply(names(clean_data), function (col) { plot_col(clean_data, col) })
   pdf(str_c(state, city, "plots.pdf", sep = "_"), onefile = TRUE)
   lapply(plots, print)
   dev.off()

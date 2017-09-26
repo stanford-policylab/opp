@@ -43,7 +43,7 @@ opp_load <- function() {
       officer_gender                = col_factor(NULL, include_na = TRUE),
       officer_race                  = col_factor(NULL, include_na = TRUE),
       officer_age                   = col_integer(),
-      officer_position              = col_factor(NULL, include_na = TRUE),
+      officer_position              = col_character(),
       officer_years_of_service      = col_integer()
     ),
     skip = 1
@@ -85,11 +85,12 @@ opp_load <- function() {
       officer_first_name            = col_character(),
       officer_gender                = col_factor(NULL, include_na = TRUE),
       officer_race                  = col_factor(NULL, include_na = TRUE),
-      officer_position              = col_factor(NULL, include_na = TRUE),
+      officer_position              = col_character(),
       officer_years_of_service      = col_integer()
     ),
     skip = 1
   )
+
   full_join(arrests, citations,
             by = c("arrest_date" = "contact_date",
                    "arrest_hour" = "time_of_day",
@@ -98,6 +99,47 @@ opp_load <- function() {
 }
 
 opp_clean <- function(tbl) {
+  tbl %>%
+    mutate(outcome_citation = as.logical(ifelse(is.na(citation), 0, citation)),
+           outcome_arrest = coalesce(!is.na(arrest_id)),
+           date = arrest_date,
+           hour = arrest_hour,
+           street_no = coalesce(street_no.x, street_no.y),
+           street_name = coalesce(street_name.x, street_name.y),
+           street_direction = coalesce(street_direction.x,
+                                       street_direction.y),
+           statute = coalesce(statute.x, statute.y),
+           statute_description = coalesce(statute_description.x,
+                                          statute_description.y),
+           driver_age = defendant_age,
+           driver_gender = coalesce(defendant_gender, driver_gender),
+           driver_race = coalesce(defendant_race, driver_race),
+           officer_gender = coalesce(officer_gender.x, officer_gender.y) ,
+           officer_race = coalesce(officer_race.x, officer_race.y),
+           officer_position = coalesce(officer_position.x,
+                                       officer_position.y),
+           officer_years_of_service = coalesce(officer_years_of_service.x,
+                                               officer_years_of_service.y)
+          ) %>%
+    select(outcome_citation,
+           outcome_arrest,
+           date,
+           hour,
+           street_no,
+           street_name,
+           street_direction,
+           statute,
+           statute_description,
+           driver_age,
+           driver_gender,
+           driver_race,
+           officer_first_name,
+           officer_last_name,
+           officer_gender,
+           officer_race,
+           officer_age,
+           officer_position,
+           officer_years_of_service)
 }
 
 opp_save <- function(tbl) {
