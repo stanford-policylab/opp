@@ -39,7 +39,8 @@ opp_summarize <- function(state, city) {
   source_opp_funcs_for(state, city)
   raw_data <- opp_load()
   clean_data <- opp_clean(raw_data)
-  plots <- lapply(names(clean_data), function (col) { plot_col(clean_data, col) })
+  plots <- lapply(colnames(clean_data),
+                  function (colname) { plot_col(clean_data, colname) })
   pdf(str_c(state, city, "plots.pdf", sep = "_"), onefile = TRUE)
   lapply(plots, print)
   dev.off()
@@ -47,7 +48,9 @@ opp_summarize <- function(state, city) {
 
 
 plot_col <- function(tbl, col) {
+  print(col)
   plot_map <- c(
+    "logical"   = plot_factor,
     "integer"   = plot_numeric,
     "numeric"   = plot_numeric,
     "factor"    = plot_factor,
