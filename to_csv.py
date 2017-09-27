@@ -28,16 +28,33 @@ def xls_to_csv(in_file):
     require('ssconvert', "try installing 'gnumeric' package on linux")
     out_file = to_csv_ext(in_file)
     run(['ssconvert', '--export-file-per-sheet', in_file, out_file])
-    # for filename in os.listdir('.'):
-    #     if '.csv.' in filename:
-    #         basename, index = filename.split('.csv.')
-    #         new_out_filename = '%s_sheet_%d.csv' % (basename, int(index) + 1)
-    #         os.rename(filename, new_out_filename)
+    for filename in os.listdir('.'):
+        if '.csv.' in filename:
+            basename, index = filename.split('.csv.')
+            new_out_filename = '%s_sheet_%d.csv' % (basename, int(index) + 1)
+            os.rename(filename, new_out_filename)
     return
 
 
 def xlsx_to_csv(in_file):
-    xls_to_csv(in_file)
+    return xls_to_csv(in_file)
+
+
+def mdb_to_csv(in_file):
+    require('mdb-tables', "try installing 'mdbtools' package on linux")
+    require('mdb-export', "try installing 'mdbtools' package on linux")
+    out_file = to_csv_ext(in_file)
+    stdout = run(['mdb-tables', '-1', in_file])
+    tbls = [tbl for tbl in stdout.split('\n') if tbl != '']
+    for tbl in tbls:
+        contents = run(['mdb-export', in_file, tbl])
+        with open(out_file, 'w') as f:
+            f.write(contents)
+    return
+
+
+def accdb_to_csv(in_file):
+    return mdb_to_csv(in_file)
 
 
 ###############################################################################
@@ -139,16 +156,21 @@ def run(cmd, **kwargs):
         perr(cmd_str)
         perr('STDOUT:\n' + str(so))
         perr('STDERR:\n' + str(se))
-    return so
+    return so.decode('utf-8')
 
 
 def to_csv_ext(filename):
     base = filename_without_ext(filename)
-    return base + '.csv'
+    base_norm = normalize_filename(base)
+    return base_norm + '.csv'
 
 
 def filename_without_ext(filename):
     return os.path.splitext(os.path.basename(filename))[0]
+
+
+def normalize_filename(filename):
+    return filename.lower().replace(' ', '_')
 
 
 def parse_args(argv):
