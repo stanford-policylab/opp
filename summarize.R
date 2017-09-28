@@ -48,17 +48,19 @@ opp_summarize <- function(state, city) {
 
 
 plot_col <- function(tbl, col) {
-  print(col)
-  print(class(tbl[[col]]))
+  print(str_c(col, get_primary_class(tbl[[col]]), sep=", "))
   plot_map <- c(
     "logical"   = plot_factor,
     "integer"   = plot_numeric,
     "numeric"   = plot_numeric,
     "factor"    = plot_factor,
     "character" = plot_character,
-    "Date"      = plot_date
+    "Date"      = plot_date,
+    "POSIXct"   = plot_date,
+    "POSIXlt"   = plot_date,
+    "hms"       = plot_time
   )
-  plot_map[[class(tbl[[col]])]](tbl, col)
+  plot_map[[get_primary_class(tbl[[col]])]](tbl, col)
 }
 
 
@@ -75,14 +77,24 @@ plot_factor <- function (tbl, col) {
 
 
 plot_character <- function (tbl, col) {
-  ggplot(tbl) +
-    geom_bar(aes(sapply(tbl[[col]], function (v) { v == "" || is.na(v) }))) +
-    xlab(paste(col, "is empty"))
+  n <- n_distinct(tbl[[col]])
+  if (n <= 100) {
+    plot_factor(tbl, col)
+  } else {
+    ggplot(tbl) +
+      geom_bar(aes(sapply(tbl[[col]], function (v) { v == "" || is.na(v) }))) +
+      xlab(paste(col, "is empty"))
+  }
 }
 
 
 plot_date <- function(tbl, col) {
   plot_factor(tbl, col)
+}
+
+
+plot_time <- function(tbl, col) {
+  plot_numeric(tbl, col)
 }
 
 

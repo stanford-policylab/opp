@@ -69,3 +69,8 @@ plot_top_n_by_year <- function(tbl, date_col, col_to_rank, top_n = 10) {
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
     xlab(enquo(col_to_rank))
 }
+
+
+get_primary_class <- function(obj) {
+  class(obj)[1]
+}
