@@ -1,5 +1,7 @@
+source("lib/schema.R")
+
 opp_load <- function() {
-  arrests <- read_csv("data/states/il/chicago_arrests.csv",
+  arrests <- read_csv("data/states/il/chicago/arrests.csv",
     col_names = c(
       "arrest_id",
       "arrest_date",
@@ -49,7 +51,7 @@ opp_load <- function() {
     skip = 1
   )
 
-  citations <- read_csv("data/states/il/chicago_citations.csv",
+  citations <- read_csv("data/states/il/chicago/citations.csv",
     col_names = c(
       "contact_card_id",
       "contact_date",

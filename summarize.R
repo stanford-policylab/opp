@@ -49,6 +49,7 @@ opp_summarize <- function(state, city) {
 
 plot_col <- function(tbl, col) {
   print(col)
+  print(class(tbl[[col]]))
   plot_map <- c(
     "logical"   = plot_factor,
     "integer"   = plot_numeric,
