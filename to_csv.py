@@ -67,7 +67,7 @@ def convert(files_or_dirs):
             convert_file(f_or_d)
         elif os.path.isdir(f_or_d):
             for f in os.listdir(f_or_d):
-                convert_file(f)
+                convert_file(os.path.join(f_or_d, f))
         else:
             perr(f_or_d + " isn't a file or directory!")
     return
