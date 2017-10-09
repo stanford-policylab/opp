@@ -2,7 +2,7 @@ source("lib/schema.R")
 
 opp_load <- function() {
   tbls <- list()
-  for (year in 2010:2016) {
+  for (year in 2010:2010) {
     filename = str_c("data/states/tn/nashville/traffic_stop_", year, ".csv")
     tbls[[length(tbls) + 1]] <- read_csv(filename,
       col_names = c(
