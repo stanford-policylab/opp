@@ -1,0 +1,74 @@
+---
+params:
+  state: "DEFAULT"
+  city: "DEFAULT"
+  set_title: "DEFAULT"
+title: "`r params$set_title`"
+---
+
+
+```{r setup, echo = FALSE}
+opts_chunk$set(echo = FALSE)
+city <- params$city
+state <- params$state
+read_chunk('test.R')
+```
+
+```{r part1}
+```
+
+
+Hi Dan,
+
+test
+```{r}
+state
+city
+a
+```
+`r has("location")` test
+The crucial list of information we need for each city is the following (broken into categories, and with some comments):
+Basic incident information
+
+incident location (as granular as possible. Ideally this would be lat/lon)
+incident time (should include both date and time of day, ideally to the minute)
+incident type (vehicle or pedestrian. As per our discussion today, this will mostly be vehicle)
+reason for stop (this field might be coded in very different ways, but I'm looking for things like 'speeding 10 miles over limit' or 'broken tail light'. Note that this is different from the reason given, if any, for a citation or arrest (although in practice these two reasons may end up coinciding quite a bit), because the reason from the stop should be the ex-ante motivation for making the stop, whereas the reason for the citation/arrest is the ex-post description of what law was violated)
+Driver information
+5) driver race/ethnicity (ideally this would at least include the values 'black', 'white', 'hispanic', 'asian/pacific islander', and 'other'. As we've seen, datasets may include both race and ethnicity separately, in which case we should combine them into one column, with ethnicity taking precedence over race)
+
+Stop outcome information
+6) search conducted (this should be a binary field, although if possible we would have information on whether the search was a 'plain view' search, whether the search was consensual, and whether the search occurred 'incident to arrest' (sometimes called a 'custodial search'). I'll add this to the 'non-crucial' list of information below.)
+7) contraband found (this should be a binary field, although if possible we would have information on whether the contraband was a weapon, drugs, or something else)
+8) arrest made (this should be a binary field. Ideally we would also have another field 'arrest statute', i.e., some reason or description of why the arrest was made)
+9) citation given (this should be a binary field. Ideally we would also have another field 'description of citation', i.e., some reason or statute for the citation)
+
+Here's another list, which contains information that we would like to have, but isn't essential for some of the analyses we plan to do (some of these are listed in the comments for each of the crucial items, above):
+Additional driver information
+
+driver sex (this will probably always be recorded as a binary field)
+driver age
+characteristics of vehicle (e.g., vehicle registration state, vehicle model/color/year)
+resident driver (i.e., driver is a resident of the county/state)
+Additional outcome information
+5) search incident to arrest/custodial search (binary field)
+6) plain view search (binary field)
+7) consent search (binary field)
+8) description of contraband found (could be type of weapon, type/amount of drugs, etc)
+9) reason for arrest
+10) reason for/description of citation
+11) warning given (this would usually be a verbal warning, but could be written)
+12) frisk/patdown performed (this is different than a search)
+13) reason for frisk/patdown (this could be different than the reason for a search, if one was also performed)
+14) contraband recovered from frisk (this could be different than what was recovered from a search)
+15) search of driver/search of vehicle/search of passenger (these could all be different)
+
+Officer information
+16) officer id
+17) officer race
+18) officer sex
+19) officer years of service
+
+Other
+20) any free-text notes by the officer
+21) complaint filed (by driver against officer/PD)
