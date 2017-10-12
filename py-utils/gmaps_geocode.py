@@ -2,6 +2,8 @@
 
 import argparse
 import csv
+import logging
+import os
 import sys
 
 import googlemaps
@@ -9,6 +11,9 @@ import pandas as pd
 
 from collections import namedtuple
 from datetime import datetime
+
+
+logging.basicConfig(filename='errors.log')
 
 
 GeocodedLocation = namedtuple('GeocodedLocation', ['loc', 'lat', 'lng'])
@@ -44,12 +49,22 @@ def extract_unique_locations(csv_files, location_column_name):
     return locs
 
 
+def path_of_this_file():
+    return os.path.dirname(os.path.realpath(__file__))
+
+
+def path_relative_to_this_file(file_path):
+    return os.path.join(path_of_this_file(), file_path)
+
+
 def parse_args(argv):
     parser = argparse.ArgumentParser(prog=argv[0])
     parser.add_argument('csv_files', nargs='+')
     parser.add_argument('location_column_name')
+    parser.add_argument('-output_file_csv', default='geocoded_locations.csv')
     parser.add_argument('-api_key')
-    parser.add_argument('-api_key_file', default='gmaps_api.key')
+    parser.add_argument('-api_key_file',
+                        default=path_relative_to_this_file('gmaps_api.key'))
     return parser.parse_args(argv[1:])
 
 
@@ -57,11 +72,16 @@ if __name__ == '__main__':
     args = parse_args(sys.argv)
     gm = GM(get_key(args))
     locs = extract_unique_locations(args.csv_files, args.location_column_name)
-    glocs = set()
+    glocs = []
     for loc in locs:
-        lat, lng = gm.geocode(loc)
-        glocs.update(GeocodedLocation(loc, lat, lng))
-    with open('geocoded_locations.csv', 'w', newline='') as csv_file:
+        try:
+            lat, lng = gm.geocode(loc)
+            glocs.append(GeocodedLocation(loc, lat, lng))
+        except Exception as e:
+            logging.error(loc)
+    with open(args.output_file_csv, 'w', newline='') as csv_file:
         csv_writer = csv.writer(csv_file)
+        csv_writer.writerow(['loc', 'lat', 'lng'])
         for gloc in glocs:
             csv_writer.writerow([gloc.loc, gloc.lat, gloc.lng])
+    print('Output: ' + args.output_file_csv + '\nErrors: errors.log')
