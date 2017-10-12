@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-from pprint import pprint
-
 import argparse
 import sys
 
@@ -11,8 +9,18 @@ import pandas as pd
 from datetime import datetime
 
 
-def get_client(key):
-    return googlemaps.Client(key=key)
+class GM(object):
+    
+    def __init__(self, api_key):
+        self.c = googlemaps.Client(key=api_key)
+
+    def geocode(self, loc):
+        d = self.c.geocode(loc)
+        return self._extract_lat_lng(d)
+
+    def _extract_lat_lng(self, data):
+        coords = d[0]['geometry']['location']
+        return coords['lat'], coords['lng']
 
 
 def get_key(args):
@@ -31,18 +39,18 @@ def parse_args(argv):
     parser.add_argument('-api_key_file', default='google_maps_api.key')
     return parser.parse_args(argv[1:])
 
+
 if __name__ == '__main__':
     args = parse_args(sys.argv)
-    c = get_client(get_key(args))
+    gm = GM(get_key(args))
     df = pd.read_csv(args.csv_file)
     lats = []
-    longs = []
+    lngs = []
     for loc in df[args.location_column_name]:
-        d = c.geocode(loc)
-        pprint(d)
+        d = gm.geocode(loc)
         loc = d[0]['geometry']['location']
         lats.append(loc['lat'])
-        longs.append(loc['lng'])
+        lngs.append(loc['lng'])
     df['lat'] = lats
-    df['long'] = longs
-    print(df[[args.location_column_name, 'lat', 'long']])
+    df['lng'] = lngs
+    print(df[[args.location_column_name, 'lat', 'lng']])
