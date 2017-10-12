@@ -13,12 +13,15 @@ city <- params$city
 state <- params$state
 read_chunk('test.R')
 ```
+# https://stackoverflow.com/questions/14796501/is-it-possible-to-call-external-r-script-from-r-markdown-rmd-in-rstudio
+# https://stackoverflow.com/questions/23597140/how-to-find-the-percentage-of-nas-in-a-data-frame-using-apply
 
 ```{r part1}
+annotate with ## @knitr part1 in script
+x %>% summarize_all(funs(sum(is.na(.)) / length(.)))
 ```
 
 
-Hi Dan,
 
 test
 ```{r}

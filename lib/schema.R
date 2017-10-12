@@ -48,29 +48,51 @@ quit_if_not_valid_factors <- function(tbl) {
 }
 
 
-valid_schema <- c(
- "case_number"                      = "integer",
- "incident_type"                    = "factor",
- "incident_date"                    = "Date",
- "incident_time"                    = "hms",
- "incident_location"                = "character",
- "incident_lat"                     = "numeric",
- "incident_long"                    = "numeric",
- "defendant_gender"                 = "factor",
- "defendant_race"                   = "factor",
- "defendant_dob"                    = "Date",
- "officer_first_name"               = "character",
- "officer_last_name"                = "character",
- "officer_id"                       = "integer",
- "officer_gender"                   = "factor",
- "officer_race"                     = "factor",
- "officer_dob"                      = "Date",
- "officer_years_of_service"         = "numeric",
- "vehicle_year"                     = "factor",
- "vehicle_color"                    = "character",
- "vehicle_make"                     = "character",
- "vehicle_style"                    = "character",
- "vehicle_registration_state"       = "factor"
+required_schema <- c(
+  "incident_id"                       = "character",
+  "incident_type"                     = "factor",
+  "incident_date"                     = "Date",
+  "incident_time"                     = "hms",
+  "incident_location"                 = "character",
+  "incident_lat"                      = "numeric",
+  "incident_long"                     = "numeric",
+  "defendant_race"                    = "factor",
+  "reason_for_stop"                   = "character",
+  "search_conducted"                  = "logical",
+  "contraband_found"                  = "logical",
+  "arrest_made"                       = "logical",
+  "citation_issued"                   = "logical"
+)
+
+extra_schema <- c(
+  "defendant_sex"                     = "factor",
+  "defendant_dob"                     = "Date",
+  "defendant_is_resident_of_state"    = "logical",
+  "officer_id"                        = "integer",
+  "officer_sex"                       = "factor",
+  "officer_race"                      = "factor",
+  "officer_dob"                       = "Date",
+  "officer_years_of_service"          = "numeric",
+  "vehicle_year"                      = "factor",
+  "vehicle_color"                     = "character",
+  "vehicle_make"                      = "character",
+  "vehicle_style"                     = "character",
+  "vehicle_registration_state"        = "factor",
+  "warning_issued"                    = "logical",
+  "frisk_performed"                   = "logical",
+  "search_consent"                    = "logical",
+  "search_plain_view"                 = "logical",
+  "search_driver"                     = "logical",
+  "search_passenger"                  = "logical",
+  "search_vehicle"                    = "logical",
+  "search_incident_to_arrest"         = "logical",
+  "reason_for_frisk"                  = "character",
+  "reason_for_arrest"                 = "character",
+  "reason_for_citation"               = "character",
+  "contraband_recovered_from_frisk"   = "character",
+  "contraband_recovered_from_search"  = "character",
+  "complaint_filed_by_defendant"      = "logical",
+  "notes"                             = "character"
 )
 
 
@@ -87,13 +109,11 @@ valid_genders <- c(
 
 
 valid_races <- c(
+  "asian/pacific islander",
+  "black",
   "hispanic",
-  "white",
-  "african american",
-  "asian american",
-  "pacific islander",
-  "middle eastern",
-  "native american"
+  "other",
+  "white"
 )
 
 
@@ -157,9 +177,9 @@ valid_states <- c(
 
 valid_factors <- list(
   "incident_type"                   = valid_incident_types,
-  "defendant_gender"                = valid_genders,
+  "defendant_sex"                   = valid_sexes,
   "defendant_race"                  = valid_races,
-  "officer_gender"                  = valid_genders,
+  "officer_sex"                     = valid_sexes,
   "officer_race"                    = valid_races,
   "vehicle_year"                    = valid_vehicle_years,
   "vehicle_registration_state"      = valid_states
