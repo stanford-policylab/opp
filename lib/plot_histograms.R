@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
-suppressPackageStartupMessages(source("lib/utils.R"))
-source("lib/schema.R")
+suppressPackageStartupMessages(source("utils.R"))
+source("schema.R")
 
 
 main <- function() {

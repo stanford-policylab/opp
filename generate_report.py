@@ -7,7 +7,7 @@ import subprocess as sub
 
 def generate_report(state, city):
     rcmd = "library(rmarkdown); library(knitr);"
-    rcmd += " render('Report.Rmd', 'pdf_document', '{state}_{city_}.pdf',"
+    rcmd += " render('lib/Report.Rmd', 'pdf_document', '../out/{state}_{city_}.pdf',"
     rcmd += " params = list("
     rcmd += " state = '{state}',"
     rcmd += " city = '{city}',"
