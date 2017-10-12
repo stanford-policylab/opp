@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 
 import argparse
+import csv
 import sys
 
 import googlemaps
 import pandas as pd
 
+from collections import namedtuple
 from datetime import datetime
+
+
+GeocodedLocation = namedtuple('GeocodedLocation', ['loc', 'lat', 'lng'])
 
 
 class GM(object):
@@ -19,7 +24,7 @@ class GM(object):
         return self._extract_lat_lng(d)
 
     def _extract_lat_lng(self, data):
-        coords = d[0]['geometry']['location']
+        coords = data[0]['geometry']['location']
         return coords['lat'], coords['lng']
 
 
@@ -31,26 +36,32 @@ def get_key(args):
     return key
 
 
+def extract_unique_locations(csv_files, location_column_name):
+    locs = set()
+    for csv_file in args.csv_files:
+        df = pd.read_csv(csv_file)
+        locs.update(df[args.location_column_name].unique())
+    return locs
+
+
 def parse_args(argv):
     parser = argparse.ArgumentParser(prog=argv[0])
-    parser.add_argument('csv_file')
+    parser.add_argument('csv_files', nargs='+')
     parser.add_argument('location_column_name')
     parser.add_argument('-api_key')
-    parser.add_argument('-api_key_file', default='google_maps_api.key')
+    parser.add_argument('-api_key_file', default='gmaps_api.key')
     return parser.parse_args(argv[1:])
 
 
 if __name__ == '__main__':
     args = parse_args(sys.argv)
     gm = GM(get_key(args))
-    df = pd.read_csv(args.csv_file)
-    lats = []
-    lngs = []
-    for loc in df[args.location_column_name]:
-        d = gm.geocode(loc)
-        loc = d[0]['geometry']['location']
-        lats.append(loc['lat'])
-        lngs.append(loc['lng'])
-    df['lat'] = lats
-    df['lng'] = lngs
-    print(df[[args.location_column_name, 'lat', 'lng']])
+    locs = extract_unique_locations(args.csv_files, args.location_column_name)
+    glocs = set()
+    for loc in locs:
+        lat, lng = gm.geocode(loc)
+        glocs.update(GeocodedLocation(loc, lat, lng))
+    with open('geocoded_locations.csv', 'w', newline='') as csv_file:
+        csv_writer = csv.writer(csv_file)
+        for gloc in glocs:
+            csv_writer.writerow([gloc.loc, gloc.lat, gloc.lng])
