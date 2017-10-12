@@ -1,3 +1,4 @@
 *.csv
 *.swp
+google_maps_api.key
 .Rhistory
