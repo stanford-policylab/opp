@@ -13,7 +13,8 @@ from collections import namedtuple
 from datetime import datetime
 
 
-logging.basicConfig(filename='errors.log')
+LOG_FILE = 'geocode.log'
+logging.basicConfig(filename=LOG_FILE, level=logging.INFO)
 
 
 GeocodedLocation = namedtuple('GeocodedLocation', ['loc', 'lat', 'lng'])
@@ -75,6 +76,7 @@ if __name__ == '__main__':
     glocs = []
     for loc in locs:
         try:
+            logging.info(loc)
             lat, lng = gm.geocode(loc)
             glocs.append(GeocodedLocation(loc, lat, lng))
         except Exception as e:
@@ -84,4 +86,4 @@ if __name__ == '__main__':
         csv_writer.writerow(['loc', 'lat', 'lng'])
         for gloc in glocs:
             csv_writer.writerow([gloc.loc, gloc.lat, gloc.lng])
-    print('Output: ' + args.output_file_csv + '\nErrors: errors.log')
+    print('Output: ' + args.output_file_csv + '\nLog:' + LOG_FILE)
