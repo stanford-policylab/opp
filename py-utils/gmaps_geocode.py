@@ -33,17 +33,23 @@ def get_key(args):
     return key
 
 
-def extract_locations(csv_files, location_column_name, errors_file):
+def extract_locations(csv_files,
+                      location_column_name,
+                      output_file_csv,
+                      errors_file):
     locs = set()
     for csv_file in args.csv_files:
         df = pd.read_csv(csv_file)
         locs.update(df[args.location_column_name].unique())
+    existing_locs = set()
+    if os.path.exists(output_file_csv):
+        existing_locs.update(pd.read_csv(output_file_csv)['loc'].unique())
     errors = set()
     if os.path.exists(errors_file):
         with open(errors_file) as f:
             for line in f:
                 errors.update(line.strip())
-    return locs - errors
+    return locs - existint_locs - errors
 
 
 def path_of_this_file():
@@ -79,7 +85,11 @@ if __name__ == '__main__':
     gm = GM(get_key(args))
     locs = extract_locations(args.csv_files,
                              args.location_column_name,
+                             args.output_file_csv,
                              args.error_file)
+    print('Getting addresses for %d locations...' % len(locs))
+    print('Writing output to ' + args.output_file_csv)
+    print('Writing errors to ' + args.errors_file)
     with open(args.output_file_csv, 'a', newline='') as csv_file, \
         open(args.errors_file, 'a') as errors:
         csv_writer = csv.writer(csv_file)
@@ -90,4 +100,3 @@ if __name__ == '__main__':
                 csv_writer.writerow([loc, lat, lng])
             except Exception as e:
                 errors.write(loc + '\n')
-    print('Output: ' + args.output_file_csv + '\nErrors: ' + args.errors_file)
