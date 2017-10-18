@@ -33,12 +33,17 @@ def get_key(args):
     return key
 
 
-def extract_unique_locations(csv_files, location_column_name):
+def extract_locations(csv_files, location_column_name, errors_file):
     locs = set()
     for csv_file in args.csv_files:
         df = pd.read_csv(csv_file)
         locs.update(df[args.location_column_name].unique())
-    return locs
+    errors = set()
+    if os.path.exists(errors_file):
+        with open(errors_file) as f:
+            for line in f:
+                errors.update(line.strip())
+    return locs - errors
 
 
 def path_of_this_file():
@@ -53,7 +58,16 @@ def parse_args(argv):
     parser = argparse.ArgumentParser(prog=argv[0])
     parser.add_argument('csv_files', nargs='+')
     parser.add_argument('location_column_name')
-    parser.add_argument('-output_file_csv', default='geocoded_locations.csv')
+    parser.add_argument('-o', '--output_file_csv',
+                        default='geocoded_locations.csv',
+                        help='if the file already exists, the addresses'
+                             ' already present in the file will be skipped,'
+                             ' and new addresses appended')
+    parser.add_argument('-e', '--errors_file',
+                        default='errors.log',
+                        help='errors are output to this file; if the file'
+                             ' already exists, addresses in this file will be'
+                             ' skipped and new errors appended')
     parser.add_argument('-api_key')
     parser.add_argument('-api_key_file',
                         default=path_relative_to_this_file('gmaps_api.key'))
@@ -63,9 +77,11 @@ def parse_args(argv):
 if __name__ == '__main__':
     args = parse_args(sys.argv)
     gm = GM(get_key(args))
-    locs = extract_unique_locations(args.csv_files, args.location_column_name)
-    with open(args.output_file_csv, 'w', newline='') as csv_file, \
-        open('errors.log', 'w') as errors:
+    locs = extract_locations(args.csv_files,
+                             args.location_column_name,
+                             args.error_file)
+    with open(args.output_file_csv, 'a', newline='') as csv_file, \
+        open(args.errors_file, 'a') as errors:
         csv_writer = csv.writer(csv_file)
         csv_writer.writerow(['loc', 'lat', 'lng'])
         for loc in locs:
@@ -74,4 +90,4 @@ if __name__ == '__main__':
                 csv_writer.writerow([loc, lat, lng])
             except Exception as e:
                 errors.write(loc + '\n')
-    print('Output: ' + args.output_file_csv + '\nErrors: errors.log')
+    print('Output: ' + args.output_file_csv + '\nErrors: ' + args.errors_file)
