@@ -70,7 +70,7 @@ def parse_args(argv):
                              ' already present in the file will be skipped,'
                              ' and new addresses appended')
     parser.add_argument('-e', '--errors_file',
-                        default='errors.log',
+                        default='geocoded_locations_errors.csv',
                         help='errors are output to this file; if the file'
                              ' already exists, addresses in this file will be'
                              ' skipped and new errors appended')
@@ -90,13 +90,14 @@ if __name__ == '__main__':
     print('Getting addresses for %d locations...' % len(locs))
     print('Writing output to ' + args.output_file_csv)
     print('Writing errors to ' + args.errors_file)
-    with open(args.output_file_csv, 'a', newline='') as csv_file, \
+    with open(args.output_file_csv, 'a', newline='') as output, \
         open(args.errors_file, 'a') as errors:
-        csv_writer = csv.writer(csv_file)
-        csv_writer.writerow(['loc', 'lat', 'lng'])
+        output = csv.writer(output)
+        errors = csv.writer(errors)
+        output.writerow(['loc', 'lat', 'lng'])
         for loc in locs:
             try:
                 lat, lng = gm.geocode(loc)
-                csv_writer.writerow([loc, lat, lng])
+                output.writerow([loc, lat, lng])
             except Exception as e:
-                errors.write(loc + '\n')
+                errors.writerow([loc])
