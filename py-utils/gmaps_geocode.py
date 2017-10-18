@@ -2,22 +2,13 @@
 
 import argparse
 import csv
-import logging
 import os
 import sys
 
 import googlemaps
 import pandas as pd
 
-from collections import namedtuple
 from datetime import datetime
-
-
-LOG_FILE = 'geocode.log'
-logging.basicConfig(filename=LOG_FILE, level=logging.INFO)
-
-
-GeocodedLocation = namedtuple('GeocodedLocation', ['loc', 'lat', 'lng'])
 
 
 class GM(object):
@@ -73,17 +64,14 @@ if __name__ == '__main__':
     args = parse_args(sys.argv)
     gm = GM(get_key(args))
     locs = extract_unique_locations(args.csv_files, args.location_column_name)
-    glocs = []
-    for loc in locs:
-        try:
-            logging.info(loc)
-            lat, lng = gm.geocode(loc)
-            glocs.append(GeocodedLocation(loc, lat, lng))
-        except Exception as e:
-            logging.error(loc)
-    with open(args.output_file_csv, 'w', newline='') as csv_file:
+    with open(args.output_file_csv, 'w', newline='') as csv_file, \
+        open('errors.log', 'w') as errors:
         csv_writer = csv.writer(csv_file)
         csv_writer.writerow(['loc', 'lat', 'lng'])
-        for gloc in glocs:
-            csv_writer.writerow([gloc.loc, gloc.lat, gloc.lng])
-    print('Output: ' + args.output_file_csv + '\nLog:' + LOG_FILE)
+        for loc in locs:
+            try:
+                lat, lng = gm.geocode(loc)
+                csv_writer.writerow([loc, lat, lng])
+            except Exception as e:
+                errors.write(loc + '\n')
+    print('Output: ' + args.output_file_csv + '\nErrors: errors.log')
