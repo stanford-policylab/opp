@@ -4,7 +4,7 @@ library(stringr)
 
 verify_schema <- function(tbl) {
   quit_if_not_tibble(tbl)
-  quit_if_not_valid_schema(tbl)
+  quit_if_not_required_schema(tbl)
   quit_if_not_valid_factors(tbl)
 }
 
@@ -17,15 +17,12 @@ quit_if_not_tibble <- function(tbl) {
 }
 
 
-quit_if_not_valid_schema <- function(tbl) {
+quit_if_not_required_schema <- function(tbl) {
   tbl_schema <- named_vector_from_list_firsts(sapply(tbl, class))
-  same <- valid_schema == tbl_schema
-  extra <- tbl_schema != valid_schema
-  if (!all(same) || any(extra)) {
-    not_same_str <- str_c(names(valid_schema)[!same], collapse = ", ")
-    extra_str <- str_c(names(tbl_schema)[extra], collapse = ", ")
+  same <- required_schema == tbl_schema[names(required_schema)]
+  if (!all(same)) {
+    not_same_str <- str_c(names(required_schema)[!same], collapse = ", ")
     print(str_c("Invalid or missing columns: ", not_same_str))
-    print(str_c("Extra columns found: ", extra_str))
     q(status = 1)
   }
 }

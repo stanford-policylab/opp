@@ -100,9 +100,14 @@ opp_load <- function() {
 opp_clean <- function(tbl) {
   yn_to_tf <- c(Y = TRUE, N = FALSE)
   tbl %>%
-    separate(stop_datetime, c("date", "time"), sep = " ", extra = "merge") %>%
-    mutate(date = parse_date(date, "%m/%d/%Y"),
-           time = parse_time(time, "%I:%M:%S %p"),
+    separate(stop_datetime, c("incident_date", "incident_time"),
+             sep = " ", extra = "merge") %>%
+    rename(incident_id = stop_number,
+           incident_type = stop_type) %>%
+    mutate(incident_id = stop_number,
+           incident_type = stop_type,
+           incident_date = parse_date(date, "%m/%d/%Y"),
+           incident_time = parse_time(time, "%I:%M:%S %p"),
            county_resident = yn_to_tf[county_resident],
            verbal_warning_issued = yn_to_tf[verbal_warning_issued],
            written_warning_issued = yn_to_tf[written_warning_issued],
