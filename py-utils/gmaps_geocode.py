@@ -36,7 +36,7 @@ def get_key(args):
 def extract_locations(csv_files,
                       location_column_name,
                       output_file_csv,
-                      errors_file):
+                      errors_file_csv):
     locs = set()
     for csv_file in args.csv_files:
         df = pd.read_csv(csv_file)
@@ -45,11 +45,11 @@ def extract_locations(csv_files,
     if os.path.exists(output_file_csv):
         existing_locs.update(pd.read_csv(output_file_csv)['loc'].unique())
     errors = set()
-    if os.path.exists(errors_file):
-        with open(errors_file) as f:
+    if os.path.exists(errors_file_csv):
+        with open(errors_file_csv) as f:
             for line in f:
                 errors.update(line.strip())
-    return locs - existint_locs - errors
+    return locs - existing_locs - errors
 
 
 def path_of_this_file():
@@ -69,7 +69,7 @@ def parse_args(argv):
                         help='if the file already exists, the addresses'
                              ' already present in the file will be skipped,'
                              ' and new addresses appended')
-    parser.add_argument('-e', '--errors_file',
+    parser.add_argument('-e', '--errors_file_csv',
                         default='geocoded_locations_errors.csv',
                         help='errors are output to this file; if the file'
                              ' already exists, addresses in this file will be'
@@ -86,18 +86,22 @@ if __name__ == '__main__':
     locs = extract_locations(args.csv_files,
                              args.location_column_name,
                              args.output_file_csv,
-                             args.error_file)
+                             args.errors_file_csv)
     print('Getting addresses for %d locations...' % len(locs))
     print('Writing output to ' + args.output_file_csv)
-    print('Writing errors to ' + args.errors_file)
-    with open(args.output_file_csv, 'a', newline='') as output, \
-        open(args.errors_file, 'a') as errors:
-        output = csv.writer(output)
-        errors = csv.writer(errors)
-        output.writerow(['loc', 'lat', 'lng'])
+    print('Writing errors to ' + args.errors_file_csv)
+    output_file_csv_already_exists = os.path.exists(args.output_file_csv)
+    with open(args.output_file_csv, 'a', newline='') as ocsv, \
+        open(args.errors_file_csv, 'a') as ecsv:
+        output = csv.writer(ocsv)
+        errors = csv.writer(ecsv)
+        if not output_file_csv_already_exists:
+            output.writerow(['loc', 'lat', 'lng'])
         for loc in locs:
             try:
                 lat, lng = gm.geocode(loc)
                 output.writerow([loc, lat, lng])
+                ocsv.flush()
             except Exception as e:
                 errors.writerow([loc])
+                ecsv.flush()

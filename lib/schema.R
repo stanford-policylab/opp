@@ -52,10 +52,11 @@ required_schema <- c(
   "incident_time"                     = "hms",
   "incident_location"                 = "character",
   "incident_lat"                      = "numeric",
-  "incident_long"                     = "numeric",
+  "incident_lng"                      = "numeric",
   "defendant_race"                    = "factor",
   "reason_for_stop"                   = "character",
   "search_conducted"                  = "logical",
+  "search_type"                       = "factor",
   "contraband_found"                  = "logical",
   "arrest_made"                       = "logical",
   "citation_issued"                   = "logical"
@@ -99,7 +100,18 @@ valid_incident_types <- c(
 )
 
 
-valid_genders <- c(
+valid_search_types <- c(
+  "probable cause",
+  "custodial"
+)
+
+valid_search_probable_cause_types <- c(
+  "plain view",
+  "k9"
+)
+
+
+valid_sexes <- c(
   "male",
   "female"
 )
@@ -174,6 +186,8 @@ valid_states <- c(
 
 valid_factors <- list(
   "incident_type"                   = valid_incident_types,
+  "search_type"                     = valid_search_types,
+  "search_probable_cause_type"      = valid_search_probable_cause_types,
   "defendant_sex"                   = valid_sexes,
   "defendant_race"                  = valid_races,
   "officer_sex"                     = valid_sexes,
