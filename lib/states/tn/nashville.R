@@ -100,12 +100,11 @@ opp_load <- function() {
 opp_clean <- function(tbl) {
   yn_to_tf <- c(Y = TRUE, N = FALSE)
   tbl %>%
+    rename(incident_id = stop_number,
+           incident_location = stop_location) %>%
     separate(stop_datetime, c("incident_date", "incident_time"),
              sep = " ", extra = "merge") %>%
-    rename(incident_id = stop_number,
-           incident_type = stop_type) %>%
-    mutate(incident_id = stop_number,
-           incident_type = stop_type,
+    mutate(incident_type = factor("vehicular", levels = valid_incident_types),
            incident_date = parse_date(date, "%m/%d/%Y"),
            incident_time = parse_time(time, "%I:%M:%S %p"),
            county_resident = yn_to_tf[county_resident],
@@ -129,7 +128,22 @@ opp_clean <- function(tbl) {
            search_arrest = yn_to_tf[search_arrest],
            search_warrant = yn_to_tf[search_warrant],
            search_inventory = yn_to_tf[search_inventory],
-           search_plain_view = yn_to_tf[search_plain_view])
+           search_plain_view = yn_to_tf[search_plain_view]) %>%
+    select(incident_id,
+           incident_type,
+           incident_date,
+           incident_location,
+           incident_lat,
+           incident_lng,
+           defendant_race,
+           reason_for_stop,
+           search_conducted,
+           search_type,
+           contraband_found,
+           arrest_made,
+           citation_issued,
+           )
+
 }
 
 
