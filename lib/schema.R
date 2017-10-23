@@ -106,8 +106,9 @@ valid_search_types <- c(
 )
 
 valid_search_probable_cause_types <- c(
-  "plain view",
-  "k9"
+  "k9",
+  "other",
+  "plain view"
 )
 
 
