@@ -2,8 +2,9 @@ source("lib/schema.R")
 
 opp_load <- function() {
   tbls <- list()
+  path_prefix <- "data/states/tn/nashville/"
   for (year in 2010:2010) {
-    filename = str_c("data/states/tn/nashville/traffic_stop_", year, ".csv")
+    filename <- str_c(path_prefix, "traffic_stop_", year, ".csv")
     tbls[[length(tbls) + 1]] <- read_csv(filename,
       col_names = c(
         "stop_number",
@@ -31,7 +32,7 @@ opp_load <- function() {
         "suspect_ethnicity",
         "action_against_driver",
         "action_against_passenger",
-        "search_occured",
+        "search_occurred",
         "evidence_seized",
         "drugs_seized",
         "weapons_seized",
@@ -74,7 +75,7 @@ opp_load <- function() {
         suspect_ethnicity               = col_character(),
         action_against_driver           = col_character(),
         action_against_passenger        = col_character(),
-        search_occured                  = col_character(),
+        search_occurred                 = col_character(),
         evidence_seized                 = col_character(),
         drugs_seized                    = col_character(),
         weapons_seized                  = col_character(),
@@ -94,41 +95,85 @@ opp_load <- function() {
       skip = 1
     )
   }
-  bind_rows(tbls)
+  geocoded_locations <- read_csv(str_c(path_prefix, "geocoded_locations.csv"))
+  bind_rows(tbls) %>% left_join(geocoded_locations,
+                                by = c("stop_location" = "loc"))
 }
 
 opp_clean <- function(tbl) {
   yn_to_tf <- c(Y = TRUE, N = FALSE)
+  tr_race <- c(A = "asian/pacific islander",
+               B = "black",
+               I = "other",  # TODO(danj): verify I, O, U
+               O = "other",
+               U = "other",
+               W = "white")
   tbl %>%
     rename(incident_id = stop_number,
-           incident_location = stop_location) %>%
+           incident_location = stop_location,
+           defendant_race = race,
+           incident_lat = lat,
+           incident_lng = lng,
+           # TODO(danj): verify and translate
+           reason_for_stop = stop_type,  
+           search_conducted = search_occurred,
+           arrest_made = custodial_arrest_issued,
+           # TODO(danj): what about misd_state_citation_issued
+           citation_issued = traffic_citation_issued,
+           defendant_sex = sex,
+           defendant_age = age_of_suspect,
+           officer_id = officer_employee_number,
+           # TODO(danj): what are all these weird things
+           vehicle_registration_state = vehicle_tag_state,
+           frisk_performed = pat_down_search,
+           search_driver = driver_searched,
+           search_passenger = passenger_searched,
+           # TODO(danj): double check
+           search_incident_to_arrest = search_arrest
+          ) %>%
     separate(stop_datetime, c("incident_date", "incident_time"),
-             sep = " ", extra = "merge") %>%
+             sep = " ", extra = "merge"
+            ) %>%
     mutate(incident_type = factor("vehicular", levels = valid_incident_types),
-           incident_date = parse_date(date, "%m/%d/%Y"),
-           incident_time = parse_time(time, "%I:%M:%S %p"),
+           incident_date = parse_date(incident_date, "%m/%d/%Y"),
+           incident_time = parse_time(incident_time, "%I:%M:%S %p"),
+           # TODO(danj): what is H, N, U in ethnicity
+           defendant_race = factor(tr_race[defendant_race],
+                                   levels = valid_races),
            county_resident = yn_to_tf[county_resident],
            verbal_warning_issued = yn_to_tf[verbal_warning_issued],
            written_warning_issued = yn_to_tf[written_warning_issued],
-           traffic_citation_issued = yn_to_tf[traffic_citation_issued],
+           citation_issued = yn_to_tf[citation_issued],
            misd_state_citation_issued = yn_to_tf[misd_state_citation_issued],
-           custodial_arrest_issued = yn_to_tf[custodial_arrest_issued],
+           arrest_made = yn_to_tf[arrest_made],
            action_against_driver = yn_to_tf[action_against_driver],
-           search_occurred = yn_to_tf[search_occured],
+           search_conducted = yn_to_tf[search_conducted],
            evidence_seized = yn_to_tf[evidence_seized],
            drugs_seized = yn_to_tf[drugs_seized],
            weapons_seized = yn_to_tf[weapons_seized],
            other_seized = yn_to_tf[other_seized],
+           # TODO(danj): check this with Ravi
+           contraband_found = any(evidence_seized,
+                                  drugs_seized,
+                                  weapons_seized,
+                                  other_seized),
            vehicle_searched = yn_to_tf[vehicle_searched],
-           pat_down_search = yn_to_tf[pat_down_search],
-           driver_searched = yn_to_tf[driver_searched],
-           passenger_searched = yn_to_tf[passenger_searched],
+           frisk_performed = yn_to_tf[frisk_performed],
+           search_driver = yn_to_tf[search_driver],
+           search_passenger = yn_to_tf[search_passenger],
            search_consent = yn_to_tf[search_consent],
            search_probable_cause = yn_to_tf[search_probable_cause],
-           search_arrest = yn_to_tf[search_arrest],
+           search_incident_to_arrest = yn_to_tf[search_incident_to_arrest],
            search_warrant = yn_to_tf[search_warrant],
            search_inventory = yn_to_tf[search_inventory],
-           search_plain_view = yn_to_tf[search_plain_view]) %>%
+           search_plain_view = yn_to_tf[search_plain_view],
+           # TODO(danj): check
+           search_type = factor(ifelse(search_conducted,
+                                       ifelse(search_probable_cause,
+                                              "probable cause",
+                                              "custodial"),
+                                       NA), levels = valid_search_types)
+          ) %>%
     select(incident_id,
            incident_type,
            incident_date,
@@ -142,8 +187,8 @@ opp_clean <- function(tbl) {
            contraband_found,
            arrest_made,
            citation_issued,
+           everything()
            )
-
 }
 
 
