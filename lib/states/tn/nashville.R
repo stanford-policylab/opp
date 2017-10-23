@@ -3,6 +3,8 @@ source("lib/schema.R")
 opp_load <- function() {
   tbls <- list()
   path_prefix <- "data/states/tn/nashville/"
+  # TODO(danj): replace with all years when "finalized"
+  # for (year in 2010:2016) {
   for (year in 2010:2010) {
     filename <- str_c(path_prefix, "traffic_stop_", year, ".csv")
     tbls[[length(tbls) + 1]] <- read_csv(filename,
@@ -100,11 +102,13 @@ opp_load <- function() {
                                 by = c("stop_location" = "loc"))
 }
 
+
 opp_clean <- function(tbl) {
   yn_to_tf <- c(Y = TRUE, N = FALSE)
+  # TODO(danj): verify I, O, U
   tr_race <- c(A = "asian/pacific islander",
                B = "black",
-               I = "other",  # TODO(danj): verify I, O, U
+               I = "other",
                O = "other",
                U = "other",
                W = "white")
