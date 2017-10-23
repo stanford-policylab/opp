@@ -137,6 +137,8 @@ opp_clean <- function(tbl) {
     mutate(incident_type = factor("vehicular", levels = valid_incident_types),
            incident_date = parse_date(incident_date, "%m/%d/%Y"),
            incident_time = parse_time(incident_time, "%I:%M:%S %p"),
+           incident_lat = parse_numeric(incident_lat),
+           incident_lng = parse_numeric(insident_lng),
            # TODO(danj): what is H, N, U in ethnicity
            defendant_race = factor(tr_race[defendant_race],
                                    levels = valid_races),
@@ -167,12 +169,21 @@ opp_clean <- function(tbl) {
            search_warrant = yn_to_tf[search_warrant],
            search_inventory = yn_to_tf[search_inventory],
            search_plain_view = yn_to_tf[search_plain_view],
-           # TODO(danj): check
+           # TODO(danj): check - what is it when not either?
+           # run d %>% group_by(search_conducted,
+           #                    search_probable_cause,
+           #                    search_incident_to_arrest)
+           #       %>% summarize(n = n())
+           # most searches look like they are neither probable or incident
            search_type = factor(ifelse(search_conducted,
                                        ifelse(search_probable_cause,
                                               "probable cause",
-                                              "custodial"),
-                                       NA), levels = valid_search_types)
+                                              ifelse(search_incident_to_arrest,
+                                                     "custodial",
+                                                     NA)
+                                             ),
+                                             NA
+                                      ), levels = valid_search_types)
           ) %>%
     select(incident_id,
            incident_type,
