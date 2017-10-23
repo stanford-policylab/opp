@@ -137,8 +137,8 @@ opp_clean <- function(tbl) {
     mutate(incident_type = factor("vehicular", levels = valid_incident_types),
            incident_date = parse_date(incident_date, "%m/%d/%Y"),
            incident_time = parse_time(incident_time, "%I:%M:%S %p"),
-           incident_lat = parse_numeric(incident_lat),
-           incident_lng = parse_numeric(insident_lng),
+           incident_lat = parse_double(incident_lat),
+           incident_lng = parse_double(incident_lng),
            # TODO(danj): what is H, N, U in ethnicity
            defendant_race = factor(tr_race[defendant_race],
                                    levels = valid_races),
