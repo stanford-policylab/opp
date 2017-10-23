@@ -74,3 +74,11 @@ plot_top_n_by_year <- function(tbl, date_col, col_to_rank, top_n = 10) {
 get_primary_class <- function(obj) {
   class(obj)[1]
 }
+
+
+get_null_rates <- function(tbl) {
+  nulls_tbl <- tbl %>% summarize_all(funs(sum(is.na(.)) / length(.)))
+  nulls_vec <- named_vector_from_list_firsts(nulls_tbl)
+  nulls_pcts <- paste0(formatC(100 * nulls_vec, format = "f", digits = 2), "%")
+  tibble(features = names(nulls_vec), null_pct = nulls_pcts) %>% print(n = Inf)
+}
