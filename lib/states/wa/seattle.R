@@ -2,9 +2,11 @@ source("lib/schema.R")
 
 opp_load <- function() {
   tbls <- list()
+  path_prefix <- "data/states/wa/seattle/"
+  # TODO(danj): replace with all years when "finalized"
   # for (year in 2006:2015) {
   for (year in 2006:2006) {
-    filename = str_c("data/states/wa/seattle/trafs_evs_", year, "_sheet_1.csv")
+    filename = str_c(path_prefix, "trafs_evs_", year, "_sheet_1.csv")
     tbls[[length(tbls) + 1]] <- read_csv(filename,
       col_names = c(
         "rin",
@@ -23,7 +25,7 @@ opp_load <- function() {
       ),
       col_types = cols(
         rin                         = col_character(),
-        datetime                    = col_datetime("%Y/%m/%d %H:%M:%S"),
+        datetime                    = col_character(),
         address                     = col_character(),
         type                        = col_character(),
         pri                         = col_integer(),
@@ -39,39 +41,76 @@ opp_load <- function() {
       skip = 1
     )
   }
-  tbls[[1]]
-  # bind_rows(tbls)
+  geocoded_locations <- read_csv(str_c(path_prefix, "geocoded_locations.csv"))
+  bind_rows(tbls) %>% left_join(geocoded_locations,
+                                by = c("address" = "loc"))
 }
 
+
 opp_clean <- function(tbl) {
-  # yn_to_tf <- c(Y = TRUE, N = FALSE)
-  # tbl %>%
-  #   separate(stop_datetime, c("date", "time"), sep = " ", extra = "merge") %>%
-  #   mutate(date = parse_date(date, "%m/%d/%Y"),
-  #          time = parse_time(time, "%I:%M:%S %p"),
-  #          county_resident = yn_to_tf[county_resident],
-  #          verbal_warning_issued = yn_to_tf[verbal_warning_issued],
-  #          written_warning_issued = yn_to_tf[written_warning_issued],
-  #          traffic_citation_issued = yn_to_tf[traffic_citation_issued],
-  #          misd_state_citation_issued = yn_to_tf[misd_state_citation_issued],
-  #          custodial_arrest_issued = yn_to_tf[custodial_arrest_issued],
-  #          action_against_driver = yn_to_tf[action_against_driver],
-  #          search_occurred = yn_to_tf[search_occured],
-  #          evidence_seized = yn_to_tf[evidence_seized],
-  #          drugs_seized = yn_to_tf[drugs_seized],
-  #          weapons_seized = yn_to_tf[weapons_seized],
-  #          other_seized = yn_to_tf[other_seized],
-  #          vehicle_searched = yn_to_tf[vehicle_searched],
-  #          pat_down_search = yn_to_tf[pat_down_search],
-  #          driver_searched = yn_to_tf[driver_searched],
-  #          passenger_searched = yn_to_tf[passenger_searched],
-  #          search_consent = yn_to_tf[search_consent],
-  #          search_probable_cause = yn_to_tf[search_probable_cause],
-  #          search_arrest = yn_to_tf[search_arrest],
-  #          search_warrant = yn_to_tf[search_warrant],
-  #          search_inventory = yn_to_tf[search_inventory],
-  #          search_plain_view = yn_to_tf[search_plain_view])
-  tbl
+  # TODO(danj): verify
+  tr_race <- c(A = "asian/pacific islander",
+               B = "black",
+               H = "hispanic",
+               W = "white")
+  tbl %>%
+    select(-empty) %>%
+    rename(incident_id = rin,
+           # TODO(danj): sort this out from type, mir_and_description, and
+           # disposition_description
+           incident_type = disposition_description,
+           incident_location = address,
+           incident_lat = lat,
+           incident_lng = lng,
+           # TODO(danj): make this meaningful, maybe combine with "type"
+           reason_for_stop = mir_and_description,
+           defendant_dob = subject_dob
+          ) %>%
+    filter(!is.na(incident_id)) %>%
+    separate(datetime, c("incident_date", "incident_time"),
+             sep = " ", extra = "merge"
+            ) %>%
+    separate(possible_race_and_sex, c("defendant_race", "defendant_sex"),
+             sep = 1, extra = "merge"
+            ) %>%
+    separate(officer_no_name_1, c("officer_id_1", "officer_name_1"),
+             sep = " ", extra = "merge"
+            ) %>%
+    separate(officer_no_name_2, c("officer_id_2", "officer_name_2"),
+             sep = " ", extra = "merge"
+            ) %>%
+    mutate(incident_date = parse_date(incident_date, "%Y/%m/%d"),
+           incident_time = parse_time(incident_time, "%H:%M:%S"),
+           incident_lat = parse_number(incident_lat),
+           incident_lng = parse_number(incident_lng),
+           defendant_race = factor(tr_race[defendant_race],
+                                   levels = valid_races),
+           search_conducted = NA,
+           search_type = NA,
+           contraband_found = NA,
+           arrest_made = str_sub(incident_type, 1, 1) == "A",
+           # TODO(danj): includes criminal and non-criminal citations
+           citation_issued = !is.na(str_match(incident_type, "CITATION")),
+           defendant_dob = ymd(defendant_dob),
+           officer_id_1 = parse_number(officer_id_1),
+           officer_id_2 = parse_number(officer_id_2)
+          ) %>%
+    select(incident_id,
+           incident_type,
+           incident_date,
+           incident_time,
+           incident_location,
+           incident_lat,
+           incident_lng,
+           defendant_race,
+           reason_for_stop,
+           search_conducted,
+           search_type,
+           contraband_found,
+           arrest_made,
+           citation_issued,
+           everything()
+          )
 }
 
 
