@@ -177,6 +177,7 @@ opp_clean <- function(tbl) {
     select(incident_id,
            incident_type,
            incident_date,
+           incident_time,
            incident_location,
            incident_lat,
            incident_lng,
