@@ -2,6 +2,7 @@
 
 import argparse
 import csv
+import math
 import os
 import sys
 
@@ -77,6 +78,12 @@ def parse_args(argv):
     parser.add_argument('-api_key')
     parser.add_argument('-api_key_file',
                         default=path_relative_to_this_file('gmaps_api.key'))
+    parser.add_argument('-as', '--address_suffix',
+                        help='append to the end of the address,'
+                             ' i.e. ", Seattle, WA"',
+                        default='')
+    parser.add_argument('-n', help='sample the first n for testing',
+                        default=math.inf, type=float)
     return parser.parse_args(argv[1:])
 
 
@@ -91,6 +98,7 @@ if __name__ == '__main__':
     print('Writing output to ' + args.output_file_csv)
     print('Writing errors to ' + args.errors_file_csv)
     output_file_csv_already_exists = os.path.exists(args.output_file_csv)
+    count = 0
     with open(args.output_file_csv, 'a', newline='') as ocsv, \
         open(args.errors_file_csv, 'a') as ecsv:
         output = csv.writer(ocsv)
@@ -99,9 +107,12 @@ if __name__ == '__main__':
             output.writerow(['loc', 'lat', 'lng'])
         for loc in locs:
             try:
-                lat, lng = gm.geocode(loc)
+                lat, lng = gm.geocode(loc + args.address_suffix)
                 output.writerow([loc, lat, lng])
                 ocsv.flush()
             except Exception as e:
                 errors.writerow([loc])
                 ecsv.flush()
+            count += 1
+            if count > args.n:
+                break
