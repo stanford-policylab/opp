@@ -105,12 +105,12 @@ opp_load <- function() {
 
 opp_clean <- function(tbl) {
   yn_to_tf <- c(Y = TRUE, N = FALSE)
-  # TODO(danj): verify I, O, U
+  # TODO(danj): use suspect_ethnicity for hispanic
   tr_race <- c(A = "asian/pacific islander",
                B = "black",
-               I = "other",
-               O = "other",
-               U = "other",
+               I = "other/unknown",
+               O = "other/unknown",
+               U = "other/unknown",
                W = "white")
   tbl %>%
     rename(incident_id = stop_number,
@@ -118,21 +118,21 @@ opp_clean <- function(tbl) {
            defendant_race = race,
            incident_lat = lat,
            incident_lng = lng,
-           # TODO(danj): verify and translate
-           reason_for_stop = stop_type,  
+           # TODO(journalist):
+           # https://app.asana.com/0/456927885748233/462732257741346
+           reason_for_stop = stop_type,
            search_conducted = search_occurred,
            arrest_made = custodial_arrest_issued,
-           # TODO(danj): what about misd_state_citation_issued
+           # NOTE: not using misd_state_citation_issued
            citation_issued = traffic_citation_issued,
            defendant_sex = sex,
            defendant_age = age_of_suspect,
            officer_id = officer_employee_number,
-           # TODO(danj): what are all these weird things
+           # TODO(danj): convert non-states to NA
            vehicle_registration_state = vehicle_tag_state,
            frisk_performed = pat_down_search,
            search_driver = driver_searched,
            search_passenger = passenger_searched,
-           # TODO(danj): double check
            search_incident_to_arrest = search_arrest
           ) %>%
     separate(stop_datetime, c("incident_date", "incident_time"),
@@ -150,6 +150,7 @@ opp_clean <- function(tbl) {
            verbal_warning_issued = yn_to_tf[verbal_warning_issued],
            written_warning_issued = yn_to_tf[written_warning_issued],
            citation_issued = yn_to_tf[citation_issued],
+           # TODO(danj): convert NAs to FALSE
            misd_state_citation_issued = yn_to_tf[misd_state_citation_issued],
            arrest_made = yn_to_tf[arrest_made],
            action_against_driver = yn_to_tf[action_against_driver],
@@ -158,7 +159,6 @@ opp_clean <- function(tbl) {
            drugs_seized = yn_to_tf[drugs_seized],
            weapons_seized = yn_to_tf[weapons_seized],
            other_seized = yn_to_tf[other_seized],
-           # TODO(danj): check this with Ravi
            contraband_found = any(evidence_seized,
                                   drugs_seized,
                                   weapons_seized,
@@ -174,6 +174,7 @@ opp_clean <- function(tbl) {
            search_inventory = yn_to_tf[search_inventory],
            search_plain_view = yn_to_tf[search_plain_view],
            # TODO(danj): check - what is it when not either?
+           # TODO(danj): use hierarchy, default to probable cause
            # run d %>% group_by(search_conducted,
            #                    search_probable_cause,
            #                    search_incident_to_arrest)
