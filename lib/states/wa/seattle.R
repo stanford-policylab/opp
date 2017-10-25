@@ -48,7 +48,6 @@ opp_load <- function() {
 
 
 opp_clean <- function(tbl) {
-  # TODO(danj): verify
   tr_race <- c(A = "asian/pacific islander",
                B = "black",
                H = "hispanic",
@@ -78,7 +77,7 @@ opp_clean <- function(tbl) {
     separate(officer_no_name_2, c("officer_id_2", "officer_name_2"),
              sep = " ", extra = "merge"
             ) %>%
-           # NOTE: vehicular because mir_and_description are all traffic related
+           # NOTE: vehicular because mir_and_description are all traffic
     mutate(incident_type = factor("vehicular", levels = valid_incident_types),
            incident_date = parse_date(incident_date, "%Y/%m/%d"),
            incident_time = parse_time(incident_time, "%H:%M:%S"),
