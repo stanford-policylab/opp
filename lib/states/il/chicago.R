@@ -102,26 +102,33 @@ opp_load <- function() {
 
 opp_clean <- function(tbl) {
   tbl %>%
-    mutate(outcome_citation = as.logical(ifelse(is.na(citation), 0, citation)),
-           outcome_arrest = coalesce(!is.na(arrest_id)),
-           date = arrest_date,
-           hour = arrest_hour,
-           street_no = coalesce(street_no.x, street_no.y),
-           street_name = coalesce(street_name.x, street_name.y),
-           street_direction = coalesce(street_direction.x,
-                                       street_direction.y),
+    rename(incident_date = arrest_date,
+           )
+           # arrest_id and contact_card_id have different ranges, so it's ok
+    mutate(incident_id = coalesce(arrest_id, contact_card_id),
+           incident_type = NA,
+           incident_time = parse_time(arrest_hour, "%H"),
+           incident_location = str_c(coalesce(street_no.x, street_no.y),
+                                     coalesce(street_name.x, street_name.y),
+                                     coalesce(street_direction.x,
+                                              street_direction.y), sep = " "),
+           incident_lat = NA,
+           incident_lng = NA,
+           defendant_race
            statute = coalesce(statute.x, statute.y),
            statute_description = coalesce(statute_description.x,
                                           statute_description.y),
            driver_age = defendant_age,
            driver_gender = coalesce(defendant_gender, driver_gender),
            driver_race = coalesce(defendant_race, driver_race),
-           officer_gender = coalesce(officer_gender.x, officer_gender.y) ,
+           officer_gender = coalesce(officer_gender.x, officer_gender.y),
            officer_race = coalesce(officer_race.x, officer_race.y),
            officer_position = coalesce(officer_position.x,
                                        officer_position.y),
            officer_years_of_service = coalesce(officer_years_of_service.x,
-                                               officer_years_of_service.y)
+                                               officer_years_of_service.y),
+           arrest_made = !is.na(arrest_id),
+           citation_issued = !is.na(citation)
           ) %>%
     select(outcome_citation,
            outcome_arrest,

@@ -5,8 +5,8 @@ opp_load <- function() {
   path_prefix <- "data/states/wa/seattle/"
   # TODO(danj): replace with all years when "finalized"
   # for (year in 2006:2015) {
-  for (year in 2006:2006) {
-    filename = str_c(path_prefix, "trafs_evs_", year, "_sheet_1.csv")
+  for (year in 2015:2015) {
+    filename <- str_c(path_prefix, "trafs_evs_", year, "_sheet_1.csv")
     tbls[[length(tbls) + 1]] <- read_csv(filename,
       col_names = c(
         "rin",
@@ -56,13 +56,12 @@ opp_clean <- function(tbl) {
   tbl %>%
     select(-empty) %>%
     rename(incident_id = rin,
-           # TODO(danj): sort this out from type, mir_and_description, and
-           # disposition_description
-           incident_type = disposition_description,
            incident_location = address,
            incident_lat = lat,
            incident_lng = lng,
-           # TODO(danj): make this meaningful, maybe combine with "type"
+           # TODO(journalist): clarify relationship between
+           # mir_and_description, disposition_description, type
+           # https://app.asana.com/0/456927885748233/462732257741348 
            reason_for_stop = mir_and_description,
            defendant_dob = subject_dob
           ) %>%
@@ -79,7 +78,9 @@ opp_clean <- function(tbl) {
     separate(officer_no_name_2, c("officer_id_2", "officer_name_2"),
              sep = " ", extra = "merge"
             ) %>%
-    mutate(incident_date = parse_date(incident_date, "%Y/%m/%d"),
+           # NOTE: vehicular because mir_and_description are all traffic related
+    mutate(incident_type = factor("vehicular", levels = valid_incident_types),
+           incident_date = parse_date(incident_date, "%Y/%m/%d"),
            incident_time = parse_time(incident_time, "%H:%M:%S"),
            incident_lat = parse_number(incident_lat),
            incident_lng = parse_number(incident_lng),
@@ -89,7 +90,7 @@ opp_clean <- function(tbl) {
            search_type = NA,
            contraband_found = NA,
            arrest_made = str_sub(incident_type, 1, 1) == "A",
-           # TODO(danj): includes criminal and non-criminal citations
+           # NOTE: includes criminal and non-criminal citations
            citation_issued = !is.na(str_match(incident_type, "CITATION")),
            defendant_dob = ymd(defendant_dob),
            officer_id_1 = parse_number(officer_id_1),

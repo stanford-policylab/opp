@@ -101,6 +101,9 @@ valid_incident_types <- c(
 
 
 valid_search_types <- c(
+  "k9",
+  "plain_view",
+  "consent",
   "probable cause",
   "custodial"
 )
@@ -118,11 +121,12 @@ valid_sexes <- c(
 )
 
 
+# if ethnicity, i.e. hispanic use the, else default to race
 valid_races <- c(
   "asian/pacific islander",
   "black",
   "hispanic",
-  "other",
+  "other/unknown",
   "white"
 )
 
