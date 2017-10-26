@@ -1,8 +1,11 @@
 source("lib/schema.R")
 
+
+path_prefix <- "data/states/tn/nashville/"
+
+
 opp_load <- function() {
   tbls <- list()
-  path_prefix <- "data/states/tn/nashville/"
   # TODO(danj): replace with all years when "finalized"
   # for (year in 2010:2016) {
   for (year in 2010:2010) {
@@ -105,9 +108,9 @@ opp_load <- function() {
 
 opp_clean <- function(tbl) {
   yn_to_tf <- c(Y = TRUE, N = FALSE)
-  # TODO(danj): use suspect_ethnicity for hispanic
   tr_race <- c(A = "asian/pacific islander",
                B = "black",
+               H = "hispanic",
                I = "other/unknown",
                O = "other/unknown",
                U = "other/unknown",
@@ -128,7 +131,6 @@ opp_clean <- function(tbl) {
            defendant_sex = sex,
            defendant_age = age_of_suspect,
            officer_id = officer_employee_number,
-           # TODO(danj): convert non-states to NA
            vehicle_registration_state = vehicle_tag_state,
            frisk_performed = pat_down_search,
            search_driver = driver_searched,
@@ -143,14 +145,14 @@ opp_clean <- function(tbl) {
            incident_time = parse_time(incident_time, "%I:%M:%S %p"),
            incident_lat = parse_double(incident_lat),
            incident_lng = parse_double(incident_lng),
-           # TODO(danj): what is H, N, U in ethnicity
-           defendant_race = factor(tr_race[defendant_race],
+           defendant_race = factor(tr_race[ifelse(suspect_ethnicity == "H",
+                                                  "H",
+                                                  defendant_race)],
                                    levels = valid_races),
            county_resident = yn_to_tf[county_resident],
            verbal_warning_issued = yn_to_tf[verbal_warning_issued],
            written_warning_issued = yn_to_tf[written_warning_issued],
            citation_issued = yn_to_tf[citation_issued],
-           # TODO(danj): convert NAs to FALSE
            misd_state_citation_issued = yn_to_tf[misd_state_citation_issued],
            arrest_made = yn_to_tf[arrest_made],
            action_against_driver = yn_to_tf[action_against_driver],
@@ -163,6 +165,9 @@ opp_clean <- function(tbl) {
                                   drugs_seized,
                                   weapons_seized,
                                   other_seized),
+           # NOTE: invalid states converted to NAs
+           vehicle_registration_state = factor(vehicle_registration_state,
+                                               levels = valid_states),
            vehicle_searched = yn_to_tf[vehicle_searched],
            frisk_performed = yn_to_tf[frisk_performed],
            search_driver = yn_to_tf[search_driver],
@@ -173,23 +178,23 @@ opp_clean <- function(tbl) {
            search_warrant = yn_to_tf[search_warrant],
            search_inventory = yn_to_tf[search_inventory],
            search_plain_view = yn_to_tf[search_plain_view],
-           # TODO(danj): check - what is it when not either?
-           # TODO(danj): use hierarchy, default to probable cause
-           # run d %>% group_by(search_conducted,
-           #                    search_probable_cause,
-           #                    search_incident_to_arrest)
-           #       %>% summarize(n = n())
-           # most searches look like they are neither probable or incident
-           search_type = factor(ifelse(search_conducted,
-                                       ifelse(search_probable_cause,
-                                              "probable cause",
-                                              ifelse(search_incident_to_arrest,
-                                                     "custodial",
-                                                     NA)
-                                             ),
-                                             NA
-                                      ), levels = valid_search_types)
+           search_type = factor(c("plain_view",
+                                  "consent",
+                                  "probable cause",
+                                  "incident to arrest")[min(which(c(
+                                  search_plain_view,
+                                  search_consent,
+                                  any(search_driver,
+                                      search_passenger,
+                                      search_probable_cause,
+                                      search_warrant,
+                                      search_inventory),
+                                  search_incident_to_arrest
+                                  )))],
+                                levels = valid_search_types)
           ) %>%
+    replace_na(list(misd_state_citation_issued = FALSE)
+              ) %>%
     select(incident_id,
            incident_type,
            incident_date,
@@ -210,4 +215,5 @@ opp_clean <- function(tbl) {
 
 
 opp_save <- function(tbl) {
+  write_csv(tbl, strc_c(path_prefix, "nashville.csv"))
 }
