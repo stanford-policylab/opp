@@ -1,11 +1,12 @@
 source("lib/schema.R")
 
+
+path_prefix <- "data/states/wa/seattle/"
+
+
 opp_load <- function() {
   tbls <- list()
-  path_prefix <- "data/states/wa/seattle/"
-  # TODO(danj): replace with all years when "finalized"
-  # for (year in 2006:2015) {
-  for (year in 2015:2015) {
+  for (year in 2006:2015) {
     filename <- str_c(path_prefix, "trafs_evs_", year, "_sheet_1.csv")
     tbls[[length(tbls) + 1]] <- read_csv(filename,
       col_names = c(
@@ -115,4 +116,5 @@ opp_clean <- function(tbl) {
 
 
 opp_save <- function(tbl) {
+  write_csv(tbl, str_c(path_prefix, "seattle.csv"))
 }
