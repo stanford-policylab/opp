@@ -140,7 +140,8 @@ opp_clean <- function(tbl) {
     separate(stop_datetime, c("incident_date", "incident_time"),
              sep = " ", extra = "merge"
             ) %>%
-    mutate(incident_type = factor("vehicular", levels = valid_incident_types),
+    mutate(incident_id = as.character(incident_id),
+           incident_type = factor("vehicular", levels = valid_incident_types),
            incident_date = parse_date(incident_date, "%m/%d/%Y"),
            incident_time = parse_time(incident_time, "%I:%M:%S %p"),
            incident_lat = parse_double(incident_lat),
