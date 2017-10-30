@@ -106,21 +106,23 @@ opp_clean <- function(tbl) {
            )
            # arrest_id and contact_card_id have different ranges, so it's ok
     mutate(incident_id = coalesce(arrest_id, contact_card_id),
+           # TODO(danj): use statute_description
+           # does bicycle matter? traffic vs pedestrian vs vehicular
            incident_type = NA,
            incident_time = parse_time(arrest_hour, "%H"),
            incident_location = str_c(coalesce(street_no.x, street_no.y),
                                      coalesce(street_name.x, street_name.y),
                                      coalesce(street_direction.x,
                                               street_direction.y), sep = " "),
+           # TODO(danj): get these
            incident_lat = NA,
            incident_lng = NA,
-           defendant_race
+           defendant_race = coalesce(defendant_race, driver_race),
            statute = coalesce(statute.x, statute.y),
            statute_description = coalesce(statute_description.x,
                                           statute_description.y),
            driver_age = defendant_age,
            driver_gender = coalesce(defendant_gender, driver_gender),
-           driver_race = coalesce(defendant_race, driver_race),
            officer_gender = coalesce(officer_gender.x, officer_gender.y),
            officer_race = coalesce(officer_race.x, officer_race.y),
            officer_position = coalesce(officer_position.x,
