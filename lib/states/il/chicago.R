@@ -108,7 +108,7 @@ opp_clean <- function(tbl) {
     mutate(incident_id = coalesce(arrest_id, contact_card_id),
            # TODO(danj): use statute_description
            # does bicycle matter? traffic vs pedestrian vs vehicular
-           incident_type = NA,
+           incident_type = factor("vehicular", levels = valid_incident_types),
            incident_time = parse_time(arrest_hour, "%H"),
            incident_location = str_c(coalesce(street_no.x, street_no.y),
                                      coalesce(street_name.x, street_name.y),
