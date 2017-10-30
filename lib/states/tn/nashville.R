@@ -6,9 +6,7 @@ path_prefix <- "data/states/tn/nashville/"
 
 opp_load <- function() {
   tbls <- list()
-  # TODO(danj): replace with all years when "finalized"
-  # for (year in 2010:2016) {
-  for (year in 2010:2010) {
+  for (year in 2010:2016) {
     filename <- str_c(path_prefix, "traffic_stop_", year, ".csv")
     tbls[[length(tbls) + 1]] <- read_csv(filename,
       col_names = c(
