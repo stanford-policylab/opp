@@ -102,10 +102,10 @@ valid_incident_types <- c(
 
 valid_search_types <- c(
   "k9",
-  "plain_view",
+  "plain view",
   "consent",
   "probable cause",
-  "custodial"
+  "incident to arrest"
 )
 
 valid_search_probable_cause_types <- c(
