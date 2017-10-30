@@ -87,11 +87,12 @@ opp_clean <- function(tbl) {
            defendant_race = factor(tr_race[defendant_race],
                                    levels = valid_races),
            search_conducted = NA,
-           search_type = NA,
+           search_type = factor(NA, levels = valid_search_types),
            contraband_found = NA,
            arrest_made = str_sub(incident_type, 1, 1) == "A",
            # NOTE: includes criminal and non-criminal citations
-           citation_issued = !is.na(str_match(incident_type, "CITATION")),
+           citation_issued = as.vector(!is.na(str_match(incident_type,
+                                                        "CITATION"))),
            defendant_dob = ymd(defendant_dob),
            officer_id_1 = parse_number(officer_id_1),
            officer_id_2 = parse_number(officer_id_2)
