@@ -179,7 +179,7 @@ opp_clean <- function(tbl) {
            search_warrant = yn_to_tf[search_warrant],
            search_inventory = yn_to_tf[search_inventory],
            search_plain_view = yn_to_tf[search_plain_view],
-           search_type = factor(c("plain_view",
+           search_type = factor(c("plain view",
                                   "consent",
                                   "probable cause",
                                   "incident to arrest")[min(which(c(
@@ -216,5 +216,5 @@ opp_clean <- function(tbl) {
 
 
 opp_save <- function(tbl) {
-  write_csv(tbl, strc_c(path_prefix, "nashville.csv"))
+  write_csv(tbl, str_c(path_prefix, "nashville.csv"))
 }
