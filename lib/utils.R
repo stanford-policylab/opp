@@ -1,7 +1,7 @@
-library("tidyverse")
-library("lubridate")
-library("getopt")
-library("stringr")
+library(tidyverse)
+library(lubridate)
+library(getopt)
+library(stringr)
 
 source("lib/contract.R")
 
@@ -81,4 +81,19 @@ get_null_rates <- function(tbl) {
   nulls_vec <- named_vector_from_list_firsts(nulls_tbl)
   nulls_pcts <- paste0(formatC(100 * nulls_vec, format = "f", digits = 2), "%")
   tibble(features = names(nulls_vec), null_pct = nulls_pcts) %>% print(n = Inf)
+}
+
+
+add_lat_lng <- function(tbl, join_col, path_prefix) {
+  geocoded_locations <- read_csv(str_c(path_prefix,
+                                       "/geocodes/",
+                                       "geocoded_locations.csv"))
+  join_on <- c("loc")
+  names(join_on) <- c(join_col)
+  tbl %>% left_join(geocoded_locations, by = join_on)
+}
+
+
+save_clean_csv <- function(tbl, path_prefix, city) {
+  write_csv(tbl, str_c(path_prefix, "/clean/", city, ".csv"))
 }

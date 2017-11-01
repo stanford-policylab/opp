@@ -1,4 +1,5 @@
 source("lib/schema.R")
+source("lib/utils.R")
 
 
 path_prefix <- "data/states/tn/nashville/"
@@ -99,11 +100,7 @@ opp_load <- function() {
       skip = 1
     )
   }
-  geocoded_locations <- read_csv(str_c(path_prefix,
-                                       "/geocodes/",
-                                       "geocoded_locations.csv"))
-  bind_rows(tbls) %>% left_join(geocoded_locations,
-                                by = c("stop_location" = "loc"))
+  add_lat_lng(bind_rows(tbls), "stop_location", path_prefix)
 }
 
 
@@ -217,5 +214,5 @@ opp_clean <- function(tbl) {
 
 
 opp_save <- function(tbl) {
-  write_csv(tbl, str_c(path_prefix, "/clean/", "nashville.csv"))
+  save_clean_csv(tbl, path_prefix, "nashville")
 }

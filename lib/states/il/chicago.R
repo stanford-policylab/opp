@@ -1,7 +1,13 @@
 source("lib/schema.R")
+source("lib/utils.R")
+
+
+path_prefix <- "data/states/il/chicago/"
+
 
 opp_load <- function() {
-  arrests <- read_csv("data/states/il/chicago/arrests.csv",
+  raw_csv_path_prefix = str_c(path_prefix, "/raw_csv/")
+  arrests <- read_csv(str_c(raw_csv_path_prefix, "arrests.csv"),
     col_names = c(
       "arrest_id",
       "arrest_date",
@@ -51,7 +57,7 @@ opp_load <- function() {
     skip = 1
   )
 
-  citations <- read_csv("data/states/il/chicago/citations.csv",
+  citations <- read_csv(str_c(raw_csv_path_prefix, "citations.csv"),
     col_names = c(
       "contact_card_id",
       "contact_date",
@@ -93,11 +99,13 @@ opp_load <- function() {
     skip = 1
   )
 
-  full_join(arrests, citations,
-            by = c("arrest_date" = "contact_date",
-                   "arrest_hour" = "time_of_day",
-                   "officer_first_name" = "officer_first_name",
-                   "officer_last_name" = "officer_last_name"))
+  joined <- full_join(arrests, citations,
+                      by = c("arrest_date" = "contact_date",
+                             "arrest_hour" = "time_of_day",
+                             "officer_first_name" = "officer_first_name",
+                             "officer_last_name" = "officer_last_name"))
+
+  add_lat_lng(joined, "address", path_prefix)
 }
 
 opp_clean <- function(tbl) {
@@ -155,4 +163,5 @@ opp_clean <- function(tbl) {
 }
 
 opp_save <- function(tbl) {
+  save_clean_csv(tbl, path_prefix, "chicago")
 }

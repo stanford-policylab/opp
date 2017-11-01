@@ -35,13 +35,14 @@ def get_key(args):
 
 
 def extract_locations(csv_files,
-                      location_column_name,
+                      location_column_names,
                       output_file_csv,
                       errors_file_csv):
     locs = set()
-    for csv_file in args.csv_files:
+    for csv_file in csv_files:
         df = pd.read_csv(csv_file)
-        locs.update(df[args.location_column_name].str.strip().unique())
+        df = add_loc_col(df, location_column_names)
+        locs.update(df['loc'].unique())
     existing_locs = set()
     if os.path.exists(output_file_csv):
         existing_locs.update(pd.read_csv(output_file_csv)['loc'].unique())
@@ -51,6 +52,14 @@ def extract_locations(csv_files,
             for line in f:
                 errors.update(line.strip())
     return locs - existing_locs - errors
+
+
+def add_loc_col(df, location_column_names):
+    # NOTE: assumes space separators
+    df['loc'] = df[location_column_names[0]].astype('str').str.strip()
+    for loc_col in location_column_names[1:]:
+        df['loc'] += ' ' + df[loc_col].astype('str').str.strip()
+    return df
 
 
 def path_of_this_file():
@@ -64,7 +73,9 @@ def path_relative_to_this_file(file_path):
 def parse_args(argv):
     parser = argparse.ArgumentParser(prog=argv[0])
     parser.add_argument('csv_files', nargs='+')
-    parser.add_argument('location_column_name')
+    parser.add_argument('location_column_names', nargs='+',
+                        help='if multiple, list in order to compose'
+                             ' an address')
     parser.add_argument('-o', '--output_file_csv',
                         default='geocoded_locations.csv',
                         help='if the file already exists, the addresses'
@@ -91,7 +102,7 @@ if __name__ == '__main__':
     args = parse_args(sys.argv)
     gm = GM(get_key(args))
     locs = extract_locations(args.csv_files,
-                             args.location_column_name,
+                             args.location_column_names,
                              args.output_file_csv,
                              args.errors_file_csv)
     print('Getting addresses for %d locations...' % len(locs))
