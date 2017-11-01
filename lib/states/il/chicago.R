@@ -103,9 +103,14 @@ opp_load <- function() {
                       by = c("arrest_date" = "contact_date",
                              "arrest_hour" = "time_of_day",
                              "officer_first_name" = "officer_first_name",
-                             "officer_last_name" = "officer_last_name"))
+                             "officer_last_name" = "officer_last_name")
+                     ) %>%
+              mutate(incident_location = str_trim(str_c(street_no,
+                                                        street_name,
+                                                        street_direction,
+                                                        sep = " ")))
 
-  add_lat_lng(joined, "address", path_prefix)
+  add_lat_lng(joined, "incident_location", path_prefix)
 }
 
 opp_clean <- function(tbl) {

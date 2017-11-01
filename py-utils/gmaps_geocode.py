@@ -56,10 +56,15 @@ def extract_locations(csv_files,
 
 def add_loc_col(df, location_column_names):
     # NOTE: assumes space separators
-    df['loc'] = df[location_column_names[0]].astype('str').str.strip()
+    df['loc'] = col_as_str(df, location_column_names[0])
     for loc_col in location_column_names[1:]:
-        df['loc'] += ' ' + df[loc_col].astype('str').str.strip()
+        df['loc'] += ' ' + col_as_str(df, loc_col)
+    df['loc'] = df['loc'].str.strip()
     return df
+
+
+def col_as_str(df, col):
+    return df[col].fillna('').astype('str').str.strip()
 
 
 def path_of_this_file():
@@ -72,8 +77,8 @@ def path_relative_to_this_file(file_path):
 
 def parse_args(argv):
     parser = argparse.ArgumentParser(prog=argv[0])
-    parser.add_argument('csv_files', nargs='+')
-    parser.add_argument('location_column_names', nargs='+',
+    parser.add_argument('-f', '--csv_files', nargs='+')
+    parser.add_argument('-l', '--location_column_names', nargs='+',
                         help='if multiple, list in order to compose'
                              ' an address')
     parser.add_argument('-o', '--output_file_csv',
