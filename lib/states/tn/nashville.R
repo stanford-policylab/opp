@@ -6,8 +6,9 @@ path_prefix <- "data/states/tn/nashville/"
 
 opp_load <- function() {
   tbls <- list()
+  raw_csv_path_prefix = str_c(path_prefix, "/raw_csv/")
   for (year in 2010:2016) {
-    filename <- str_c(path_prefix, "traffic_stop_", year, ".csv")
+    filename <- str_c(raw_csv_path_prefix, "traffic_stop_", year, ".csv")
     tbls[[length(tbls) + 1]] <- read_csv(filename,
       col_names = c(
         "stop_number",
@@ -98,7 +99,9 @@ opp_load <- function() {
       skip = 1
     )
   }
-  geocoded_locations <- read_csv(str_c(path_prefix, "geocoded_locations.csv"))
+  geocoded_locations <- read_csv(str_c(path_prefix,
+                                       "/geocodes/",
+                                       "geocoded_locations.csv"))
   bind_rows(tbls) %>% left_join(geocoded_locations,
                                 by = c("stop_location" = "loc"))
 }
@@ -214,5 +217,5 @@ opp_clean <- function(tbl) {
 
 
 opp_save <- function(tbl) {
-  write_csv(tbl, str_c(path_prefix, "nashville.csv"))
+  write_csv(tbl, str_c(path_prefix, "/clean/", "nashville.csv"))
 }

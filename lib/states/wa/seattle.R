@@ -6,8 +6,9 @@ path_prefix <- "data/states/wa/seattle/"
 
 opp_load <- function() {
   tbls <- list()
+  raw_csv_path_prefix = str_c(path_prefix, "/raw_csv/")
   for (year in 2006:2015) {
-    filename <- str_c(path_prefix, "trafs_evs_", year, "_sheet_1.csv")
+    filename <- str_c(raw_csv_path_prefix, "trafs_evs_", year, "_sheet_1.csv")
     tbls[[length(tbls) + 1]] <- read_csv(filename,
       col_names = c(
         "rin",
@@ -42,7 +43,9 @@ opp_load <- function() {
       skip = 1
     )
   }
-  geocoded_locations <- read_csv(str_c(path_prefix, "geocoded_locations.csv"))
+  geocoded_locations <- read_csv(str_c(path_prefix,
+                                       "/geocodes/",
+                                       "geocoded_locations.csv"))
   bind_rows(tbls) %>% left_join(geocoded_locations,
                                 by = c("address" = "loc"))
 }
@@ -117,5 +120,5 @@ opp_clean <- function(tbl) {
 
 
 opp_save <- function(tbl) {
-  write_csv(tbl, str_c(path_prefix, "seattle.csv"))
+  write_csv(tbl, str_c(path_prefix, "/clean/", "seattle.csv"))
 }

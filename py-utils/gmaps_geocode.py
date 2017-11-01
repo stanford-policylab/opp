@@ -41,7 +41,7 @@ def extract_locations(csv_files,
     locs = set()
     for csv_file in args.csv_files:
         df = pd.read_csv(csv_file)
-        locs.update(df[args.location_column_name].unique())
+        locs.update(df[args.location_column_name].str.strip().unique())
     existing_locs = set()
     if os.path.exists(output_file_csv):
         existing_locs.update(pd.read_csv(output_file_csv)['loc'].unique())
