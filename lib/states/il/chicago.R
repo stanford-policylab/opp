@@ -125,11 +125,12 @@ opp_clean <- function(tbl) {
               "BLACK" = "black",
               "HISPANIC" = "hispanic",
               "UNKNOWN" = "other/unknown",
-              "WHITE" = "white",
-              "<NA>" = "other/unknown"
+              "WHITE" = "white"
              )
   tr_sex = c("F" = "female", "M" = "male")
 
+  # TODO(danj): write tibble coalescer
+  # TODO(danj) write column combiner 
   tbl %>% # arrest_id and contact_card_id have different ranges, so it's ok
     mutate(incident_id = coalesce(arrest_id, contact_card_id),
            incident_type = factor("vehicular", levels = valid_incident_types),
@@ -157,13 +158,16 @@ opp_clean <- function(tbl) {
            search_type = NA,
            contraband_found = NA,
            arrest_made = !is.na(arrest_id),
-           citation_issued = !is.na(citation)
+           # TODO(danj): 0, 1, and NA
+           citation_issued = citation == 1
           ) %>%
     rename(incident_date = arrest_date,
            incident_lat = lat,
            incident_lng = lng,
            reason_for_stop = statute_description
           ) %>%
+    replace_na(list(defendant_race = "unknown/other")
+              ) %>%
     select(incident_id,
            incident_type,
            incident_date,
@@ -178,7 +182,23 @@ opp_clean <- function(tbl) {
            contraband_found,
            arrest_made,
            citation_issued,
-           everything()
+           citation,
+           street_no,
+           street_name,
+           street_direction,
+           statute,
+           defendant_age,
+           defendant_sex,
+           officer_employee_no,
+           officer_first_name,
+           officer_middle_initial,
+           officer_last_name,
+           officer_age,
+           officer_sex,
+           officer_race,
+           officer_role,
+           officer_position,
+           officer_years_of_service
            )
 }
 
