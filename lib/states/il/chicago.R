@@ -105,101 +105,110 @@ opp_load <- function() {
                         "arrest_hour" = "time_of_day",
                         "officer_first_name" = "officer_first_name",
                         "officer_last_name" = "officer_last_name")
-                ) %>%
-        # NOTE: normally mutates are reserved for cleaning, but
-        # here it's required to join to geolocation data
-        mutate(incident_location = str_trim(str_c(coalesce(street_no.x,
-                                                           street_no.y),
-                                                  coalesce(street_name.x,
-                                                           street_name.y),
-                                                  coalesce(street_direction.x,
-                                                           street_direction.y),
-                                                  sep = " ")))
+       ) %>%
+       # NOTE: normally mutates are reserved for cleaning, but
+       # here it's required to join to geolocation data
+       mutate(incident_location = str_trim(str_c(coalesce(street_no.x,
+                                                          street_no.y),
+                                                 coalesce(street_name.x,
+                                                          street_name.y),
+                                                 coalesce(street_direction.x,
+                                                          street_direction.y),
+                                                 sep = " ")))
 
   add_lat_lng(j, "incident_location", path_prefix)
 }
 
 opp_clean <- function(tbl) {
-  tr_race = c("AMER IND/ALASKAN NATIVE" = "other/unknown",
-              "ASIAN/PACIFIC ISLANDER" = "asian/pacific islander",
-              "BLACK" = "black",
-              "HISPANIC" = "hispanic",
-              "UNKNOWN" = "other/unknown",
-              "WHITE" = "white"
-             )
-  tr_sex = c("F" = "female", "M" = "male")
+  tr_race = c(
+    "AMER IND/ALASKAN NATIVE" = "other/unknown",
+    "ASIAN/PACIFIC ISLANDER" = "asian/pacific islander",
+    "BLACK" = "black",
+    "HISPANIC" = "hispanic",
+    "UNKNOWN" = "other/unknown",
+    "WHITE" = "white"
+  )
+  tr_sex = c(
+    F = "female",
+    M = "male"
+  )
 
   # TODO(danj): write tibble coalescer
   # TODO(danj) write column combiner 
-  tbl %>% # arrest_id and contact_card_id have different ranges, so it's ok
-    mutate(incident_id = coalesce(arrest_id, contact_card_id),
-           incident_type = factor("vehicular", levels = valid_incident_types),
-           incident_time = parse_time(arrest_hour, "%H"),
-           street_no = coalesce(street_no.x, street_no.y),
-           street_name = coalesce(street_name.x, street_name.y),
-           street_direction = coalesce(street_direction.x, street_direction.y),
-           defendant_race = factor(tr_race[coalesce(defendant_race,
-                                                    driver_race)],
-                                   levels = valid_races),
-           statute = coalesce(statute.x, statute.y),
-           statute_description = coalesce(statute_description.x,
-                                          statute_description.y),
-           defendant_sex = factor(tr_sex[coalesce(defendant_gender,
-                                                  driver_gender)],
-                                  levels = valid_sexes),
-           officer_sex = factor(coalesce(officer_gender.x, officer_gender.y),
-                                levels = valid_sexes),
-           officer_race = coalesce(officer_race.x, officer_race.y),
-           officer_position = coalesce(officer_position.x,
-                                       officer_position.y),
-           officer_years_of_service = coalesce(officer_years_of_service.x,
-                                               officer_years_of_service.y),
-           search_conducted = NA,
-           search_type = NA,
-           contraband_found = NA,
-           arrest_made = !is.na(arrest_id),
-           # TODO(danj): 0, 1, and NA
-           citation_issued = citation == 1
-          ) %>%
-    rename(incident_date = arrest_date,
-           incident_lat = lat,
-           incident_lng = lng,
-           reason_for_stop = statute_description
-          ) %>%
-    replace_na(list(defendant_race = "unknown/other")
-              ) %>%
-    select(incident_id,
-           incident_type,
-           incident_date,
-           incident_time,
-           incident_location,
-           incident_lat,
-           incident_lng,
-           defendant_race,
-           reason_for_stop,
-           search_conducted,
-           search_type,
-           contraband_found,
-           arrest_made,
-           citation_issued,
-           citation,
-           street_no,
-           street_name,
-           street_direction,
-           statute,
-           defendant_age,
-           defendant_sex,
-           officer_employee_no,
-           officer_first_name,
-           officer_middle_initial,
-           officer_last_name,
-           officer_age,
-           officer_sex,
-           officer_race,
-           officer_role,
-           officer_position,
-           officer_years_of_service
-           )
+  tbl %>%
+    mutate(
+      incident_id = as.character(coalesce(arrest_id, contact_card_id)),
+      # arrest_id and contact_card_id have different ranges, so it's ok
+      incident_type = factor("vehicular", levels = valid_incident_types),
+      incident_time = parse_time(arrest_hour, "%H"),
+      street_no = coalesce(street_no.x, street_no.y),
+      street_name = coalesce(street_name.x, street_name.y),
+      street_direction = coalesce(street_direction.x, street_direction.y),
+      defendant_race = factor(tr_race[coalesce(defendant_race,
+                                               driver_race)],
+                              levels = valid_races),
+      statute = coalesce(statute.x, statute.y),
+      statute_description = coalesce(statute_description.x,
+                                     statute_description.y),
+      defendant_sex = factor(tr_sex[coalesce(defendant_gender,
+                                             driver_gender)],
+                             levels = valid_sexes),
+      officer_sex = factor(coalesce(officer_gender.x, officer_gender.y),
+                           levels = valid_sexes),
+      officer_race = coalesce(officer_race.x, officer_race.y),
+      officer_position = coalesce(officer_position.x,
+                                  officer_position.y),
+      officer_years_of_service = coalesce(officer_years_of_service.x,
+                                          officer_years_of_service.y),
+      search_conducted = NA,
+      search_type = factor(NA, levels = valid_search_types),
+      contraband_found = NA,
+      arrest_made = !is.na(arrest_id),
+      # TODO(danj): 0, 1, and NA
+      citation_issued = citation == 1
+    ) %>%
+    rename(
+      incident_date = arrest_date,
+      incident_lat = lat,
+      incident_lng = lng,
+      reason_for_stop = statute_description
+    ) %>%
+    replace_na(
+      list(defendant_race = "unknown/other")
+    ) %>%
+    select(
+      incident_id,
+      incident_type,
+      incident_date,
+      incident_time,
+      incident_location,
+      incident_lat,
+      incident_lng,
+      defendant_race,
+      reason_for_stop,
+      search_conducted,
+      search_type,
+      contraband_found,
+      arrest_made,
+      citation_issued,
+      citation,
+      street_no,
+      street_name,
+      street_direction,
+      statute,
+      defendant_age,
+      defendant_sex,
+      officer_employee_no,
+      officer_first_name,
+      officer_middle_initial,
+      officer_last_name,
+      officer_age,
+      officer_sex,
+      officer_race,
+      officer_role,
+      officer_position,
+      officer_years_of_service
+    )
 }
 
 opp_save <- function(tbl) {

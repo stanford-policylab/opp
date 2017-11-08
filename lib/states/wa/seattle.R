@@ -48,70 +48,84 @@ opp_load <- function() {
 
 
 opp_clean <- function(tbl) {
-  tr_race <- c(A = "asian/pacific islander",
-               B = "black",
-               H = "hispanic",
-               W = "white")
+  tr_race <- c(
+    A = "asian/pacific islander",
+    B = "black",
+    H = "hispanic",
+    W = "white"
+  )
+
   tbl %>%
-    select(-empty) %>%
-    rename(incident_id = rin,
-           incident_location = address,
-           incident_lat = lat,
-           incident_lng = lng,
-           # TODO(journalist): clarify relationship between
-           # mir_and_description, disposition_description, type
-           # https://app.asana.com/0/456927885748233/462732257741348 
-           reason_for_stop = mir_and_description,
-           defendant_dob = subject_dob
-          ) %>%
-    filter(!is.na(incident_id)) %>%
-    separate(datetime, c("incident_date", "incident_time"),
-             sep = " ", extra = "merge"
-            ) %>%
-    separate(possible_race_and_sex, c("defendant_race", "defendant_sex"),
-             sep = 1, extra = "merge"
-            ) %>%
-    separate(officer_no_name_1, c("officer_id_1", "officer_name_1"),
-             sep = " ", extra = "merge"
-            ) %>%
-    separate(officer_no_name_2, c("officer_id_2", "officer_name_2"),
-             sep = " ", extra = "merge"
-            ) %>%
-           # NOTE: vehicular because mir_and_description are all traffic
-    mutate(incident_type = factor("vehicular", levels = valid_incident_types),
-           incident_date = parse_date(incident_date, "%Y/%m/%d"),
-           incident_time = parse_time(incident_time, "%H:%M:%S"),
-           incident_lat = parse_number(incident_lat),
-           incident_lng = parse_number(incident_lng),
-           defendant_race = factor(tr_race[defendant_race],
-                                   levels = valid_races),
-           search_conducted = NA,
-           search_type = factor(NA, levels = valid_search_types),
-           contraband_found = NA,
-           arrest_made = str_sub(incident_type, 1, 1) == "A",
-           # NOTE: includes criminal and non-criminal citations
-           citation_issued = as.vector(!is.na(str_match(incident_type,
-                                                        "CITATION"))),
-           defendant_dob = ymd(defendant_dob),
-           officer_id_1 = parse_number(officer_id_1),
-           officer_id_2 = parse_number(officer_id_2)
-          ) %>%
-    select(incident_id,
-           incident_type,
-           incident_date,
-           incident_time,
-           incident_location,
-           incident_lat,
-           incident_lng,
-           defendant_race,
-           reason_for_stop,
-           search_conducted,
-           search_type,
-           contraband_found,
-           arrest_made,
-           citation_issued,
-           everything()
-          )
+    select(
+      -empty
+    ) %>%
+    rename(
+      incident_id = rin,
+      incident_location = address,
+      incident_lat = lat,
+      incident_lng = lng,
+      # TODO(journalist): clarify relationship between
+      # mir_and_description, disposition_description, type
+      # https://app.asana.com/0/456927885748233/462732257741348 
+      reason_for_stop = mir_and_description,
+      defendant_dob = subject_dob
+    ) %>%
+    filter(
+      !is.na(incident_id)
+    ) %>%
+    separate(
+      datetime, c("incident_date", "incident_time"),
+      sep = " ", extra = "merge"
+    ) %>%
+    separate(
+      possible_race_and_sex, c("defendant_race", "defendant_sex"),
+      sep = 1, extra = "merge"
+    ) %>%
+    separate(
+      officer_no_name_1, c("officer_id_1", "officer_name_1"),
+      sep = " ", extra = "merge"
+    ) %>%
+    separate(
+      officer_no_name_2, c("officer_id_2", "officer_name_2"),
+      sep = " ", extra = "merge"
+    ) %>%
+    mutate(
+      incident_type = factor("vehicular", levels = valid_incident_types),
+      # NOTE: vehicular because mir_and_description are all traffic
+      incident_date = parse_date(incident_date, "%Y/%m/%d"),
+      incident_time = parse_time(incident_time, "%H:%M:%S"),
+      incident_lat = parse_number(incident_lat),
+      incident_lng = parse_number(incident_lng),
+      defendant_race = factor(tr_race[defendant_race],
+                              levels = valid_races),
+      search_conducted = NA,
+      search_type = factor(NA, levels = valid_search_types),
+      contraband_found = NA,
+      arrest_made = str_sub(incident_type, 1, 1) == "A",
+      # NOTE: includes criminal and non-criminal citations
+      citation_issued = as.vector(!is.na(str_match(incident_type,
+                                                   "CITATION"))),
+      defendant_dob = ymd(defendant_dob),
+      officer_id_1 = parse_number(officer_id_1),
+      officer_id_2 = parse_number(officer_id_2)
+    ) %>%
+    select(
+      incident_id,
+      incident_type,
+      incident_date,
+      incident_time,
+      incident_location,
+      incident_lat,
+      incident_lng,
+      defendant_race,
+      reason_for_stop,
+      search_conducted,
+      search_type,
+      contraband_found,
+      arrest_made,
+      citation_issued,
+      everything()
+    )
 }
 
 
