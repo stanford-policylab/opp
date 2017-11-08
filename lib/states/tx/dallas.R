@@ -22,13 +22,13 @@ opp_load <- function() {
   ) %>%
   left_join(warnings, by = c("HA_ARREST_KEY" = "AW_ARREST_KEY")
   ) %>%
-  left_join(weather, by = c("HA_WEATHER", = "LK_Code")
+  left_join(weather, by = c("HA_WEATHER" = "LK_Code")
   )
 }
 
 
 opp_clean <- function(tbl) {
-  date_fmt = "%m/%d/%y %I:%M:%S"
+  date_fmt = "%m/%d/%y %H:%M:%S"
   tr_race <- c(
     A = "asian/pacific islander",
     B = "black",
@@ -100,7 +100,7 @@ opp_clean <- function(tbl) {
       # TODO(danj): what is this?
       defendant_p_hm = HA_P_HM_DRVR,
       judge_p = HA_P_JUDGE,
-      posted_speed = HA_POSTED SPEED,
+      posted_speed = HA_POSTED_SPEED,
       precinct = HA_PRECINCT,
       # TODO(danj): what is this?
       defendant_p_wk = HA_P_WK_DRVR,
@@ -133,7 +133,8 @@ opp_clean <- function(tbl) {
       vehicle_model = HA_VEH_MODEL,
       search_vehicle = HA_VEH_SEARCH,
       vehicle_year = HA_VEH_YEAR,
-      weather = HA_WEATHER,
+      weather_code = HA_WEATHER,
+      weather_description = LK_Description,
       workers_present = HA_WORKERS_PRESENT,
       year = HA_YEAR
     ) %>%
@@ -166,6 +167,7 @@ opp_clean <- function(tbl) {
       citation_issued = as.logical(citation_issued),
       warning_issued = as.logical(warning_issued),
       search_consent = as.logical(search_consent),
+      search_probable_cause = as.logical(search_probable_cause),
       search_conducted = as.logical(search_conducted),
       race_known_prior_to_stop = as.logical(race_known_prior_to_stop),
       search_vehicle = as.logical(search_vehicle),
@@ -187,9 +189,12 @@ opp_clean <- function(tbl) {
         ],
         levels = valid_search_types
       ),
-      contraband_found,
       # TODO(danj): logic check
-      arrest_made = !citation_issued && !warning_issued,
+      arrest_made = !citation_issued && !warning_issued
+    ) %>%
+    select(
+      # NOTE: drop unused foreign keys
+      -c(LK_Lookup_Key, FA_Code)
     ) %>%
     select(
       incident_id,
