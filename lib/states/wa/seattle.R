@@ -4,7 +4,7 @@ source("lib/schema.R")
 path_prefix <- "data/states/wa/seattle/"
 
 
-opp_load <- function() {
+opp_load_raw <- function() {
   tbls <- list()
   raw_csv_path_prefix = str_c(path_prefix, "/raw_csv/")
   for (year in 2006:2015) {
@@ -131,4 +131,9 @@ opp_clean <- function(tbl) {
 
 opp_save <- function(tbl) {
   save_clean_csv(tbl, path_prefix, "seattle")
+}
+
+
+opp_load <- function() {
+  load_clean_csv(path_prefix, "seattle")
 }

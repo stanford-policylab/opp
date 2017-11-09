@@ -97,3 +97,8 @@ add_lat_lng <- function(tbl, join_col, path_prefix) {
 save_clean_csv <- function(tbl, path_prefix, city) {
   write_csv(tbl, str_c(path_prefix, "/clean/", city, ".csv"))
 }
+
+
+load_clean_csv <- function(path_prefix, city) {
+  read_csv(str_c(path_prefix, "/clean/", city, ".csv"))
+}

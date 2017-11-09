@@ -5,7 +5,7 @@ source("lib/utils.R")
 path_prefix <- "data/states/il/chicago/"
 
 
-opp_load <- function() {
+opp_load_raw <- function() {
   raw_csv_path_prefix = str_c(path_prefix, "/raw_csv/")
   arrests <- read_csv(str_c(raw_csv_path_prefix, "arrests.csv"),
     col_names = c(
@@ -213,4 +213,9 @@ opp_clean <- function(tbl) {
 
 opp_save <- function(tbl) {
   save_clean_csv(tbl, path_prefix, "chicago")
+}
+
+
+opp_load <- function() {
+  load_clean_csv(path_prefix, "chicago")
 }
