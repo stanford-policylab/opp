@@ -195,9 +195,9 @@ opp_clean <- function(tbl) {
             "consent",
             ifelse(
               search_driver
-              || search_passenger,
+              || search_passenger
               || search_probable_cause
-              || search_warrant,
+              || search_warrant
               || search_incident_to_arrest,
               "probable cause",
               ifelse(

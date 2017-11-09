@@ -57,7 +57,7 @@ opp_clean <- function(tbl) {
       defendant_city = HA_A_CITY_DRVR,
       jge_city = HA_A_CITY_JGE,
       alleged_speed = HA_ALLEGED_SPEED,
-      arrest_date = HA_ARREST_DATE,
+      arrest_datetime = HA_ARREST_DATE,
       incident_id = HA_ARREST_KEY,
       defendant_state = HA_A_STATE_DRVR,
       jge_state = HA_A_STATE_JGE,
@@ -142,9 +142,14 @@ opp_clean <- function(tbl) {
       race_sex, c("defendant_race", "defendant_sex"),
       sep = 1, extra = "merge"
     ) %>%
+    separate(
+      arrest_datetime, c("incident_date", "incident_time"),
+      sep = " ", extra = "merge"
+    ) %>%
     mutate(
+      incident_date = parse_date(incident_date, "%m/%d/%y"),
+      incident_time = parse_time(incident_time, "%H:%M:%S"),
       is_accident = as.logical(is_accident),
-      arrest_date = parse_date(arrest_date, date_fmt),
       defendant_state = factor(defendant_state, levels = valid_states),
       jge_state = factor(jge_state, levels = valid_states),
       is_commercial_vehicle = as.logical(is_commercial_vehicle),
@@ -173,10 +178,8 @@ opp_clean <- function(tbl) {
       search_vehicle = as.logical(search_vehicle),
       workers_present = as.logical(workers_present),
       incident_type = factor("vehicular", levels = valid_incident_types),
-      incident_date = date(arrest_date),
-      incident_time = format(arrest_date, "%H:%M:%S"),
       # TODO(danj): what could we use here?
-      reason_for_stop = NA,
+      reason_for_stop = as.character(NA),
       search_type = factor(
         ifelse(
           search_consent,
