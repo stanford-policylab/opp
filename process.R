@@ -38,7 +38,7 @@ get_args <- function() {
 process <- function(state, city) {
   source_opp_funcs_for(state, city)
   print("loading data...")
-  raw_data <- opp_load()
+  raw_data <- opp_load_raw()
   print("cleaning data...")
   clean_data <- opp_clean(raw_data)
   print("verifying schema...")

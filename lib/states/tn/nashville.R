@@ -5,7 +5,7 @@ source("lib/utils.R")
 path_prefix <- "data/states/tn/nashville/"
 
 
-opp_load <- function() {
+opp_load_raw <- function() {
   tbls <- list()
   raw_csv_path_prefix = str_c(path_prefix, "/raw_csv/")
   for (year in 2010:2016) {
@@ -187,21 +187,27 @@ opp_clean <- function(tbl) {
       search_inventory = yn_to_tf[search_inventory],
       search_plain_view = yn_to_tf[search_plain_view],
       search_type = factor(
-        c("plain view",
-          "consent",
-          "probable cause",
-          "incident to arrest"
-        )[min(which(
-            c(search_plain_view,
-              search_consent,
-              any(search_driver,
-                  search_passenger,
-                  search_probable_cause,
-                  search_warrant,
-                  search_inventory),
-              search_incident_to_arrest
-              )))
-        ],
+        ifelse(
+          search_plain_view,
+          "plain view",
+          ifelse(
+            search_consent,
+            "consent",
+            ifelse(
+              search_driver
+              || search_passenger,
+              || search_probable_cause
+              || search_warrant,
+              || search_incident_to_arrest,
+              "probable cause",
+              ifelse(
+                search_incident_to_arrest,
+                "incident to arrest",
+                NA
+              )
+            )
+          )
+        ),
         levels = valid_search_types)
     ) %>%
     replace_na(
@@ -229,4 +235,9 @@ opp_clean <- function(tbl) {
 
 opp_save <- function(tbl) {
   save_clean_csv(tbl, path_prefix, "nashville")
+}
+
+
+opp_load <- function() {
+  load_clean_csv(path_prefix, "nashville")
 }

@@ -5,7 +5,7 @@ source("lib/utils.R")
 path_prefix <- "data/states/tx/dallas/"
 
 
-opp_load <- function() {
+opp_load_raw <- function() {
   tbls <- list()
   raw_csv_path_prefix = str_c(path_prefix, "/raw_csv/")
   # TODO(danj): do we want commercial vehicle inspections (CVE)?
@@ -178,15 +178,19 @@ opp_clean <- function(tbl) {
       # TODO(danj): what could we use here?
       reason_for_stop = NA,
       search_type = factor(
-        c("consent",
-          "probable cause",
-          "incident to arrest"
-        )[min(which(c(
+        ifelse(
           search_consent,
-          search_probable_cause,
-          search_incident_to_arrest
-          )))
-        ],
+          "consent",
+          ifelse(
+            search_probable_cause,
+            "probable cause",
+            ifelse(
+              search_incident_to_arrest,
+              "incident to arrest",
+              NA
+            )
+          ) 
+        ),
         levels = valid_search_types
       ),
       # TODO(danj): logic check
@@ -218,4 +222,9 @@ opp_clean <- function(tbl) {
 
 opp_save <- function(tbl) {
   save_clean_csv(tbl, path_prefix, "dallas")
+}
+
+
+opp_load <- function() {
+  load_clean_csv(path_prefix, "dallas")
 }
