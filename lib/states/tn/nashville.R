@@ -137,6 +137,7 @@ opp_clean <- function(tbl) {
       defendant_age = age_of_suspect,
       officer_id = officer_employee_number,
       vehicle_registration_state = vehicle_tag_state,
+      search_vehicle = vehicle_searched,
       frisk_performed = pat_down_search,
       search_driver = driver_searched,
       search_passenger = passenger_searched,
@@ -176,7 +177,7 @@ opp_clean <- function(tbl) {
       # NOTE: invalid states converted to NAs
       vehicle_registration_state = factor(vehicle_registration_state,
                                           levels = valid_states),
-      vehicle_searched = yn_to_tf[vehicle_searched],
+      search_vehicle = yn_to_tf[search_vehicle],
       frisk_performed = yn_to_tf[frisk_performed],
       search_driver = yn_to_tf[search_driver],
       search_passenger = yn_to_tf[search_passenger],
@@ -196,9 +197,10 @@ opp_clean <- function(tbl) {
             ifelse(
               search_driver
               || search_passenger
+              || search_vehicle
+              || search_inventory
               || search_probable_cause
-              || search_warrant
-              || search_incident_to_arrest,
+              || search_warrant,
               "probable cause",
               ifelse(
                 search_incident_to_arrest,
