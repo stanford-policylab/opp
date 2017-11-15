@@ -3,6 +3,8 @@ library(lubridate)
 library(getopt)
 library(stringr)
 
+source("lib/schema.R")
+
 
 parse_args <- function(tbl) {
   argument_types <- c("none", "required", "optional")
@@ -70,6 +72,77 @@ get_null_rates <- function(tbl) {
   nulls_vec <- named_vector_from_list_firsts(nulls_tbl)
   nulls_pcts <- paste0(formatC(100 * nulls_vec, format = "f", digits = 2), "%")
   tibble(features = names(nulls_vec), null_pct = nulls_pcts) %>% print(n = Inf)
+}
+
+
+verify_schema <- function(tbl) {
+  quit_if_not_tibble(tbl)
+  quit_if_not_required_schema(tbl)
+  quit_if_not_valid_factors(tbl)
+}
+
+
+quit_if_not_tibble <- function(tbl) {
+  if (class(tbl)[1] != "tbl_df") {
+    print("Invalid tibble in verify_schema!")
+    q(status = 1)
+  }
+}
+
+
+quit_if_not_required_schema <- function(tbl) {
+  tbl_schema <- named_vector_from_list_firsts(sapply(tbl, class))
+  same <- required_schema == tbl_schema[names(required_schema)]
+  if (!all(same)) {
+    not_same_str <- str_c(names(required_schema)[!same], collapse = ", ")
+    print(str_c("Invalid or missing columns: ", not_same_str))
+    q(status = 1)
+  }
+}
+
+
+quit_if_not_valid_factors <- function(tbl) {
+  tbl_schema <- sapply(tbl, class)
+  tbl_factors <- names(tbl_schema[tbl_schema == "factor"])
+  invalid_factors <- map_lgl(tbl_factors, function(col) {
+    values <- levels(tbl[[col]])
+    valids <- valid_factors[col]
+    all(valids == values)
+  })
+  if (any(invalid_factors)) {
+    invalid_factors_str <- str_c(tbl_factors[invalid_factors], collapse = ", ")
+    print(str_c("The following columns have invalid factor values: ",
+                invalid_factors_str))
+    q(status = 1)
+  }
+}
+
+
+sanitize_incident_date <- function(col) {
+  sanitize_date(col, valid_incident_start_date, valid_incident_end_date)
+}
+
+
+sanitize_date <- function(val, start, end) {
+  out_of_bounds_to(val, start, end, as.Date(NA))
+}
+
+
+out_of_bounds_to <- function(val, start, end, fill) {
+  if_else(val < start | val > end, fill, val)
+}
+
+
+sanitize_dob <- function(col) {
+  sanitize_date(col, valid_dob_start_date, valid_dob_end_date)
+}
+
+
+sanitize_vehicle_year <- function(col) {
+  out_of_bounds_to(col,
+                   valid_vehicle_start_year,
+                   valid_vehicle_end_year,
+                   as.integer(NA))
 }
 
 

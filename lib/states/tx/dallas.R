@@ -147,7 +147,8 @@ clean <- function(tbl) {
       sep = " ", extra = "merge"
     ) %>%
     mutate(
-      incident_date = parse_date(incident_date, "%m/%d/%y"),
+      incident_date = sanitize_incident_date(parse_date(incident_date,
+                                                        "%m/%d/%y")),
       incident_time = parse_time(incident_time, "%H:%M:%S"),
       is_accident = as.logical(is_accident),
       defendant_state = factor(defendant_state, levels = valid_states),
@@ -199,7 +200,8 @@ clean <- function(tbl) {
       ),
       # TODO(journalist): how can we determine whether an arrest happened?
       # https://app.asana.com/0/456927885748233/475749789858290 
-      arrest_made = !citation_issued && !warning_issued
+      arrest_made = !citation_issued && !warning_issued,
+      vehicle_year = sanitize_vehicle_year(vehicle_year)
     ) %>%
     select(
       # NOTE: drop unused foreign keys
