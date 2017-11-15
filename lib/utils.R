@@ -3,8 +3,6 @@ library(lubridate)
 library(getopt)
 library(stringr)
 
-source("lib/contract.R")
-
 
 parse_args <- function(tbl) {
   argument_types <- c("none", "required", "optional")
@@ -23,15 +21,6 @@ not_null <- function(v) {
 relative_path <- function(...) {
   # TODO(djenson): figure out robust way of getting project root directory
   file.path(...)
-}
-
-
-source_opp_funcs_for <- function(state, city) {
-  source(relative_path("lib",
-                       "states",
-                       str_to_lower(state),
-                       str_c(str_to_lower(city), ".R")))
-  ensure_contract()
 }
 
 
@@ -84,21 +73,9 @@ get_null_rates <- function(tbl) {
 }
 
 
-add_lat_lng <- function(tbl, join_col, path_prefix) {
-  geocoded_locations <- read_csv(str_c(path_prefix,
-                                       "/geocodes/",
-                                       "geocoded_locations.csv"))
+add_lat_lng <- function(tbl, join_col, geocodes_path) {
+  geocoded_locations <- read_csv(geocodes_path)
   join_on <- c("loc")
   names(join_on) <- c(join_col)
   tbl %>% left_join(geocoded_locations, by = join_on)
-}
-
-
-save_clean_csv <- function(tbl, path_prefix, city) {
-  write_csv(tbl, str_c(path_prefix, "/clean/", city, ".csv"))
-}
-
-
-load_clean_csv <- function(path_prefix, city) {
-  read_csv(str_c(path_prefix, "/clean/", city, ".csv"))
 }

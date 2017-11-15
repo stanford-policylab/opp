@@ -1,14 +1,7 @@
-source("lib/schema.R")
-
-
-path_prefix <- "data/states/wa/seattle/"
-
-
-opp_load_raw <- function() {
+load_raw <- function(raw_data_dir, geocodes_path) {
   tbls <- list()
-  raw_csv_path_prefix = str_c(path_prefix, "/raw_csv/")
   for (year in 2006:2015) {
-    filename <- str_c(raw_csv_path_prefix, "trafs_evs_", year, "_sheet_1.csv")
+    filename <- str_c(raw_data_dir, "trafs_evs_", year, "_sheet_1.csv")
     tbls[[length(tbls) + 1]] <- read_csv(filename,
       col_names = c(
         "rin",
@@ -43,11 +36,11 @@ opp_load_raw <- function() {
       skip = 1
     )
   }
-  add_lat_lng(bind_rows(tbls), "address", path_prefix)
+  add_lat_lng(bind_rows(tbls), "address", geocodes_path)
 }
 
 
-opp_clean <- function(tbl) {
+clean <- function(tbl) {
   tr_race <- c(
     A = "asian/pacific islander",
     B = "black",
@@ -126,14 +119,4 @@ opp_clean <- function(tbl) {
       citation_issued,
       everything()
     )
-}
-
-
-opp_save <- function(tbl) {
-  save_clean_csv(tbl, path_prefix, "seattle")
-}
-
-
-opp_load <- function() {
-  load_clean_csv(path_prefix, "seattle")
 }

@@ -1,22 +1,14 @@
-source("lib/schema.R")
-source("lib/utils.R")
-
-
-path_prefix <- "data/states/tx/dallas/"
-
-
-opp_load_raw <- function() {
+load_raw <- function(raw_data_dir, geocodes_path) {
   tbls <- list()
-  raw_csv_path_prefix = str_c(path_prefix, "/raw_csv/")
   # NOTE: commercial vehicle inspections is not currently processed but exists
-  # in the raw_csv folder
-  stops <- read_csv(str_c(raw_csv_path_prefix,
+  # in the raw_data_dir
+  stops <- read_csv(str_c(raw_data_dir,
                           'txdps_2016_statewide_stops.csv'))
-  citations <- read_csv(str_c(raw_csv_path_prefix,
+  citations <- read_csv(str_c(raw_data_dir,
                               'txdps_2016_statewide_citation_violations.csv'))
-  warnings <- read_csv(str_c(raw_csv_path_prefix,
+  warnings <- read_csv(str_c(raw_data_dir,
                              'txdps_2016_statewide_warning_violations.csv'))
-  weather <- read_csv(str_c(raw_csv_path_prefix,
+  weather <- read_csv(str_c(raw_data_dir,
                             'txdps_lookups.csv'))
 
   left_join(stops, citations, by = c("HA_ARREST_KEY" = "AD_ARREST_KEY")
@@ -28,7 +20,7 @@ opp_load_raw <- function() {
 }
 
 
-opp_clean <- function(tbl) {
+clean <- function(tbl) {
   date_fmt = "%m/%d/%y %H:%M:%S"
   tr_race <- c(
     A = "asian/pacific islander",
@@ -230,14 +222,4 @@ opp_clean <- function(tbl) {
       citation_issued,
       everything()
     )
-}
-
-
-opp_save <- function(tbl) {
-  save_clean_csv(tbl, path_prefix, "dallas")
-}
-
-
-opp_load <- function() {
-  load_clean_csv(path_prefix, "dallas")
 }

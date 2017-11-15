@@ -1,15 +1,7 @@
-source("lib/schema.R")
-source("lib/utils.R")
-
-
-path_prefix <- "data/states/tn/nashville/"
-
-
-opp_load_raw <- function() {
+load_raw <- function(raw_data_dir, geocodes_path) {
   tbls <- list()
-  raw_csv_path_prefix = str_c(path_prefix, "/raw_csv/")
   for (year in 2010:2016) {
-    filename <- str_c(raw_csv_path_prefix, "traffic_stop_", year, ".csv")
+    filename <- str_c(raw_data_dir, "traffic_stop_", year, ".csv")
     tbls[[length(tbls) + 1]] <- read_csv(filename,
       col_names = c(
         "stop_number",
@@ -100,11 +92,11 @@ opp_load_raw <- function() {
       skip = 1
     )
   }
-  add_lat_lng(bind_rows(tbls), "stop_location", path_prefix)
+  add_lat_lng(bind_rows(tbls), "stop_location", geocodes_path)
 }
 
 
-opp_clean <- function(tbl) {
+clean <- function(tbl) {
   yn_to_tf <- c(
     Y = TRUE,
     N = FALSE
@@ -232,14 +224,4 @@ opp_clean <- function(tbl) {
       citation_issued,
       everything()
     )
-}
-
-
-opp_save <- function(tbl) {
-  save_clean_csv(tbl, path_prefix, "nashville")
-}
-
-
-opp_load <- function() {
-  load_clean_csv(path_prefix, "nashville")
 }
