@@ -10,29 +10,19 @@ main <- function() {
     opp_process(args$state, args$city)
   if (not_null(args$plot))
     opp_plot(args$state, args$city)
-  if (not_null(args$null_rates))
-    print(get_null_rates(opp_load(args$state, args$city)))
   q(status = 0)
 }
 
 
 get_args <- function() {
-  usage <- str_c("./opp.R"
-                 "[--help|-h]",
-                 "[--process|-r]",
-                 "[--plot|-l]",
-                 "[--null_rates|-n]"
-                 "-s <state_code>",
-                 "-c <city_name>",
-                 sep = " ")
+  usage <- "./opp.R [-h] [--process] [--plot] -s <state_code> -c <city_name>"
   spec <- tribble(
-    ~long_name,   ~short_name,  ~argument_type, ~data_type,
-    "help",       "h",          "none",         "logical",
-    "process",    "r",          "none",         "logical",
-    "plot",       "l",          "none",         "logical",
-    "null_rates", "n",          "none",         "logical",
-    "state",      "s",          "required",     "character",
-    "city",       "c",          "required",     "character"
+    ~long_name, ~short_name,  ~argument_type, ~data_type,
+    "help",     "h",          "none",         "logical",
+    "process",  "r",          "none",         "logical",
+    "plot",     "l",          "none",         "logical",
+    "state",    "s",          "required",     "character",
+    "city",     "c",          "required",     "character"
   )
   args <- parse_args(spec)
 
