@@ -1,13 +1,5 @@
-source("lib/schema.R")
-source("lib/utils.R")
-
-
-path_prefix <- "data/states/il/chicago/"
-
-
-opp_load_raw <- function() {
-  raw_csv_path_prefix = str_c(path_prefix, "/raw_csv/")
-  arrests <- read_csv(str_c(raw_csv_path_prefix, "arrests.csv"),
+load_raw <- function(raw_data_dir, geocodes_path) {
+  arrests <- read_csv(str_c(raw_data_dir, "arrests.csv"),
     col_names = c(
       "arrest_id",
       "arrest_date",
@@ -57,7 +49,7 @@ opp_load_raw <- function() {
     skip = 1
   )
 
-  citations <- read_csv(str_c(raw_csv_path_prefix, "citations.csv"),
+  citations <- read_csv(str_c(raw_data_dir, "citations.csv"),
     col_names = c(
       "contact_card_id",
       "contact_date",
@@ -116,10 +108,11 @@ opp_load_raw <- function() {
                                                           street_direction.y),
                                                  sep = " ")))
 
-  add_lat_lng(j, "incident_location", path_prefix)
+  add_lat_lng(j, "incident_location", geocodes_path)
 }
 
-opp_clean <- function(tbl) {
+
+clean <- function(tbl) {
   tr_race = c(
     "AMER IND/ALASKAN NATIVE" = "other/unknown",
     "ASIAN/PACIFIC ISLANDER" = "asian/pacific islander",
@@ -209,13 +202,4 @@ opp_clean <- function(tbl) {
       officer_position,
       officer_years_of_service
     )
-}
-
-opp_save <- function(tbl) {
-  save_clean_csv(tbl, path_prefix, "chicago")
-}
-
-
-opp_load <- function() {
-  load_clean_csv(path_prefix, "chicago")
 }
