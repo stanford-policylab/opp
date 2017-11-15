@@ -85,20 +85,21 @@ clean <- function(tbl) {
     mutate(
       incident_type = factor("vehicular", levels = valid_incident_types),
       # NOTE: vehicular because mir_and_description are all traffic
-      incident_date = parse_date(incident_date, "%Y/%m/%d"),
+      incident_date = sanitize_incident_date(parse_date(incident_date,
+                                                        "%Y/%m/%d")),
       incident_time = parse_time(incident_time, "%H:%M:%S"),
       incident_lat = parse_number(incident_lat),
       incident_lng = parse_number(incident_lng),
       defendant_race = factor(tr_race[defendant_race],
                               levels = valid_races),
-      search_conducted = NA,
+      search_conducted = as.logical(NA),
       search_type = factor(NA, levels = valid_search_types),
-      contraband_found = NA,
-      arrest_made = str_sub(incident_type, 1, 1) == "A",
+      contraband_found = as.logical(NA),
+      arrest_made = str_sub(disposition_description, 1, 1) == "A",
       # NOTE: includes criminal and non-criminal citations
-      citation_issued = as.vector(!is.na(str_match(incident_type,
+      citation_issued = as.vector(!is.na(str_match(disposition_description,
                                                    "CITATION"))),
-      defendant_dob = ymd(defendant_dob),
+      defendant_dob = sanitize_dob(ymd(defendant_dob)),
       officer_id_1 = parse_number(officer_id_1),
       officer_id_2 = parse_number(officer_id_2)
     ) %>%

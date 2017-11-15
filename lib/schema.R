@@ -1,48 +1,16 @@
-library(tidyverse)
-library(stringr)
+library(lubridate)
 
 
-verify_schema <- function(tbl) {
-  quit_if_not_tibble(tbl)
-  quit_if_not_required_schema(tbl)
-  quit_if_not_valid_factors(tbl)
-}
+valid_incident_start_date <- ymd("2000-01-01")
+valid_incident_end_date <- ymd(Sys.Date())
 
 
-quit_if_not_tibble <- function(tbl) {
-  if (class(tbl)[1] != "tbl_df") {
-    print("Invalid tibble in verify_schema!")
-    q(status = 1)
-  }
-}
+valid_vehicle_start_year <- 1800
+valid_vehicle_end_year <- lubridate::year(Sys.Date()) + 1
 
 
-quit_if_not_required_schema <- function(tbl) {
-  tbl_schema <- named_vector_from_list_firsts(sapply(tbl, class))
-  same <- required_schema == tbl_schema[names(required_schema)]
-  if (!all(same)) {
-    not_same_str <- str_c(names(required_schema)[!same], collapse = ", ")
-    print(str_c("Invalid or missing columns: ", not_same_str))
-    q(status = 1)
-  }
-}
-
-
-quit_if_not_valid_factors <- function(tbl) {
-  tbl_schema <- sapply(tbl, class)
-  tbl_factors <- names(tbl_schema[tbl_schema == "factor"])
-  invalid_factors <- map_lgl(tbl_factors, function(col) {
-    values <- levels(tbl[[col]])
-    valids <- valid_factors[col]
-    all(valids == values)
-  })
-  if (any(invalid_factors)) {
-    invalid_factors_str <- str_c(tbl_factors[invalid_factors], collapse = ", ")
-    print(str_c("The following columns have invalid factor values: ",
-                invalid_factors_str))
-    q(status = 1)
-  }
-}
+valid_dob_start_date <- ymd("1900-01-01")
+valid_dob_end_date <- ymd(Sys.Date())
 
 
 required_schema <- c(
@@ -131,9 +99,6 @@ valid_races <- c(
 )
 
 
-valid_vehicle_years <- 1800:(lubridate::year(Sys.Date()) + 1)
-
-
 valid_states <- c(
   "AL",
   "AK",
@@ -197,6 +162,5 @@ valid_factors <- list(
   "defendant_race"                  = valid_races,
   "officer_sex"                     = valid_sexes,
   "officer_race"                    = valid_races,
-  "vehicle_year"                    = valid_vehicle_years,
   "vehicle_registration_state"      = valid_states
 )
