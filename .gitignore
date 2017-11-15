@@ -1,5 +1,6 @@
 *.csv
 *.swp
 *.pdf
+*.nfs*
 gmaps_api.key
 .Rhistory
