@@ -13,6 +13,10 @@ valid_dob_start_date <- ymd("1900-01-01")
 valid_dob_end_date <- ymd(Sys.Date())
 
 
+valid_yob_start <- 1900
+valid_yob_end <- year(Sys.Date())
+
+
 valid_age_start <- 0
 valid_age_end <- 120
 

@@ -129,6 +129,9 @@ clean <- function(tbl) {
   # TODO(danj): write tibble coalescer
   # TODO(danj) write column combiner 
   tbl %>%
+    rename(
+      citation_issued = citation
+    ) %>%
     mutate(
       incident_id = as.character(coalesce(arrest_id, contact_card_id)),
       # arrest_id and contact_card_id have different ranges, so it's ok
@@ -150,7 +153,8 @@ clean <- function(tbl) {
       officer_sex = factor(tr_sex[coalesce(officer_gender.x,
                                            officer_gender.y)],
                            levels = valid_sexes),
-      officer_race = coalesce(officer_race.x, officer_race.y),
+      officer_race = factor(tr_race[coalesce(officer_race.x, officer_race.y)],
+                            levels = valid_races),
       officer_age = sanitize_age(officer_age),
       officer_position = coalesce(officer_position.x,
                                   officer_position.y),
@@ -160,8 +164,8 @@ clean <- function(tbl) {
       search_type = factor(NA, levels = valid_search_types),
       contraband_found = as.logical(NA),
       arrest_made = !is.na(arrest_id),
-      # TODO(danj): 0, 1, and NA
-      citation_issued = citation == 1
+      # NOTE: values 0, 1, and NA are coerced to logical T/F
+      citation_issued = as.logical(citation_issued)
     ) %>%
     rename(
       incident_date = arrest_date,
@@ -187,7 +191,6 @@ clean <- function(tbl) {
       contraband_found,
       arrest_made,
       citation_issued,
-      citation,
       street_no,
       street_name,
       street_direction,
