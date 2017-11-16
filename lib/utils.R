@@ -162,3 +162,11 @@ add_lat_lng <- function(tbl, join_col, geocodes_path) {
   names(join_on) <- c(join_col)
   tbl %>% left_join(geocoded_locations, by = join_on)
 }
+
+
+find_similar_rows <- function(tbl, threshold = 0.90) {
+  cols <- ncol(tbl)
+  tbls <- mutate_each(tbl, funs(sort))
+  # starts at row 2 and compares to previous row by each column for equality
+  diffs <- as_tibble(tbls[-1,] == tbls[-nrow(tbls),])
+}
