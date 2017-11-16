@@ -138,6 +138,11 @@ sanitize_dob <- function(col) {
 }
 
 
+sanitize_age <- function(val) {
+  out_of_bounds_to(val, valid_age_start, valid_age_end, as.numeric(NA))
+}
+
+
 sanitize_vehicle_year <- function(col) {
   out_of_bounds_to(col,
                    valid_vehicle_start_year,

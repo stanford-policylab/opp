@@ -63,7 +63,7 @@ load_raw <- function(raw_data_dir, geocodes_path) {
         misd_state_citation_issued      = col_character(),
         custodial_arrest_issued         = col_character(),
         officers_comments               = col_character(),
-        age_of_suspect                  = col_number(),
+        age_of_suspect                  = col_double(),
         related_mov_vio_number          = col_character(),
         zone                            = col_character(),
         vehicle_tag_number              = col_character(),
@@ -142,7 +142,8 @@ clean <- function(tbl) {
     mutate(
       incident_id = as.character(incident_id),
       incident_type = factor("vehicular", levels = valid_incident_types),
-      incident_date = parse_date(incident_date, "%m/%d/%Y"),
+      incident_date = sanitize_incident_date(parse_date(incident_date,
+                                                        "%m/%d/%Y")),
       incident_time = parse_time(incident_time, "%I:%M:%S %p"),
       incident_lat = parse_double(incident_lat),
       incident_lng = parse_double(incident_lng),
@@ -150,6 +151,7 @@ clean <- function(tbl) {
                                              "H",
                                              defendant_race)],
                               levels = valid_races),
+      defendant_age = sanitize_age(defendant_age),
       county_resident = yn_to_tf[county_resident],
       verbal_warning_issued = yn_to_tf[verbal_warning_issued],
       written_warning_issued = yn_to_tf[written_warning_issued],
@@ -162,10 +164,10 @@ clean <- function(tbl) {
       drugs_seized = yn_to_tf[drugs_seized],
       weapons_seized = yn_to_tf[weapons_seized],
       other_seized = yn_to_tf[other_seized],
-      contraband_found = any(evidence_seized,
-                             drugs_seized,
-                             weapons_seized,
-                             other_seized),
+      contraband_found = (evidence_seized
+                          | drugs_seized
+                          | weapons_seized
+                          | other_seized),
       # NOTE: invalid states converted to NAs
       vehicle_registration_state = factor(vehicle_registration_state,
                                           levels = valid_states),
@@ -188,11 +190,11 @@ clean <- function(tbl) {
             "consent",
             ifelse(
               search_driver
-              || search_passenger
-              || search_vehicle
-              || search_inventory
-              || search_probable_cause
-              || search_warrant,
+              | search_passenger
+              | search_vehicle
+              | search_inventory
+              | search_probable_cause
+              | search_warrant,
               "probable cause",
               ifelse(
                 search_incident_to_arrest,

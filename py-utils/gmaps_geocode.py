@@ -36,12 +36,13 @@ def get_key(args):
 
 def extract_locations(csv_files,
                       location_column_names,
+                      location_column_sep,
                       output_file_csv,
                       errors_file_csv):
     locs = set()
     for csv_file in csv_files:
         df = pd.read_csv(csv_file)
-        df = add_loc_col(df, location_column_names)
+        df = add_loc_col(df, location_column_names, location_column_sep)
         locs.update(df['loc'].unique())
     existing_locs = set()
     if os.path.exists(output_file_csv):
@@ -54,11 +55,11 @@ def extract_locations(csv_files,
     return locs - existing_locs - errors
 
 
-def add_loc_col(df, location_column_names):
+def add_loc_col(df, location_column_names, location_column_sep):
     # NOTE: assumes space separators
     df['loc'] = col_as_str(df, location_column_names[0])
     for loc_col in location_column_names[1:]:
-        df['loc'] += ' ' + col_as_str(df, loc_col)
+        df['loc'] += location_column_sep + col_as_str(df, loc_col)
     df['loc'] = df['loc'].str.strip()
     return df
 
@@ -81,16 +82,21 @@ def parse_args(argv):
     parser.add_argument('-l', '--location_column_names', nargs='+',
                         help='if multiple, list in order to compose'
                              ' an address')
+    parser.add_argument('-s', '--location_column_sep', nargs=1, type=str,
+                        help='separator for location columns; default space',
+                        default=' ')
     parser.add_argument('-o', '--output_file_csv',
                         default='geocoded_locations.csv',
                         help='if the file already exists, the addresses'
                              ' already present in the file will be skipped,'
-                             ' and new addresses appended')
+                             ' and new addresses appended;'
+                             ' default: ./geocoded_locations.csv')
     parser.add_argument('-e', '--errors_file_csv',
                         default='geocoded_locations_errors.csv',
                         help='errors are output to this file; if the file'
                              ' already exists, addresses in this file will be'
-                             ' skipped and new errors appended')
+                             ' skipped and new errors appended;'
+                             ' default: ./geocoded_locations_errors.csv')
     parser.add_argument('-api_key')
     parser.add_argument('-api_key_file',
                         default=path_relative_to_this_file('gmaps_api.key'))
@@ -108,6 +114,7 @@ if __name__ == '__main__':
     gm = GM(get_key(args))
     locs = extract_locations(args.csv_files,
                              args.location_column_names,
+                             args.location_column_sep,
                              args.output_file_csv,
                              args.errors_file_csv)
     print('Getting addresses for %d locations...' % len(locs))
