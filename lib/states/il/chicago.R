@@ -147,7 +147,8 @@ clean <- function(tbl) {
                                              driver_gender)],
                              levels = valid_sexes),
       defendant_age = sanitize_age(defendant_age),
-      officer_sex = factor(coalesce(officer_gender.x, officer_gender.y),
+      officer_sex = factor(tr_sex[coalesce(officer_gender.x,
+                                           officer_gender.y)],
                            levels = valid_sexes),
       officer_race = coalesce(officer_race.x, officer_race.y),
       officer_age = sanitize_age(officer_age),
@@ -155,9 +156,9 @@ clean <- function(tbl) {
                                   officer_position.y),
       officer_years_of_service = coalesce(officer_years_of_service.x,
                                           officer_years_of_service.y),
-      search_conducted = NA,
+      search_conducted = as.logical(NA),
       search_type = factor(NA, levels = valid_search_types),
-      contraband_found = NA,
+      contraband_found = as.logical(NA),
       arrest_made = !is.na(arrest_id),
       # TODO(danj): 0, 1, and NA
       citation_issued = citation == 1
