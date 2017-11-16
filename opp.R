@@ -17,11 +17,11 @@ main <- function() {
 
 
 get_args <- function() {
-  usage <- str_c("./opp.R"
+  usage <- str_c("./opp.R",
                  "[--help|-h]",
                  "[--process|-r]",
                  "[--plot|-l]",
-                 "[--null_rates|-n]"
+                 "[--null_rates|-n]",
                  "-s <state_code>",
                  "-c <city_name>",
                  sep = " ")

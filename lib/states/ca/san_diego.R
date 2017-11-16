@@ -26,7 +26,7 @@ load_raw <- function(raw_data_dir, geocodes_path) {
       stop_cause            = col_character(),
       race                  = col_character(),
       sex                   = col_character(),
-      age                   = col_integer(),
+      age                   = col_double(),
       arrested              = col_character(),
       searched              = col_character(),
       obtained_consent      = col_character(),
@@ -88,11 +88,13 @@ clean <- function(tbl) {
     ) %>%
     mutate(
       incident_type = factor("vehicular", levels = valid_incident_types),
+      incident_date = sanitize_incident_date(incident_date),
       incident_location = as.character(NA),
       incident_lat = as.numeric(NA),
       incident_lng = as.numeric(NA),
       defendant_race = factor(tr_race[defendant_race], levels = valid_races),
       defendant_sex = factor(tr_sex[defendant_sex], levels = valid_sexes),
+      defendant_age = sanitize_age(defendant_age),
       search_conducted = yn_to_tf[search_conducted],
       search_consent = yn_to_tf[search_consent],
       contraband_found = yn_to_tf[contraband_found],

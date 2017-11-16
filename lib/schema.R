@@ -13,6 +13,10 @@ valid_dob_start_date <- ymd("1900-01-01")
 valid_dob_end_date <- ymd(Sys.Date())
 
 
+valid_age_start <- 0
+valid_age_end <- 120
+
+
 required_schema <- c(
   "incident_id"                       = "character",
   "incident_type"                     = "factor",
@@ -29,6 +33,7 @@ required_schema <- c(
   "arrest_made"                       = "logical",
   "citation_issued"                   = "logical"
 )
+
 
 extra_schema <- c(
   "defendant_sex"                     = "factor",
