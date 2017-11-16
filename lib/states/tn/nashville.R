@@ -110,6 +110,10 @@ clean <- function(tbl) {
     U = "other/unknown",
     W = "white"
   )
+  tr_sex = c(
+    F = "female",
+    M = "male"
+  )
 
   tbl %>%
     rename(
@@ -151,6 +155,7 @@ clean <- function(tbl) {
                                              "H",
                                              defendant_race)],
                               levels = valid_races),
+      defendant_sex = factor(tr_sex[defendant_sex], levels = valid_sexes),
       defendant_age = sanitize_age(defendant_age),
       county_resident = yn_to_tf[county_resident],
       verbal_warning_issued = yn_to_tf[verbal_warning_issued],
@@ -159,6 +164,7 @@ clean <- function(tbl) {
       misd_state_citation_issued = yn_to_tf[misd_state_citation_issued],
       arrest_made = yn_to_tf[arrest_made],
       action_against_driver = yn_to_tf[action_against_driver],
+      action_against_passenger = yn_to_tf[action_against_passenger],
       search_conducted = yn_to_tf[search_conducted],
       evidence_seized = yn_to_tf[evidence_seized],
       drugs_seized = yn_to_tf[drugs_seized],

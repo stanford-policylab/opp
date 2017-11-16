@@ -118,8 +118,8 @@ quit_if_not_valid_factors <- function(tbl) {
 }
 
 
-sanitize_incident_date <- function(col) {
-  sanitize_date(col, valid_incident_start_date, valid_incident_end_date)
+sanitize_incident_date <- function(val) {
+  sanitize_date(val, valid_incident_start_date, valid_incident_end_date)
 }
 
 
@@ -133,8 +133,13 @@ out_of_bounds_to <- function(val, start, end, fill) {
 }
 
 
-sanitize_dob <- function(col) {
-  sanitize_date(col, valid_dob_start_date, valid_dob_end_date)
+sanitize_dob <- function(val) {
+  sanitize_date(val, valid_dob_start_date, valid_dob_end_date)
+}
+
+
+sanitize_yob <- function(val) {
+  out_of_bounds_to(val, valid_yob_start, valid_yob_end, as.integer(NA))
 }
 
 
@@ -143,8 +148,8 @@ sanitize_age <- function(val) {
 }
 
 
-sanitize_vehicle_year <- function(col) {
-  out_of_bounds_to(col,
+sanitize_vehicle_year <- function(val) {
+  out_of_bounds_to(val,
                    valid_vehicle_start_year,
                    valid_vehicle_end_year,
                    as.integer(NA))
