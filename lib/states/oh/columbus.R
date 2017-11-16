@@ -64,6 +64,7 @@ clean <- function(tbl) {
       sep = " ", extra = "merge"
     ) %>%
     mutate(
+      incident_id = as.character(incident_id),
       incident_type = factor("vehicular", levels = valid_incident_types),
       incident_date = parse_date(incident_date, dt_fmt),
       incident_time = parse_time(incident_time, tm_fmt),

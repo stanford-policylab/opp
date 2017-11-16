@@ -100,6 +100,8 @@ clean <- function(tbl) {
   )
 
   tbl %>%
+    distinct(
+    ) %>%
     rename(
       incident_id = street_check_case_number,
       incident_date = occurred_date,
