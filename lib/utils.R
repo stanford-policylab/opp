@@ -169,14 +169,13 @@ find_similar_rows <- function(tbl, threshold = 0.95) {
   tbls <- sort_all(tbl)
   sim <- rowwise_similarity(tbls)
   idx <- which(sim >= threshold)
-  idxAll <- sort(unique(c(idx, idx + 1)))
+  idxAll <- sort(unique(c(idx - 1, idx)))
   tbls[idxAll,]
 }
 
 
 sort_all <- function(tbl) {
-  sort_with_na <- Curry(sort, na.last = TRUE)
-  mutate_each(tbl, funs(sort_with_na))
+  tbl %>% arrange_(.dots=colnames(.))
 }
 
 
