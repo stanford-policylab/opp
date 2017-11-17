@@ -21,6 +21,7 @@ load_raw <- function(raw_data_dir, geocodes_path) {
 
 
 clean <- function(tbl) {
+  # TODO(danj): dedup
   date_fmt = "%m/%d/%y %H:%M:%S"
   tr_race <- c(
     A = "asian/pacific islander",

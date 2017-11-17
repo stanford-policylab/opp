@@ -2,6 +2,7 @@ library(tidyverse)
 library(lubridate)
 library(getopt)
 library(stringr)
+library(functional)
 
 source("lib/schema.R")
 
@@ -164,9 +165,39 @@ add_lat_lng <- function(tbl, join_col, geocodes_path) {
 }
 
 
-find_similar_rows <- function(tbl, threshold = 0.90) {
-  cols <- ncol(tbl)
-  tbls <- mutate_each(tbl, funs(sort))
-  # starts at row 2 and compares to previous row by each column for equality
-  diffs <- as_tibble(tbls[-1,] == tbls[-nrow(tbls),])
+find_similar_rows <- function(tbl, threshold = 0.95) {
+  tbls <- sort_all(tbl)
+  sim <- rowwise_similarity(tbls)
+  idx <- which(sim >= threshold)
+  idxAll <- sort(unique(c(idx, idx + 1)))
+  tbls[idxAll,]
+}
+
+
+sort_all <- function(tbl) {
+  sort_with_na <- Curry(sort, na.last = TRUE)
+  mutate_each(tbl, funs(sort_with_na))
+}
+
+
+rowwise_similarity <- function(tbl) {
+  # score compares current row vs. previous row
+  rowwise_diffs(tbl) %>% mutate(sim = rowMeans(.)) %>%
+    # TODO(danj): replace with pull once dplyr updated to 0.7.0
+    select(sim) %>% collect %>% .[["sim"]]
+}
+
+
+rowwise_diffs <- function(tbl) {
+  # compares current row to previous row
+  diffs <- as_tibble(
+    # equal or both NA
+    tbl[-1,] == tbl[-nrow(tbl),] | (is.na(tbl[-1,]) & is.na(tbl[-nrow(tbl),]))
+  ) %>% 
+  # covers cases where one is NA and the other isn't
+  mutate_all(
+    funs(replace(., is.na(.), FALSE))
+  )
+  # prepends a row of FALSE for first row
+  rbind(logical(ncol(diffs)), diffs)
 }
