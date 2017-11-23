@@ -180,15 +180,14 @@ sort_all <- function(tbl) {
 
 
 rowwise_similarity <- function(tbl) {
-  # score compares current row vs. previous row
-  rowwise_diffs(tbl) %>% mutate(sim = rowMeans(.)) %>%
+  # NOTE: you probably want rows sorted using sort_all before calling
+  compare_current_row_to_previous(tbl) %>% mutate(sim = rowMeans(.)) %>%
     # TODO(danj): replace with pull once dplyr updated to 0.7.0
     select(sim) %>% collect %>% .[["sim"]]
 }
 
 
-rowwise_diffs <- function(tbl) {
-  # compares current row to previous row
+compare_current_row_to_previous <- function(tbl) {
   diffs <- as_tibble(
     # equal or both NA
     tbl[-1,] == tbl[-nrow(tbl),] | (is.na(tbl[-1,]) & is.na(tbl[-nrow(tbl),]))
@@ -199,4 +198,27 @@ rowwise_diffs <- function(tbl) {
   )
   # prepends a row of FALSE for first row
   rbind(logical(ncol(diffs)), diffs)
+}
+
+
+rowwise_similarity_report <- function(tbl) {
+  # NOTE: you probably want rows sorted using sort_all before calling
+  sim <- compare_current_row_to_previous(tbl) %>% summarise_all(mean)
+  as_tibble(
+    cbind(cols = names(sim), t(sim))
+  ) %>%
+  arrange(
+    .[[2]]
+  ) %>%
+  print(
+    n = Inf
+  )
+}
+
+
+merge_rowwise <- function(tbl, ...) {
+  m <- function(...) {
+    str_c(sort(unique(str_replace_na(...))), collapse = "|")
+  }
+  group_by(tbl, ...) %>% summarise_all(m)
 }
