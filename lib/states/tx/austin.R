@@ -105,5 +105,6 @@ clean <- function(tbl) {
       search_conducted = search_person | search_vehicle,
       # TODO(danj): check this
       search_type = ifelse(search_conducted, "probable cause", NA)
-    )
+    ) %>%
+    standardize()
 }
