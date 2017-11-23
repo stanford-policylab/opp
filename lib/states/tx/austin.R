@@ -4,8 +4,8 @@ load_raw <- function(raw_data_dir, geocodes_path) {
       "street_check_case_number",
       "occurred_date",
       "officer",
-      "reason_checked",       # can be more than 1
-      "street_check_type",    # can be more than 1
+      "reason_checked",
+      "street_check_type",
       "sex",
       "race",
       "ethnicity",
