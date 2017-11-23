@@ -1,7 +1,9 @@
+source("common.R")
+
 load_raw <- function(raw_data_dir, geocodes_path) {
   tbl <- read_csv_with_types(str_c(raw_data_dir, "data.csv"), c(
     street_check_case_number          = "c",
-    occurred_date                     = "d",
+    occurred_date                     = "c",
     officer                           = "c",
     reason_checked                    = "c",
     street_check_type                 = "c",
@@ -55,17 +57,12 @@ load_raw <- function(raw_data_dir, geocodes_path) {
 
 clean <- function(tbl) {
   dt_fmt = "%Y/%m/%d"
-  tm_fmt = "%H:%M:%S"
   tr_race = c(
     A = "asian/pacific islander",
     B = "black",
     H = "hispanic",
     U = "other/unknown",
     W = "white"
-  )
-  tr_sex = c(
-    F = "female",
-    M = "male"
   )
 
   tbl %>%
@@ -77,33 +74,12 @@ clean <- function(tbl) {
       officer_id = officer,
       reason_checked_code = reason_checked,
       street_check_type = street_check_type_code,
-      defendant_sex = sex,
-      defendant_race = race,
+      subject_sex = sex,
+      subject_race = race,
       year_of_birth = yob
     ) %>%
     mutate(
-      person_searched = if_else(is.na(str_match(person_searched, "YES"),
-                                FALSE, TRUE)),
-      vehicle_searched = if_else(is.na(str_match(vehicle_searched, "YES"),
-                                 FALSE, TRUE))
+      person_searched = matches(person_searched, "YES"),
+      vehicle_searched = matches(vehicle_searched, "YES")
     )
-
-  # tbl %>%
-  #   select(
-  #     incident_id,
-  #     incident_type,
-  #     incident_date,
-  #     incident_time,
-  #     incident_location,
-  #     incident_lat,
-  #     incident_lng,
-  #     defendant_race,
-  #     reason_for_stop,
-  #     search_conducted,
-  #     search_type,
-  #     contraband_found,
-  #     arrest_made,
-  #     citation_issued,
-  #     everything()
-  #   )
 }

@@ -1,7 +1,8 @@
 #!/usr/bin/env Rscript
+library(stringr)
+library(tibble)
 
-suppressPackageStartupMessages(source("lib/utils.R"))
-suppressPackageStartupMessages(source("lib/schema.R"))
+source("lib/utils.R")
 
 
 main <- function() {
@@ -110,7 +111,6 @@ opp_process <- function(state, city) {
   d <- load_raw(opp_raw_data_dir(state, city),
                 opp_geocodes_path(state, city))
   dc <- clean(d)
-  verify_schema(dc)
   opp_save(dc, state, city)
 }
 
