@@ -1,10 +1,6 @@
-library(tidyverse)
-library(lubridate)
 library(getopt)
-library(stringr)
-library(functional)
-
-source("lib/schema.R")
+library(lubridate)
+library(tidyverse)
 
 
 parse_args <- function(tbl) {
@@ -21,9 +17,8 @@ not_null <- function(v) {
 }
 
 
-relative_path <- function(...) {
-  # TODO(djenson): figure out robust way of getting project root directory
-  file.path(...)
+matches <- function(col, s) {
+  as.vector(!is.na(str_match(col, s)))
 }
 
 
@@ -76,49 +71,6 @@ get_null_rates <- function(tbl) {
 }
 
 
-verify_schema <- function(tbl) {
-  quit_if_not_tibble(tbl)
-  quit_if_not_required_schema(tbl)
-  quit_if_not_valid_factors(tbl)
-}
-
-
-quit_if_not_tibble <- function(tbl) {
-  if (class(tbl)[1] != "tbl_df") {
-    print("Invalid tibble in verify_schema!")
-    q(status = 1)
-  }
-}
-
-
-quit_if_not_required_schema <- function(tbl) {
-  tbl_schema <- named_vector_from_list_firsts(sapply(tbl, class))
-  same <- required_schema == tbl_schema[names(required_schema)]
-  if (!all(same)) {
-    not_same_str <- str_c(names(required_schema)[!same], collapse = ", ")
-    print(str_c("Invalid or missing columns: ", not_same_str))
-    q(status = 1)
-  }
-}
-
-
-quit_if_not_valid_factors <- function(tbl) {
-  tbl_schema <- sapply(tbl, class)
-  tbl_factors <- names(tbl_schema[tbl_schema == "factor"])
-  invalid_factors <- map_lgl(tbl_factors, function(col) {
-    values <- levels(tbl[[col]])
-    valids <- valid_factors[col]
-    all(valids == values)
-  })
-  if (any(invalid_factors)) {
-    invalid_factors_str <- str_c(tbl_factors[invalid_factors], collapse = ", ")
-    print(str_c("The following columns have invalid factor values: ",
-                invalid_factors_str))
-    q(status = 1)
-  }
-}
-
-
 read_csv_with_types <- function(path, type_vec) {
   tbl <- read_csv(path,
                   col_names = names(type_vec),
@@ -126,49 +78,28 @@ read_csv_with_types <- function(path, type_vec) {
                   skip = 1)
 }
 
-sanitize_incident_date <- function(val) {
-  sanitize_date(val, valid_incident_start_date, valid_incident_end_date)
+
+separate_cols <- function(tbl, lst, sep = " ") {
+  for (colname in names(lst)) {
+    tbl <- separate_(tbl, colname, lst[[colname]], sep = sep, extra = "merge")
+  }
+  tbl
 }
 
-
-sanitize_date <- function(val, start, end) {
-  out_of_bounds_to(val, start, end, as.Date(NA))
-}
-
-
-out_of_bounds_to <- function(val, start, end, fill) {
-  if_else(val < start | val > end, fill, val)
-}
-
-
-sanitize_dob <- function(val) {
-  sanitize_date(val, valid_dob_start_date, valid_dob_end_date)
-}
-
-
-sanitize_yob <- function(val) {
-  out_of_bounds_to(val, valid_yob_start, valid_yob_end, as.integer(NA))
-}
-
-
-sanitize_age <- function(val) {
-  out_of_bounds_to(val, valid_age_start, valid_age_end, as.numeric(NA))
-}
-
-
-sanitize_vehicle_year <- function(val) {
-  out_of_bounds_to(val,
-                   valid_vehicle_start_year,
-                   valid_vehicle_end_year,
-                   as.integer(NA))
-}
 
 
 add_lat_lng <- function(tbl, join_col, geocodes_path) {
-  geocoded_locations <- read_csv(geocodes_path)
+  geocoded_locations <- read_csv(geocodes_path, col_types = 'cdd')
   join_on <- c("loc")
   names(join_on) <- c(join_col)
-  tbl %>% left_join(geocoded_locations, by = join_on)
+  tbl %>%
+    left_join(
+      geocoded_locations, by = join_on
+    ) %>%
+    rename(
+      incident_lat = lat,
+      incident_lng = lng
+    )
 }
 
 

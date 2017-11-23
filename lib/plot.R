@@ -1,3 +1,6 @@
+library(tidyverse)
+
+
 plot_cols <- function(tbl, output_filename = "plots.pdf") {
   plots <- lapply(colnames(tbl), function (col) { plot_col(tbl, col) })
   pdf(output_filename, onefile = TRUE)
@@ -17,22 +20,30 @@ plot_col <- function(tbl, col) {
     "Date"      = plot_date,
     "POSIXct"   = plot_date,
     "POSIXlt"   = plot_date,
-    "hms"       = plot_time
+    "hms"       = plot_time,
+    "Period"    = plot_time
   )
   plot_map[[get_primary_class(tbl[[col]])]](tbl, col)
 }
 
 
 plot_numeric <- function (tbl, col) {
-  ggplot(tbl) + geom_histogram(aes(tbl[[col]])) + xlab(col)
+  plot_setup(tbl, col) + geom_histogram(aes(tbl[[col]]))
+}
+
+
+plot_setup <- function(tbl, col) {
+  ggplot(tbl) + xlab(col)
 }
 
 
 plot_factor <- function (tbl, col) {
-  ggplot(tbl) +
-    geom_bar(aes(tbl[[col]])) +
-    xlab(col) +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  plot_setup_text(tbl, col) + geom_bar(aes(tbl[[col]]))
+}
+
+
+plot_setup_text <- function(tbl, col) {
+  plot_setup(tbl, col) + theme(axis.text.x = element_text(angle = 90))
 }
 
 
@@ -49,10 +60,8 @@ plot_character <- function (tbl, col) {
 
 
 plot_date <- function(tbl, col) {
-  ggplot(tbl) +
-    geom_histogram(aes(as.POSIXct(tbl[[col]]))) +
-    xlab(col) +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  plot_setup_text(tbl, col) +
+    geom_histogram(aes(as.POSIXct(tbl[[col]], origin = "1970-01-01")))
 }
 
 
