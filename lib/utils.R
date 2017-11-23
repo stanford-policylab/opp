@@ -119,6 +119,13 @@ quit_if_not_valid_factors <- function(tbl) {
 }
 
 
+read_csv_with_types <- function(path, type_vec) {
+  tbl <- read_csv(path,
+                  col_names = names(type_vec),
+                  col_types = str_c(type_vec, collapse = ""),
+                  skip = 1)
+}
+
 sanitize_incident_date <- function(val) {
   sanitize_date(val, valid_incident_start_date, valid_incident_end_date)
 }
