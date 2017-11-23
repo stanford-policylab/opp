@@ -70,7 +70,7 @@ clean <- function(tbl) {
       subject_sex = tr_sex[subject_sex],
       search_conducted = (enforcement_taken == "Vehicle Search"
                           | enforcement_taken == "Driver Search"),
-      search_type = "probable cause", 
+      search_type = ifelse(search_conducted, "probable cause", NA), 
       arrest_made = enforcement_taken == "Arrest",
       # TODO(danj): include "Misd. Citation or Summons"?
       citation_issued = enforcement_taken == "Traffic Citation",

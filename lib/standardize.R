@@ -30,13 +30,13 @@ sanitize <- function(tbl) {
   )
   # optional
   for (col in colnames(tbl)) {
-    if (endsWith(col, "_dob")) {
+    if (endsWith(col, "dob")) {
       tbl[[col]] <- sanitize_dob(tbl[[col]])
     }
-    if (endsWith(col, "_age")) {
+    if (endsWith(col, "age")) {
       tbl[[col]] <- sanitize_age(tbl[[col]])
     }
-    if (endsWith(col, "_yob")) {
+    if (endsWith(col, "yob")) {
       tbl[[col]] <- sanitize_yob(tbl[[col]])
     }
     if (col == "vehicle_year") {

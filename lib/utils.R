@@ -105,7 +105,7 @@ add_lat_lng <- function(tbl, join_col, geocodes_path) {
 
 find_similar_rows <- function(tbl, threshold = 0.95) {
   tbls <- sort_all(tbl)
-  sim <- rowwise_similarity(tbls)
+  sim <- row_similarity(tbls)
   idx <- which(sim >= threshold)
   idxAll <- sort(unique(c(idx - 1, idx)))
   tbls[idxAll,]
@@ -117,7 +117,7 @@ sort_all <- function(tbl) {
 }
 
 
-rowwise_similarity <- function(tbl) {
+row_similarity <- function(tbl) {
   # NOTE: you probably want rows sorted using sort_all before calling
   compare_current_row_to_previous(tbl) %>% mutate(sim = rowMeans(.)) %>%
     # TODO(danj): replace with pull once dplyr updated to 0.7.0
@@ -139,7 +139,7 @@ compare_current_row_to_previous <- function(tbl) {
 }
 
 
-rowwise_similarity_report <- function(tbl) {
+row_similarity_report <- function(tbl) {
   # NOTE: you probably want rows sorted using sort_all before calling
   sim <- compare_current_row_to_previous(tbl) %>% summarise_all(mean)
   as_tibble(
@@ -154,7 +154,7 @@ rowwise_similarity_report <- function(tbl) {
 }
 
 
-merge_rowwise <- function(tbl, ...) {
+merge_rows <- function(tbl, ...) {
   m <- function(...) {
     str_c(sort(unique(str_replace_na(...))), collapse = "|")
   }

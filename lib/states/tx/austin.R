@@ -1,4 +1,4 @@
-source("common.R")
+source("lib/common.R")
 
 load_raw <- function(raw_data_dir, geocodes_path) {
   tbl <- read_csv_with_types(str_c(raw_data_dir, "data.csv"), c(
@@ -60,26 +60,50 @@ clean <- function(tbl) {
   tr_race = c(
     A = "asian/pacific islander",
     B = "black",
-    H = "hispanic",
+    I = "other/unknown",
+    M = "other/unknown",
+    P = "other/unknown",
     U = "other/unknown",
     W = "white"
   )
 
   tbl %>%
-    distinct(
-    ) %>%
     rename(
       incident_id = street_check_case_number,
       incident_date = occurred_date,
       officer_id = officer,
       reason_checked_code = reason_checked,
-      street_check_type = street_check_type_code,
+      street_check_type_code = street_check_type,
       subject_sex = sex,
       subject_race = race,
-      year_of_birth = yob
+      subject_ethnicity = ethnicity,
+      subject_yob = yob,
+      search_person = person_searched,
+      search_vehicle = vehicle_searched,
+      vehicle_type = veh_type,
+      vehicle_year = veh_year,
+      vehicle_make = veh_make,
+      vehicle_model = veh_model,
+      vehicle_style = veh_style,
+      vehicle_code = soi
+    ) %>%
+    merge_rows(
+      incident_id
     ) %>%
     mutate(
-      person_searched = matches(person_searched, "YES"),
-      vehicle_searched = matches(vehicle_searched, "YES")
+      # TODO(danj): looks like there are some random types here
+      incident_type = "vehicular",
+      incident_date = parse_date(incident_date, dt_fmt),
+      subject_sex = tr_sex[subject_sex],
+      subject_race = tr_race[subject_race],
+      # TODO(danj): is this the right reason?
+      reason_for_stop = person_search_reason_for_stop,
+      person_search_race_known = matches(person_search_race_known, "YES"),
+      search_person = matches(search_person, "YES"),
+      vehicle_search_race_known = matches(vehicle_search_race_known, "YES"),
+      search_vehicle = matches(search_vehicle, "YES"),
+      search_conducted = search_person | search_vehicle,
+      # TODO(danj): check this
+      search_type = ifelse(search_conducted, "probable cause", NA)
     )
 }
