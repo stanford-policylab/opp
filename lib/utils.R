@@ -172,6 +172,9 @@ merge_rows <- function(tbl, ..., null_fill = "NA", sep = "|") {
   # is more than one unique value and there is at least one NA, the NA will
   # be converted to fill_value and included in the merge,
   # i.e. banana<sep><fill_value> or banana|NA
+  # NOTE: this function adds a column called unmerged_row_count that indicates
+  # how many unmerged rows a current row represents, this can be used to
+  # melt/explode a row back into its original rows
   m <- function(v) {
     # null_fill must be a string
     if (is.na(null_fill)) {
