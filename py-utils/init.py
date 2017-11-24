@@ -57,10 +57,13 @@ def copy_template(template_path, state, city):
 
 
 def parse_args(argv):
-    parser = argparse.ArgumentParser(prog=argv[0])
+    desc = 'initializes the data and lib directories for a new city'
+    default_template = 'lib/states/wa/seattle.R'
+    parser = argparse.ArgumentParser(prog=argv[0], description=desc)
     parser.add_argument('state')
     parser.add_argument('city', nargs='+')
-    parser.add_argument('-template', default='lib/states/wa/seattle.R')
+    parser.add_argument('-template', default=default_template,
+                        help='default: ' + default_template)
     return parser.parse_args(argv[1:])
 
 
