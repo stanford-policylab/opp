@@ -105,15 +105,14 @@ clean <- function(tbl) {
       # TODO(danj): is this how we want to do this?
       reason_for_stop = str_combine(
         person_search_reason_for_stop, vehicle_search_reason_for_stop,
-        prefix_left = "PERSON=", prefix_right = "VEHICLE=",
-        na_left = "NONE", na_right = "NONE"
+        prefix_left = "subject=", prefix_right = "vehicle="
       ),
       person_search_race_known = matches(person_search_race_known, "YES"),
       search_person = matches(search_person, "YES"),
       vehicle_search_race_known = matches(vehicle_search_race_known, "YES"),
       search_vehicle = matches(search_vehicle, "YES"),
       search_conducted = search_person | search_vehicle,
-      # TODO(danj): check this
+      # TODO(danj): should we try to infer from reason_for_stop?
       search_type = ifelse(search_conducted, "probable cause", NA),
       contraband_found = (
         matches(person_search_search_discovered, contraband)
@@ -121,8 +120,7 @@ clean <- function(tbl) {
       ),
       contraband_recovered_from_search = str_combine(
         person_search_search_discovered, vehicle_search_search_discovered,
-        prefix_left = "PERSON=", prefix_right = "VEHICLE=",
-        na_left = "NOTHING", na_right = "NOTHING"
+        prefix_left = "subject=", prefix_right = "vehicle="
       )
     # ) %>%
     )
