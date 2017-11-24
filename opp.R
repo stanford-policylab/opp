@@ -112,6 +112,7 @@ opp_process <- function(state, city) {
                 opp_geocodes_path(state, city))
   dc <- clean(d)
   opp_save(dc, state, city)
+  warnings()
 }
 
 
