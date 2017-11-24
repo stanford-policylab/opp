@@ -64,10 +64,15 @@ get_primary_class <- function(obj) {
 
 
 get_null_rates <- function(tbl) {
-  nulls_tbl <- tbl %>% summarize_all(funs(sum(is.na(.)) / length(.)))
+  nulls_tbl <- tbl %>% summarize_all(funs(sum(is_null(.)) / length(.)))
   nulls_vec <- named_vector_from_list_firsts(nulls_tbl)
   nulls_pcts <- paste0(formatC(100 * nulls_vec, format = "f", digits = 2), "%")
   tibble(features = names(nulls_vec), null_pct = nulls_pcts) %>% print(n = Inf)
+}
+
+
+is_null <- function(v) {
+  is.na(v) | v == "NA" | v == "" | v == "NULL"
 }
 
 
@@ -154,18 +159,68 @@ row_similarity_report <- function(tbl) {
 }
 
 
-merge_rows <- function(tbl, ...) {
-  m <- function(...) {
-    str_c(sort(unique(str_replace_na(...))), collapse = "|")
+merge_rows <- function(tbl, ..., null_fill = "NA", sep = "|") {
+  # NOTE: merging converts all columns being merged to strings so the values
+  # can be concatenated; so, for instance, the number 1987 will become the
+  # string 1987, and two values, 1987 and 1989, being merged will be converted
+  # to the string 1987<sep>1989. If you later force this column back to an
+  # integer data type, you will introduce NAs, since merged columns will no
+  # longer convert back cleanly
+  # NOTE: if there is only one unique value when merging, return only the 
+  # unique value; furthermore, if that unique value is the null_fill, return
+  # NA_character_, since by default NAs propagate in R; however, if there
+  # is more than one unique value and there is at least one NA, the NA will
+  # be converted to fill_value and included in the merge,
+  # i.e. banana<sep><fill_value> or banana|NA
+  m <- function(v) {
+    # null_fill must be a string
+    if (is.na(null_fill)) {
+      null_fill <- "NA"
+    }
+    v <- fill_null(as.character(v), null_fill)
+    if (length(unique(v)) == 1) {
+      v <- v[1]
+      if (v == null_fill)
+        v <- as.character(NA)
+    } else {
+      v <- str_c(v, collapse = sep)
+    }
+    v
   }
-  group_by(tbl, ...) %>% summarise_all(m)
+  group_by(tbl, ...) %>%
+    mutate(unmerged_row_count = n()) %>%
+    summarise_all(m)
+}
+
+
+all_null <- function(v) {
+  all(is_null(v))
+}
+
+
+fill_null <- function(v, fill = NA) {
+  v[is_null(v)] <- fill
+  v
 }
 
 
 str_combine <- function(left, right,
                         prefix_left = "", prefix_right = "",
-                        na_left = "NA", na_right = "NA") {
-  str_c(str_c(prefix_left, str_replace_na(left, na_left)),
-        str_c(prefix_right, str_replace_na(right, na_right)),
-        sep = "|")
+                        sep = "|") {
+
+  left_null <- is_null(left)
+  right_null <- is_null(right)
+  both_null <- left_null & right_null
+  neither_null <- !left_null & !right_null
+  left_null_right_not_null <- left_null & !right_null
+
+  v = str_c(prefix_left, left)
+  v[both_null] <- as.character(NA)
+  v[neither_null] <- str_c(
+    str_c(prefix_left, left[neither_null]),
+    str_c(prefix_right, right[neither_null])
+  )
+  v[left_null_right_not_null] <- str_c(prefix_right,
+                                       right[left_null_right_not_null])
+  v
 }
