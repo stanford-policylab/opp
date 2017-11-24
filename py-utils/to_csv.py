@@ -198,7 +198,7 @@ def parse_args(argv):
     desc = 'supported file types: ' + ', '.join(supported_file_types())
     parser = argparse.ArgumentParser(prog=argv[0], description=desc)
     parser.add_argument('files_or_dirs', nargs='+',
-                        help='a.xlsx b.xls c.mdb data/')
+                        help='a.xlsx b.xls c.mdb d.xml data/')
     return parser.parse_args(argv[1:])
 
 
