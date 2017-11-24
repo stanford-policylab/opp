@@ -19,7 +19,9 @@ import os
 import re
 import sys
 
+import pandas as pd
 import subprocess as sub
+import xml.etree.ElementTree as et
 
 
 ############################### CONVERTERS ####################################
@@ -54,7 +56,26 @@ def mdb_to_csv(in_file):
 
 
 def accdb_to_csv(in_file):
-    return mdb_to_csv(in_file)
+    mdb_to_csv(in_file)
+    return
+
+
+def xml_to_csv(in_file):
+    '''
+    https://stackoverflow.com/questions/41776263/ \
+    pandas-read-xml-method-test-strategies
+    '''
+    tree = et.parse(in_file)
+    data = []
+    inner = {}
+    for el in tree.iterfind('./*'):
+        for i in el.iterfind('*'):
+            inner[i.tag] = i.text
+        data.append(inner)
+        inner = {}
+    df = pd.DataFrame(data)
+    df.to_csv(to_csv_ext(in_file))
+    return
 
 
 ###############################################################################

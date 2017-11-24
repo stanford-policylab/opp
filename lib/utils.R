@@ -160,3 +160,12 @@ merge_rows <- function(tbl, ...) {
   }
   group_by(tbl, ...) %>% summarise_all(m)
 }
+
+
+str_combine <- function(left, right,
+                        prefix_left = "", prefix_right = "",
+                        na_left = "NA", na_right = "NA") {
+  str_c(str_c(prefix_left, str_replace_na(left, na_left)),
+        str_c(prefix_right, str_replace_na(right, na_right)),
+        sep = "|")
+}
