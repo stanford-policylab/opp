@@ -51,7 +51,9 @@ def make_lib_dirs(state):
 
 
 def copy_template(template_path, state, city):
-    copyfile(template_path, os.path.join('lib', 'states', city + '.R'))
+    dst = os.path.join('lib', 'states', state, city + '.R')
+    copyfile(template_path, dst)
+    return
 
 
 def parse_args(argv):
