@@ -14,6 +14,7 @@ standardize <- function(tbl) {
 
 
 add_missing_required <- function(tbl) {
+  print("add missing required")
   for (name in names(required_schema)) {
     if (!(name %in% colnames(tbl))) {
       tbl[[name]] = NA
@@ -24,6 +25,7 @@ add_missing_required <- function(tbl) {
 
 
 sanitize <- function(tbl) {
+  print("sanitizing")
   # required
   tbl <- mutate(tbl,
     incident_date = sanitize_incident_date(incident_date)
@@ -48,6 +50,7 @@ sanitize <- function(tbl) {
 
 
 enforce_types <- function(tbl) {
+  print("enforcing types")
   for (name in names(required_schema)) {
     tbl[[name]] <- required_schema[[name]](tbl[[name]])
   }
@@ -61,6 +64,7 @@ enforce_types <- function(tbl) {
 
 
 select_required_first <- function(tbl) {
+  print("selecting required first")
   select(tbl,
     incident_id,
     incident_type,

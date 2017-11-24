@@ -60,14 +60,17 @@ clean <- function(tbl) {
   tr_race = c(
     A = "asian/pacific islander",
     B = "black",
+    H = "hispanic",
     I = "other/unknown",
     M = "other/unknown",
     P = "other/unknown",
     U = "other/unknown",
     W = "white"
   )
+  # TODO(danj): include alcohol, other?
+  contraband = "ALCOHOL|CASH|DRUGS|OTHER|WEAPONS"
 
-  tbl %>%
+  tbl <- tbl %>%
     rename(
       incident_id = street_check_case_number,
       incident_date = occurred_date,
@@ -91,20 +94,38 @@ clean <- function(tbl) {
       incident_id
     ) %>%
     mutate(
-      # TODO(danj): looks like there are some random types here
+      # TODO(danj): looks like there are some random types here, improve this
       incident_type = "vehicular",
       incident_date = parse_date(incident_date, dt_fmt),
       subject_sex = tr_sex[subject_sex],
-      subject_race = tr_race[subject_race],
-      # TODO(danj): is this the right reason?
-      reason_for_stop = person_search_reason_for_stop,
+      # TODO(danj): N in ethnicity was highest, H second, what is N?
+      subject_race = tr_race[
+        ifelse(subject_ethnicity == "H", "H", subject_race)
+      ],
+      # TODO(danj): is this how we want to do this?
+      reason_for_stop = str_combine(
+        person_search_reason_for_stop, vehicle_search_reason_for_stop,
+        prefix_left = "PERSON=", prefix_right = "VEHICLE=",
+        na_left = "NONE", na_right = "NONE"
+      ),
       person_search_race_known = matches(person_search_race_known, "YES"),
       search_person = matches(search_person, "YES"),
       vehicle_search_race_known = matches(vehicle_search_race_known, "YES"),
       search_vehicle = matches(search_vehicle, "YES"),
       search_conducted = search_person | search_vehicle,
       # TODO(danj): check this
-      search_type = ifelse(search_conducted, "probable cause", NA)
-    ) %>%
-    standardize()
+      search_type = ifelse(search_conducted, "probable cause", NA),
+      contraband_found = (
+        matches(person_search_search_discovered, contraband)
+        | matches(vehicle_search_search_discovered, contraband)
+      ),
+      contraband_recovered_from_search = str_combine(
+        person_search_search_discovered, vehicle_search_search_discovered,
+        prefix_left = "PERSON=", prefix_right = "VEHICLE=",
+        na_left = "NOTHING", na_right = "NOTHING"
+      )
+    # ) %>%
+    )
+    saveRDS(tbl, "austin.rds")
+    tbl %>% standardize()
 }
