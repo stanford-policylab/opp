@@ -107,8 +107,10 @@ clean <- function(tbl) {
         person_search_reason_for_stop, vehicle_search_reason_for_stop,
         prefix_left = "subject=", prefix_right = "vehicle="
       ),
+      # TODO(danj): this should only be for where searches conducted
       person_search_race_known = matches(person_search_race_known, "YES"),
       search_person = matches(search_person, "YES"),
+      # TODO(danj): this should only be for where searches conducted
       vehicle_search_race_known = matches(vehicle_search_race_known, "YES"),
       search_vehicle = matches(search_vehicle, "YES"),
       search_conducted = search_person | search_vehicle,
