@@ -1,0 +1,3 @@
+create verify_schema using funciton names in requried_schema
+create left_join_and_coalesce (chicago)
+refactor chicago, dallas, san diego, and nashville

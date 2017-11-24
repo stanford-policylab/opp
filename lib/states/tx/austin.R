@@ -122,8 +122,6 @@ clean <- function(tbl) {
         person_search_search_discovered, vehicle_search_search_discovered,
         prefix_left = "subject=", prefix_right = "vehicle="
       )
-    # ) %>%
-    )
-    saveRDS(tbl, "austin.rds")
-    tbl %>% standardize()
+    ) %>%
+    standardize()
 }
