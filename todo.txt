@@ -1,7 +1,7 @@
-fix determine austin stop type
-create verify_schema using funciton names in requried_schema
+create verify_schema using funciton names in required_schema
 create left_join_and_coalesce (chicago)
 fix plot to make a table when the labels are really long
+finish austin
 refactor chicago, dallas, san diego, and nashville
 
 
