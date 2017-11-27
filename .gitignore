@@ -2,5 +2,7 @@
 *.swp
 *.pdf
 *.nfs*
+*/__pycache__/*
+reports/*
 gmaps_api.key
 .Rhistory

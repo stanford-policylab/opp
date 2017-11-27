@@ -1,20 +1,29 @@
 #!/usr/bin/env python3
 
-import re
+import os
 import sys
 import argparse
 import subprocess as sub
 import tempfile
 
 
+from utils import (
+    chdir_to_opp_root, 
+    make_dir,
+    strip_margin, 
+)
+
+
 def generate_report(state, city):
+    opp_root_dir = chdir_to_opp_root()
+    make_reports_dir(opp_root_dir)
     rcmd = strip_margin('''
     library(rmarkdown)
     library(knitr)
     render(
       'lib/report.Rmd',
       'pdf_document',
-      '{state_}_{city_}_report.pdf',
+      '../reports/{state_}_{city_}_report.pdf',
       params = list(
         state = '{state_}',
         city = '{city_}',
@@ -35,13 +44,15 @@ def generate_report(state, city):
             print(e)
             print('Failed to make report! Are the R packages'
                   ' rmarkdown and knitr installed?')
+            sys.exit(1)
+    print('Report saved to reports directory!')
     return
 
 
-def strip_margin(text):
-    indent = len(min(re.findall('\n[ \t]*(?=\S)', text) or ['']))
-    pattern = r'\n[ \t]{%d}' % (indent - 1)
-    return re.sub(pattern, '\n', text)
+def make_reports_dir(opp_root_dir):
+    reports_dir = os.path.join(opp_root_dir, 'reports')
+    make_dir(reports_dir)
+    return
 
 
 def parse_args(argv):
