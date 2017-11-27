@@ -12,6 +12,8 @@ import sys
 
 from shutil import copyfile
 
+from utils import chdir_to_opp_city_root_dir, make_dir
+
 
 def init(args):
     chdir_to_opp_city_root()
@@ -23,25 +25,11 @@ def init(args):
     return
 
 
-def chdir_to_opp_city_root():
-    path = os.path.dirname(os.path.realpath(__file__))
-    # NOTE: this assumes opp-city root is parent directory of this file
-    parent = os.path.abspath(os.path.join(path, os.pardir))
-    os.chdir(parent)
-    return
-
-
 def make_data_dirs(state, city):
     parent_dir = os.path.join('data', 'states', state, city)
     sub_dirs = ['raw', 'raw_csv', 'clean', 'geocodes']
     for sub_dir in sub_dirs:
         make_dir(os.path.join(parent_dir, sub_dir))
-    return
-
-
-def make_dir(d):
-    if not os.path.exists(d):
-        os.makedirs(d)
     return
 
 
