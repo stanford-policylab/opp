@@ -155,6 +155,7 @@ extra_schema <- c(
   frisk_performed                   = as.logical,
   search_consent                    = as.logical,
   search_plain_view                 = as.logical,
+  search_probable_cause             = as.logical,
   search_person                     = as.logical,
   search_driver                     = as.logical,
   search_passenger                  = as.logical,

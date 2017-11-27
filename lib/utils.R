@@ -209,7 +209,7 @@ fill_null <- function(v, fill = NA) {
 
 str_combine <- function(left, right,
                         prefix_left = "", prefix_right = "",
-                        sep = "|") {
+                        sep = "||") {
 
   left_null <- is_null(left)
   right_null <- is_null(right)
@@ -221,7 +221,8 @@ str_combine <- function(left, right,
   v[both_null] <- as.character(NA)
   v[neither_null] <- str_c(
     str_c(prefix_left, left[neither_null]),
-    str_c(prefix_right, right[neither_null])
+    str_c(prefix_right, right[neither_null]),
+    sep = sep
   )
   v[left_null_right_not_null] <- str_c(prefix_right,
                                        right[left_null_right_not_null])
