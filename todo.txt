@@ -1,3 +1,5 @@
+create multi-join by col
+  - i.e. AW -> joins to A and W in another file
 create verify_schema using funciton names in required_schema
 create left_join_and_coalesce (chicago)
 fix plot to make a table when the labels are really long
