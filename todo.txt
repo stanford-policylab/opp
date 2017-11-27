@@ -3,3 +3,35 @@ create verify_schema using funciton names in requried_schema
 create left_join_and_coalesce (chicago)
 fix plot to make a table when the labels are really long
 refactor chicago, dallas, san diego, and nashville
+
+
+unit tests:
+- total count of rows
+  - total
+  - by incident type
+  - by year
+  - by year and month
+  - by year by day
+- date range
+- percent with lat/lng
+- percent race distribution (graph)
+- plot reason for stop
+  - plot top 20
+  - what proportion top 20 represents
+- add null rates to report
+- search conducted
+  - percent true
+- search types
+  - distro plot (including NAs)
+- contraband found
+  - percent true (including NAs)
+- percent contraband found by race (predicated search conducted)
+- arrest made
+  - percent true
+- citation issued
+  - percent true
+
+
+- make sanitization report
+  - how many values were corrected for each sanitizer
+- write lat/lng sanitizer
