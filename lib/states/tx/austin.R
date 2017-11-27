@@ -102,7 +102,7 @@ clean <- function(tbl) {
       subject_race = tr_race[
         ifelse(subject_ethnicity == "H", "H", subject_race)
       ],
-      # TODO(danj): is this how we want to do this?
+      # TODO(danj): there is a better column for this
       reason_for_stop = str_combine(
         person_search_reason_for_stop, vehicle_search_reason_for_stop,
         prefix_left = "subject=", prefix_right = "vehicle="
