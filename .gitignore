@@ -3,6 +3,8 @@
 *.pdf
 *.nfs*
 */__pycache__/*
+data
+data/*
 reports/*
 gmaps_api.key
 .Rhistory

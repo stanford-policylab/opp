@@ -1,11 +1,12 @@
-## @knitr part1
-a <- 1 + 1
+## @knitr load
+setwd("..")
+source("opp.R")
+d <- opp_load(state, city)
 
-has <- function(col) {
-  if (col == "location") 1
-  else 0
-}
-
+## @knitr counts
+nrows <- nrow(d)
+# by_type <- group_by(d, incident_type) %>% count
+# by_year <- group_by(d, year = year(incident_date)) %>% count
 
 ## @knitr part2
 print(city)
