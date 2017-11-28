@@ -45,7 +45,6 @@ def generate_report(state, city):
             print('Failed to make report! Are the R packages'
                   ' rmarkdown and knitr installed?')
             sys.exit(1)
-    print('Report saved to reports directory!')
     return
 
 

@@ -16,7 +16,3 @@ state <- params$state
 read_chunk('report.R')
 ```
 
-```{r part1}
-```
-
-The city is `r city` and state is `r state` and a is `r a`.
