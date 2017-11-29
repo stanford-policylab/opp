@@ -12,11 +12,11 @@ import sys
 
 from shutil import copyfile
 
-from utils import chdir_to_opp_city_root_dir, make_dir
+from utils import chdir_to_opp_root, make_dir
 
 
 def init(args):
-    chdir_to_opp_city_root()
+    chdir_to_opp_root()
     state = args.state.lower()
     city = '_'.join([x.lower() for x in args.city])
     make_data_dirs(state, city)
@@ -40,7 +40,8 @@ def make_lib_dirs(state):
 
 def copy_template(template_path, state, city):
     dst = os.path.join('lib', 'states', state, city + '.R')
-    copyfile(template_path, dst)
+    if not os.path.exists(dst):
+        copyfile(template_path, dst)
     return
 
 
