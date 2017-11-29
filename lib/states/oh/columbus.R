@@ -1,8 +1,8 @@
-source("lib/common.R")
+source("common.R")
 
 load_raw <- function(raw_data_dir, geocodes_path) {
   tbl <- read_csv_with_types(
-    str_c(raw_data_dir, "columbus_oh_data_sheet_1.csv"),
+    file.path(raw_data_dir, "columbus_oh_data_sheet_1.csv"),
     c(
       incident_id                 = "c",
       stop_date                   = "c",

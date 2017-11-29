@@ -2,8 +2,7 @@
 params:
   state: "DEFAULT"
   city: "DEFAULT"
-  set_title: "DEFAULT"
-title: "`r params$set_title`"
+title: "`r paste(params$city, params$state, sep = ', ')`"
 ---
 
 
@@ -13,6 +12,14 @@ opts_chunk$set(echo = FALSE)
 city <- params$city
 state <- params$state
 
-read_chunk('report.R')
+read_chunk("opp.R", labels = "opp")
+read_chunk("report.R")
 ```
 
+```{r opp, message=F, warning=F}
+```
+
+```{r load}
+```
+
+`r nrow(d)`

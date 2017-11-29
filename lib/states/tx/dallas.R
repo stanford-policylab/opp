@@ -1,15 +1,14 @@
+source("common.R")
+
 load_raw <- function(raw_data_dir, geocodes_path) {
   tbls <- list()
   # NOTE: commercial vehicle inspections is not currently processed but exists
   # in the raw_data_dir
-  stops <- read_csv(str_c(raw_data_dir,
-                          'txdps_2016_statewide_stops.csv'))
-  citations <- read_csv(str_c(raw_data_dir,
-                              'txdps_2016_statewide_citation_violations.csv'))
-  warnings <- read_csv(str_c(raw_data_dir,
-                             'txdps_2016_statewide_warning_violations.csv'))
-  weather <- read_csv(str_c(raw_data_dir,
-                            'txdps_lookups.csv'))
+  r <- function(fname) { read_csv(file.path(raw_data_dir, fname)) }
+  stops <- r('txdps_2016_statewide_stops.csv')
+  citations <- r('txdps_2016_statewide_citation_violations.csv')
+  warnings <- r('txdps_2016_statewide_warning_violations.csv')
+  weather <- r('txdps_lookups.csv')
 
   left_join(stops, citations, by = c("HA_ARREST_KEY" = "AD_ARREST_KEY")
   ) %>%

@@ -1,7 +1,7 @@
 source("lib/common.R")
 
 load_raw <- function(raw_data_dir, geocodes_path) {
-  tbl <- read_csv_with_types(str_c(raw_data_dir, "data.csv"), c(
+  tbl <- read_csv_with_types(file.path(raw_data_dir, "data.csv"), c(
     street_check_case_number          = "c",
     occurred_date                     = "c",
     officer                           = "c",
@@ -29,7 +29,7 @@ load_raw <- function(raw_data_dir, geocodes_path) {
     vehicle_searched                  = "c"
   ))
 
-  r <- function(fname) { read_csv(str_c(raw_data_dir, fname)) }
+  r <- function(fname) { read_csv(file.path(raw_data_dir, fname)) }
 
   reason_codes <- r("reason_checked_code_lookup.csv")
   race_codes <- r("race_code_lookup.csv")
