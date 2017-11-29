@@ -1,5 +1,7 @@
+source("common.R")
+
 load_raw <- function(raw_data_dir, geocodes_path) {
-  arrests <- read_csv(str_c(raw_data_dir, "arrests.csv"),
+  arrests <- read_csv(file.path(raw_data_dir, "arrests.csv"),
     col_names = c(
       "arrest_id",
       "arrest_date",
@@ -49,7 +51,7 @@ load_raw <- function(raw_data_dir, geocodes_path) {
     skip = 1
   )
 
-  citations <- read_csv(str_c(raw_data_dir, "citations.csv"),
+  citations <- read_csv(file.path(raw_data_dir, "citations.csv"),
     col_names = c(
       "contact_card_id",
       "contact_date",

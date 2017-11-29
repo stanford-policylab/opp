@@ -1,10 +1,10 @@
-source("lib/common.R")
+source("common.R")
 
 load_raw <- function(raw_data_dir, geocodes_path) {
   tbls <- list()
   for (year in 2006:2015) {
     tbls[[length(tbls) + 1]] <- read_csv_with_types(
-      str_c(raw_data_dir, "trafs_evs_", year, "_sheet_1.csv"),
+      file.path(raw_data_dir, str_c("trafs_evs_", year, "_sheet_1.csv")),
       c(
         rin                       = "c",
         datetime                  = "c",

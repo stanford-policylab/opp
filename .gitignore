@@ -5,6 +5,8 @@
 */__pycache__/*
 data
 data/*
+plots
+plots/*
 reports/*
 gmaps_api.key
 .Rhistory

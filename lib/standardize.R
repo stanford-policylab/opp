@@ -1,7 +1,7 @@
 library(dplyr)
 
-source("lib/standards.R")
-source("lib/sanitizers.R")
+source("standards.R")
+source("sanitizers.R")
 
 
 standardize <- function(tbl) {

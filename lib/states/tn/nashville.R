@@ -1,7 +1,9 @@
+source("common.R")
+
 load_raw <- function(raw_data_dir, geocodes_path) {
   tbls <- list()
   for (year in 2010:2016) {
-    filename <- str_c(raw_data_dir, "traffic_stop_", year, ".csv")
+    filename <- file.path(raw_data_dir, str_c("traffic_stop_", year, ".csv"))
     tbls[[length(tbls) + 1]] <- read_csv(filename,
       col_names = c(
         "stop_number",

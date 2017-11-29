@@ -1,4 +1,4 @@
-source("lib/standards.R")
+source("standards.R")
 
 
 sanitize_incident_date <- function(val) {
