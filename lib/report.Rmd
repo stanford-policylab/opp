@@ -18,7 +18,9 @@ read_chunk("report.R", labels = "report")
 ```{r report, message=F, warning=F}
 ```
 
-Total rows: `r total_rows`
+total rows: `r total_rows`
+
+date range: `r date_range[1]` to `r date_range[2]`
 
 ```{r by_incident_type_table}
 by_incident_type_table
@@ -30,4 +32,9 @@ by_year_plot
 
 ```{r by_year_by_month_plot}
 by_year_by_month_plot
+```
+
+
+```{r by_year_by_day_plot, fig.height = 10}
+by_year_by_day_plot
 ```
