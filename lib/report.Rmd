@@ -3,6 +3,8 @@ params:
   state: ""
   city: ""
 title: "`r paste(params$city, params$state, sep = ', ')`"
+fig_width: 3
+fig_height: 3
 ---
 
 
@@ -17,6 +19,8 @@ read_chunk("report.R", labels = "report")
 
 ```{r report, message=F, warning=F}
 ```
+
+Total rows: `r total_rows`
 
 ```{r by_year_plot}
 by_year_plot

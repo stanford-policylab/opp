@@ -1,9 +1,10 @@
 library(ggplot2)
+
 source("opp.R")
 
 d <- opp_load(state, city)
 
-nrows <- nrow(d)
+total_rows <- nrow(d)
 
 by_type <- group_by(d, incident_type) %>% count
 by_type_plot <- ggplot(by_type) +
