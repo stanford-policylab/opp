@@ -5,12 +5,10 @@ create left_join_and_coalesce (chicago)
 fix plot to make a table when the labels are really long
 finish austin
 refactor chicago, dallas, san diego, and nashville
+propagate NAs in predicate dependent columns
 
 
 unit tests:
-- total count of rows
-  - by year by day
-- date range
 - percent with lat/lng
 - percent race distribution (graph)
 - plot reason for stop
