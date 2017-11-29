@@ -13,8 +13,6 @@ main <- function() {
     opp_report(args$state, args$city)
   if (not_null(args$plot))
     opp_plot(args$state, args$city)
-  if (not_null(args$null_rates))
-    print(get_null_rates(opp_load(args$state, args$city)))
   q(status = 0)
 }
 
@@ -35,7 +33,6 @@ get_args <- function() {
     "process",    "o",          "none",         "logical",
     "report",     "r",          "none",         "logical",
     "plot",       "p",          "none",         "logical",
-    "null_rates", "n",          "none",         "logical",
     "state",      "s",          "required",     "character",
     "city",       "c",          "required",     "character"
   )
