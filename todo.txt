@@ -9,10 +9,6 @@ refactor chicago, dallas, san diego, and nashville
 
 unit tests:
 - total count of rows
-  - total
-  - by incident type
-  - by year
-  - by year and month
   - by year by day
 - date range
 - percent with lat/lng
