@@ -72,7 +72,11 @@ get_null_rates <- function(tbl) {
 
 
 is_null <- function(v) {
-  is.na(v) | v == "NA" | v == "" | v == "NULL"
+  if (is.character(v)) {
+    is.na(v) | v == "NA" | v == "" | v == "NULL"
+  } else {
+    is.na(v)
+  }
 }
 
 
