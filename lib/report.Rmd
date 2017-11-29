@@ -1,7 +1,7 @@
 ---
 params:
-  state: "DEFAULT"
-  city: "DEFAULT"
+  state: ""
+  city: ""
 title: "`r paste(params$city, params$state, sep = ', ')`"
 ---
 
@@ -12,14 +12,12 @@ opts_chunk$set(echo = FALSE)
 city <- params$city
 state <- params$state
 
-read_chunk("opp.R", labels = "opp")
-read_chunk("report.R")
+read_chunk("report.R", labels = "report")
 ```
 
-```{r opp, message=F, warning=F}
+```{r report, message=F, warning=F}
 ```
 
-```{r load}
+```{r by_year_plot}
+by_year_plot
 ```
-
-`r nrow(d)`
