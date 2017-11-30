@@ -9,8 +9,6 @@ propagate NAs in predicate dependent columns
 
 
 unit tests:
-- percent with lat/lng
-- percent race distribution (graph)
 - plot reason for stop
   - plot top 20
   - what proportion top 20 represents

@@ -7,6 +7,7 @@ d <- opp_load(state, city)
 
 total_rows <- nrow(d)
 date_range <- range(d$incident_date)
+null_rates_table <- kable(null_rates(d), align = c('l', 'r'))
 
 by_incident_type <- group_by(d, incident_type) %>% count
 by_incident_type_table <- kable(by_incident_type)
@@ -28,3 +29,7 @@ by_year_by_day_plot <- ggplot(d) +
   facet_grid(year(incident_date) ~ .) +
   xlab("day of year") +
   ylab("count")
+
+race_pct_tbl <- pct_tbl(d$subject_race, c("race", "percent"))
+race_pct_plot <- ggplot(race_pct_tbl) +
+  geom_bar(aes(x = race, y = percent), stat = "identity")
