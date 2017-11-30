@@ -62,12 +62,20 @@ get_primary_class <- function(obj) {
   class(obj)[1]
 }
 
+pct_tbl <- function(v, colnames = c("name", "pct")) {
+  tbl <- as_tibble(prop.table(table(v)) * 100)
+  names(tbl) <- colnames
+  tbl
+}
 
-get_null_rates <- function(tbl) {
+
+null_rates <- function(tbl) {
   nulls_tbl <- tbl %>% summarize_all(funs(sum(is_null(.)) / length(.)))
-  nulls_vec <- named_vector_from_list_firsts(nulls_tbl)
-  nulls_pcts <- paste0(formatC(100 * nulls_vec, format = "f", digits = 2), "%")
-  tibble(features = names(nulls_vec), null_pct = nulls_pcts) %>% print(n = Inf)
+  transpose_one_line_table(
+    nulls_tbl,
+    colnames = c("features", "null percent"),
+    f = pretty_percents
+  )
 }
 
 
@@ -77,6 +85,21 @@ is_null <- function(v) {
   } else {
     is.na(v)
   }
+}
+
+
+transpose_one_line_table <- function(tbl,
+                                     colnames = c("names", "values"),
+                                     f = identity) {
+  v <- named_vector_from_list_firsts(tbl)
+  tbl <- tibble(names(v), f(v))
+  names(tbl) <- colnames
+  tbl
+}
+
+
+pretty_percents <- function(v) {
+  paste0(formatC(100 * v, format = "f", digits = 2), "%")
 }
 
 

@@ -18,12 +18,18 @@ read_chunk("report.R", labels = "report")
 ```{r report, message=F, warning=F}
 ```
 
-total rows: `r total_rows`
+\begin{center}
+`r prettyNum(total_rows, big.mark = ",")` rows
 
-date range: `r date_range[1]` to `r date_range[2]`
+`r date_range[1]` to `r date_range[2]`
+\end{center}
 
-```{r by_incident_type_table}
+```{r by_incident_type_table, fig.align = 'left'}
 by_incident_type_table
+```
+
+```{r null_rates_table}
+null_rates_table
 ```
 
 ```{r by_year_plot}
@@ -34,7 +40,10 @@ by_year_plot
 by_year_by_month_plot
 ```
 
-
 ```{r by_year_by_day_plot, fig.height = 10}
 by_year_by_day_plot
+```
+
+```{r race_pct_plot}
+race_pct_plot
 ```
