@@ -33,3 +33,5 @@ by_year_by_day_plot <- ggplot(d) +
 race_pct_tbl <- pct_tbl(d$subject_race, c("race", "percent"))
 race_pct_plot <- ggplot(race_pct_tbl) +
   geom_bar(aes(x = race, y = percent), stat = "identity")
+
+top_20_reason_for_stop_plot <- plot_top_n_by_year()

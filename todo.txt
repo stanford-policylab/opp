@@ -12,7 +12,6 @@ unit tests:
 - plot reason for stop
   - plot top 20
   - what proportion top 20 represents
-- add null rates to report
 - search conducted
   - percent true
 - search types
