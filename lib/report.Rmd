@@ -47,3 +47,7 @@ by_year_by_day_plot
 ```{r race_pct_plot}
 race_pct_plot
 ```
+
+```{r reason_for_stop_top_20_plot}
+reason_for_stop_top_20_plot
+```
