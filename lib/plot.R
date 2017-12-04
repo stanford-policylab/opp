@@ -44,7 +44,8 @@ plot_factor <- function (tbl, col) {
 
 
 plot_setup_text <- function(tbl, col) {
-  plot_setup(tbl, col) + theme(axis.text.x = element_text(angle = 90))
+  plot_setup(tbl, col) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1))
 }
 
 

@@ -53,7 +53,7 @@ null_rates <- function(tbl) {
   nulls_tbl <- tbl %>% summarize_all(funs(sum(is_null(.)) / length(.)))
   transpose_one_line_table(
     nulls_tbl,
-    colnames = c("features", "null percent"),
+    colnames = c("features", "null rate"),
     f = pretty_percents
   )
 }
