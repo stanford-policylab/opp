@@ -1,12 +1,13 @@
 #!/usr/bin/env Rscript
-library(tibble)
 
 setwd("lib")
-source("opp.R")
+suppressMessages(source("opp.R"))
 
 
 main <- function() {
   args <- get_args()
+
+
   if (not_null(args$process))
     opp_process(args$state, args$city)
   if (not_null(args$report))
@@ -23,7 +24,6 @@ get_args <- function() {
                  "[--process]",
                  "[--report]",
                  "[--plot]",
-                 "[--null_rates]",
                  "-s <state_code>",
                  "-c <city_name>",
                  sep = " ")

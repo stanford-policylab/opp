@@ -5,26 +5,11 @@ create left_join_and_coalesce (chicago)
 fix plot to make a table when the labels are really long
 finish austin
 refactor chicago, dallas, san diego, and nashville
-propagate NAs in predicate dependent columns
+- propagate NAs in predicate dependent columns
 
 
-unit tests:
-- plot reason for stop
-  - plot top 20
-  - what proportion top 20 represents
-- search conducted
-  - percent true
-- search types
-  - distro plot (including NAs)
-- contraband found
-  - percent true (including NAs)
-- percent contraband found by race (predicated search conducted)
-- arrest made
-  - percent true
-- citation issued
-  - percent true
-
-
+- 2010 census population in report
+- investigate spike in seattle
 - make sanitization report
   - how many values were corrected for each sanitizer
 - write lat/lng sanitizer
