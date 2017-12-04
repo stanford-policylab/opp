@@ -28,31 +28,13 @@ named_vector_from_list_firsts <- function(lst) {
 
 
 top_n_by <- function(tbl, ..., top_n = 10) {
-  rank_enquo <- enquo(col_to_rank)
   tbl %>%
     group_by(...) %>%
     count %>%
+    ungroup %>%
     mutate(rank = row_number(-n)) %>%
-    fitler(rank <= top_n) %>%
+    filter(rank <= top_n) %>%
     arrange(rank)
-}
-
-
-
-top_n_by_year <- function(tbl, date_col, col_to_rank, top_n = 10) {
-  stopifnot(is.data.frame(tbl) || is.list(tbl) || is.environment(tbl))
-
-  date_enquo <- enquo(date_col)
-  rank_enquo <- enquo(col_to_rank)
-
-  d <- tbl %>%
-    mutate(yr = year(!!date_enquo)) %>%
-    group_by(yr, !!rank_enquo) %>%
-    count() %>%
-    group_by(yr) %>%
-    mutate(yr_rank = row_number(-n)) %>%
-    filter(yr_rank <= top_n) %>%
-    arrange(yr, yr_rank)
 }
 
 

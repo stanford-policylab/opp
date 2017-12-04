@@ -34,4 +34,8 @@ race_pct_tbl <- pct_tbl(d$subject_race, c("race", "percent"))
 race_pct_plot <- ggplot(race_pct_tbl) +
   geom_bar(aes(x = race, y = percent), stat = "identity")
 
-top_20_reason_for_stop_plot <- plot_top_n_by_year()
+reason_for_stop_top_20 <- top_n_by(tbl, reason_for_stop)
+reason_for_stop_top_20_plot <- ggplot(reason_for_stop_top_20) +
+  geom_bar(aes(x = reorder(reason_for_stop, -n), y = n, stat = "identity")) +
+  theme(axis.text.x = element_text(angle = 90)) +
+  xlab("reason for stop")
