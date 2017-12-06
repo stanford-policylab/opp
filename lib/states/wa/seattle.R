@@ -1,10 +1,12 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, geocodes_path) {
-  tbls <- list()
+  data <- tibble()
+	loading_problems <- list()
   for (year in 2006:2015) {
-    tbls[[length(tbls) + 1]] <- read_csv_with_types(
-      file.path(raw_data_dir, str_c("trafs_evs_", year, "_sheet_1.csv")),
+    fname <- str_c("trafs_evs_", year, "_sheet_1.csv")
+    tbl <- read_csv_with_types(
+      file.path(raw_data_dir, fname),
       c(
         rin                       = "c",
         datetime                  = "c",
@@ -21,13 +23,22 @@ load_raw <- function(raw_data_dir, geocodes_path) {
         empty                     = "c"
       )
     )
+		data <- bind_rows(data, tbl)
+		loading_problems[[fname]] <- problems(tbl)
   }
-  add_lat_lng(bind_rows(tbls), "address", geocodes_path)
+  data <- add_lat_lng(data, "address", geocodes_path)
+
+	list(
+		data = data,
+		metadata = list(
+			loading_problems = loading_problems
+		)
+	)
 }
 
 
-clean <- function(tbl) {
-  tbl %>%
+clean <- function(d) {
+  d$data %>%
     select(
       -empty
     ) %>%

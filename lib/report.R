@@ -11,6 +11,7 @@ prop_plot <- function(col) {
     ylab("proportion")
 }
 
+population <- opp_population(state, city)
 total_rows <- nrow(d)
 date_range <- range(d$incident_date)
 null_rates_table <- kable(null_rates(d), align = c('l', 'r'))
