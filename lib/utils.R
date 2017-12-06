@@ -50,12 +50,17 @@ pct_tbl <- function(v, colnames = c("name", "pct")) {
 
 
 null_rates <- function(tbl) {
-  nulls_tbl <- tbl %>% summarize_all(funs(sum(is_null(.)) / length(.)))
+  nulls_tbl <- tbl %>% summarize_all(funs(null_rate))
   transpose_one_line_table(
     nulls_tbl,
     colnames = c("features", "null rate"),
     f = pretty_percents
   )
+}
+
+
+null_rate <- function(v) {
+	sum(is_null(v)) / length(v)
 }
 
 
@@ -68,6 +73,33 @@ is_null <- function(v) {
 }
 
 
+apply_schema_and_collect_null_rates <- function(schema, data) {
+  null_rates <- list()
+  for (name in names(schema)) {
+    x <- apply_and_collect_null_rates(schema[[name]], data[[name]])
+    data[[name]] <- x$v
+    null_rates[[name]] <- x$null_rates 
+  }
+  null_rates_tbl <- t(bind_rows(null_rates))
+  colnames(null_rates_tbl) <- c("null_rate_before", "null_rate_after")
+  list(data = data, null_rates = null_rates_tbl)
+}
+
+
+apply_and_collect_null_rates <- function(f, v) {
+	null_rate_before <- null_rate(v)
+	v <- f(v)
+	null_rate_after <- null_rate(v)
+	list(
+		v = v,
+		null_rates = c(
+			null_rate_before = null_rate_before,
+			null_rate_after = null_rate_after
+		)
+	)
+}
+
+
 transpose_one_line_table <- function(tbl,
                                      colnames = c("names", "values"),
                                      f = identity) {
@@ -75,6 +107,11 @@ transpose_one_line_table <- function(tbl,
   tbl <- tibble(names(v), f(v))
   names(tbl) <- colnames
   tbl
+}
+
+
+transpose_tbl <- function(tbl) {
+	as_tibble(cbind(columns = names(tbl), t(tbl)))
 }
 
 

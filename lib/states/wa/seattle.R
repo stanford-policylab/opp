@@ -78,5 +78,5 @@ clean <- function(d) {
       officer_id_1 = parse_number(officer_id_1),
       officer_id_2 = parse_number(officer_id_2)
     ) %>%
-    standardize()
+    standardize(d$metadata)
 }
