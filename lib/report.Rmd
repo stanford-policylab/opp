@@ -19,9 +19,9 @@ read_chunk("report.R", labels = "report")
 ```
 
 \begin{center}
-`r prettyNum(total_rows, big.mark = ",")` rows
+2010 Census Population: `r commaNum(population)`
 
-`r date_range[1]` to `r date_range[2]`
+`r commaNum(total_rows)` rows from `r date_range[1]` to `r date_range[2]`
 \end{center}
 
 ```{r by_incident_type_table, fig.align = 'left'}

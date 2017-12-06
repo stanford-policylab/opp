@@ -235,3 +235,15 @@ str_combine <- function(left, right,
                                        right[left_null_right_not_null])
   v
 }
+
+
+capitalizeFirstLetters <- function(x) {
+  s <- strsplit(x, " ")[[1]]
+  paste(toupper(substring(s, 1,1)), substring(s, 2),
+      sep="", collapse=" ")
+}
+
+
+commaNum <- function(n) {
+	prettyNum(n, big.mark = ",")
+}

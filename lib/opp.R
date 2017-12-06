@@ -14,7 +14,7 @@ opp_clean_data_path <- function(state, city) {
   # NOTE: all clean data is stored and loaded in RDS format to
   # maintain data types
   data_dir = opp_data_dir(state, city)
-  file.path(data_dir, "clean", str_c(normalize_city(city), ".rds"))
+  file.path(data_dir, "clean", str_c(normalizeCity(city), ".rds"))
 }
 
 
@@ -75,8 +75,8 @@ opp_clean <- function(tbl, state, city) {
 }
 
 
-opp_save <- function(tbl, state, city) {
-  saveRDS(tbl, opp_clean_data_path(state, city))
+opp_save <- function(d, state, city) {
+  saveRDS(d, opp_clean_data_path(state, city))
 }
 
 
@@ -120,4 +120,42 @@ opp_plot <- function(state, city) {
     opp_load(state, city),
     file.path(output_dir, pdf_filename(state, city))
   )
+}
+
+
+opp_population <- function(state, city) {
+  p <- read_csv(
+    file.path("..", "data", "populations.csv"),
+    col_types = cols_only(
+      STATE = "c",
+      NAME = "c",
+      STNAME = "c",
+      CENSUS2010POP = "i"
+    )
+  )
+  fips <- read_delim(
+    file.path("..", "data", "fips.csv"),
+    delim = "|",
+    col_types = cols_only(
+      STATE = "c",
+      STUSAB = "c",
+      STATE_NAME = "c"
+    )
+  )
+  v <- left_join(
+    p,
+    fips,
+    by = c("STATE" = "STATE")
+  ) %>%
+  filter(
+    STUSAB == toupper(state),
+    NAME == str_c(capitalizeFirstLetters(city), " city")
+  ) %>%
+  select(
+    CENSUS2010POP
+  ) %>%
+	distinct
+
+	# return scalar, not tibble
+	as.integer(v)
 }
