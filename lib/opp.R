@@ -14,7 +14,7 @@ opp_clean_data_path <- function(state, city) {
   # NOTE: all clean data is stored and loaded in RDS format to
   # maintain data types
   data_dir = opp_data_dir(state, city)
-  file.path(data_dir, "clean", str_c(normalizeCity(city), ".rds"))
+  file.path(data_dir, "clean", str_c(normalize_city(city), ".rds"))
 }
 
 
