@@ -133,11 +133,6 @@ loading_problems_random_sample_sorted_table <- kable(
 	caption = "20 Random loading problem errors, sorted"
 )
 
-missing_columns_added_table <- kable(
-	tibble(added_columns = d$metadata$standardize$add_missing_required_columns),
-  caption = "Missing columns added"
-)
-
 enforce_types_table <- kable(
 	d$metadata$standardize$enforce_types,
 	caption = "Enforce data types null rates"
@@ -147,3 +142,9 @@ sanitize_table <- kable(
 	d$metadata$standardize$sanitize,
 	caption = "Sanitize data null rates"
 )
+
+missing_columns_added_table <- kable(
+	tibble(added_columns = d$metadata$standardize$add_missing_required_columns),
+  caption = "Missing columns added"
+)
+
