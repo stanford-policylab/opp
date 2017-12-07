@@ -24,9 +24,9 @@ standardize <- function(data, metadata) {
     select_required_first
 
   # put all local metadata in standarize sublist of all metadata
-  metadata[["standarize"]] <- d$metadata
+  metadata[["standardize"]] <- d$metadata
   list(
-    data = d$data 
+    data = d$data,
     metadata = metadata
   )
 }
