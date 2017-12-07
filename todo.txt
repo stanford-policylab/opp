@@ -1,13 +1,9 @@
-create multi-join by col
+create verify_schema using function names in required_schema
+create multi-join by col (austin)
   - i.e. AW -> joins to A and W in another file
-create verify_schema using funciton names in required_schema
 create left_join_and_coalesce (chicago)
-fix plot to make a table when the labels are really long
-finish austin
-refactor chicago, dallas, san diego, and nashville
+refactor austin, chicago, dallas, san diego, and nashville
 - propagate NAs in predicate dependent columns
 
 
-- make sanitization report
-  - how many values were corrected for each sanitizer
 - write lat/lng sanitizer

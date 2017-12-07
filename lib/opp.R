@@ -149,7 +149,7 @@ opp_population <- function(state, city) {
   ) %>%
   filter(
     STUSAB == toupper(state),
-    NAME == str_c(capitalizeFirstLetters(city), " city")
+    NAME == str_c(capitalize_first_letters(city), " city")
   ) %>%
   select(
     CENSUS2010POP

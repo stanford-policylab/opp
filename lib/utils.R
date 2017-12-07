@@ -60,7 +60,7 @@ null_rates <- function(tbl) {
 
 
 null_rate <- function(v) {
-	sum(is_null(v)) / length(v)
+	round(sum(is_null(v)) / length(v), 4)
 }
 
 
@@ -76,13 +76,21 @@ is_null <- function(v) {
 apply_schema_and_collect_null_rates <- function(schema, data) {
   null_rates <- list()
   for (name in names(schema)) {
-    x <- apply_and_collect_null_rates(schema[[name]], data[[name]])
-    data[[name]] <- x$v
-    null_rates[[name]] <- x$null_rates 
+		if (name %in% colnames(data)) {
+			x <- apply_and_collect_null_rates(schema[[name]], data[[name]])
+			data[[name]] <- x$v
+			null_rates[[name]] <- x$null_rates 
+		}
   }
-  null_rates_tbl <- t(bind_rows(null_rates))
-  colnames(null_rates_tbl) <- c("null_rate_before", "null_rate_after")
-  list(data = data, null_rates = null_rates_tbl)
+  list(data = data, null_rates = create_null_rates_tbl(null_rates))
+}
+
+
+create_null_rates_tbl <- function(null_rates_list) {
+	null_rates_matrix <- t(bind_rows(null_rates_list))
+	t <- as_tibble(rownames_to_column(as.data.frame(null_rates_matrix)))
+	colnames(t) <- c("col", "null_rate_before", "null_rate_after")
+	mutate(t, null_rate_after_less_before = null_rate_after - null_rate_before)
 }
 
 
@@ -274,13 +282,13 @@ str_combine <- function(left, right,
 }
 
 
-capitalizeFirstLetters <- function(x) {
+capitalize_first_letters <- function(x) {
   s <- strsplit(x, " ")[[1]]
   paste(toupper(substring(s, 1,1)), substring(s, 2),
       sep="", collapse=" ")
 }
 
 
-commaNum <- function(n) {
+comma_num <- function(n) {
 	prettyNum(n, big.mark = ",")
 }
