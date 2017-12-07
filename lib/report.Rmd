@@ -98,6 +98,7 @@ loading_problems_random_sample_sorted_table
 ```
 
 \newpage
+
 ```{r missing_columns_added_table}
 missing_columns_added_table
 ```
