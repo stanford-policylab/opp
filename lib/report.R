@@ -134,7 +134,8 @@ loading_problems_random_sample_sorted_table <- kable(
 )
 
 missing_columns_added_table <- kable(
-	tibble(added_columns = d$metadata$standardize$add_missing_required_columns)
+	tibble(added_columns = d$metadata$standardize$add_missing_required_columns),
+  caption = "Missing columns added"
 )
 
 enforce_types_table <- kable(
