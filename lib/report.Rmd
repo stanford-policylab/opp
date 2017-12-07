@@ -99,14 +99,14 @@ loading_problems_random_sample_sorted_table
 
 \newpage
 
-```{r missing_columns_added_table}
-missing_columns_added_table
-```
-
 ```{r enforce_types_table}
 enforce_types_table
 ```
 
 ```{r sanitize_table}
 sanitize_table
+```
+
+```{r missing_columns_added_table}
+missing_columns_added_table
 ```
