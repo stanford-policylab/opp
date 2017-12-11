@@ -42,6 +42,7 @@ get_primary_class <- function(obj) {
   class(obj)[1]
 }
 
+
 pct_tbl <- function(v, colnames = c("name", "pct")) {
   tbl <- as_tibble(prop.table(table(v)) * 100)
   names(tbl) <- colnames
@@ -54,7 +55,7 @@ null_rates <- function(tbl) {
   transpose_one_line_table(
     nulls_tbl,
     colnames = c("features", "null rate"),
-    f = pretty_percents
+    f = pretty_percent
   )
 }
 
@@ -123,7 +124,7 @@ transpose_tbl <- function(tbl) {
 }
 
 
-pretty_percents <- function(v) {
+pretty_percent <- function(v) {
   paste0(formatC(100 * v, format = "f", digits = 2), "%")
 }
 

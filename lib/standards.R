@@ -10,16 +10,16 @@ valid_vehicle_start_year <- 1800
 valid_vehicle_end_year <- lubridate::year(Sys.Date()) + 1
 
 
-valid_dob_start_date <- ymd("1900-01-01")
-valid_dob_end_date <- ymd(Sys.Date())
+valid_age_start <- 10
+valid_age_end <- 100
 
 
-valid_yob_start <- 1900
-valid_yob_end <- year(Sys.Date())
+valid_dob_start_date <- ymd(Sys.Date()) - valid_age_end
+valid_dob_end_date <- ymd(Sys.Date()) - valid_age_start
 
 
-valid_age_start <- 0
-valid_age_end <- 120
+valid_yob_start <- year(Sys.Date()) - valid_age_end
+valid_yob_end <- year(Sys.Date()) - valid_age_start
 
 
 valid_incident_types <- c(
@@ -35,6 +35,15 @@ valid_search_types <- c(
   "probable cause",
   "incident to arrest"
 )
+
+
+valid_outcomes <- c(
+  "warning",
+  "citation",
+  "summons",
+  "arrest"
+)
+
 
 valid_search_probable_cause_types <- c(
   "k9",
@@ -120,19 +129,18 @@ required_schema <- c(
   incident_date           = as.Date,
   incident_time           = hms,
   incident_location       = as.character,
-  incident_lat            = as.numeric,
-  incident_lng            = as.numeric,
+  incident_outcome        = Curry(factor, levels = valid_outcomes),
   subject_race            = Curry(factor, levels = valid_races),
   reason_for_stop         = as.character,
   search_conducted        = as.logical,
   search_type             = Curry(factor, levels = valid_search_types),
-  contraband_found        = as.logical,
-  arrest_made             = as.logical,
-  citation_issued         = as.logical
+  contraband_found        = as.logical
 )
 
 
 extra_schema <- c(
+  incident_lat                      = as.numeric,
+  incident_lng                      = as.numeric,
   subject_sex                       = Curry(factor, levels = valid_sexes),
   subject_age                       = as.numeric,
   subject_dob                       = as.Date,
@@ -152,6 +160,8 @@ extra_schema <- c(
   vehicle_style                     = as.character,
   vehicle_registration_state        = Curry(factor, levels = valid_states),
   warning_issued                    = as.logical,
+  citation_issued                   = as.logical,
+  arrest_made                       = as.logical,
   frisk_performed                   = as.logical,
   search_consent                    = as.logical,
   search_plain_view                 = as.logical,

@@ -7,11 +7,6 @@ source("opp.R")
 title <- str_c(capitalize_first_letters(city), toupper(state), sep = ", ")
 
 d <- opp_load(state, city)
-prop_plot <- function(col) {
-  ggplot(d$data, aes_string(x = col)) +
-    geom_bar(aes(y = (..count..)/sum(..count..))) + 
-    ylab("proportion")
-}
 
 population <- opp_population(state, city)
 total_rows <- nrow(d$data)
@@ -49,7 +44,7 @@ by_year_by_day_plot <- ggplot(d_yd) +
   xlab("day of year") +
   ylab("count")
 
-d_wd <- mutate(
+d_yw <- mutate(
 		d$data,
 		yr = year(incident_date),
 		day_of_week = wday(incident_date, label = TRUE)
@@ -59,20 +54,42 @@ d_wd <- mutate(
 		day_of_week
 	) %>%
   count
-by_year_by_day_of_week_plot <- ggplot(d_wd) +
+by_year_by_day_of_week_plot <- ggplot(d_yw) +
   geom_bar(aes(x = day_of_week, y = n), stat = "identity") +
   facet_grid(yr ~ .) +
   xlab("day of week") +
   ylab("count")
 
+d_yh <- mutate(
+		d$data,
+		yr = year(incident_date),
+		hr = hour(incident_time)
+	) %>%
+  group_by(
+		yr,
+		hr
+	) %>%
+  count
+by_year_by_hour_of_day_plot <- ggplot(d_yh) +
+  geom_bar(aes(x = hr, y = n), stat = "identity") +
+  facet_grid(yr ~ .) +
+  xlab("hour of day") +
+  ylab("count")
+
+
 race_pct_tbl <- pct_tbl(d$data$subject_race, c("race", "percent"))
+race_present_pct <- pretty_percent(1 - null_rate(d$data$subject_race))
 race_pct_plot <- ggplot(race_pct_tbl) +
   geom_bar(aes(x = reorder(race, -percent), y = percent), stat = "identity") +
-  xlab("race")
+  xlab(str_c(
+		"race",
+		str_c("(represents", race_present_pct, "of stops)", sep = " "),
+		sep = "\n"
+	))
 
 reason_for_stop_top_20 <- top_n_by(d$data, reason_for_stop, top_n = 20)
 reason_for_stop_top_20_pct <-
-  pretty_percents(sum(reason_for_stop_top_20$n) / nrow(d$data))
+  pretty_percent(sum(reason_for_stop_top_20$n) / nrow(d$data))
 reason_for_stop_top_20_plot <- ggplot(reason_for_stop_top_20) +
   geom_bar(aes(x = reorder(reason_for_stop, -n), y = n), stat = "identity") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
@@ -82,25 +99,38 @@ reason_for_stop_top_20_plot <- ggplot(reason_for_stop_top_20) +
 		sep = "\n"
 	))
 
-search_conducted_plot <- prop_plot("search_conducted")
-
 search_types_tbl <- group_by(d$data, search_type) %>% count
 search_types_plot <- ggplot(search_types_tbl) +
   geom_bar(aes(x = reorder(search_type, -n), y = n), stat = "identity") +
   xlab("search type")
 
-contraband_found_plot <- prop_plot("contraband_found")
+pct <- function(colname) {
+  pretty_percent(mean(d$data[[colname]], na.rm = TRUE))
+}
 
-contraband_found_by_race_tbl <- group_by(d$data, subject_race) %>%
-  summarize(rate = mean(contraband_found))
-contraband_found_by_race_plot <- ggplot(contraband_found_by_race_tbl) +
-  geom_bar(aes(x = subject_race, y = rate), stat = "identity") +
-  xlab("race") +
-  ylab("contraband found rate")
+search_conducted_pct <- pct("search_conducted")
+contraband_found_pct <- pct("contraband_found")
+citation_issued_pct <- pct("citation_issued")
+arrest_made_pct <- pct("arrest_made")
 
-citation_issued_plot <- prop_plot("citation_issued")
+plot_prop_by_race <- function(col) {
+  colq <- enquo(col)
+  tbl <- group_by(
+    d$data,
+    subject_race
+  ) %>% summarize(
+    rate = mean(UQE(colq), na.rm = TRUE)
+  )
+  ggplot(tbl) + 
+    geom_bar(aes(x = subject_race, y = rate), stat = "identity") +
+    xlab("race") +
+    ylab(str_c(deparse(substitute(col)), "rate", sep = " "))
+}
 
-arrest_made_plot <- prop_plot("arrest_made")
+search_conducted_by_race_plot <- plot_prop_by_race(search_conducted)
+contraband_found_by_race_plot <- plot_prop_by_race(contraband_found)
+citation_issued_by_race_plot <- plot_prop_by_race(citation_issued)
+arrest_made_by_race_plot <- plot_prop_by_race(arrest_made)
 
 loading_problems <- bind_rows(d$metadata$loading_problems)
 loading_problems_count <- group_by(
@@ -147,4 +177,3 @@ missing_columns_added_table <- kable(
 	tibble(added_columns = d$metadata$standardize$add_missing_required_columns),
   caption = "Missing columns added"
 )
-
