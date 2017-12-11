@@ -51,6 +51,10 @@ by_year_by_day_plot
 by_year_by_day_of_week_plot
 ```
 
+```{r by_year_by_hour_of_day, fig.height = 10}
+by_year_by_hour_of_day_plot
+```
+
 ```{r race_pct_plot}
 race_pct_plot
 ```
@@ -59,28 +63,23 @@ race_pct_plot
 reason_for_stop_top_20_plot
 ```
 
-```{r search_conducted_plot}
-search_conducted_plot
-```
-
 ```{r search_types_plot}
 search_types_plot
 ```
 
-```{r contraband_found_plot}
-contraband_found_plot
-```
+Search conducted: `r search_conducted_pct`
 
-```{r contraband_found_by_race_plot}
+Contraband found: `r contraband_found_pct`
+
+Citation issued: `r citation_issued_pct`
+
+Arrest made: `r arrest_made_pct`
+
+```{r plot_props_by_race}
+search_conducted_by_race_plot
 contraband_found_by_race_plot
-```
-
-```{r citation_issued_plot}
-citation_issued_plot
-```
-
-```{r arrest_made_plot}
-arrest_made_plot
+citation_issued_by_race_plot
+arrest_made_by_race_plot
 ```
 
 \newpage

@@ -1,9 +1,8 @@
 create verify_schema using function names in required_schema
+create left_join_and_coalesce (chicago)
 create multi-join by col (austin)
   - i.e. AW -> joins to A and W in another file
-create left_join_and_coalesce (chicago)
 refactor austin, chicago, dallas, san diego, and nashville
 - propagate NAs in predicate dependent columns
-
 
 - write lat/lng sanitizer
