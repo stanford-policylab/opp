@@ -71,15 +71,13 @@ Search conducted: `r search_conducted_pct`
 
 Contraband found: `r contraband_found_pct`
 
-Citation issued: `r citation_issued_pct`
-
-Arrest made: `r arrest_made_pct`
-
 ```{r plot_props_by_race}
 search_conducted_by_race_plot
 contraband_found_by_race_plot
-citation_issued_by_race_plot
-arrest_made_by_race_plot
+```
+
+```{r outcome_by_race_plot, fig.height = 10}
+outcome_by_race_plot
 ```
 
 \newpage

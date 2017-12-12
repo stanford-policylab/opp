@@ -14,6 +14,7 @@ main <- function() {
     opp_report(args$state, args$city)
   if (not_null(args$plot))
     opp_plot(args$state, args$city)
+  print("Finished!")
   q(status = 0)
 }
 

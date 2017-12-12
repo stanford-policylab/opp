@@ -1,4 +1,3 @@
-create verify_schema using function names in required_schema
 create left_join_and_coalesce (chicago)
 create multi-join by col (austin)
   - i.e. AW -> joins to A and W in another file

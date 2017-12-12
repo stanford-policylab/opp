@@ -41,7 +41,7 @@ add_missing_required_columns <- function(d) {
       added <- c(added, name)
     }
   }
-  d$metadata[["add_missing_required_columns"]] <- added
+  d$metadata[["add_missing_required_columns"]] <- sort(added)
   d
 }
 
@@ -86,22 +86,13 @@ sanitize <- function(d) {
 
 select_required_first <- function(d) {
   print("selecting required columns first...")
-  d$data <- select(d$data,
-    incident_id,
-    incident_type,
-    incident_date,
-    incident_time,
-    incident_location,
-    incident_lat,
-    incident_lng,
-    subject_race,
-    reason_for_stop,
-    search_conducted,
-    search_type,
-    contraband_found,
-    arrest_made,
-    citation_issued,
-    everything()
-  )
+  req <- names(required_schema)
+  extra <- c()
+  for (col in colnames(d$data)) {
+    if (!(col %in% req)) {
+      extra <- c(extra, col)
+    }
+  }
+  d$data <- select_(d$data, .dots = c(req, sort(extra)))
   d
 }
