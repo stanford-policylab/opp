@@ -17,6 +17,11 @@ not_null <- function(v) {
 }
 
 
+str_expr <- function(expr) {
+  deparse(substitute(expr))
+}
+
+
 matches <- function(col, s) {
   as.vector(!is.na(str_match(col, s)))
 }
@@ -91,7 +96,13 @@ create_null_rates_tbl <- function(null_rates_list) {
 	null_rates_matrix <- t(bind_rows(null_rates_list))
 	t <- as_tibble(rownames_to_column(as.data.frame(null_rates_matrix)))
 	colnames(t) <- c("col", "null_rate_before", "null_rate_after")
-	mutate(t, null_rate_after_less_before = null_rate_after - null_rate_before)
+	mutate(
+    t,
+    null_rate_after_less_before = null_rate_after - null_rate_before
+  ) %>%
+  arrange(
+    desc(null_rate_after_less_before)
+  )
 }
 
 

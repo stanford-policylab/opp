@@ -28,12 +28,7 @@ load_raw <- function(raw_data_dir, geocodes_path) {
   }
   data <- add_lat_lng(data, "address", geocodes_path)
 
-	list(
-		data = data,
-		metadata = list(
-			loading_problems = loading_problems
-		)
-	)
+	list(data = data, metadata = list(loading_problems = loading_problems))
 }
 
 
@@ -74,6 +69,15 @@ clean <- function(d) {
       arrest_made = str_sub(disposition_description, 1, 1) == "A",
       # NOTE: includes criminal and non-criminal citations
       citation_issued = matches(disposition_description, "CITATION"),
+      incident_outcome = ifelse(
+        arrest_made,
+        "arrest",
+        ifelse(
+          citation_issued,
+          "citation",
+          NA
+        )
+      ),
       subject_dob = ymd(subject_dob),
       officer_id_1 = parse_number(officer_id_1),
       officer_id_2 = parse_number(officer_id_2)
