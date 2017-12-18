@@ -174,9 +174,10 @@ loading_problems_count_table <- kable(
 	loading_problems_count,
 	caption = "Loading problems"
 )
+sample_number = min(nrow(loading_problems), 20)
 loading_problems_random_sample_sorted <- sample_n(
 		loading_problems,
-		20
+		sample_number
 	) %>%
 	arrange(
 		expected,

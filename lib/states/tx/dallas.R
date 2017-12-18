@@ -1,26 +1,32 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, geocodes_path) {
-  tbls <- list()
   # NOTE: commercial vehicle inspections is not currently processed but exists
   # in the raw_data_dir
+  loading_problems <- list()
   r <- function(fname) { read_csv(file.path(raw_data_dir, fname)) }
   stops <- r('txdps_2016_statewide_stops.csv')
   citations <- r('txdps_2016_statewide_citation_violations.csv')
   warnings <- r('txdps_2016_statewide_warning_violations.csv')
   weather <- r('txdps_lookups.csv')
 
-  left_join(stops, citations, by = c("HA_ARREST_KEY" = "AD_ARREST_KEY")
+  data <- left_join(
+    stops,
+    citations,
+    by = c("HA_ARREST_KEY" = "AD_ARREST_KEY")
   ) %>%
-  left_join(warnings, by = c("HA_ARREST_KEY" = "AW_ARREST_KEY")
+  left_join(
+    warnings,
+    by = c("HA_ARREST_KEY" = "AW_ARREST_KEY")
   ) %>%
-  left_join(weather, by = c("HA_WEATHER" = "LK_Code")
+  left_join(
+    weather,
+    by = c("HA_WEATHER" = "LK_Code")
   )
 }
 
 
-clean <- function(tbl) {
-  # TODO(danj): dedup
+clean <- function(d) {
   date_fmt = "%m/%d/%y %H:%M:%S"
   tr_race <- c(
     A = "asian/pacific islander",
@@ -32,11 +38,10 @@ clean <- function(tbl) {
     U = "other/unknown",
     W = "white"
   )
-  tr_sex <- c(
-    F = "female",
-    M = "male"
-  )
-  tbl %>%
+  # TODO(journalist): what should we use as reason for stop?
+  # https://app.asana.com/0/456927885748233/475749789858290 
+  # TODO(danj): dedup
+  d$data %>%
     rename(
       # TODO(journalist): we need translations of these
       # https://app.asana.com/0/456927885748233/475749789858290
@@ -44,34 +49,34 @@ clean <- function(tbl) {
       citation_prefix = AD_VIOLATION_PREFIX,
       warning_code = AW_VIOLATION_CODE,
       warning_prefix = AW_VIOLATION_PREFIX,
-      defendant_address = HA_A_ADDRESS_DRVR,
+      subject_address = HA_A_ADDRESS_DRVR,
       # TODO(journalist): what is jge?
       # https://app.asana.com/0/456927885748233/475749789858290 
       jge_address = HA_A_ADDRESS_JGE,
       is_accident = HA_ACCIDENT,
-      defendant_city = HA_A_CITY_DRVR,
+      subject_city = HA_A_CITY_DRVR,
       jge_city = HA_A_CITY_JGE,
       alleged_speed = HA_ALLEGED_SPEED,
       arrest_datetime = HA_ARREST_DATE,
       incident_id = HA_ARREST_KEY,
-      defendant_state = HA_A_STATE_DRVR,
+      subject_state = HA_A_STATE_DRVR,
       jge_state = HA_A_STATE_JGE,
-      defendant_zipcode = HA_A_ZIP_DRVR,
+      subject_zipcode = HA_A_ZIP_DRVR,
       jge_zipcode = HA_A_ZIP_JGE,
       is_commercial_vehicle = HA_COMM_VEHICLE,
       is_construction_zone = HA_CONSTRUCTION_ZONE,
       contraband_found = HA_CONTRABAN,
-      is_contraband_currency = HA_CONTRAB_CURRENCY,
-      is_contraband_drugs = HA_CONTRAB_DRUGS,
-      is_contraband_other = HA_CONTRAB_OTHER,
-      is_contraband_weapon = HA_CONTRAB_WEAPON,
+      contraband_is_currency = HA_CONTRAB_CURRENCY,
+      contraband_is_drugs = HA_CONTRAB_DRUGS,
+      contraband_is_other = HA_CONTRAB_OTHER,
+      contraband_is_weapon = HA_CONTRAB_WEAPON,
       county_code = HA_COUNTY,
       court_code = HA_COURT,
       day_of_week = HA_DAY_OF_WEEK,
       court_date = HA_D_COURT,
       district = HA_DISTRICT,
       gross_vehicle_weight = HA_GVWR,
-      # NOTE: some of these heights don't appear valid
+      # NOTE: some of these heights are invalid
       height = HA_HEIGHT,
       search_incident_to_arrest = HA_INCIDTO_ARREST,
       is_fugitive_arrest = HA_INT1,
@@ -82,10 +87,10 @@ clean <- function(tbl) {
       incident_lng = HA_LONGITUDE,
       milepost = HA_MILEPOST,
       month = HA_MONTH,
-      defendant_first_name = HA_N_FIRST_DRVR,
+      subject_first_name = HA_N_FIRST_DRVR,
       judge_name = HA_N_JUDGE,
-      defendant_last_name = HA_N_LAST_DRVR,
-      defendant_middle_name = HA_N_MIDDLE_DRVR,
+      subject_last_name = HA_N_LAST_DRVR,
+      subject_middle_name = HA_N_MIDDLE_DRVR,
       officer_name = HA_N_TROOPER,
       officer_id = HA_OFFICER_ID,
       other_conditions = HA_OTH_CONDITIONS,
@@ -94,13 +99,13 @@ clean <- function(tbl) {
       has_passengers = HA_PASSENGERS,
       # TODO(journalist): what is this?
       # https://app.asana.com/0/456927885748233/475749789858290 
-      defendant_p_hm = HA_P_HM_DRVR,
+      subject_p_hm = HA_P_HM_DRVR,
       judge_p = HA_P_JUDGE,
       posted_speed = HA_POSTED_SPEED,
       precinct = HA_PRECINCT,
       # TODO(journalist): what is this?
       # https://app.asana.com/0/456927885748233/475749789858290
-      defendant_p_wk = HA_P_WK_DRVR,
+      subject_p_wk = HA_P_WK_DRVR,
       quarter_of_year = HA_QTR_DAY,
       race_sex = HA_RACE_SEX,
       citation_issued = HA_REASON_CITA,
@@ -138,51 +143,42 @@ clean <- function(tbl) {
       workers_present = HA_WORKERS_PRESENT,
       year = HA_YEAR
     ) %>%
-    separate(
-      race_sex, c("defendant_race", "defendant_sex"),
-      sep = 1, extra = "merge"
+    separate_cols(
+      race_sex = c("subject_race", "subject_sex"),
+      sep = 1
     ) %>%
-    separate(
-      arrest_datetime, c("incident_date", "incident_time"),
-      sep = " ", extra = "merge"
+    separate_cols(
+      arrest_datetime = c("incident_date", "incident_time")
     ) %>%
     mutate(
-      incident_date = sanitize_incident_date(parse_date(incident_date,
-                                                        "%m/%d/%y")),
+      incident_date = parse_date(incident_date, "%m/%d/%y"),
       incident_time = parse_time(incident_time, "%H:%M:%S"),
       is_accident = as.logical(is_accident),
-      defendant_state = factor(defendant_state, levels = valid_states),
+      subject_state = factor(subject_state, levels = valid_states),
       jge_state = factor(jge_state, levels = valid_states),
       is_commercial_vehicle = as.logical(is_commercial_vehicle),
       is_construction_zone = as.logical(is_construction_zone),
-      contraband_found = as.logical(contraband_found),
-      is_contraband_currency = as.logical(is_contraband_currency),
-      is_contraband_drugs = as.logical(is_contraband_currency),
-      is_contraband_other = as.logical(is_contraband_other),
-      is_contraband_weapon = as.logical(is_contraband_weapon),
+      contraband_is_currency = as.logical(contraband_is_currency),
+      contraband_is_drugs = as.logical(contraband_is_currency),
+      contraband_is_other = as.logical(contraband_is_other),
+      contraband_is_weapon = as.logical(contraband_is_weapon),
       court_date = parse_date(court_date, date_fmt),
-      search_incident_to_arrest = as.logical(search_incident_to_arrest),
       is_fugitive_arrest = as.logical(is_fugitive_arrest),
       is_interstate = as.logical(is_interstate),
       is_intrastate = as.logical(is_intrastate),
       incident_lat = incident_lat / 1E6,
       incident_lng = incident_lng / 1E6,
       has_passengers = as.logical(has_passengers),
-      defendant_race = factor(tr_race[defendant_race], levels = valid_races),
-      defendant_sex = factor(tr_sex[defendant_sex], levels = valid_sexes),
-      citation_issued = as.logical(citation_issued),
-      warning_issued = as.logical(warning_issued),
-      search_consent = as.logical(search_consent),
-      search_probable_cause = as.logical(search_probable_cause),
-      search_conducted = as.logical(search_conducted),
+      subject_race = tr_race[subject_race],
+      subject_sex = tr_sex[subject_sex],
       race_known_prior_to_stop = as.logical(race_known_prior_to_stop),
-      search_vehicle = as.logical(search_vehicle),
       workers_present = as.logical(workers_present),
-      incident_type = factor("vehicular", levels = valid_incident_types),
-      # TODO(journalist): what should we use here?
-      # https://app.asana.com/0/456927885748233/475749789858290 
-      reason_for_stop = as.character(NA),
-      search_type = factor(
+      incident_type = "vehicular",
+      search_type = first_of(
+        "consent" = search_consent,
+        "probable cause" = search_probable_cause,
+
+      )
         ifelse(
           search_consent,
           "consent",
@@ -207,21 +203,5 @@ clean <- function(tbl) {
       # NOTE: drop unused foreign keys
       -c(LK_Lookup_Key, FA_Code)
     ) %>%
-    select(
-      incident_id,
-      incident_type,
-      incident_date,
-      incident_time,
-      incident_location,
-      incident_lat,
-      incident_lng,
-      defendant_race,
-      reason_for_stop,
-      search_conducted,
-      search_type,
-      contraband_found,
-      arrest_made,
-      citation_issued,
-      everything()
-    )
+    standardize(d$metadata)
 }

@@ -1,108 +1,65 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, geocodes_path) {
-  tbls <- list()
+  data <- tibble()
+  loading_problems <- list()
   for (year in 2010:2016) {
-    filename <- file.path(raw_data_dir, str_c("traffic_stop_", year, ".csv"))
-    tbls[[length(tbls) + 1]] <- read_csv(filename,
-      col_names = c(
-        "stop_number",
-        "stop_datetime",
-        "related_incident_number",
-        "stop_location",
-        "officer_employee_number",
-        "stop_type",
-        "race",
-        "sex",
-        "county_resident",
-        "vehicle_tag_state",
-        "verbal_warning_issued",
-        "written_warning_issued",
-        "traffic_citation_issued",
-        "misd_state_citation_issued",
-        "custodial_arrest_issued",
-        "officers_comments",
-        "age_of_suspect",
-        "related_mov_vio_number",
-        "zone",
-        "vehicle_tag_number",
-        "crime_reduction_initiative",
-        "reporting_area",
-        "suspect_ethnicity",
-        "action_against_driver",
-        "action_against_passenger",
-        "search_occurred",
-        "evidence_seized",
-        "drugs_seized",
-        "weapons_seized",
-        "other_seized",
-        "vehicle_searched",
-        "pat_down_search",
-        "driver_searched",
-        "passenger_searched",
-        "search_consent",
-        "search_probable_cause",
-        "search_arrest",
-        "search_warrant",
-        "search_inventory",
-        "search_plain_view",
-        "id"
-      ),
-      col_types = cols(
-        stop_number                     = col_number(),
-        stop_datetime                   = col_character(),
-        related_incident_number         = col_character(),
-        stop_location                   = col_character(),
-        officer_employee_number         = col_number(),
-        stop_type                       = col_character(),
-        race                            = col_character(),
-        sex                             = col_character(),
-        county_resident                 = col_character(),
-        vehicle_tag_state               = col_character(),
-        verbal_warning_issued           = col_character(),
-        written_warning_issued          = col_character(),
-        traffic_citation_issued         = col_character(),
-        misd_state_citation_issued      = col_character(),
-        custodial_arrest_issued         = col_character(),
-        officers_comments               = col_character(),
-        age_of_suspect                  = col_double(),
-        related_mov_vio_number          = col_character(),
-        zone                            = col_character(),
-        vehicle_tag_number              = col_character(),
-        crime_reduction_initiative      = col_character(),
-        reporting_area                  = col_character(),
-        suspect_ethnicity               = col_character(),
-        action_against_driver           = col_character(),
-        action_against_passenger        = col_character(),
-        search_occurred                 = col_character(),
-        evidence_seized                 = col_character(),
-        drugs_seized                    = col_character(),
-        weapons_seized                  = col_character(),
-        other_seized                    = col_character(),
-        vehicle_searched                = col_character(),
-        pat_down_search                 = col_character(),
-        driver_searched                 = col_character(),
-        passenger_searched              = col_character(),
-        search_consent                  = col_character(),
-        search_probable_cause           = col_character(),
-        search_arrest                   = col_character(),
-        search_warrant                  = col_character(),
-        search_inventory                = col_character(),
-        search_plain_view               = col_character(),
-        id                              = col_number()
-      ),
-      skip = 1
+    fname <- file.path(raw_data_dir, str_c("traffic_stop_", year, ".csv"))
+    tbl <- read_csv_with_types(
+      fname,
+      c(
+        stop_number                     = "n",
+        stop_datetime                   = "c",
+        related_incident_number         = "c",
+        stop_location                   = "c",
+        officer_employee_number         = "i",
+        stop_type                       = "c",
+        race                            = "c",
+        sex                             = "c",
+        county_resident                 = "c",
+        vehicle_tag_state               = "c",
+        verbal_warning_issued           = "c",
+        written_warning_issued          = "c",
+        traffic_citation_issued         = "c",
+        misd_state_citation_issued      = "c",
+        custodial_arrest_issued         = "c",
+        officers_comments               = "c",
+        age_of_suspect                  = "d",
+        related_mov_vio_number          = "c",
+        zone                            = "c",
+        vehicle_tag_number              = "c",
+        crime_reduction_initiative      = "c",
+        reporting_area                  = "c",
+        suspect_ethnicity               = "c",
+        action_against_driver           = "c",
+        action_against_passenger        = "c",
+        search_occurred                 = "c",
+        evidence_seized                 = "c",
+        drugs_seized                    = "c",
+        weapons_seized                  = "c",
+        other_seized                    = "c",
+        vehicle_searched                = "c",
+        pat_down_search                 = "c",
+        driver_searched                 = "c",
+        passenger_searched              = "c",
+        search_consent                  = "c",
+        search_probable_cause           = "c",
+        search_arrest                   = "c",
+        search_warrant                  = "c",
+        search_inventory                = "c",
+        search_plain_view               = "c",
+        id                              = "i"
+      )
     )
+    data <- bind_rows(data, tbl)
+    loading_problems[[fname]] <- problems(tbl)
   }
-  add_lat_lng(bind_rows(tbls), "stop_location", geocodes_path)
+  list(data = add_lat_lng(data, "stop_location", geocodes_path),
+       metadata = list(loading_problems = loading_problems))
 }
 
 
-clean <- function(tbl) {
-  yn_to_tf <- c(
-    Y = TRUE,
-    N = FALSE
-  )
+clean <- function(d) {
   tr_race <- c(
     A = "asian/pacific islander",
     B = "black",
@@ -112,18 +69,12 @@ clean <- function(tbl) {
     U = "other/unknown",
     W = "white"
   )
-  tr_sex = c(
-    F = "female",
-    M = "male"
-  )
 
-  tbl %>%
+  d$data %>%
     rename(
       incident_id = stop_number,
       incident_location = stop_location,
-      defendant_race = race,
-      incident_lat = lat,
-      incident_lng = lng,
+      subject_race = race,
       # TODO(journalist):
       # https://app.asana.com/0/456927885748233/462732257741346
       reason_for_stop = stop_type,
@@ -131,8 +82,8 @@ clean <- function(tbl) {
       arrest_made = custodial_arrest_issued,
       # NOTE: not using misd_state_citation_issued
       citation_issued = traffic_citation_issued,
-      defendant_sex = sex,
-      defendant_age = age_of_suspect,
+      subject_sex = sex,
+      subject_age = age_of_suspect,
       officer_id = officer_employee_number,
       vehicle_registration_state = vehicle_tag_state,
       search_vehicle = vehicle_searched,
@@ -141,97 +92,66 @@ clean <- function(tbl) {
       search_passenger = passenger_searched,
       search_incident_to_arrest = search_arrest
     ) %>%
-    separate(
-      stop_datetime, c("incident_date", "incident_time"),
-      sep = " ", extra = "merge"
+    separate_cols(
+      stop_datetime = c("incident_date", "incident_time")
+    ) %>%
+    apply_translator_to(
+      yn_to_tf,
+      "county_resident",
+      "verbal_warning_issued",
+      "written_warning_issued",
+      "citation_issued",
+      "misd_state_citation_issued",
+      "arrest_made",
+      "action_against_driver",
+      "action_against_passenger",
+      "search_conducted",
+      "evidence_seized",
+      "drugs_seized",
+      "weapons_seized",
+      "other_seized",
+      "search_vehicle",
+      "frisk_performed",
+      "search_driver",
+      "search_passenger",
+      "search_consent",
+      "search_probable_cause",
+      "search_incident_to_arrest",
+      "search_warrant",
+      "search_inventory",
+      "search_plain_view"
     ) %>%
     mutate(
-      incident_id = as.character(incident_id),
-      incident_type = factor("vehicular", levels = valid_incident_types),
-      incident_date = sanitize_incident_date(parse_date(incident_date,
-                                                        "%m/%d/%Y")),
+      incident_type = "vehicular",
+      incident_date = parse_date(incident_date, "%m/%d/%Y"),
       incident_time = parse_time(incident_time, "%I:%M:%S %p"),
-      incident_lat = parse_double(incident_lat),
-      incident_lng = parse_double(incident_lng),
-      defendant_race = factor(tr_race[ifelse(suspect_ethnicity == "H",
-                                             "H",
-                                             defendant_race)],
-                              levels = valid_races),
-      defendant_sex = factor(tr_sex[defendant_sex], levels = valid_sexes),
-      defendant_age = sanitize_age(defendant_age),
-      county_resident = yn_to_tf[county_resident],
-      verbal_warning_issued = yn_to_tf[verbal_warning_issued],
-      written_warning_issued = yn_to_tf[written_warning_issued],
-      citation_issued = yn_to_tf[citation_issued],
-      misd_state_citation_issued = yn_to_tf[misd_state_citation_issued],
-      arrest_made = yn_to_tf[arrest_made],
-      action_against_driver = yn_to_tf[action_against_driver],
-      action_against_passenger = yn_to_tf[action_against_passenger],
-      search_conducted = yn_to_tf[search_conducted],
-      evidence_seized = yn_to_tf[evidence_seized],
-      drugs_seized = yn_to_tf[drugs_seized],
-      weapons_seized = yn_to_tf[weapons_seized],
-      other_seized = yn_to_tf[other_seized],
-      contraband_found = (evidence_seized
-                          | drugs_seized
-                          | weapons_seized
-                          | other_seized),
-      # NOTE: invalid states converted to NAs
-      vehicle_registration_state = factor(vehicle_registration_state,
-                                          levels = valid_states),
-      search_vehicle = yn_to_tf[search_vehicle],
-      frisk_performed = yn_to_tf[frisk_performed],
-      search_driver = yn_to_tf[search_driver],
-      search_passenger = yn_to_tf[search_passenger],
-      search_consent = yn_to_tf[search_consent],
-      search_probable_cause = yn_to_tf[search_probable_cause],
-      search_incident_to_arrest = yn_to_tf[search_incident_to_arrest],
-      search_warrant = yn_to_tf[search_warrant],
-      search_inventory = yn_to_tf[search_inventory],
-      search_plain_view = yn_to_tf[search_plain_view],
-      search_type = factor(
-        ifelse(
-          search_plain_view,
-          "plain view",
-          ifelse(
-            search_consent,
-            "consent",
-            ifelse(
-              search_driver
-              | search_passenger
-              | search_vehicle
-              | search_inventory
-              | search_probable_cause
-              | search_warrant,
-              "probable cause",
-              ifelse(
-                search_incident_to_arrest,
-                "incident to arrest",
-                NA
-              )
-            )
-          )
+      incident_outcome = first_of(
+        arrest = arrest_made,
+        citation = citation_issued,
+        warning = verbal_warning_issued | written_warning_issued
+      ),
+      subject_race =
+        tr_race[ifelse(suspect_ethnicity == "H", "H", subject_race)],
+      subject_sex = tr_sex[subject_sex],
+      contraband_found = (
+        evidence_seized
+        | drugs_seized
+        | weapons_seized
+        | other_seized
+      ),
+      search_type = first_of(
+        "plain view" = search_plain_view,
+        "consent" = search_consent,
+        "probable cause" = (
+          search_driver
+          | search_passenger
+          | search_vehicle
+          | search_inventory
+          | search_warrant
+          | search_probable_cause
         ),
-        levels = valid_search_types)
+        "incident to arrest" = search_incident_to_arrest
+      )
     ) %>%
-    replace_na(
-      list(misd_state_citation_issued = FALSE)
-    ) %>%
-    select(
-      incident_id,
-      incident_type,
-      incident_date,
-      incident_time,
-      incident_location,
-      incident_lat,
-      incident_lng,
-      defendant_race,
-      reason_for_stop,
-      search_conducted,
-      search_type,
-      contraband_found,
-      arrest_made,
-      citation_issued,
-      everything()
-    )
+    standardize(d$metadata)
 }

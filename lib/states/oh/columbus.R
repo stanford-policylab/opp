@@ -1,8 +1,10 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, geocodes_path) {
-  tbl <- read_csv_with_types(
-    file.path(raw_data_dir, "columbus_oh_data_sheet_1.csv"),
+  loading_problems <- list()
+  fname <- "columbus_oh_data_sheet_1.csv"
+  data <- read_csv_with_types(
+    file.path(raw_data_dir, fname),
     c(
       incident_id                 = "c",
       stop_date                   = "c",
@@ -20,17 +22,31 @@ load_raw <- function(raw_data_dir, geocodes_path) {
       violation_cross_street      = "c"
     )
   )
+  loading_problems[[fname]] <- problems(data)
+
   # NOTE: normally mutates are reserved for cleaning, but
   # here it's required to join to geolocation data
   # TODO(danj): is this the right address to use?
-  tbl <- mutate(tbl, incident_location = str_trim(str_c(violation_street,
-                                                  violation_cross_street,
-                                                  sep = " and ")))
-  add_lat_lng(tbl, "incident_location", geocodes_path)
+  data <- mutate(
+    data,
+    incident_location = str_trim(
+      str_c(
+        violation_street,
+        violation_cross_street,
+        sep = " and "
+      )
+    )
+  ) %>%
+  add_lat_lng(
+    "incident_location",
+    geocodes_path
+  )
+
+	list(data = data, metadata = list(loading_problems = loading_problems))
 }
 
 
-clean <- function(tbl) {
+clean <- function(d) {
   dt_fmt = "%Y/%m/%d"
   tr_race = c(
     Asian = "asian/pacific islander",
@@ -44,7 +60,7 @@ clean <- function(tbl) {
     FEMALE = "female"
   )
 
-  tbl %>%
+  d$data %>%
     rename(
       stop_road_type = type_of_stop,
       reason_for_stop = stop_reason,
@@ -52,11 +68,9 @@ clean <- function(tbl) {
       subject_sex = gender
     ) %>%
     separate_cols(
-      list(
-        stop_date = c("incident_date", "incident_time"),
-        contact_end_date = c("contact_end_date", "contact_end_time"),
-        system_entry_date = c("system_entry_date", "system_entry_time")
-      )
+      stop_date = c("incident_date", "incident_time"),
+      contact_end_date = c("contact_end_date", "contact_end_time"),
+      system_entry_date = c("system_entry_date", "system_entry_time")
     ) %>%
     mutate(
       incident_type = "vehicular",
@@ -68,13 +82,18 @@ clean <- function(tbl) {
       system_entry_time = parse_time(system_entry_time),
       subject_race = tr_race[subject_race],
       subject_sex = tr_sex[subject_sex],
-      search_conducted = (enforcement_taken == "Vehicle Search"
-                          | enforcement_taken == "Driver Search"),
+      search_conducted = 
+        enforcement_taken %in% c("Vehicle Search", "Driver Search"),
       search_type = ifelse(search_conducted, "probable cause", NA), 
       arrest_made = enforcement_taken == "Arrest",
       # TODO(danj): include "Misd. Citation or Summons"?
       citation_issued = enforcement_taken == "Traffic Citation",
-      warning_issued = enforcement_taken == "Verbal Warning"
+      warning_issued = enforcement_taken == "Verbal Warning",
+      incident_outcome = first_of(
+        arrest = arrest_made,
+        citation = citation_issued,
+        warning = warning_issued
+      )
     ) %>%
-    standardize()
+    standardize(d$metadata)
 }

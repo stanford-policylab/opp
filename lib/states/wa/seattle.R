@@ -49,15 +49,13 @@ clean <- function(d) {
       !is.na(incident_id)
     ) %>%
     separate_cols(
-      list(possible_race_and_sex = c("subject_race", "subject_sex")),
+      possible_race_and_sex = c("subject_race", "subject_sex"),
       sep = 1
     ) %>%
     separate_cols(
-      list(
-        datetime = c("incident_date", "incident_time"),
-        officer_no_name_1 = c("officer_id_1", "officer_name_1"),
-        officer_no_name_2 = c("officer_id_2", "officer_name_2")
-      )
+      datetime = c("incident_date", "incident_time"),
+      officer_no_name_1 = c("officer_id_1", "officer_name_1"),
+      officer_no_name_2 = c("officer_id_2", "officer_name_2")
     ) %>%
     mutate(
       incident_type = "vehicular",
@@ -69,14 +67,9 @@ clean <- function(d) {
       arrest_made = str_sub(disposition_description, 1, 1) == "A",
       # NOTE: includes criminal and non-criminal citations
       citation_issued = matches(disposition_description, "CITATION"),
-      incident_outcome = ifelse(
-        arrest_made,
-        "arrest",
-        ifelse(
-          citation_issued,
-          "citation",
-          NA
-        )
+      incident_outcome = first_of(
+        arrest = arrest_made,
+        citation = citation_issued
       ),
       subject_dob = ymd(subject_dob),
       officer_id_1 = parse_number(officer_id_1),

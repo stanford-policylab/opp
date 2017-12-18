@@ -28,6 +28,7 @@ valid_incident_types <- c(
 )
 
 
+# order they are likely to occur
 valid_search_types <- c(
   "k9",
   "plain view",

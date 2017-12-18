@@ -22,8 +22,15 @@ str_expr <- function(expr) {
 }
 
 
-matches <- function(col, s) {
-  as.vector(!is.na(str_match(col, s)))
+matches <- function(col, pattern) {
+  v <- as.vector(!is.na(str_match(col, pattern)))
+  v[is.na(col)] <- NA  # keep original NAs, don't impute FALSE
+  v
+}
+
+
+any_matches <- function(pattern, ...) {
+  Reduce(function(a, b) { a | b }, lapply(list(...), matches, pattern))
 }
 
 
@@ -140,15 +147,17 @@ pretty_percent <- function(v) {
 }
 
 
-read_csv_with_types <- function(path, type_vec) {
+read_csv_with_types <- function(path, type_vec, na = c("", "NA", "NULL")) {
   tbl <- read_csv(path,
                   col_names = names(type_vec),
                   col_types = str_c(type_vec, collapse = ""),
+                  na = na,
                   skip = 1)
 }
 
 
-separate_cols <- function(tbl, lst, sep = " ") {
+separate_cols <- function(tbl, ..., sep = " ") {
+  lst = list(...)
   for (colname in names(lst)) {
     tbl <- separate_(tbl, colname, lst[[colname]], sep = sep, extra = "merge")
   }
@@ -169,6 +178,22 @@ add_lat_lng <- function(tbl, join_col, geocodes_path) {
       incident_lat = lat,
       incident_lng = lng
     )
+}
+
+
+left_coalesce_cols_by_suffix <- function(tbl, left_suffix, right_suffix) {
+  left_names <- names_ending_with(names(tbl), left_suffix)
+  right_names <- str_replace(left_names, left_suffix, right_suffix)
+  new_names <- str_replace(left_names, left_suffix, "")
+  for (i in seq_along(new_names)) {
+    tbl[[new_names[i]]] = coalesce(tbl[[left_names[i]]], tbl[[right_names[i]]])
+  }
+  select(tbl, -dplyr::matches(str_c(left_suffix, right_suffix, sep = "|")))
+}
+
+
+names_ending_with <- function(v, ending) {
+  names(which(sapply(v, endsWith, ending)))
 }
 
 
@@ -294,6 +319,23 @@ str_combine <- function(left, right,
 }
 
 
+first_of <- function(..., default = NA) {
+  tbl <- cbind(..., "__default" = TRUE)
+  nms <- colnames(tbl)
+  v <- nms[apply(tbl, 1, which.max)]
+  str_replace(v, "__default", as.character(default))
+}
+
+
+apply_translator_to <- function(tbl, translator, ...) {
+  tr <- function(v) {
+    translator[v]
+  }
+  cols <- as.vector(unlist(list(...)))
+  mutate_each_(tbl, funs(tr), cols)
+}
+
+
 capitalize_first_letters <- function(x) {
   s <- strsplit(x, " ")[[1]]
   paste(toupper(substring(s, 1,1)), substring(s, 2),
@@ -303,4 +345,19 @@ capitalize_first_letters <- function(x) {
 
 comma_num <- function(n) {
 	prettyNum(n, big.mark = ",")
+}
+
+
+translator_from_tbl <- function(tbl, from, to) {
+  v <- tbl[[to]]
+  names(v) <- tbl[[from]]
+  v
+}
+
+
+translate_by_char <- function(str_vec, translator, sep = "|") {
+  tr <- function(v) {
+    str_c(str_replace_na(translator[v]), collapse = sep)
+  }
+  unlist(lapply(str_split(str_vec, ""), tr))
 }
