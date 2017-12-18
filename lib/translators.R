@@ -6,3 +6,8 @@ tr_race <- c(
   H = "hispanic",
   W = "white"
 )
+
+yn_to_tf = c(
+  Y = TRUE,
+  N = FALSE
+)

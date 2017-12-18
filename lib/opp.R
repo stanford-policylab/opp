@@ -130,6 +130,7 @@ opp_population <- function(state, city) {
       STATE = "c",
       NAME = "c",
       STNAME = "c",
+      FUNCSTAT = "c",
       CENSUS2010POP = "i"
     )
   )
@@ -148,6 +149,8 @@ opp_population <- function(state, city) {
     by = c("STATE" = "STATE")
   ) %>%
   filter(
+    # https://www.census.gov/geo/reference/codes/place.html, only [A]ctive
+    FUNCSTAT == "A",
     STUSAB == toupper(state),
     NAME == str_c(capitalize_first_letters(city), " city")
   ) %>%
