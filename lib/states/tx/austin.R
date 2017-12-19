@@ -108,7 +108,7 @@ clean <- function(d) {
       search_person_race_known_before_stop = person_search_race_known,
       search_person_discovered = person_search_search_discovered,
       search_vehicle = vehicle_searched,
-      vehicle_search_race_known_before_stop = vehicle_search_race_known,
+      search_vehicle_race_known_before_stop = vehicle_search_race_known,
       search_vehicle_discovered = vehicle_search_search_discovered,
       vehicle_type = veh_type,
       vehicle_year = veh_year,
