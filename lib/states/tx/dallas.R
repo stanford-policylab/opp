@@ -4,7 +4,11 @@ load_raw <- function(raw_data_dir, geocodes_path) {
   # NOTE: commercial vehicle inspections is not currently processed but exists
   # in the raw_data_dir
   loading_problems <- list()
-  r <- function(fname) { read_csv(file.path(raw_data_dir, fname)) }
+  r <- function(fname) {
+    tbl <- read_csv(file.path(raw_data_dir, fname))
+    loading_problems[[fname]] <- problems(tbl)
+    tbl
+  }
   stops <- r('txdps_2016_statewide_stops.csv')
   citations <- r('txdps_2016_statewide_citation_violations.csv')
   warnings <- r('txdps_2016_statewide_warning_violations.csv')
@@ -23,6 +27,8 @@ load_raw <- function(raw_data_dir, geocodes_path) {
     weather,
     by = c("HA_WEATHER" = "LK_Code")
   )
+
+  list(data = data, metadata = list(loading_problems = loading_problems))
 }
 
 
@@ -177,27 +183,11 @@ clean <- function(d) {
       search_type = first_of(
         "consent" = search_consent,
         "probable cause" = search_probable_cause,
-
-      )
-        ifelse(
-          search_consent,
-          "consent",
-          ifelse(
-            search_probable_cause,
-            "probable cause",
-            ifelse(
-              search_incident_to_arrest,
-              "incident to arrest",
-              NA
-            )
-          ) 
-        ),
-        levels = valid_search_types
+        "incident to arrest" = search_incident_to_arrest
       ),
       # TODO(journalist): how can we determine whether an arrest happened?
       # https://app.asana.com/0/456927885748233/475749789858290 
-      arrest_made = !citation_issued && !warning_issued,
-      vehicle_year = sanitize_vehicle_year(vehicle_year)
+      arrest_made = !citation_issued && !warning_issued
     ) %>%
     select(
       # NOTE: drop unused foreign keys
