@@ -92,6 +92,8 @@ clean <- function(d) {
     W = "white"
   )
 
+  # TODO(journalist): What is search outcome?
+  # https://app.asana.com/0/456927885748233/507608374034702/f
   d$data %>%
     rename(
       incident_id = street_check_case_number,
@@ -119,15 +121,17 @@ clean <- function(d) {
       vehicle_style = veh_style,
       vehicle_registration_state = soi
     ) %>%
+    merge_rows(
+      incident_id
+    ) %>%
     mutate(
       search_person = matches(search_person, "YES"),
       search_vehicle = matches(search_vehicle, "YES"),
       search_conducted = search_person | search_vehicle,
       # TODO(danj): verify logic with Ravi
-      incident_type = ifelse(
-        search_vehicle | matches(reason_for_stop, "VEHICLE"),
-        "vehicular",
-        "pedestrian"
+      incident_type = first_of(
+        "vehicular" = search_vehicle | matches(reason_for_stop, "VEHICLE"),
+        "pedestrian" = TRUE  # default if not vehicular
       ),
       incident_date = parse_date(incident_date, dt_fmt),
       subject_sex = tr_sex[subject_sex],
@@ -180,9 +184,6 @@ clean <- function(d) {
         search_person_discovered, search_vehicle_discovered,
         prefix_left = "subject=", prefix_right = "vehicle="
       )
-    ) %>%
-    merge_rows(
-      incident_id
     ) %>%
     standardize(d$metadata)
 }

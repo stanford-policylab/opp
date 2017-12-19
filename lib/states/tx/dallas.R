@@ -46,8 +46,7 @@ clean <- function(d) {
   )
   # TODO(journalist): what should we use as reason for stop?
   # https://app.asana.com/0/456927885748233/475749789858290 
-  # TODO(danj): dedup
-  d$data %>%
+  tmp <- d$data %>%
     rename(
       # TODO(journalist): we need translations of these
       # https://app.asana.com/0/456927885748233/475749789858290
@@ -187,14 +186,24 @@ clean <- function(d) {
       ),
       # TODO(journalist): how can we determine whether an arrest happened?
       # https://app.asana.com/0/456927885748233/475749789858290 
-      arrest_made = !citation_issued && !warning_issued
+      arrest_made = !citation_issued && !warning_issued,
+      incident_outcome = first_of(
+        arrest = arrest_made,
+        citation = citation_issued,
+        warning = warning_issued
+      )
     ) %>%
     select(
       # NOTE: drop unused foreign keys
       -c(LK_Lookup_Key, FA_Code)
-    ) %>%
-    merge_rows(
+    # ) %>%
+    )
+    saveRDS(tmp, "before_merge.rds")
+    tmp <- merge_rows(
+      tmp,
       incident_id
-    ) %>%
-    standardize(d$metadata)
+    )
+    # ) %>%
+    saveRDS(tmp, "after_merge.rds")
+    standardize(tmp, d$metadata)
 }
