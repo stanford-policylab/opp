@@ -106,8 +106,10 @@ clean <- function(d) {
       subject_yob = yob,
       search_person = person_searched,
       search_person_race_known_before_stop = person_search_race_known,
+      search_person_reason = person_search_search_based_on,
       search_person_discovered = person_search_search_discovered,
       search_vehicle = vehicle_searched,
+      search_vehicle_reason = vehicle_search_search_based_on,
       search_vehicle_race_known_before_stop = vehicle_search_race_known,
       search_vehicle_discovered = vehicle_search_search_discovered,
       vehicle_type = veh_type,
@@ -116,9 +118,6 @@ clean <- function(d) {
       vehicle_model = veh_model,
       vehicle_style = veh_style,
       vehicle_registration_state = soi
-    ) %>%
-    merge_rows(
-      incident_id
     ) %>%
     mutate(
       search_person = matches(search_person, "YES"),
@@ -141,28 +140,28 @@ clean <- function(d) {
         matches(search_vehicle_race_known_before_stop, "YES"),
       search_consent = any_matches(
         "CONSENT",
-        search_person_search_based_on,
-        search_vehicle_search_based_on
+        search_person_reason,
+        search_vehicle_reason
       ),
       search_plain_view = any_matches(
         "PLAIN VIEW",
-        search_person_search_based_on,
-        search_vehicle_search_based_on
+        search_person_reason,
+        search_vehicle_reason
       ),
       search_incident_to_arrest = any_matches(
         "INCIDENTAL",
-        search_person_search_based_on,
-        search_vehicle_search_based_on
+        search_person_reason,
+        search_vehicle_reason
       ),
       frisk_performed = any_matches(
         "FRISK",
-        search_person_search_based_on,
-        search_vehicle_search_based_on
+        search_person_reason,
+        search_vehicle_reason
       ),
       search_probable_cause = any_matches(
         "PROBABLE",
-        search_person_search_based_on,
-        search_vehicle_search_based_on
+        search_person_reason,
+        search_vehicle_reason
       ),
       search_type = first_of(
         "plain view" = search_plain_view,
@@ -174,13 +173,16 @@ clean <- function(d) {
       contraband_found = any_matches(
         # TODO(danj): include alcohol, other?
         "ALCOHOL|CASH|DRUGS|OTHER|WEAPONS",
-        search_person_search_discovered,
-        search_vehicle_search_discovered
+        search_person_discovered,
+        search_vehicle_discovered
       ),
       contraband_recovered_from_search = str_combine(
         search_person_discovered, search_vehicle_discovered,
         prefix_left = "subject=", prefix_right = "vehicle="
       )
+    ) %>%
+    merge_rows(
+      incident_id
     ) %>%
     standardize(d$metadata)
 }
