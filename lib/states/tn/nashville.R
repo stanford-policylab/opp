@@ -4,9 +4,9 @@ load_raw <- function(raw_data_dir, geocodes_path) {
   data <- tibble()
   loading_problems <- list()
   for (year in 2010:2016) {
-    fname <- file.path(raw_data_dir, str_c("traffic_stop_", year, ".csv"))
+    fname <- str_c("traffic_stop_", year, ".csv")
     tbl <- read_csv_with_types(
-      fname,
+      file.path(raw_data_dir, fname),
       c(
         stop_number                     = "n",
         stop_datetime                   = "c",

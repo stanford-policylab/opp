@@ -94,8 +94,6 @@ loading_problems_count_table
 loading_problems_random_sample_sorted_table
 ```
 
-\newpage
-
 ```{r enforce_types_table}
 enforce_types_table
 ```

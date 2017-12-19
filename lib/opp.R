@@ -124,6 +124,7 @@ opp_plot <- function(state, city) {
 
 
 opp_population <- function(state, city) {
+
   p <- read_csv(
     file.path("..", "data", "populations.csv"),
     col_types = cols_only(
@@ -152,12 +153,11 @@ opp_population <- function(state, city) {
     # https://www.census.gov/geo/reference/codes/place.html, only [A]ctive
     FUNCSTAT == "A",
     STUSAB == toupper(state),
-    NAME == str_c(capitalize_first_letters(city), " city")
+    matches(NAME, capitalize_first_letters(city))
   ) %>%
-  select(
-    CENSUS2010POP
-  ) %>%
-	distinct
+  summarize(
+    population = max(CENSUS2010POP)
+  )
 
 	# return scalar, not tibble
 	as.integer(v)

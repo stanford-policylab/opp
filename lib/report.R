@@ -161,39 +161,43 @@ outcome_by_race_plot <- ggplot(d_o) +
   xlab("outcome")
 
 
-loading_problems <- bind_rows(d$metadata$loading_problems)
-loading_problems_count <- group_by(
-		loading_problems,
-		col,
-		expected
-	) %>%
-	count
-
-
-loading_problems_count_table <- kable(
-	loading_problems_count,
-	caption = "Loading problems"
-)
-sample_number = min(nrow(loading_problems), 20)
-loading_problems_random_sample_sorted <- sample_n(
-		loading_problems,
-		sample_number
-	) %>%
-	arrange(
-		expected,
-		actual
-	) %>%
-	select(
-		col,
-		expected,
-		actual
-	)	
-
-
-loading_problems_random_sample_sorted_table <- kable(
-	loading_problems_random_sample_sorted,
-	caption = "20 Random loading problem errors, sorted"
-)
+loading_problems <- d$metadata$loading_problems %>%
+  lapply(function(x) mutate_each(x, funs('as.character'))) %>% bind_rows()
+loading_problems_count_table <- kable(tibble())
+loading_problems_random_sample_sorted_table <- kable(tibble())
+if (nrow(loading_problems) > 0) {
+  loading_problems_count <- group_by(
+      loading_problems,
+      col,
+      expected
+    ) %>%
+    count
+  loading_problems_count_table <- kable(
+    loading_problems_count,
+    caption = "Loading problems"
+  )
+  sample_number = min(nrow(loading_problems), 20)
+  loading_problems_random_sample_sorted <- sample_n(
+      loading_problems,
+      sample_number
+    ) %>%
+    arrange(
+      expected,
+      actual
+    ) %>%
+    mutate(
+      actual = str_replace(actual, "\\\\", "::backslash::") # to make printable
+    ) %>%
+    select(
+      col,
+      expected,
+      actual
+    )	
+  loading_problems_random_sample_sorted_table <- kable(
+    loading_problems_random_sample_sorted,
+    caption = "20 Random loading problem errors, sorted"
+  )
+}
 
 
 enforce_types_table <- kable(
@@ -208,7 +212,10 @@ sanitize_table <- kable(
 )
 
 
-missing_columns_added_table <- kable(
-	tibble(added_columns = d$metadata$standardize$add_missing_required_columns),
-  caption = "Missing columns added"
-)
+missing_columns_added_table <- kable(tibble())
+if ("add_missing_required_columns" %in% d$metadata$standardize) {
+  missing_columns_added_table <- kable(
+    tibble(added_columns = d$metadata$standardize$add_missing_required_columns),
+    caption = "Missing columns added"
+  )
+}
