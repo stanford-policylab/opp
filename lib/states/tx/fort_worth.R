@@ -84,7 +84,16 @@ clean <- function(d) {
       state_traffic_law,
       warrant
     ) %>%
+    row_id_to_column(
+      "incident_id"
+    ) %>%
     mutate(
+      # TODO(ravi): can we assume this
+      incident_type = ifelse(
+        matches(reason_for_stop, "Traffic Violation")
+        "vehicular",
+        "pedestrian"
+      ),
       # NOTE: Hispanic ethnicity > race subdivision
       subject_race =
         tr_race[ifelse(ethnicity == "Hispanic", "Hispanic", race)],
@@ -97,7 +106,7 @@ clean <- function(d) {
       warning_issued = verbal_warning,  # doesn't appear to be written_warning
       tmp_sr = tolower(search_reason),
       search_type = first_of(
-        "plain view" = matches(tmp_sr, "plain (sight|view)"),
+        "plain view" = matches(tmp_sr, "plain sight|plain view"),
         "consent" = matches(tmp_sr, "consent"),
         "incident to arrest" = matches(tmp_sr, "arrest|warrant"),
         "probable cause" =  # default
