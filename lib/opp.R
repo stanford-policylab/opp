@@ -80,12 +80,15 @@ opp_save <- function(d, state, city) {
 }
 
 
-opp_process <- function(state, city) {
+opp_process <- function(state, city, sample_num) {
   source(opp_processor_path(state, city), local = TRUE)
   d <- load_raw(
     opp_raw_data_dir(state, city),
     opp_geocodes_path(state, city)
   )
+  if (not_null(sample_num)) {
+    d$data <- sample_n(d$data, sample_num)
+  }
   dc <- clean(d)
   opp_save(dc, state, city)
   warnings()
