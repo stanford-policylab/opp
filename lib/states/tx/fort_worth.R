@@ -90,7 +90,7 @@ clean <- function(d) {
     mutate(
       # TODO(ravi): can we assume this
       incident_type = ifelse(
-        matches(reason_for_stop, "Traffic Violation")
+        matches(reason_for_stop, "Traffic Violation"),
         "vehicular",
         "pedestrian"
       ),
