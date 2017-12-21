@@ -92,7 +92,6 @@ apply_schema_and_collect_null_rates <- function(schema, data) {
   null_rates <- list()
   for (name in names(schema)) {
 		if (name %in% colnames(data)) {
-      print(name)
 			x <- apply_and_collect_null_rates(schema[[name]], data[[name]])
 			data[[name]] <- x$v
 			null_rates[[name]] <- x$null_rates 
