@@ -46,7 +46,8 @@ top_n_by <- function(tbl, ..., top_n = 10) {
     ungroup %>%
     mutate(rank = row_number(-n)) %>%
     filter(rank <= top_n) %>%
-    arrange(rank)
+    arrange(rank) %>%
+    print(n = top_n)
 }
 
 
@@ -87,9 +88,11 @@ is_null <- function(v) {
 
 
 apply_schema_and_collect_null_rates <- function(schema, data) {
+  saveRDS(data, "apply_schema.rds")
   null_rates <- list()
   for (name in names(schema)) {
 		if (name %in% colnames(data)) {
+      print(name)
 			x <- apply_and_collect_null_rates(schema[[name]], data[[name]])
 			data[[name]] <- x$v
 			null_rates[[name]] <- x$null_rates 
@@ -197,9 +200,9 @@ names_ending_with <- function(v, ending) {
 }
 
 
-find_similar_rows <- function(tbl, threshold = 0.95) {
+similar_rows <- function(tbl, threshold = 0.95) {
   tbls <- sort_all(tbl)
-  sim <- row_similarity(tbls)
+  sim <- rolling_row_similarity(tbls)
   idx <- which(sim >= threshold)
   idxAll <- sort(unique(c(idx - 1, idx)))
   tbls[idxAll,]
@@ -211,10 +214,10 @@ sort_all <- function(tbl) {
 }
 
 
-row_similarity <- function(tbl) {
+rolling_row_similarity <- function(tbl) {
   # NOTE: you probably want rows sorted using sort_all before calling
   compare_current_row_to_previous(tbl) %>% mutate(sim = rowMeans(.)) %>%
-    # TODO(danj): replace with pull once dplyr updated to 0.7.0
+    # TODO(danj): replace with 'pull' once dplyr updated to 0.7.0
     select(sim) %>% collect %>% .[["sim"]]
 }
 
@@ -233,7 +236,7 @@ compare_current_row_to_previous <- function(tbl) {
 }
 
 
-row_similarity_report <- function(tbl) {
+similar_rows_report <- function(tbl) {
   # NOTE: you probably want rows sorted using sort_all before calling
   sim <- compare_current_row_to_previous(tbl) %>% summarise_all(mean)
   as_tibble(

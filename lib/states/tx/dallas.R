@@ -46,7 +46,7 @@ clean <- function(d) {
   )
   # TODO(journalist): what should we use as reason for stop?
   # https://app.asana.com/0/456927885748233/475749789858290 
-  tmp <- d$data %>%
+  d$data %>%
     rename(
       # TODO(journalist): we need translations of these
       # https://app.asana.com/0/456927885748233/475749789858290
@@ -63,7 +63,7 @@ clean <- function(d) {
       jge_city = HA_A_CITY_JGE,
       alleged_speed = HA_ALLEGED_SPEED,
       arrest_datetime = HA_ARREST_DATE,
-      incident_id = HA_ARREST_KEY,
+      stop_id = HA_ARREST_KEY,
       subject_state = HA_A_STATE_DRVR,
       jge_state = HA_A_STATE_JGE,
       subject_zipcode = HA_A_ZIP_DRVR,
@@ -155,29 +155,44 @@ clean <- function(d) {
     separate_cols(
       arrest_datetime = c("incident_date", "incident_time")
     ) %>%
+    mutate_each(
+      funs(as.logical),
+      is_accident,
+      is_commercial_vehicle,
+      is_construction_zone,
+      contraband_found,
+      contraband_is_currency,
+      contraband_is_drugs,
+      contraband_is_other,
+      contraband_is_weapon,
+      search_incident_to_arrest,
+      is_fugitive_arrest,
+      is_interstate,
+      is_intrastate,
+      has_passengers,
+      citation_issued,
+      warning_issued,
+      search_consent,
+      search_conducted,
+      search_probable_cause,
+      race_known_prior_to_stop,
+      workers_present
+    ) %>%
     mutate(
+      # NOTE: the stop_ids are a combination of a unique prefix and a one
+      # character suffix corresponding to the warning/citation/arrest code
+      # there are multiple stop_ids per incident, which is the unique prefix
+      incident_id = str_sub(stop_id, 1, str_length(stop_id) - 1),
       incident_date = parse_date(incident_date, "%m/%d/%y"),
       incident_time = parse_time(incident_time, "%H:%M:%S"),
       is_accident = as.logical(is_accident),
       subject_state = factor(subject_state, levels = valid_states),
       jge_state = factor(jge_state, levels = valid_states),
-      is_commercial_vehicle = as.logical(is_commercial_vehicle),
-      is_construction_zone = as.logical(is_construction_zone),
-      contraband_is_currency = as.logical(contraband_is_currency),
-      contraband_is_drugs = as.logical(contraband_is_currency),
-      contraband_is_other = as.logical(contraband_is_other),
-      contraband_is_weapon = as.logical(contraband_is_weapon),
       court_date = parse_date(court_date, date_fmt),
-      is_fugitive_arrest = as.logical(is_fugitive_arrest),
-      is_interstate = as.logical(is_interstate),
-      is_intrastate = as.logical(is_intrastate),
       incident_lat = incident_lat / 1E6,
       incident_lng = incident_lng / 1E6,
-      has_passengers = as.logical(has_passengers),
       subject_race = tr_race[subject_race],
       subject_sex = tr_sex[subject_sex],
-      race_known_prior_to_stop = as.logical(race_known_prior_to_stop),
-      workers_present = as.logical(workers_present),
       incident_type = "vehicular",
       search_type = first_of(
         "consent" = search_consent,
@@ -196,14 +211,9 @@ clean <- function(d) {
     select(
       # NOTE: drop unused foreign keys
       -c(LK_Lookup_Key, FA_Code)
-    # ) %>%
-    )
-    saveRDS(tmp, "before_merge.rds")
-    tmp <- merge_rows(
-      tmp,
+    ) %>%
+    merge_rows(
       incident_id
-    )
-    # ) %>%
-    saveRDS(tmp, "after_merge.rds")
-    standardize(tmp, d$metadata)
+    ) %>%
+    standardize(d$metadata)
 }

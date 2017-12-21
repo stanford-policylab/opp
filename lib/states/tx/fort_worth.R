@@ -1,71 +1,116 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, geocodes_path) {
-  tbls <- list()
-  for (year in 2006:2015) {
-    tbls[[length(tbls) + 1]] <- read_csv_with_types(
-      file.path(raw_data_dir, str_c("trafs_evs_", year, "_sheet_1.csv")),
-      c(
-        rin                       = "c",
-        datetime                  = "c",
-        address                   = "c",
-        type                      = "c",
-        pri                       = "i",
-        mir_and_description       = "c",
-        disposition_description   = "c",
-        veh                       = "c",
-        possible_race_and_sex     = "c",
-        subject_dob               = "c",
-        officer_no_name_1         = "c",
-        officer_no_name_2         = "c",
-        empty                     = "c"
-      )
-    )
+  data <- tibble()
+	loading_problems <- list()
+  r <- function(fname) {
+    tbl <- read_csv(file.path(raw_data_dir, fname))
+    loading_problems[[fname]] <<- problems(tbl)
+    tbl
   }
-  add_lat_lng(bind_rows(tbls), "address", geocodes_path)
+  for (yr in 2006:2016) {
+    data <- bind_rows(data, r(str_c(yr, '.csv')))
+  }
+  data <- add_lat_lng(data, "Address", geocodes_path)
+
+	list(data = data, metadata = list(loading_problems = loading_problems))
 }
 
 
-clean <- function(tbl) {
-  tbl %>%
+clean <- function(d) {
+  colnames(d$data) <- tolower(colnames(d$data))
+  tr_race <- c(
+    "Asian" = "asian/pacific islander",
+    "Black" = "black",
+    "Hispanic" = "hispanic",
+    "Middle Eastern" = "unknown/other",
+    "Native American/Eskimo" = "unknown/other",
+    "Other" = "unknown/other",
+    "Unknown" = "unknown/other",
+    "White" = "white"
+  )
+  tr_knew_race = c(
+    YES = TRUE,
+    NO = FALSE,
+    UNKNOWN = NA
+  )
+  tr_search_conducted = c(
+    Yes = TRUE,
+    No = FALSE,
+    Unknown = NA
+  )
+  tr_search_consent = c(
+    "Yes" = TRUE,
+    "No" = FALSE,
+    "N/A" = NA,
+    "Unknown" = NA
+  )
+  tr_sex = c(
+    "Female" = "female",
+    "Male" = "male"
+  )
+
+  d$data %>%
     select(
-      -empty
+      -x1  # dummy row index column
     ) %>%
     rename(
-      incident_id = rin,
       incident_location = address,
-      # TODO(journalist): clarify relationship between
-      # mir_and_description, disposition_description, type
-      # https://app.asana.com/0/456927885748233/462732257741348 
-      reason_for_stop = mir_and_description
+      arrest_made = arrest,
+      citation_issued = citation,
+      subject_sex = sex,
+      contraband_in_view = contraband_inview,
+      reason_for_stop = reason,
+      arrest_reason = arrestbasedon,
+      street_type = streettype,
+      offense_charged = offensecharged
     ) %>%
-    filter(
-      !is.na(incident_id)
-    ) %>%
-    separate_cols(
-      list(possible_race_and_sex = c("subject_race", "subject_sex")),
-      sep = 1
-    ) %>%
-    separate_cols(
-      list(
-        datetime = c("incident_date", "incident_time"),
-        officer_no_name_1 = c("officer_id_1", "officer_name_1"),
-        officer_no_name_2 = c("officer_id_2", "officer_name_2")
-      )
+    mutate_each(
+      funs(as.logical),
+      arrest_made,
+      citation_issued,
+      city_resident,
+      no_result,
+      verbal_warning,
+      city_ordinance,
+      contraband_in_view,
+      not_arrested,
+      other_arrest_reason,
+      penal_code,
+      # TODO(journalist): what are these?
+      search_arrest,
+      search_neither,
+      search_towing,
+      state_traffic_law,
+      warrant
     ) %>%
     mutate(
-      incident_type = "vehicular",
-      # NOTE: vehicular because mir_and_description are all traffic
-      incident_date = parse_date(incident_date, "%Y/%m/%d"),
-      incident_time = parse_time(incident_time),
-      subject_race = tr_race[subject_race],
-      subject_sex = tr_sex[subject_sex],
-      arrest_made = str_sub(disposition_description, 1, 1) == "A",
-      # NOTE: includes criminal and non-criminal citations
-      citation_issued = matches(disposition_description, "CITATION"),
-      subject_dob = ymd(subject_dob),
-      officer_id_1 = parse_number(officer_id_1),
-      officer_id_2 = parse_number(officer_id_2)
+      # NOTE: Hispanic ethnicity > race subdivision
+      subject_race =
+        tr_race[ifelse(ethnicity == "Hispanic", "Hispanic", race)],
+      officer_knew_ethnicity_race_prior =
+        tr_knew_race[officer_knew_ethnicity_race_prior],
+      search_conducted = tr_search_conducted[search_conducted],
+      search_consent = tr_search_consent[search_consent],
+      incident_date = as.Date(stop_date),
+      incident_time = format(as.POSIXct(stop_date), "%H:%M:%S"),
+      warning_issued = verbal_warning,  # doesn't appear to be written_warning
+      tmp_sr = tolower(search_reason),
+      search_type = first_of(
+        "plain view" = matches(tmp_sr, "plain (sight|view)"),
+        "consent" = matches(tmp_sr, "consent"),
+        "incident to arrest" = matches(tmp_sr, "arrest|warrant"),
+        "probable cause" =  # default
+          matches(tmp_sr, "probable|marijuana|furtive") | search_conducted
+      ),
+      incident_outcome = first_of(
+        arrest = arrest_made,
+        citation = citation_issued,
+        warning = warning_issued
+      )
     ) %>%
-    standardize()
+    select(
+      -tmp_sr
+    ) %>%
+    standardize(d$metadata)
 }

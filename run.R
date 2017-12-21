@@ -6,10 +6,8 @@ suppressMessages(source("opp.R"))
 
 main <- function() {
   args <- get_args()
-
-
   if (not_null(args$process))
-    opp_process(args$state, args$city)
+    opp_process(args$state, args$city, args$sample_n)
   if (not_null(args$report))
     opp_report(args$state, args$city)
   if (not_null(args$plot))
@@ -23,6 +21,7 @@ get_args <- function() {
   usage <- str_c("./run.R",
                  "[--help]",
                  "[--process]",
+                 "[--sample]",
                  "[--report]",
                  "[--plot]",
                  "-s <state_code>",
@@ -32,6 +31,7 @@ get_args <- function() {
     ~long_name,   ~short_name,  ~argument_type, ~data_type,
     "help",       "h",          "none",         "logical",
     "process",    "o",          "none",         "logical",
+    "sample_n",   "n",          "none",         "integer",
     "report",     "r",          "none",         "logical",
     "plot",       "p",          "none",         "logical",
     "state",      "s",          "required",     "character",
