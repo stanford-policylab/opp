@@ -46,8 +46,7 @@ top_n_by <- function(tbl, ..., top_n = 10) {
     ungroup %>%
     mutate(rank = row_number(-n)) %>%
     filter(rank <= top_n) %>%
-    arrange(rank) %>%
-    print(n = top_n)
+    arrange(rank)
 }
 
 
@@ -88,7 +87,6 @@ is_null <- function(v) {
 
 
 apply_schema_and_collect_null_rates <- function(schema, data) {
-  saveRDS(data, "apply_schema.rds")
   null_rates <- list()
   for (name in names(schema)) {
 		if (name %in% colnames(data)) {
