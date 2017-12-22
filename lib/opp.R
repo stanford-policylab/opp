@@ -159,7 +159,7 @@ opp_population <- function(state, city) {
     matches(NAME, capitalize_first_letters(city))
   ) %>%
   summarize(
-    population = max(CENSUS2010POP)
+    population = max(CENSUS2010POP, na.rm = TRUE)
   )
 
 	# return scalar, not tibble

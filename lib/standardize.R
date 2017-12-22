@@ -37,7 +37,11 @@ add_missing_required_columns <- function(d) {
   added <- c()
   for (name in names(required_schema)) {
     if (!(name %in% colnames(d$data))) {
-      d$data[[name]] <- NA
+      if (name == "incident_id") {
+        d$data[[name]] <- seq.int(nrow(d$data))
+      } else {
+        d$data[[name]] <- NA
+      }
       added <- c(added, name)
     }
   }

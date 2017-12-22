@@ -23,10 +23,10 @@ clean <- function(d) {
     "Asian" = "asian/pacific islander",
     "Black" = "black",
     "Hispanic" = "hispanic",
-    "Middle Eastern" = "unknown/other",
-    "Native American/Eskimo" = "unknown/other",
-    "Other" = "unknown/other",
-    "Unknown" = "unknown/other",
+    "Middle Eastern" = "other/unknown",
+    "Native American/Eskimo" = "other/unknown",
+    "Other" = "other/unknown",
+    "Unknown" = "other/unknown",
     "White" = "white"
   )
   tr_knew_race = c(
@@ -84,9 +84,6 @@ clean <- function(d) {
       state_traffic_law,
       warrant
     ) %>%
-    row_id_to_column(
-      "incident_id"
-    ) %>%
     mutate(
       # TODO(ravi): can we assume this
       incident_type = ifelse(
@@ -97,6 +94,7 @@ clean <- function(d) {
       # NOTE: Hispanic ethnicity > race subdivision
       subject_race =
         tr_race[ifelse(ethnicity == "Hispanic", "Hispanic", race)],
+      subject_sex = tr_sex[subject_sex],
       officer_knew_ethnicity_race_prior =
         tr_knew_race[officer_knew_ethnicity_race_prior],
       search_conducted = tr_search_conducted[search_conducted],
