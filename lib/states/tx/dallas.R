@@ -212,8 +212,9 @@ clean <- function(d) {
       # NOTE: drop unused foreign keys
       -c(LK_Lookup_Key, FA_Code)
     ) %>%
-    merge_rows(
-      incident_id
-    ) %>%
+    # TODO(danj): what is stop id? how are these duplicated?
+    # merge_rows(
+    #   incident_id
+    # ) %>%
     standardize(d$metadata)
 }

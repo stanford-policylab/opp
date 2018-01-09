@@ -17,6 +17,7 @@ load_raw <- function(raw_data_dir, geocodes_path) {
 }
 
 
+# TODO(danj): why do the numbers here decrease yoy?
 clean <- function(d) {
   colnames(d$data) <- tolower(colnames(d$data))
   tr_race <- c(
