@@ -17,7 +17,8 @@ load_raw <- function(raw_data_dir, geocodes_path) {
 }
 
 
-# TODO(danj): why do the numbers here decrease yoy?
+# TODO(journalist): why do the numbers here decrease yoy?
+# https://app.asana.com/0/456927885748233/519045240013551
 clean <- function(d) {
   colnames(d$data) <- tolower(colnames(d$data))
   tr_race <- c(
@@ -79,6 +80,7 @@ clean <- function(d) {
       other_arrest_reason,
       penal_code,
       # TODO(journalist): what are these?
+      # https://app.asana.com/0/456927885748233/519045240013551
       search_arrest,
       search_neither,
       search_towing,
@@ -87,6 +89,7 @@ clean <- function(d) {
     ) %>%
     mutate(
       # TODO(ravi): can we assume this
+      # https://app.asana.com/0/456927885748233/519045240013554 
       incident_type = ifelse(
         matches(reason_for_stop, "Traffic Violation"),
         "vehicular",
