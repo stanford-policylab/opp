@@ -30,7 +30,8 @@ load_raw <- function(raw_data_dir, geocodes_path) {
 
 
 clean <- function(d) {
-  # TODO(danj): check this map
+  # TODO(ravi): check this map
+  # https://app.asana.com/0/456927885748233/519045240013538
   tr_race = c(
     "A" = "asian/pacific islander",
     "B" = "black",

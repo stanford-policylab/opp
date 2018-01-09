@@ -212,9 +212,11 @@ clean <- function(d) {
       # NOTE: drop unused foreign keys
       -c(LK_Lookup_Key, FA_Code)
     ) %>%
-    # TODO(danj): what is stop id? how are these duplicated?
-    # merge_rows(
-    #   incident_id
-    # ) %>%
+    # TODO(journalist): how can we dedup this correctly?
+    # https://app.asana.com/0/456927885748233/475749789858290 
+    merge_rows(
+      stop_id
+      # incident_id
+    ) %>%
     standardize(d$metadata)
 }

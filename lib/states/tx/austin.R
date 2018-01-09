@@ -128,14 +128,16 @@ clean <- function(d) {
       search_person = matches(search_person, "YES"),
       search_vehicle = matches(search_vehicle, "YES"),
       search_conducted = search_person | search_vehicle,
-      # TODO(danj): verify logic with Ravi
+      # TODO(ravi): verify logic
+      # https://app.asana.com/0/456927885748233/519045240013543
       incident_type = first_of(
         "vehicular" = search_vehicle | matches(reason_for_stop, "VEHICLE"),
         "pedestrian" = TRUE  # default if not vehicular
       ),
       incident_date = parse_date(incident_date, dt_fmt),
       subject_sex = tr_sex[subject_sex],
-      # TODO(danj): N in ethnicity was highest, H second, what is N?
+      # TODO(ravi): N in ethnicity was highest, H second, what is N?
+      # https://app.asana.com/0/456927885748233/519045240013543
       subject_race =
         tr_race[ifelse(subject_ethnicity == "H", "H", subject_race)],
       search_person_race_known_before_stop =
@@ -175,7 +177,8 @@ clean <- function(d) {
         "probable cause" = search_conducted  # default
       ),
       contraband_found = any_matches(
-        # TODO(danj): include alcohol, other?
+        # TODO(ravi): include alcohol, other?
+        # https://app.asana.com/0/456927885748233/519045240013543
         "ALCOHOL|CASH|DRUGS|OTHER|WEAPONS",
         search_person_discovered,
         search_vehicle_discovered

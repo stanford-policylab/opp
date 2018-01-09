@@ -26,7 +26,8 @@ load_raw <- function(raw_data_dir, geocodes_path) {
 
   # NOTE: normally mutates are reserved for cleaning, but
   # here it's required to join to geolocation data
-  # TODO(danj): is this the right address to use?
+  # TODO(ravi): is this the right address to use?
+  # https://app.asana.com/0/456927885748233/519045240013558
   data <- mutate(
     data,
     incident_location = str_trim(
@@ -86,7 +87,8 @@ clean <- function(d) {
         enforcement_taken %in% c("Vehicle Search", "Driver Search"),
       search_type = ifelse(search_conducted, "probable cause", NA), 
       arrest_made = enforcement_taken == "Arrest",
-      # TODO(danj): include "Misd. Citation or Summons"?
+      # TODO(ravi): include "Misd. Citation or Summons"?
+      # https://app.asana.com/0/456927885748233/519045240013558
       citation_issued = enforcement_taken == "Traffic Citation",
       warning_issued = enforcement_taken == "Verbal Warning",
       incident_outcome = first_of(
