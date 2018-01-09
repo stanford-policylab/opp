@@ -14,9 +14,9 @@ load_raw <- function(raw_data_dir, geocodes_path) {
       street_name                   = "c",
       statute                       = "c",
       statute_description           = "c",
-      defendant_age                 = "d",
-      defendant_gender              = "c",
-      defendant_race                = "c",
+      subject_age                   = "d",
+      subject_gender                = "c",
+      subject_race                  = "c",
       officer_role                  = "c",
       officer_employee_no           = "i",
       officer_last_name             = "c",
@@ -110,15 +110,15 @@ clean <- function(d) {
       citation_issued = citation,
       incident_date = arrest_date,
       reason_for_stop = statute_description,
-      subject_age = defendant_age
+      subject_age = subject_age
     ) %>%
     mutate(
       # arrest_id and contact_card_id have different ranges, so this is ok
       incident_id = coalesce(arrest_id, contact_card_id),
       incident_type = "vehicular",
       incident_time = parse_time(arrest_hour, "%H"),
-      subject_race = tr_race[coalesce(defendant_race, driver_race)],
-      subject_sex = tr_sex[coalesce(defendant_gender, driver_gender)],
+      subject_race = tr_race[coalesce(subject_race, driver_race)],
+      subject_sex = tr_sex[coalesce(subject_gender, driver_gender)],
       officer_sex = tr_sex[officer_gender],
       officer_race = tr_race[officer_race],
       arrest_made = !is.na(arrest_id),
