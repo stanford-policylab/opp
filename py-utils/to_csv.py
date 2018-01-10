@@ -26,7 +26,7 @@ import xml.etree.ElementTree as et
 
 ############################### CONVERTERS ####################################
 
-def xls_to_csv(in_file):
+def xls_to_csv(in_file, **kwargs):
     require('ssconvert', "try installing 'gnumeric' package on linux")
     out_file = to_csv_ext(in_file)
     run(['ssconvert', '--export-file-per-sheet', in_file, out_file])
@@ -38,7 +38,7 @@ def xls_to_csv(in_file):
     return
 
 
-def xlsx_to_csv(in_file):
+def xlsx_to_csv(in_file, **kwargs):
     return xls_to_csv(in_file)
 
 
@@ -55,12 +55,12 @@ def mdb_to_csv(in_file):
     return
 
 
-def accdb_to_csv(in_file):
+def accdb_to_csv(in_file, **kwargs):
     mdb_to_csv(in_file)
     return
 
 
-def xml_to_csv(in_file):
+def xml_to_csv(in_file, **kwargs):
     '''
     https://stackoverflow.com/questions/41776263/ \
     pandas-read-xml-method-test-strategies
@@ -78,26 +78,32 @@ def xml_to_csv(in_file):
     return
 
 
+def txt_to_csv(in_file, sep, **kwargs):
+    df = pd.read_table(in_file, sep=sep)
+    df.to_csv(to_csv_ext(in_file))
+    return
+
+
 ###############################################################################
 
-def convert(files_or_dirs):
+def convert(files_or_dirs, **kwargs):
     for f_or_d in files_or_dirs:
         if not os.path.exists(f_or_d):
             perr(f_or_d + " doesn't exist!")
         elif os.path.isfile(f_or_d):
-            convert_file(f_or_d)
+            convert_file(f_or_d, **kwargs)
         elif os.path.isdir(f_or_d):
             for f in os.listdir(f_or_d):
-                convert_file(os.path.join(f_or_d, f))
+                convert_file(os.path.join(f_or_d, f), **kwargs)
         else:
             perr(f_or_d + " isn't a file or directory!")
     return
 
 
-def convert_file(filename):
+def convert_file(filename, **kwargs):
     perr('converting %s...' % filename, end='')
     if is_supported(get_file_type(filename)):
-        get_converter(filename)(filename)
+        get_converter(filename)(filename, **kwargs)
         perr('done')
         return
     perr(" it's not a supported file type!")
@@ -198,10 +204,12 @@ def parse_args(argv):
     desc = 'supported file types: ' + ', '.join(supported_file_types())
     parser = argparse.ArgumentParser(prog=argv[0], description=desc)
     parser.add_argument('files_or_dirs', nargs='+',
-                        help='a.xlsx b.xls c.mdb d.xml data/')
+                        help='a.xlsx b.xls c.mdb d.xml e.txt data/')
+    parser.add_argument('-s', '--sep', default='|',
+                        help='separator for txt files (default: "|"')
     return parser.parse_args(argv[1:])
 
 
 if __name__ == '__main__':
-    ARGS = parse_args(sys.argv)
-    convert(ARGS.files_or_dirs)
+    args = parse_args(sys.argv)
+    convert(args.files_or_dirs, sep=args.sep)
