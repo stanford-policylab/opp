@@ -106,7 +106,7 @@ def convert_file(filename, **kwargs):
         get_converter(filename)(filename, **kwargs)
         perr('done')
         return
-    perr(" it's not a supported file type!")
+    perr(" is not a supported file type for conversion!")
     return
 
 

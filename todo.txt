@@ -1,5 +1,1 @@
-create multi-join by col (austin)
-  - i.e. AW -> joins to A and W in another file
-refactor austin, chicago, dallas, san diego, and nashville
-
 - write lat/lng sanitizer
