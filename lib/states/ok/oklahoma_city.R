@@ -18,7 +18,10 @@ load_raw <- function(raw_data_dir, geocodes_path) {
     officer,
     by = c("ofc_badge_no" = "ID #")
   ) %>%
-  add_lat_lng("violLocation", geocodes_path)
+  add_lat_lng(
+    "violLocation",
+    geocodes_path
+  )
 
 	list(data = data, metadata = list(loading_problems = loading_problems))
 }
@@ -101,7 +104,7 @@ clean <- function(d) {
       # https://app.asana.com/0/456927885748233/521735743717408
       incident_type = "vehicular",
       incident_date = parse_date(incident_date, "%Y%m%d"),
-      incident_time = parse_time(str_pad(incident_time, 4, pad = "0"), "%H%M"),
+      incident_time = parse_time_int(incident_time),
       accident_occurred = yn_to_tf[accident_occurred],
       subject_race = tr_race_subject[subject_race],
       subject_sex = tr_sex[subject_sex],
