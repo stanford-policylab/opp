@@ -9,13 +9,19 @@ load_raw <- function(raw_data_dir, geocodes_path) {
     tbl
   }
 
+  data <- list()
   f1 = "jenna_fowler_013117_-_stocktonpd_cad_tstops_2012_2013_sheet_1.csv"
   f2 = "jenna_fowler_013117_-_stocktonpd_cad_tstops__2014_july_2016_sheet_1.csv"
   f3 = "jenna_fowler_013117_-_stocktonpd_trafficstopsurvey_2012_july_2016_sheet_1.csv"
   f4 = "jenna_fowler_013117_-_stocktonpd_trafficstopsurvey_aug_dec2016_sheet_1.csv"
   f5 = "jenna_fowler_013117_-_stocktonpd_tstops_aug_dec2016_sheet_1.csv"
+  data[[f1]] <- r(f1)
+  data[[f2]] <- r(f2)
+  data[[f3]] <- r(f3)
+  data[[f4]] <- r(f4)
+  data[[f5]] <- r(f5)
 
-  data <- add_lat_lng(data, "address", geocodes_path)
+  # data <- add_lat_lng(data, "address", geocodes_path)
 
 	list(data = data, metadata = list(loading_problems = loading_problems))
 }
