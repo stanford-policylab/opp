@@ -42,7 +42,7 @@ def xlsx_to_csv(in_file, **kwargs):
     return xls_to_csv(in_file)
 
 
-def mdb_to_csv(in_file):
+def mdb_to_csv(in_file, **kwargs):
     require('mdb-tables', "try installing 'mdbtools' package on linux")
     require('mdb-export', "try installing 'mdbtools' package on linux")
     out_file = to_csv_ext(in_file)

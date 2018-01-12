@@ -18,7 +18,7 @@ from utils import chdir_to_opp_root, make_dir
 def init(args):
     chdir_to_opp_root()
     state = args.state.lower()
-    city = '_'.join([x.lower() for x in args.city])
+    city = '_'.join([x.lower().replace(' ', '_') for x in args.city])
     make_data_dirs(state, city)
     make_lib_dirs(state)
     copy_template(args.template, state, city)
