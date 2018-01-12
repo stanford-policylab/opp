@@ -1,2 +1,4 @@
-- Sacramento, CA -- unprocessed
+- finish Stockton, CA
+- Sacramento, CA -- unprocessed (no link between files)
+- St. Louis, MO -- unprocessed (wrong data)
 - write lat/lng sanitizer
