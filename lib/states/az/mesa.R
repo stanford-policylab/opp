@@ -4,35 +4,44 @@ load_raw <- function(raw_data_dir, geocodes_path) {
 	loading_problems <- list()
   fname <- "2014-03-17_citations_data_prr_sheet_1.csv"
   data <- read_csv_with_types(
-    file.path(raw_data_dir, fname),
-    c(
-      incident_no       = "n",
-      arrest_no         = "n",
-      cite_no           = "n",
-      sex               = "c",
-      race              = "c",
-      race_fixed        = "c",
-      ehtnic            = "c",
-      ethnicity_fixed   = "c",
-      age               = "i",
-      date              = "D",
-      time              = "i",
-      block             = "i",
-      city              = "c",
-      ofcr_lnme         = "c",
-      ofcr_id           = "i",
-      charge_seq        = "i",
-      charge            = "c",
-      charge_desc       = "c",
-      warning           = "c"
+      file.path(raw_data_dir, fname),
+      c(
+        incident_no       = "n",
+        arrest_no         = "n",
+        cite_no           = "n",
+        sex               = "c",
+        race              = "c",
+        race_fixed        = "c",
+        ehtnic            = "c",
+        ethnicity_fixed   = "c",
+        age               = "i",
+        date              = "D",
+        time              = "i",
+        block             = "i",
+        city              = "c",
+        ofcr_lnme         = "c",
+        ofcr_id           = "i",
+        charge_seq        = "i",
+        charge            = "c",
+        charge_desc       = "c",
+        warning           = "c"
+      )
+    ) %>%
+    # NOTE: normally mutates are reserved for cleaning but this is required
+    # to add geocoding data
+    mutate(
+      incident_location = str_trim(
+        str_c(
+          block,
+          city,
+          sep = ", "
+        )
+      )
+    ) %>%
+    add_lat_lng(
+      "incident_location",
+       geocodes_path
     )
-  )
-  # TODO(danj): update
-  # ) %>%
-  # add_lat_lng(
-  #   "block",
-  #    geocodes_path
-  # )
 
   loading_problems[[fname]] <- problems(data)
 	list(data = data, metadata = list(loading_problems = loading_problems))
@@ -80,8 +89,6 @@ clean <- function(d) {
       arrest_made = !is.na(arrest_no),
       citation_issued = !is.na(cite_no),
       subject_sex = tr_sex[subject_sex],
-      # TODO(ravi): H, N, U meaning?
-      # https://app.asana.com/0/456927885748233/521735743717414 
       subject_race = tr_race[
         ifelse(subject_ethnicity == "H", "H", subject_race)
       ],

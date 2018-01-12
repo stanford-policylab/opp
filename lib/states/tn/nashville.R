@@ -69,19 +69,25 @@ clean <- function(d) {
     U = "other/unknown",
     W = "white"
   )
+  tr_stop_type <- c(
+    "CR" = "child restraint",
+    "INV" = "investigative stop",
+    "MTV" = "moving traffic violation",
+    "PARK" = "parking violation",
+    "REGS" = "regulatory violation",
+    "S/BELT" = "seatbelt violation",
+    "SAFETY" = "safety violation",
+    "VEV" = "vehicle equipment violation"
+  )
 
   d$data %>%
     rename(
       incident_id = stop_number,
       incident_location = stop_location,
       subject_race = race,
-      # TODO(journalist):
-      # https://app.asana.com/0/456927885748233/462732257741346
-      reason_for_stop = stop_type,
       search_conducted = search_occurred,
       arrest_made = custodial_arrest_issued,
-      # NOTE: not using misd_state_citation_issued
-      citation_issued = traffic_citation_issued,
+      citation_issued = traffic_citation_issued | misd_state_citation_issued,
       subject_sex = sex,
       subject_age = age_of_suspect,
       officer_id = officer_employee_number,
@@ -123,6 +129,7 @@ clean <- function(d) {
     ) %>%
     mutate(
       incident_type = "vehicular",
+      reason_for_stop = tr_stop_type[stop_type],
       incident_date = parse_date(incident_date, "%m/%d/%Y"),
       incident_time = parse_time(incident_time, "%I:%M:%S %p"),
       incident_outcome = first_of(
