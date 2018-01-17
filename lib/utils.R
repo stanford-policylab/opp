@@ -62,6 +62,25 @@ pct_tbl <- function(v, colnames = c("name", "pct")) {
 }
 
 
+predicated_null_rates <- function(tbl, pred_v) {
+  # NOTE: pred_v is c(target_colname = predicate_colname, ...)
+  pnr <- c()
+  for (colname in colnames(tbl)) {
+    if (colname %in% names(pred_v)) {
+      idx <- tbl[[pred_v[colname]]]
+      pnr[colname] <- null_rate(tbl[[colname]][idx])
+    } else {
+      pnr[colname] <- null_rate(tbl[[colname]])
+    }
+  }
+  transpose_one_line_table(
+    pnr,
+    colnames = c("features", "null rate"),
+    f = pretty_percent
+  )
+}
+
+
 null_rates <- function(tbl) {
   nulls_tbl <- tbl %>% summarize_all(funs(null_rate))
   transpose_one_line_table(

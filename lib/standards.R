@@ -175,8 +175,21 @@ extra_schema <- c(
   reason_for_frisk                  = as.character,
   reason_for_arrest                 = as.character,
   reason_for_citation               = as.character,
+  reason_for_search                 = as.character,
   contraband_recovered_from_frisk   = as.character,
   contraband_recovered_from_search  = as.character,
   complaint_filed_by_subject        = as.logical,
   notes                             = as.character
+)
+
+
+predicated_columns <- c(
+  search_type = "search_conducted",
+  contraband_found = "search_conducted",
+  contraband_type = "contraband_found",
+  reason_for_frisk = "frisk_performed",
+  reason_for_arrest = "arrest_made",
+  reason_for_citation = "citation_issued",
+  reason_for_warning = "warning_issued",
+  reason_for_search = "search_conducted"
 )

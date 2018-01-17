@@ -31,7 +31,7 @@ title: `r title`
 by_incident_type_table
 ```
 
-```{r null_rates_table}
+```{r null_rates_tables}
 null_rates_table
 ```
 
@@ -69,11 +69,13 @@ search_types_plot
 
 Search conducted: `r search_conducted_pct`
 
-Contraband found: `r contraband_found_pct`
+Contraband found (all stops): `r contraband_found_pct`
+Contraband found (where search conducted): `r predicated_contraband_found_pct`
 
 ```{r plot_props_by_race}
 search_conducted_by_race_plot
 contraband_found_by_race_plot
+predicated_contraband_found_by_race_plot
 ```
 
 ```{r outcome_by_race_plot, fig.height = 10}

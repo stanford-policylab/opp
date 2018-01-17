@@ -3,6 +3,7 @@ library(rlang)
 library(zoo)
 
 source("opp.R")
+source("standards.R")
 
 
 title <- str_c(capitalize_first_letters(city), toupper(state), sep = ", ")
@@ -14,7 +15,9 @@ d <- opp_load(state, city)
 population <- opp_population(state, city)
 total_rows <- nrow(d$data)
 date_range <- range(d$data$incident_date)
-null_rates_table <- kable(null_rates(d$data), align = c('l', 'r'))
+
+null_rates_table <- kable(predicated_null_rates(d$data, predicated_columns),
+                          align = c("l", "r"), caption = "Null Rates")
 
 
 by_incident_type <- group_by(d$data, incident_type) %>% count
@@ -110,38 +113,58 @@ reason_for_stop_top_20_plot <- ggplot(reason_for_stop_top_20) +
 	))
 
 
-search_types_tbl <- group_by(d$data, search_type) %>% count
+search_types_tbl <- filter(d$data, search_type != NA) %>% 
+  group_by(search_type) %>%
+  count
 search_types_plot <- ggplot(search_types_tbl) +
-  geom_bar(aes(x = reorder(search_type, -n), y = n), stat = "identity") +
-  xlab("search type")
+  geom_bar(aes(x = reorder(search_type, -n), y = ..density..)) +
+  xlab("search type (where search conducted)")
 
 
 pct <- function(colname) {
   pretty_percent(mean(d$data[[colname]], na.rm = TRUE))
 }
 
+ppct <- function(colname, pred_colname) {
+  idx <- d$data[[pred_colname]]
+  pretty_percent(mean(d$data[[colname]][idx], na.rm = TRUE))
+}
+
 
 search_conducted_pct <- pct("search_conducted")
 contraband_found_pct <- pct("contraband_found")
+predicated_contraband_found_pct <- ppct("contraband_found", "search_conducted")
 
 
-plot_prop_by_race <- function(col) {
+plot_prop_by_race <- function(col, pred_col = TRUE) {
   colq <- enquo(col)
+  pred_colq <- enquo(pred_col)
   tbl <- group_by(
     d$data,
     subject_race
   ) %>% summarize(
-    rate = mean(UQE(colq), na.rm = TRUE)
+    rate = mean(UQE(colq)[UQE(pred_colq)], na.rm = TRUE)
   )
+
+  colname <- deparse(substitute(col))
+  pred_colname <- deparse(substitute(col))
+  pred_str <- "(all)" 
+  if (pred_colname != "TRUE") {
+    pred_str <- str_c("(", pred_colname, ")")
+  }
+  y_label <- str_c(colname, "rate", pred_str, sep = " ")
+
   ggplot(tbl) + 
     geom_bar(aes(x = subject_race, y = rate), stat = "identity") +
     xlab("race") +
-    ylab(str_c(deparse(substitute(col)), "rate", sep = " "))
+    ylab(y_label)
 }
 
 
 search_conducted_by_race_plot <- plot_prop_by_race(search_conducted)
 contraband_found_by_race_plot <- plot_prop_by_race(contraband_found)
+predicated_contraband_found_by_race_plot <- 
+  plot_prop_by_race(contraband_found, search_conducted)
 
 
 d_o <- group_by(

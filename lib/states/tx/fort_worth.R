@@ -63,7 +63,7 @@ clean <- function(d) {
       subject_sex = sex,
       contraband_in_view = contraband_inview,
       reason_for_stop = reason,
-      arrest_reason = arrestbasedon,
+      reason_for_arrest = arrestbasedon,
       street_type = streettype,
       offense_charged = offensecharged
     ) %>%
