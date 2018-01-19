@@ -12,50 +12,64 @@ def make_training_dataset(csv_file,
                           default_label,
                           sample_n,
                           output_csv):
+
     label_categories = set(label_categories)
     if default_label:
         assert default_label in label_categories, 'default label invalid!'
-    labeled_texts = set()
-    texts = set()
 
+    labels = []
+    texts = []
+    texts_set = set()
     if os.path.exists(output_csv):
         df = pd.read_csv(output_csv, na_filter=False)
-        all_labels = df['label']
-        all_texts = df['text']
-        labeled_texts = set(zip(all_labels, all_texts))
-        texts = set(all_texts)
-        assert set(all_labels).issubset(label_categories), 'label mismatch!'
+        labels = list(df['label'])
+        texts = list(df['text'])
+        texts_set = set(texts)
+        assert set(labels).issubset(label_categories), 'label mismatch!'
         
     count = 0
     with open(csv_file) as f:
         for text in f:
             text = text.strip()
-            if text in texts:
+            if text in texts_set:
                 continue
-            msg = text + ' : '
-            if default_label:
-                msg = text + ' (%s): ' % default_label
-            label = input(msg)
-            if not label and default_label:
-                label = default_label
-            while (label not in label_categories):
-                label = input(msg)
-            labeled_texts.add((label, text))
-            texts.add(text)
+            lbls = get_labels(text, label_categories, default_label)
+            labels.extend(lbls)
+            texts.extend([text] * len(lbls))
+            texts_set.add(text)
             count += 1
             if count >= sample_n:
                 break
-
-    labels = []
-    texts = []
-    for label, text in labeled_texts:
-        labels.append(label)
-        texts.append(text)
 
     df = pd.DataFrame({'label': labels, 'text': texts})
     df.to_csv(output_csv, index=False, quoting=csv.QUOTE_NONNUMERIC)
     print('output saved to %s!' % output_csv)
     return
+
+
+def get_labels(text, label_categories, default_label):
+    msg = make_msg(text, default_label)
+    while (True):
+        lbl = input(msg)
+        if not lbl:
+            lbl = default_label
+        if ',' in lbl:
+            lbls = lbl.split(',')
+            for lbl in lbls:
+                if lbl not in label_categories:
+                    continue
+        else:
+            if lbl not in label_categories:
+                continue
+            lbls = [lbl]
+        return lbls
+
+
+def make_msg(text, default_label):
+    msg = text + ' : '
+    if default_label:
+        msg = text + ' (%s): ' % default_label
+    return msg
 
 
 def parse_args(argv):
@@ -64,7 +78,7 @@ def parse_args(argv):
     parser.add_argument('source_csv', help='format (per line): "text"')
     parser.add_argument('label_categories', nargs='+')
     parser.add_argument('-d', '--default_label')
-    parser.add_argument('-n', '--sample_n', default=10,
+    parser.add_argument('-n', '--sample_n', default=10, type=int,
                         help='how many values to sample')
     parser.add_argument('-o', '--output_csv', default='train.csv',
                         help='output file')
