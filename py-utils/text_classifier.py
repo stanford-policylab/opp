@@ -12,7 +12,7 @@ from sklearn.pipeline import make_pipeline
 
 
 def train(train_csv, model_name):
-    df = pd.read_csv(train_csv)
+    df = pd.read_csv(train_csv, na_filter=False)
     # NOTE: stemming and punctuation?
     p = make_pipeline(CountVectorizer(analyzer='char',
                                       ngram_range=(2,4),
