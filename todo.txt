@@ -1,3 +1,5 @@
+- text classifier for [W]eapons, [D]rugs, [O]
+- text clustering for standardization
 - finish Stockton, CA
 - Sacramento, CA -- unprocessed (no link between files)
 - St. Louis, MO -- unprocessed (wrong data)
