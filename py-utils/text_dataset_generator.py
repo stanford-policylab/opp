@@ -53,7 +53,6 @@ def make_training_dataset(csv_file,
         texts.append(text)
 
     df = pd.DataFrame({'label': labels, 'text': texts})
-    print(df)
     df.to_csv(output_csv, index=False, quoting=csv.QUOTE_NONNUMERIC)
     print('output saved to %s!' % output_csv)
     return
