@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import csv
 import pandas as pd
 import sys
 
@@ -16,7 +17,7 @@ def train(train_csv, model_name):
     # NOTE: stemming and punctuation?
     p = make_pipeline(CountVectorizer(analyzer='char',
                                       ngram_range=(2,4),
-                                      stop_words=stopwords,
+                                      stop_words=stopwords.words(),
                                       lowercase=True),
                       MultinomialNB())
     p.fit(df['text'], df['label'])
@@ -27,10 +28,11 @@ def train(train_csv, model_name):
 
 def predict(model_file, test_csv, output_csv):
     m = joblib.load(model_file)
-    df = pd.read_csv(test_csv)
-    df['pred'] = m.predict(X['text'])
-    df.to_csv(columns=['pred', 'text'])
-    print('output written to %s' % output_file)
+    df = pd.read_csv(test_csv, names=['text'], na_filter=False)
+    df['pred'] = m.predict(df['text'])
+    df.to_csv(output_csv, columns=['pred', 'text'], index=False,
+              quoting=csv.QUOTE_NONNUMERIC)
+    print('output written to %s' % output_csv)
     return
 
 
@@ -60,4 +62,4 @@ if __name__ == '__main__':
     if args.command == 'train':
         train(args.train_csv, args.model_name)
     else:
-        predict(args.model_file, args.test_csv, args.output_csv)
+        predict(args.model_name, args.test_csv, args.output_csv)
