@@ -6,6 +6,8 @@ import os
 import pandas as pd
 import sys
 
+from sklearn.utils import shuffle
+
 
 def make_training_dataset(csv_file,
                           label_classes,
@@ -15,26 +17,27 @@ def make_training_dataset(csv_file,
     label_classes = set(label_classes)
 
     df = pd.DataFrame(columns=sorted(label_classes) + ['text'])
-    texts = set()
+    labeled_texts = set()
     if os.path.exists(output_csv):
         df = pd.read_csv(output_csv, na_filter=False)
-        texts = set(df['text'].unique())
+        labeled_texts = set(df['text'].unique())
         assert (set(df.columns) - set(['text'])).issubset(label_classes)
         
     count = 0
+    texts = []
     with open(csv_file) as f:
-        for text in f:
-            text = text.strip()
-            if text in texts:
-                continue
-            row = get_labels(text, label_classes)
-            df = df.append(row, ignore_index=True)
-            texts.add(text)
-            count += 1
-            if count >= sample_n:
-                break
+        for line in f:
+            texts.append(line.strip())
+    for text in (text for text in shuffle(texts) if text not in labeled_texts):
+        row = get_labels(text, label_classes)
+        df = df.append(row, ignore_index=True)
+        df.to_csv(output_csv, index=False,
+                  quoting=csv.QUOTE_NONNUMERIC)
+        labeled_texts.add(text)
+        count += 1
+        if count >= sample_n:
+            break
 
-    df.to_csv(output_csv, index=False, quoting=csv.QUOTE_NONNUMERIC)
     print('output saved to %s!' % output_csv)
     return
 
