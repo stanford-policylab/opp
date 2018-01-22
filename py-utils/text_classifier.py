@@ -34,7 +34,8 @@ def train(train_csv, model_name):
 def predict(model_file, test_csv, output_csv):
     m = joblib.load(model_file)
     df = pd.read_csv(test_csv, names=['text'], na_filter=False)
-    dfp = pd.DataFrame(m.predict(df['text']), columns=m.label_names)
+    dfp = pd.DataFrame(m.predict(df['text']).astype(int),
+                       columns=m.label_names)
     dfp.join(df).to_csv(output_csv, index=False, quoting=csv.QUOTE_NONNUMERIC)
     print('output written to %s' % output_csv)
     return
