@@ -8,19 +8,25 @@ import sys
 from nltk.corpus import stopwords
 from sklearn.externals import joblib
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.naive_bayes import MultinomialNB
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import MultiLabelBinarizer
+
+from sklearn.multioutput import MultiOutputClassifier
+from sklearn.naive_bayes import MultinomialNB
 
 
 def train(train_csv, model_name):
     df = pd.read_csv(train_csv, na_filter=False)
+    labels = [col for col in df if col.startswith('label')]
     # NOTE: stemming and punctuation?
-    p = make_pipeline(CountVectorizer(analyzer='char',
+    p = make_pipeline(MultiLabelBinarizer(),
+                      CountVectorizer(analyzer='char_wb',
                                       ngram_range=(2,4),
                                       stop_words=stopwords.words(),
                                       lowercase=True),
-                      MultinomialNB())
-    p.fit(df['text'], df['label'])
+                      RandomForestClassifier(n_estimators=200))
+    p.fit(df['text'], df[labels])
     joblib.dump(p, model_name)
     print('model saved as %s' % model_name)
     return
