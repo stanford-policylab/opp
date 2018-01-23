@@ -315,9 +315,9 @@ fill_null <- function(v, fill = NA) {
 }
 
 
-str_combine <- function(left, right,
-                        prefix_left = "", prefix_right = "",
-                        sep = "||") {
+str_combine_cols <- function(left, right,
+                             prefix_left = "", prefix_right = "",
+                             sep = "||") {
 
   left_null <- is_null(left)
   right_null <- is_null(right)

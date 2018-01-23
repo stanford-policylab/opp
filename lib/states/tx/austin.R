@@ -183,7 +183,7 @@ clean <- function(d) {
         search_person_discovered,
         search_vehicle_discovered
       ),
-      contraband_recovered_from_search = str_combine(
+      contraband_recovered_from_search = str_combine_cols(
         search_person_discovered, search_vehicle_discovered,
         prefix_left = "subject=", prefix_right = "vehicle="
       )

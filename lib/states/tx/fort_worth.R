@@ -1,17 +1,19 @@
 source("common.R")
 
-load_raw <- function(raw_data_dir, geocodes_path) {
+load_raw <- function(raw_data_dir, n_max) {
+
+  loading_problems <- list()
   data <- tibble()
-	loading_problems <- list()
-  r <- function(fname) {
-    tbl <- read_csv(file.path(raw_data_dir, fname))
-    loading_problems[[fname]] <<- problems(tbl)
-    tbl
-  }
   for (yr in 2006:2016) {
-    data <- bind_rows(data, r(str_c(yr, '.csv')))
+    fname <- str_c(yr, ".csv")
+    tbl <- read_csv(file.path(raw_data_dir, fname), n_max = n_max)
+    loading_problems[[fname]] <- problems(tbl)
+    data <- bind_rows(data, tbl)
+    if (nrow(data) > n_max) {
+      data <- data[1:n_max, ]
+      break
+    }
   }
-  data <- add_lat_lng(data, "Address", geocodes_path)
 
 	list(data = data, metadata = list(loading_problems = loading_problems))
 }
@@ -19,8 +21,8 @@ load_raw <- function(raw_data_dir, geocodes_path) {
 
 # TODO(journalist): why do the numbers here decrease yoy?
 # https://app.asana.com/0/456927885748233/519045240013551
-clean <- function(d) {
-  colnames(d$data) <- tolower(colnames(d$data))
+clean <- function(d, geocodes_path) {
+
   tr_race <- c(
     "Asian" = "asian/pacific islander",
     "Black" = "black",
@@ -41,51 +43,32 @@ clean <- function(d) {
     No = FALSE,
     Unknown = NA
   )
-  tr_search_consent = c(
-    "Yes" = TRUE,
-    "No" = FALSE,
-    "N/A" = NA,
-    "Unknown" = NA
-  )
   tr_sex = c(
     "Female" = "female",
     "Male" = "male"
   )
 
   d$data %>%
-    select(
-      -x1  # dummy row index column
+    add_lat_lng(
+      "Address",
+      geocodes_path
     ) %>%
     rename(
-      incident_location = address,
-      arrest_made = arrest,
-      citation_issued = citation,
-      subject_sex = sex,
-      contraband_in_view = contraband_inview,
-      reason_for_stop = reason,
-      reason_for_arrest = arrestbasedon,
-      street_type = streettype,
-      offense_charged = offensecharged
+      incident_date = Stop_Date,
+      incident_location = Address,
+      contraband_found = Contraband_Found,
+      arrest_made = Arrest,
+      citation_issued = Citation,
+      warning_issued = Verbal_Warning,  # no written_warning or other type
+      subject_sex = Sex,
+      reason_for_stop = Reason
     ) %>%
     mutate_each(
       funs(as.logical),
+      contraband_found,
       arrest_made,
       citation_issued,
-      city_resident,
-      no_result,
-      verbal_warning,
-      city_ordinance,
-      contraband_in_view,
-      not_arrested,
-      other_arrest_reason,
-      penal_code,
-      # TODO(journalist): what are these?
-      # https://app.asana.com/0/456927885748233/519045240013551
-      search_arrest,
-      search_neither,
-      search_towing,
-      state_traffic_law,
-      warrant
+      warning_issued
     ) %>%
     mutate(
       # TODO(ravi): can we assume this
@@ -95,18 +78,18 @@ clean <- function(d) {
         "vehicular",
         "pedestrian"
       ),
+      incident_time = format(as.POSIXct(Stop_Date), "%H:%M:%S"),
+      incident_outcome = first_of(
+        arrest = arrest_made,
+        citation = citation_issued,
+        warning = warning_issued
+      ),
       # NOTE: Hispanic ethnicity > race subdivision
       subject_race =
-        tr_race[ifelse(ethnicity == "Hispanic", "Hispanic", race)],
+        tr_race[ifelse(Ethnicity == "Hispanic", "Hispanic", Race)],
       subject_sex = tr_sex[subject_sex],
-      officer_knew_ethnicity_race_prior =
-        tr_knew_race[officer_knew_ethnicity_race_prior],
-      search_conducted = tr_search_conducted[search_conducted],
-      search_consent = tr_search_consent[search_consent],
-      incident_date = as.Date(stop_date),
-      incident_time = format(as.POSIXct(stop_date), "%H:%M:%S"),
-      warning_issued = verbal_warning,  # doesn't appear to be written_warning
-      tmp_sr = tolower(search_reason),
+      search_conducted = tr_search_conducted[Search_Conducted],
+      tmp_sr = tolower(Search_reason),
       search_type = first_of(
         "plain view" = matches(tmp_sr, "plain sight|plain view"),
         "consent" = matches(tmp_sr, "consent"),
@@ -114,14 +97,14 @@ clean <- function(d) {
         "probable cause" =  # default
           matches(tmp_sr, "probable|marijuana|furtive") | search_conducted
       ),
-      incident_outcome = first_of(
-        arrest = arrest_made,
-        citation = citation_issued,
-        warning = warning_issued
+      notes = str_combine_cols(
+        Search_reason, ArrestBasedOn,
+        "Search Reason", "Arrest Reason"
       )
     ) %>%
-    select(
-      -tmp_sr
-    ) %>%
+    # TODO(danj):
+    # extra_schema
+    # contraband_weapons
+    # contraband_drugs
     standardize(d$metadata)
 }
