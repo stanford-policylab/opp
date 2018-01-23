@@ -5,14 +5,10 @@ import csv
 import pandas as pd
 import sys
 
-from nltk.corpus import stopwords
 from sklearn.externals import joblib
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import make_pipeline
-
-from sklearn.multioutput import MultiOutputClassifier
-from sklearn.naive_bayes import MultinomialNB
 
 
 def train(train_csv, model_name):
@@ -21,7 +17,7 @@ def train(train_csv, model_name):
     # NOTE: stemming and punctuation?
     p = make_pipeline(CountVectorizer(analyzer='char_wb',
                                       ngram_range=(2,4),
-                                      stop_words=stopwords.words(),
+                                      stop_words='english',
                                       lowercase=True),
                       RandomForestClassifier(n_estimators=200))
     p.fit(df['text'], df[label_cols])
