@@ -60,15 +60,15 @@ opp_raw_data_dir <- function(state, city) {
 }
 
 
-opp_geocodes_path <- function(state, city) {
+opp_calculated_features_path <- function(state, city) {
   data_dir = opp_data_dir(state, city)
-  file.path(data_dir, "geocodes", "geocoded_locations.csv")
+  file.path(data_dir, "calculated_features")
 }
 
 
 opp_clean <- function(d, state, city) {
   source(opp_processor_path(state, city), local = TRUE)
-  clean(d, opp_geocodes_path(state, city))
+  clean(d, opp_calculated_features_path(state, city))
 }
 
 
