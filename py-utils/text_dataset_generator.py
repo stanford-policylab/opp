@@ -19,7 +19,7 @@ def make_training_dataset(csv_file,
     df = pd.DataFrame(columns=sorted(label_classes) + ['text'])
     labeled_texts = set()
     if os.path.exists(output_csv):
-        df = pd.read_csv(output_csv, na_filter=False)
+        df = pd.read_csv(output_csv, na_filter=False).drop_duplicates()
         labeled_texts = set(df['text'].unique())
         assert (set(df.columns) - set(['text'])).issubset(label_classes)
         
