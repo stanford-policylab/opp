@@ -1,7 +1,7 @@
 library(dplyr)
 
-source("standards.R")
 source("sanitizers.R")
+source("standards.R")
 
 
 standardize <- function(data, metadata) {
@@ -14,14 +14,14 @@ standardize <- function(data, metadata) {
   # over another; if that's the case, a new column should be created that
   # reflects that choice
   d <- list(
-    data = data,
-    # collect metadata local to standardize here
-    metadata = list()
-  ) %>%
+      data = data,
+      # collect metadata local to standardize here
+      metadata = list()
+    ) %>%
     add_missing_required_columns %>%
     enforce_types %>%
     sanitize %>%
-    select_required_first
+    select_schema_cols
 
   # put all local metadata in standarize sublist of all metadata
   metadata[["standardize"]] <- d$metadata
@@ -68,14 +68,8 @@ sanitize <- function(d) {
   )
   # optional
   for (col in colnames(d$data)) {
-    if (endsWith(col, "dob")) {
-      sanitize_schema <- c(sanitize_schema, col = sanitize_dob)
-    }
     if (endsWith(col, "age")) {
       sanitize_schema <- c(sanitize_schema, col = sanitize_age)
-    }
-    if (endsWith(col, "yob")) {
-      sanitize_schema <- c(sanitize_schema, col = sanitize_yob)
     }
     if (col == "vehicle_year") {
       sanitize_schema <- c(sanitize_schema, col = sanitize_vehicle_year)
@@ -88,15 +82,10 @@ sanitize <- function(d) {
 }
 
 
-select_required_first <- function(d) {
-  print("selecting required columns first...")
+select_schema_cols <- function(d) {
+  print("selecting schema columns first...")
   req <- names(required_schema)
-  extra <- c()
-  for (col in colnames(d$data)) {
-    if (!(col %in% req)) {
-      extra <- c(extra, col)
-    }
-  }
-  d$data <- select_(d$data, .dots = c(req, sort(extra)))
+  extra <- Filter(function(n) { n %in% colnames(d$data) }, names(extra_schema))
+  d$data <- select_(d$data, c(req, extra))
   d
 }

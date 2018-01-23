@@ -39,12 +39,9 @@ normalize_city <- function(city) {
 }
 
 
-opp_load_raw <- function(state, city) {
+opp_load_raw <- function(state, city, n_max = Inf) {
   source(opp_processor_path(state, city), local = TRUE)
-  load_raw(
-    opp_raw_data_dir(state, city),
-    opp_geocodes_path(state, city)
-  )
+  load_raw(opp_raw_data_dir(state, city), n_max)
 }
 
 
@@ -69,9 +66,9 @@ opp_geocodes_path <- function(state, city) {
 }
 
 
-opp_clean <- function(tbl, state, city) {
+opp_clean <- function(d, state, city) {
   source(opp_processor_path(state, city), local = TRUE)
-  clean(tbl)
+  clean(d, opp_geocodes_path(state, city))
 }
 
 
@@ -80,16 +77,9 @@ opp_save <- function(d, state, city) {
 }
 
 
-opp_process <- function(state, city, sample_num) {
-  source(opp_processor_path(state, city), local = TRUE)
-  d <- load_raw(
-    opp_raw_data_dir(state, city),
-    opp_geocodes_path(state, city)
-  )
-  if (not_null(sample_num)) {
-    d$data <- sample_n(d$data, sample_num)
-  }
-  dc <- clean(d)
+opp_process <- function(state, city, n_max = Inf) {
+  dr <- opp_load_raw(state, city, n_max)
+  dc <- opp_clean(dr, state, city)
   opp_save(dc, state, city)
   warnings()
 }
