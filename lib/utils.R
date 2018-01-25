@@ -185,18 +185,46 @@ separate_cols <- function(tbl, ..., sep = " ") {
 
 
 
-add_lat_lng <- function(tbl, join_col, geocodes_path) {
-  geocoded_locations <- read_csv(geocodes_path, col_types = 'cdd')
+add_lat_lng <- function(tbl, join_col, calculated_features_path) {
   join_on <- c("loc")
   names(join_on) <- c(join_col)
-  tbl %>%
-    left_join(
-      geocoded_locations, by = join_on
+  add_calculated_feature(
+      tbl,
+      join_on,
+      calculated_features_path,
+      "geocoded_locations.csv",
+      "cdd"
     ) %>%
     rename(
       incident_lat = lat,
       incident_lng = lng
     )
+}
+
+
+add_contraband_types <- function(tbl, join_col, calculated_features_path) {
+  join_on <- c("text")
+  names(join_on) <- c(join_col)
+  add_calculated_feature(
+      tbl,
+      join_on,
+      calculated_features_path,
+      "contraband_types.csv",
+      "iic"
+    ) %>%
+    rename(
+      contraband_drugs = d,
+      contraband_weapons = w
+    )
+}
+
+
+add_calculated_feature <- function(tbl, join_on, calculated_features_path,
+                                   filename, col_types) {
+
+  feats <- read_csv(file.path(calculated_features_path, filename),
+                    col_types = col_types)
+  left_join(tbl, feats, by = join_on)
 }
 
 
