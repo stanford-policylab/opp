@@ -34,7 +34,7 @@ valid_search_types <- c(
   "plain view",
   "consent",
   "probable cause",
-  "incident to arrest"
+  "non-discretionary"  # arrest/warrant, probation/parole, inventory
 )
 
 
@@ -43,13 +43,6 @@ valid_outcomes <- c(
   "citation",
   "summons",
   "arrest"
-)
-
-
-valid_search_probable_cause_types <- c(
-  "k9",
-  "other",
-  "plain view"
 )
 
 
@@ -125,7 +118,7 @@ valid_states <- c(
 
 
 required_schema <- c(
-  incident_id             = as.character,
+  incident_id             = as.numeric,
   incident_type           = Curry(factor, levels = valid_incident_types),
   incident_date           = as.Date,
   incident_time           = hms,
@@ -167,6 +160,7 @@ extra_schema <- c(
 )
 
 
+# NOTE: for reporting; for cleaning, contraband is not dependent on search
 predicated_columns <- c(
   search_type = "search_conducted",
   contraband_found = "search_conducted",
