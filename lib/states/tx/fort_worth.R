@@ -34,11 +34,6 @@ clean <- function(d, calculated_features_path) {
     "Unknown" = "other/unknown",
     "White" = "white"
   )
-  tr_knew_race = c(
-    YES = TRUE,
-    NO = FALSE,
-    UNKNOWN = NA
-  )
   tr_search_conducted = c(
     Yes = TRUE,
     No = FALSE,
@@ -50,14 +45,6 @@ clean <- function(d, calculated_features_path) {
   )
 
   d$data %>%
-    add_lat_lng(
-      "Address",
-      calculated_features_path
-    ) %>%
-    add_contraband_types(
-      "Contraband_Type",
-      calculated_features_path
-    ) %>%
     rename(
       incident_date = Stop_Date,
       incident_location = Address,
@@ -66,7 +53,17 @@ clean <- function(d, calculated_features_path) {
       citation_issued = Citation,
       warning_issued = Verbal_Warning,  # no written_warning or other type
       subject_sex = Sex,
-      reason_for_stop = Reason
+      reason_for_stop = Reason,
+      reason_for_search = Search_reason,
+      reason_for_arrest = ArrestBasedOn
+    ) %>%
+    add_lat_lng(
+      "incident_location",
+      calculated_features_path
+    ) %>%
+    add_contraband_types(
+      "Contraband_Type",
+      calculated_features_path
     ) %>%
     mutate_each(
       funs(as.logical),
@@ -76,7 +73,8 @@ clean <- function(d, calculated_features_path) {
       warning_issued
     ) %>%
     mutate(
-      # TODO(ravi): can we assume this
+      # TODO(journalist): we could also use Violation_Offense, but results
+      # will be scattered; how can we better determine this?
       # https://app.asana.com/0/456927885748233/519045240013554 
       incident_type = ifelse(
         matches(reason_for_stop, "Traffic Violation"),
@@ -101,10 +99,6 @@ clean <- function(d, calculated_features_path) {
         "incident to arrest" = matches(tmp_sr, "arrest|warrant"),
         "probable cause" =  # default
           matches(tmp_sr, "probable|marijuana|furtive") | search_conducted
-      ),
-      notes = str_combine_cols(
-        Search_reason, ArrestBasedOn,
-        "Search Reason", "Arrest Reason"
       )
     ) %>%
     # extra_schema
