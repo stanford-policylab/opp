@@ -73,18 +73,28 @@ def get_sample(superset, n):
 
 
 def get_edits(msg, labels):
-    print(msg)
-    res = input('edits [h]: ')
-    while (res == 'h'):
-        print('format: <idx>:<label><space><idx>:<label>...\n')
+    while True:
         print(msg)
         res = input('edits [h]: ')
-    edits = [tuple(idx_lbl.split(':')) for idx_lbl in res.split()]
-    while not set([lbl for idx, lbl in edits]).issubset(labels):
-        print(msg)
-        res = input('edits [h]: ')
-        edits = [tuple(idx_lbl.split(':')) for idx_lbl in res.split()]
-    return res.split()
+        if res == 'h':
+            print('format: <idx>:<label><space><idx>:<label>...\n')
+            continue
+        elif any_malformatted_edits(res, labels):
+            continue
+        else:
+            return [e.split(':') for e in res.split()]
+
+
+def any_malformatted_edits(res, labels):
+    edits = res.split()
+    for idx_lbl in edits:
+        if not ':' in idx_lbl:
+            return True
+    for idx_lbl in edits:
+        _, lbl = idx_lbl.split(':')
+        if lbl not in labels:
+            return True
+    return False
 
 
 def train(X, y):
