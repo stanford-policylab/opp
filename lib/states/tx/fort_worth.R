@@ -15,13 +15,14 @@ load_raw <- function(raw_data_dir, n_max) {
     }
   }
 
+  data <- mutate(data, incident_id = seq_len(n()))
 	list(data = data, metadata = list(loading_problems = loading_problems))
 }
 
 
 # TODO(journalist): why do the numbers here decrease yoy?
 # https://app.asana.com/0/456927885748233/519045240013551
-clean <- function(d, geocodes_path) {
+clean <- function(d, calculated_features_path) {
 
   tr_race <- c(
     "Asian" = "asian/pacific islander",
@@ -51,7 +52,11 @@ clean <- function(d, geocodes_path) {
   d$data %>%
     add_lat_lng(
       "Address",
-      geocodes_path
+      calculated_features_path
+    ) %>%
+    add_contraband_types(
+      "Contraband_Type",
+      calculated_features_path
     ) %>%
     rename(
       incident_date = Stop_Date,
@@ -102,9 +107,6 @@ clean <- function(d, geocodes_path) {
         "Search Reason", "Arrest Reason"
       )
     ) %>%
-    # TODO(danj):
     # extra_schema
-    # contraband_weapons
-    # contraband_drugs
     standardize(d$metadata)
 }
