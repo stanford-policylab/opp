@@ -13,26 +13,43 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import make_pipeline
 
 
-def label_single(in_csv, labels, output_csv):
-    df = get_label_single_df(output_csv, labels)
+def label(in_csv, label_classes, exclusive, output_csv):
+    get_df = get_multi_df
+    add_labels_individually = add_multi_labels_individually
+    add_labels_en_masse = add_multi_labels_en_masse
+    if exclusive:
+        get_df = get_single_df
+        add_labels_individually = add_single_labels_individually
+        add_labels_en_masse = add_single_labels_en_masse
+
+    df = get_df(output_csv, label_classes)
+    label_cols = set(df.columns) - set(['text'])
     with open(in_csv) as f:
         unlabeled_texts = set(f.read().splitlines()) - set(df.text)
 
-    model = None
-    error_rate = 1.0
-    df, unlabeled_texts, error_rate = \
-        add_single_labels(unlabeled_texts, labels, df, model, error_rate)
-
+    df, unlabeled_texts = \
+        add_labels_individually(unlabeled_texts, label_classes, df, 100)
     while unlabeled_texts:
-        df, unlabeled_texts, error_rate = \
-            add_single_labels(unlabeled_texts, labels, df, model, error_rate)
-        if len(df) >= 10 and error_rate > 0.01:
-            model = train(df.text, df.label)
+        model = train(df.text, df[label_cols])
+        df, unlabeled_texts, error_rate = add_labels_en_masse(unlabeled_texts,
+                                                              label_classes,
+                                                              df,
+                                                              model)
         df.to_csv(output_csv, index=False, quoting=csv.QUOTE_NONNUMERIC)
     return
 
 
-def get_label_single_df(output_csv, labels):
+def get_multi_df(output_csv, labels):
+    colnames = list(labels) + ['text']
+    df = pd.DataFrame(columns=colnames)
+    if os.path.exists(output_csv):
+        df = pd.read_csv(output_csv).drop_duplicates()
+        assert set(df.columns).issubset(set(colnames))
+        assert (set(df.columns) - set(['text'])).issubset(labels)
+    return df
+
+
+def get_single_df(output_csv, labels):
     colnames = ['label', 'text']
     df = pd.DataFrame(columns=colnames)
     if os.path.exists(output_csv):
@@ -42,7 +59,57 @@ def get_label_single_df(output_csv, labels):
     return df
 
 
-def add_single_labels(unlabeled_texts, labels, df, model, error_rate):
+
+def add_multi_labels_individually(unlabeled_texts, label_classes, df, n):
+    while len(df) < n:
+        text, unlabeled_texts = sample_and_remove_n(unlabeled_texts, 1)
+        row = get_multi_label(text, label_classes)
+        df.append(row)
+    return df, unlabeled_texts
+
+
+def sample_and_remove_n(superset, n):
+    subset = random.sample(superset, min(n, len(superset)))
+    if n == 1:
+        subset = subset[0]
+    return subset, superset - set(subset)
+
+
+def get_multi_label(text, label_classes):
+    labels = {lblc: 0 for lblc in label_classes}
+    labels['text'] = text
+    while (True):
+        lbl = input(text + ': ')
+        if not lbl:
+            return labels
+        lbls = set(lbl.split(','))
+        if lbls.issubset(label_classes):
+            for lbl in lbls:
+                labels[lbl] = 1
+            return labels
+
+
+def add_multi_labels_en_masse(unlabeled_texts, label_classes, df, model):
+    texts_to_label, unlabeled_texts = sample_and_remove_n(unlabeled_texts)
+    labels = model.predict(texts_to_label)
+    # TODO(danj)
+
+
+def add_single_labels_individually(unlabeled_texts, label_classes, df, n):
+    while len(df) < n:
+        text, unlabeled_texts = sample_and_remove_n(unlabeled_texts, 1)
+        row = get_single_label(text, label_classes)
+        df.append(row)
+    return df, unlabeled_texts
+
+
+def get_single_label(text, label_classes):
+    # TODO(danj)
+
+
+
+def add_single_labels_en_masse(unlabeled_texts, label_classes, df, model):
+    # TODO(danj)
     texts_to_label, unlabeled_texts = \
         get_sample(unlabeled_texts, sample_n(error_rate))
     text_labels = [list(labels)[0]] * len(texts_to_label)
@@ -59,17 +126,6 @@ def add_single_labels(unlabeled_texts, labels, df, model, error_rate):
     df_samples = pd.DataFrame({'label': text_labels, 'text': texts_to_label})
     error_rate = len(edits) / len(texts_to_label)
     return df.append(df_samples), unlabeled_texts, error_rate
-
-
-def sample_n(error_rate, min_n = 10, max_n = 40):
-    if error_rate == 0:
-        return max_n
-    return min(max(int(1 / error_rate), min_n), max_n)
-
-
-def get_sample(superset, n):
-    subset = random.sample(superset, min(n, len(superset)))
-    return subset, superset - set(subset)
 
 
 def get_edits(msg, labels):
@@ -105,23 +161,6 @@ def train(X, y):
                       RandomForestClassifier(n_estimators=200))
     p.fit(X, y)
     return p
-
-
-def label_multi(in_csv, labels, output_csv):
-    df = get_label_multi_df(output_csv, labels)
-    texts = set(df.texts)
-    with open(in_csv) as f:
-        texts = set(f.read().splitlines())
-    return
-
-
-def get_label_multi_df(output_csv, labels):
-    colnames = list(labels) + ['text']
-    df = pd.DataFrame(columns=colnames)
-    if os.path.exists(output_csv):
-        df = pd.read_csv(output_csv).drop_duplicates()
-        assert set(df.columns).issubset(set(colnames))
-    return df
         
 
 def parse_args(argv):
@@ -146,7 +185,7 @@ def signal_handler(signal, frame):
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, signal_handler) 
     args = parse_args(sys.argv)
-    if args.labels_mutually_exclusive:
-        label_single(args.in_csv, set(args.labels), args.output_csv)
-    else:
-        label_multi(args.in_csv, set(args.labels), args.output_csv)
+    label(args.in_csv,
+          set(args.labels),
+          args.labels_mutually_exclusive,
+          args.output_csv)
