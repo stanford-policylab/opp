@@ -26,7 +26,7 @@ def label_single(in_csv, labels, output_csv):
     while unlabeled_texts:
         df, unlabeled_texts, error_rate = \
             add_single_labels(unlabeled_texts, labels, df, model, error_rate)
-        if len(df) > 50 and error_rate > 0.01:
+        if len(df) >= 10 and error_rate > 0.01:
             model = train(df.text, df.label)
         df.to_csv(output_csv, index=False, quoting=csv.QUOTE_NONNUMERIC)
     return
@@ -61,7 +61,7 @@ def add_single_labels(unlabeled_texts, labels, df, model, error_rate):
     return df.append(df_samples), unlabeled_texts, error_rate
 
 
-def sample_n(error_rate, min_n = 10, max_n = 25):
+def sample_n(error_rate, min_n = 10, max_n = 40):
     if error_rate == 0:
         return max_n
     return min(max(int(1 / error_rate), min_n), max_n)
