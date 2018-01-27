@@ -17,6 +17,9 @@ from sklearn.pipeline import make_pipeline
 def label(in_csv,
           label_classes,
           labels_are_mutually_exclusive,
+          min_labels_for_training
+          error_rate_last_n,
+          max_error_rate_for_bulk_review,
           chunk_size,
           save_model,
           output_csv):
@@ -31,30 +34,49 @@ def label(in_csv,
     with open(in_csv) as f:
         unlabeled_texts = set(f.read().splitlines()) - set(df.text)
     
-    texts_to_label, unlabeled_texts = sample_and_remove_n(unlabeled_texts, 10)
-    df.append(get_labels(get_label, texts_to_label, label_classes))
-    save(df, output_csv)
+
+    n = min_labels_before_training - len(df)
+    if n > 0:
+        texts_to_label, unlabeled_texts = \
+            sample_and_remove_n(unlabeled_texts, n)
+        df = df.append(get_labels(get_label, texts_to_label, label_classes),
+                       ignore_index=True)
+        save(df, output_csv)
+
+
+    '''
+    error_rate = 1.0
+    last_n = [True ]
+    while error_rate > max_error_rate_for_bulk_review:
+    n = min
+    '''
 
     label_cols = get_label_cols(df)
     while unlabeled_texts:
-        model = train(df.text, df[label_cols])
-        if save_model:
-            joblib.dump(model, save_model)
-        texts_to_label, unlabeled_texts = sample_and_remove_n(unlabeled_texts,
-                                                              chunk_size)
-        df.append(get_labels_in_bulk(get_label,
-                                     texts_to_label,
-                                     label_classes,
-                                     model))
+        model = train(df.text, df[label_cols], save_model)
+        df_to_label, unlabeled_texts = create_df_to_label(unlabeled_texts,
+                                                          chunk_size,
+                                                          model,
+                                                          label_cols)
+        df_labeled = get_labels_in_bulk(get_label, df_to_label, label_classes)
+        df = df.append(df_labeled, ignore_index=True)
         save(df, output_csv)
     return
+
+
+def create_df_to_label(unlabeled_texts, chunk_size, model, label_cols):
+    texts_to_label, unlabeled_texts = \
+        sample_and_remove_n(unlabeled_texts, chunk_size)
+    df = pd.DataFrame(model.predict(texts_to_label), columns=label_cols)
+    df.insert(loc=0, column='text', value=texts_to_label)
+    return df, unlabeled_texts
 
 
 def get_multi_df(output_csv, labels):
     colnames = list(labels) + ['text']
     df = pd.DataFrame(columns=colnames)
     if os.path.exists(output_csv):
-        df = pd.read_csv(output_csv).drop_duplicates()
+        df = pd.read_csv(output_csv, na_filter=False).drop_duplicates()
         assert set(df.columns).issubset(set(colnames))
         assert (set(df.columns) - set(['text'])).issubset(labels)
     return df
@@ -67,7 +89,7 @@ def get_multi_label(text, label_classes):
         lbl = input(text + ': ')
         if not lbl:
             return labels
-        lbls = set(lbl.split())
+        lbls = set([x.strip() for x in lbl.split(',')])
         if lbls.issubset(label_classes):
             for lbl in lbls:
                 labels[lbl] = 1
@@ -78,7 +100,7 @@ def get_single_df(output_csv, labels):
     colnames = ['label', 'text']
     df = pd.DataFrame(columns=colnames)
     if os.path.exists(output_csv):
-        df = pd.read_csv(output_csv).drop_duplicates()
+        df = pd.read_csv(output_csv, na_filter=False).drop_duplicates()
         assert set(df.columns).issubset(set(colnames))
         assert set(df.label).issubset(labels)
     return df
@@ -114,29 +136,45 @@ def get_label_cols(df):
     return list(set(df.columns) - set(['text']))
 
 
-def train(X, y):
+def train(X, y, save_model):
     p = make_pipeline(CountVectorizer(analyzer='char_wb',
                                       ngram_range=(2,4),
                                       stop_words='english',
                                       lowercase=True),
                       RandomForestClassifier(n_estimators=200))
     p.fit(X, y)
+    if save_model:
+        joblib.dump(p, save_model)
     return p
 
 
-def get_labels_in_bulk(get_label, texts_to_label, label_classes, model):
-    tmp_df = pd.DataFrame(model.predict(texts_to_label),
-                          columns=get_label_cols(df))
-    tmp_df['text'] = texts_to_label
-    print(tmp_df)
-    edit_idxs = input('edit indices: ')
-    while not set(edit_idxs).issubset(tmp_df.index):
-        print(tmp_df)
-        edit_idxs = input('edit indices: ')
-    df = tmp_df[~tmp_df.index.isin(edit_idxs)]
-    for edit_idx in edit_idxs:
-        df.append(get_label(tmp_df.loc[edit_idx, 'text'], label_classes))
+def get_labels_in_bulk(get_label, df_to_label, label_classes):
+    edit_indices = get_edit_indices(df_to_label)
+    df = df_to_label[~df_to_label.index.isin(edit_indices)]
+    for idx in edit_indices:
+        row = get_label(df_to_label.loc[idx, 'text'], label_classes)
+        df = df.append(row, ignore_index=True)
     return df
+
+
+def get_edit_indices(df_to_label):
+    display(df_to_label)
+    edit_indices = [int(idx) for idx in input('edit indices: ').split(',')]
+    while not set(edit_indices).issubset(df_to_label.index):
+        display(df_to_label)
+        edit_indices = [int(idx) for idx in input('edit indices: ').split(',')]
+    return edit_indices
+
+
+def display(df):
+    dfc = df.copy()
+    label_cols = get_label_cols(df)
+    for label_col in label_cols:
+        dfc[label_col] = dfc[label_col].apply(lambda x: label_col if x else '')
+    join_cols = lambda cols: ','.join(cols).strip(',')
+    dfc['labels'] = dfc[label_cols].apply(join_cols, axis=1)
+    print(dfc[['text', 'labels']])
+    return
         
 
 def parse_args(argv):
@@ -148,8 +186,16 @@ def parse_args(argv):
     parser.add_argument('-xor', '--labels_are_mutually_exclusive',
                         action='store_true',
                         help='make labels are mutually exclusive')
-    parser.add_argument('-cs', '--chunk_size', type=int, default=40,
-                        help='bulk label chunk size')
+    parser.add_argument('-min', '--min_labels_for_training',
+                        type=int, default=50,
+                        help='number of labels to have before training')
+    parser.add_argument('-ern', '--error_rate_last_n', type=int,
+                        default=100, help='use last n to calculate error rate')
+    parser.add_argument('-mer', '--min_error_rate_for_bulk_review',
+                        type=float, default=0.01,
+                        help='minimum error rate before bulk review')
+    parser.add_argument('-cs', '--chunk_size', type=int, default=50,
+                        help='chunk size for bulk review')
     parser.add_argument('-sm', '--save_model',
                         help='name to save model as (not saved if no name)')
     parser.add_argument('-o', '--output_csv', default='output.csv',
@@ -168,6 +214,9 @@ if __name__ == '__main__':
     label(args.in_csv,
           set(args.labels),
           args.labels_are_mutually_exclusive,
+          args.min_labels_for_training,
+          args.error_rate_last_n,
+          args.min_error_rate_for_bulk_review,
           args.chunk_size,
           args.save_model,
           args.output_csv)
