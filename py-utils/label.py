@@ -3,6 +3,7 @@
 import argparse
 import csv
 import os
+import numpy as np
 import pandas as pd
 import random
 import signal
@@ -17,9 +18,9 @@ from sklearn.pipeline import make_pipeline
 def label(in_csv,
           label_classes,
           labels_are_mutually_exclusive,
-          min_labels_for_training
-          error_rate_last_n,
+          min_labels_for_training,
           max_error_rate_for_bulk_review,
+          error_rate_last_n,
           chunk_size,
           save_model,
           output_csv):
@@ -35,7 +36,7 @@ def label(in_csv,
         unlabeled_texts = set(f.read().splitlines()) - set(df.text)
     
 
-    n = min_labels_before_training - len(df)
+    n = min_labels_for_training - len(df)
     if n > 0:
         texts_to_label, unlabeled_texts = \
             sample_and_remove_n(unlabeled_texts, n)
@@ -43,15 +44,23 @@ def label(in_csv,
                        ignore_index=True)
         save(df, output_csv)
 
-
-    '''
-    error_rate = 1.0
-    last_n = [True ]
-    while error_rate > max_error_rate_for_bulk_review:
-    n = min
-    '''
-
     label_cols = get_label_cols(df)
+    model = train(df.text, df[label_cols], save_model)
+
+    last_n_correct = [False] * error_rate_last_n
+    error_rate = 1.0
+    while error_rate > max_error_rate_for_bulk_review:
+        text_to_label, unlabeled_texts = \
+            sample_and_remove_n(unlabeled_texts, 1)
+        pred_row = dict(zip(label_cols, model.predict([text_to_label])[0]))
+        pred_row['text'] = text_to_label
+        row = get_label(text_to_label, label_classes)
+        df = df.append(row, ignore_index=True)
+        model = train(df.text, df[label_cols], save_model)
+        last_n_correct.insert(0, pred_row == row)
+        last_n_correct.pop()
+        error_rate = 1 - np.mean(last_n_correct)
+
     while unlabeled_texts:
         model = train(df.text, df[label_cols], save_model)
         df_to_label, unlabeled_texts = create_df_to_label(unlabeled_texts,
@@ -128,7 +137,8 @@ def save(df, output_csv):
 def get_labels(get_label, texts_to_label, label_classes):
     rows = []
     for text in texts_to_label:
-        rows.append(get_label(text, label_classes))
+        row = get_label(text, label_classes)
+        rows.append(row)
     return pd.DataFrame(rows)
 
 
@@ -189,11 +199,11 @@ def parse_args(argv):
     parser.add_argument('-min', '--min_labels_for_training',
                         type=int, default=50,
                         help='number of labels to have before training')
+    parser.add_argument('-mer', '--max_error_rate_for_bulk_review',
+                        type=float, default=0.01,
+                        help='max error rate before bulk review')
     parser.add_argument('-ern', '--error_rate_last_n', type=int,
                         default=100, help='use last n to calculate error rate')
-    parser.add_argument('-mer', '--min_error_rate_for_bulk_review',
-                        type=float, default=0.01,
-                        help='minimum error rate before bulk review')
     parser.add_argument('-cs', '--chunk_size', type=int, default=50,
                         help='chunk size for bulk review')
     parser.add_argument('-sm', '--save_model',
@@ -215,8 +225,8 @@ if __name__ == '__main__':
           set(args.labels),
           args.labels_are_mutually_exclusive,
           args.min_labels_for_training,
+          args.max_error_rate_for_bulk_review,
           args.error_rate_last_n,
-          args.min_error_rate_for_bulk_review,
           args.chunk_size,
           args.save_model,
           args.output_csv)
