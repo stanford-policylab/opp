@@ -93,6 +93,7 @@ clean <- function(d, calculated_features_path) {
       subject_sex = tr_sex[subject_sex],
       search_conducted = tr_search_conducted[Search_Conducted],
       tmp_sr = tolower(Search_reason),
+      # TODO(danj): improve this
       search_type = first_of(
         "plain view" = matches(tmp_sr, "plain sight|plain view"),
         "consent" = matches(tmp_sr, "consent"),
