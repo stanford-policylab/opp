@@ -9,10 +9,7 @@ import random
 import signal
 import sys
 
-from sklearn.externals import joblib
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.pipeline import make_pipeline
+from text_classifier import train
 
 
 def label(in_csv,
@@ -205,20 +202,6 @@ def save(df, output_csv):
     df = df.reindex(columns=get_label_cols(df) + ['text'])
     df.to_csv(output_csv, index=False, quoting=csv.QUOTE_NONNUMERIC)
     return
-
-
-def train(X, y, save_model):
-    p = make_pipeline(CountVectorizer(analyzer='char_wb',
-                                      ngram_range=(2,4),
-                                      stop_words='english',
-                                      lowercase=True),
-                      RandomForestClassifier(n_estimators=200))
-    if y.shape[1] == 1:
-        y = y.iloc[:, 0].ravel()
-    p.fit(X, y)
-    if save_model:
-        joblib.dump(p, save_model)
-    return p
 
 
 def get_labels_in_bulk(get_label, label_classes, df_to_label):
