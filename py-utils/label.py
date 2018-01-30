@@ -36,13 +36,19 @@ def label(in_csv,
 
     df, unlabeled_texts = single_review(df,
                                         unlabeled_texts,
+                                        get_label,
                                         label_classes,
                                         retrain_every_n,
                                         error_rate_last_n,
                                         max_error_rate_for_bulk_review,
                                         save_model,
                                         output_csv)
-    bulk_review(df, unlabeled_texts, label_classes, save_model, output_csv)
+    bulk_review(df,
+                unlabeled_texts,
+                get_label,
+                label_classes,
+                save_model,
+                output_csv)
     return
 
 
@@ -66,6 +72,7 @@ def get_unlabeled_texts(in_csv, df):
 
 def single_review(df,
                   unlabeled_texts,
+                  get_label,
                   label_classes,
                   retrain_every_n,
                   error_rate_last_n,
@@ -243,7 +250,12 @@ def display(df):
     return
 
 
-def bulk_review(df, unlabeled_texts, label_classes, save_model, output_csv):
+def bulk_review(df,
+                unlabeled_texts,
+                get_label,
+                label_classes,
+                save_model,
+                output_csv):
     label_cols = get_label_cols(df)
     while unlabeled_texts:
         model = train(df.text, df[label_cols], save_model)
