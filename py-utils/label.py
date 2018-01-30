@@ -47,6 +47,7 @@ def label(in_csv,
                 unlabeled_texts,
                 get_label,
                 label_classes,
+                chunk_size,
                 save_model,
                 output_csv)
     return
@@ -256,6 +257,7 @@ def bulk_review(df,
                 unlabeled_texts,
                 get_label,
                 label_classes,
+                chunk_size,
                 save_model,
                 output_csv):
     label_cols = get_label_cols(df)
