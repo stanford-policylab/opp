@@ -80,8 +80,12 @@ def single_review(df,
                   max_error_rate_for_bulk_review,
                   save_model,
                   output_csv):
-    model = None
+
     label_cols = get_label_cols(df)
+    model = None
+    if len(df) > retrain_every_n:
+        model = train(df.text, df[label_cols], save_model)
+
     last_n_error = LastN(error_rate_last_n)
     while (last_n_error.rate() > max_error_rate_for_bulk_review):
         text_to_label, unlabeled_texts = \
@@ -218,13 +222,18 @@ def train(X, y, save_model):
 
 
 def get_labels_in_bulk(get_label, label_classes, df_to_label):
+    label_cols = get_label_cols(df_to_label)
+    df_to_label = df_to_label.sort_values(label_cols).reset_index(drop=True)
     edit_indices = get_edit_indices(df_to_label)
     df = df_to_label[~df_to_label.index.isin(edit_indices)]
     for idx in edit_indices:
         text = df_to_label.loc[idx, 'text']
         row = {'text': text}
-        labels = get_label(text, label_classes)
-        row.update(dict(zip(label_classes, labels)))
+        label = get_label(text, label_classes)
+        if isinstance(label, list):
+            row.update(dict(zip(label_classes, label)))
+        else:
+            row['label'] = label
         df = df.append(row, ignore_index=True)
     return df
 
@@ -243,12 +252,14 @@ def get_edit_indices(df_to_label):
 def display(df):
     dfc = df.copy()
     label_cols = get_label_cols(df)
-    for label_col in label_cols:
-        dfc[label_col] = dfc[label_col].apply(lambda x: label_col if x else '')
-    join_cols = lambda cols: ','.join(cols).strip(',')
-    dfc['labels'] = dfc[label_cols].apply(join_cols, axis=1)
+    if len(label_cols) > 1:
+        for label_col in label_cols:
+            get_colname_if = lambda x: label_col if x else ''
+            dfc[label_col] = dfc[label_col].apply(get_colname_if)
+        join_cols = lambda cols: ','.join(cols).strip(',')
+        dfc['label'] = dfc[label_cols].apply(join_cols, axis=1)
     print()
-    print(dfc[['text', 'labels']])
+    print(dfc[['text', 'label']])
     print()
     return
 
