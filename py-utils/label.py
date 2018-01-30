@@ -25,19 +25,53 @@ def label(in_csv,
           save_model,
           output_csv):
 
+    get_df, get_label = get_helpers(labels_are_mutually_exclusive)
+    df = get_df(output_csv, label_classes)
+    unlabeled_texts = get_unlabeled_texts(in_csv, df)
+
     if not labels_are_mutually_exclusive:
         print('\nEnter label classes, i.e. "w[, d]", or "-" to clear labels\n')
+    else:
+        print('\nEnter label class, i.e. "w"\n')
 
+    df, unlabeled_texts = single_review(df,
+                                        unlabeled_texts,
+                                        label_classes,
+                                        retrain_every_n,
+                                        error_rate_last_n,
+                                        max_error_rate_for_bulk_review,
+                                        save_model,
+                                        output_csv)
+    bulk_review(df, unlabeled_texts, label_classes, save_model, output_csv)
+    return
+
+
+def get_helpers(labels_are_mutually_exclusive):
     get_df = get_multi_df
     get_label = get_multi_label
     if labels_are_mutually_exclusive:
         get_df = get_single_df
         get_label = get_single_label
+    return get_df, get_label
 
-    df = get_df(output_csv, label_classes)
+
+def get_unlabeled_texts(in_csv, df):
     with open(in_csv) as f:
         unlabeled_texts = set(f.read().splitlines()) - set(df.text)
+    if not unlabeled_texts:
+        print('All texts already labeled!')
+        sys.exit(0)
+    return unlabeled_texts
 
+
+def single_review(df,
+                  unlabeled_texts,
+                  label_classes,
+                  retrain_every_n,
+                  error_rate_last_n,
+                  max_error_rate_for_bulk_review,
+                  save_model,
+                  output_csv):
     model = None
     label_cols = get_label_cols(df)
     last_n_error = LastN(error_rate_last_n)
@@ -56,18 +90,7 @@ def label(in_csv,
         save(df, output_csv)
         if should_train_model(df, retrain_every_n):
             model = train(df.text, df[label_cols], save_model)
-
-    while unlabeled_texts:
-        model = train(df.text, df[label_cols], save_model)
-        texts_to_label, unlabeled_texts = \
-            sample_and_remove_n(unlabeled_texts, chunk_size)
-        df_pred = pd.DataFrame(model.predict(texts_to_label),
-                               columns=label_cols)
-        df_pred.insert(loc=0, column='text', value=texts_to_label)
-        df_labeled = get_labels_in_bulk(get_label, label_classes, df_pred)
-        df = df.append(df_labeled, ignore_index=True)
-        save(df, output_csv)
-    return
+    return df, unlabeled_texts
 
 
 def get_multi_df(output_csv, label_classes):
@@ -170,14 +193,6 @@ def save(df, output_csv):
     return
 
 
-def get_labels(get_label, texts_to_label, label_classes):
-    rows = []
-    for text in texts_to_label:
-        row = get_label(text, label_classes)
-        rows.append(row)
-    return pd.DataFrame(rows)
-
-
 def train(X, y, save_model):
     p = make_pipeline(CountVectorizer(analyzer='char_wb',
                                       ngram_range=(2,4),
@@ -225,6 +240,21 @@ def display(df):
     print()
     print(dfc[['text', 'labels']])
     print()
+    return
+
+
+def bulk_review(df, unlabeled_texts, label_classes, save_model, output_csv):
+    label_cols = get_label_cols(df)
+    while unlabeled_texts:
+        model = train(df.text, df[label_cols], save_model)
+        texts_to_label, unlabeled_texts = \
+            sample_and_remove_n(unlabeled_texts, chunk_size)
+        df_pred = pd.DataFrame(model.predict(texts_to_label),
+                               columns=label_cols)
+        df_pred.insert(loc=0, column='text', value=texts_to_label)
+        df_labeled = get_labels_in_bulk(get_label, label_classes, df_pred)
+        df = df.append(df_labeled, ignore_index=True)
+        save(df, output_csv)
     return
 
 
