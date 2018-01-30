@@ -91,6 +91,8 @@ def single_review(df,
             last_n_error.add(not np.array_equal(pred, label))
         else:
             label = get_label(text_to_label, label_classes)
+        if not isinstance(label, list):  # xor labels
+            label = [label]
         row = {'text': text_to_label}
         row.update(dict(zip(label_cols, label)))
         df = df.append(row, ignore_index=True)
