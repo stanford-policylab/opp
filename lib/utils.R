@@ -189,16 +189,16 @@ add_lat_lng <- function(tbl, join_col, calculated_features_path) {
   join_on <- c("loc")
   names(join_on) <- c(join_col)
   add_calculated_feature(
-      tbl,
-      join_on,
-      calculated_features_path,
-      "geocoded_locations.csv",
-      "cdd"
-    ) %>%
-    rename(
-      incident_lat = lat,
-      incident_lng = lng
-    )
+    tbl,
+    join_on,
+    calculated_features_path,
+    "geocoded_locations.csv",
+    "cdd"
+  ) %>%
+  rename(
+    incident_lat = lat,
+    incident_lng = lng
+  )
 }
 
 
@@ -206,16 +206,43 @@ add_contraband_types <- function(tbl, join_col, calculated_features_path) {
   join_on <- c("text")
   names(join_on) <- c(join_col)
   add_calculated_feature(
-      tbl,
-      join_on,
-      calculated_features_path,
-      "contraband_types.csv",
-      "iic"
-    ) %>%
-    rename(
-      contraband_drugs = d,
-      contraband_weapons = w
-    )
+    tbl,
+    join_on,
+    calculated_features_path,
+    "contraband_types.csv",
+    "iic"
+  ) %>%
+  rename(
+    contraband_drugs = d,
+    contraband_weapons = w
+  )
+}
+
+
+add_search_types <- function(tbl, join_col, calculated_features_path) {
+  join_on <- c("text")
+  names(join_on) <- c(join_col)
+  tr_search_type <- c(
+    k9 = "k9",
+    pv = "plain view" ,
+    cn = "consent",
+    pc = "probable cause",
+    nd = "non-discretionary"
+  )
+  add_calculated_feature(
+    tbl,
+    join_on,
+    calculated_features_path,
+    "search_types.csv",
+    "cc"
+  ) %>%
+  rename(
+    search_type = label
+  ) %>%
+  mutate(
+    search_type = tr_search_type[search_type],
+    search_type = ifelse(search_conducted, search_type, NA_character_)
+  )
 }
 
 
