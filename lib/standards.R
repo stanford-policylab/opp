@@ -160,9 +160,13 @@ extra_schema <- c(
 )
 
 
-# NOTE: for reporting; for cleaning, contraband is not dependent on search
+# NOTE: these are dependencies for reporting null rates only,
+# i.e. contraband_weapons null rate will only be the null rate
+# only where contraband_found is TRUE
 predicated_columns <- c(
   search_type = "search_conducted",
+  reason_for_search = "search_conducted",
+  reason_for_arrest = "arrest_made",
   contraband_found = "search_conducted",
   contraband_weapons = "contraband_found",
   contraband_drugs = "contraband_found"

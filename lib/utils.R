@@ -215,6 +215,10 @@ add_contraband_types <- function(tbl, join_col, calculated_features_path) {
   rename(
     contraband_drugs = d,
     contraband_weapons = w
+  ) %>%
+  mutate(
+    contraband_drugs = ifelse(contraband_found, contraband_drugs, FALSE),
+    contraband_weapons = ifelse(contraband_found, contraband_weapons, FALSE)
   )
 }
 

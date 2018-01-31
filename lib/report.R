@@ -16,12 +16,13 @@ population <- opp_population(state, city)
 total_rows <- nrow(d$data)
 date_range <- range(d$data$incident_date)
 
-null_rates_table <- kable(predicated_null_rates(d$data, predicated_columns),
-                          align = c("l", "r"), caption = "Null Rates")
-
 
 by_incident_type <- group_by(d$data, incident_type) %>% count
 by_incident_type_table <- kable(by_incident_type)
+
+
+null_rates_table <- kable(predicated_null_rates(d$data, predicated_columns),
+                          align = c("l", "r"))
 
 
 by_year <- group_by(d$data, year = year(incident_date)) %>% count
@@ -113,11 +114,12 @@ reason_for_stop_top_20_plot <- ggplot(reason_for_stop_top_20) +
 	))
 
 
-search_types_tbl <- filter(d$data, search_type != NA) %>% 
+search_types_tbl <- filter(d$data, !is.na(search_type)) %>% 
   group_by(search_type) %>%
-  count
+  count %>%
+  mutate(pct = n / sum(n))
 search_types_plot <- ggplot(search_types_tbl) +
-  geom_bar(aes(x = reorder(search_type, -n), y = ..density..)) +
+  geom_bar(aes(x = reorder(search_type, -pct), y = pct), stat = "identity") +
   xlab("search type (where search conducted)")
 
 
@@ -142,20 +144,21 @@ plot_prop_by_race <- function(col, pred_col = TRUE) {
   tbl <- group_by(
     d$data,
     subject_race
-  ) %>% summarize(
+  ) %>%
+  summarize(
     rate = mean(UQE(colq)[UQE(pred_colq)], na.rm = TRUE)
   )
 
   colname <- deparse(substitute(col))
-  pred_colname <- deparse(substitute(col))
+  pred_colname <- deparse(substitute(pred_col))
   pred_str <- "(all)" 
   if (pred_colname != "TRUE") {
     pred_str <- str_c("(", pred_colname, ")")
   }
   y_label <- str_c(colname, "rate", pred_str, sep = " ")
 
-  ggplot(tbl) + 
-    geom_bar(aes(x = subject_race, y = rate), stat = "identity") +
+  ggplot(tbl, aes(x = reorder(subject_race, -rate), y = rate)) + 
+    geom_bar(stat = "identity") +
     xlab("race") +
     ylab(y_label)
 }
