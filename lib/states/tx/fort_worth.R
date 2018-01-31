@@ -54,16 +54,7 @@ clean <- function(d, calculated_features_path) {
       warning_issued = Verbal_Warning,  # no written_warning or other type
       subject_sex = Sex,
       reason_for_stop = Reason,
-      reason_for_search = Search_reason,
       reason_for_arrest = ArrestBasedOn
-    ) %>%
-    add_lat_lng(
-      "incident_location",
-      calculated_features_path
-    ) %>%
-    add_contraband_types(
-      "Contraband_Type",
-      calculated_features_path
     ) %>%
     mutate_each(
       funs(as.logical),
@@ -92,16 +83,21 @@ clean <- function(d, calculated_features_path) {
         tr_race[ifelse(Ethnicity == "Hispanic", "Hispanic", Race)],
       subject_sex = tr_sex[subject_sex],
       search_conducted = tr_search_conducted[Search_Conducted],
-      tmp_sr = tolower(Search_reason),
-      # TODO(danj): improve this
-      search_type = first_of(
-        "plain view" = matches(tmp_sr, "plain sight|plain view"),
-        "consent" = matches(tmp_sr, "consent"),
-        "incident to arrest" = matches(tmp_sr, "arrest|warrant"),
-        "probable cause" =  # default
-          matches(tmp_sr, "probable|marijuana|furtive") | search_conducted
-      )
+      reason_for_search = str_combine_cols(Search_reason,
+                                           Facts_Supporting_Search,
+                                           sep = ", "),
     ) %>%
-    # extra_schema
+    add_lat_lng(
+      "incident_location",
+      calculated_features_path
+    ) %>%
+    add_contraband_types(
+      "Contraband_Type",
+      calculated_features_path
+    ) %>%
+    add_search_types(
+      "reason_for_search",
+      calculated_features_path
+    ) %>%
     standardize(d$metadata)
 }
