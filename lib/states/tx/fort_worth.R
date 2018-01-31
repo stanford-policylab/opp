@@ -72,7 +72,7 @@ clean <- function(d, calculated_features_path) {
         "vehicular",
         "pedestrian"
       ),
-      incident_time = format(as.POSIXct(Stop_Date), "%H:%M:%S"),
+      incident_time = format(as.POSIXct(incident_date), "%H:%M:%S"),
       incident_outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued,
@@ -83,9 +83,8 @@ clean <- function(d, calculated_features_path) {
         tr_race[ifelse(Ethnicity == "Hispanic", "Hispanic", Race)],
       subject_sex = tr_sex[subject_sex],
       search_conducted = tr_search_conducted[Search_Conducted],
-      reason_for_search = str_combine_cols(Search_reason,
-                                           Facts_Supporting_Search,
-                                           sep = ", "),
+      reason_for_search =
+        str_combine_cols(Search_reason, Facts_Supporting_Search)
     ) %>%
     add_lat_lng(
       "incident_location",
