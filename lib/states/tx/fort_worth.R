@@ -2,8 +2,8 @@ source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
 
-  loading_problems <- list()
   data <- tibble()
+  loading_problems <- list()
   for (yr in 2006:2016) {
     fname <- str_c(yr, ".csv")
     tbl <- read_csv(file.path(raw_data_dir, fname), n_max = n_max)
@@ -15,8 +15,7 @@ load_raw <- function(raw_data_dir, n_max) {
     }
   }
 
-  data <- mutate(data, incident_id = seq_len(n()))
-	list(data = data, metadata = list(loading_problems = loading_problems))
+  bundle_raw(data, loading_problems)
 }
 
 
