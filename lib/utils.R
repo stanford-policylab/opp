@@ -259,6 +259,12 @@ add_calculated_feature <- function(tbl, join_on, calculated_features_path,
 }
 
 
+bundle_raw <- function(data, loading_problems) {
+  data <- mutate(data, incident_id = seq_len(n()))
+	list(data = data, metadata = list(loading_problems = loading_problems))
+}
+
+
 left_coalesce_cols_by_suffix <- function(tbl, left_suffix, right_suffix) {
   left_names <- names_ending_with(names(tbl), left_suffix)
   right_names <- str_replace(left_names, left_suffix, right_suffix)
