@@ -86,6 +86,6 @@ select_schema_cols <- function(d) {
   print("selecting schema columns first...")
   req <- names(required_schema)
   extra <- Filter(function(n) { n %in% colnames(d$data) }, names(extra_schema))
-  d$data <- select_(d$data, c(req, extra))
+  d$data <- select_(d$data, .dots = c(req, extra))
   d
 }
