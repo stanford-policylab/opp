@@ -15,7 +15,22 @@ load_raw <- function(raw_data_dir, n_max) {
     }
   }
 
-  bundle_raw(data, loading_problems)
+  arrest_codes_fname <- "02022018_fortworth_charge_codes.csv"
+  arrest_codes <- read_csv_with_types(
+    file.path(raw_data_dir, arrest_codes_fname),
+    c(
+      arrest_code_description = "c",
+      arrest_code = "c"
+    )
+  )
+  loading_problems[[arrest_codes_fname]] <- problems(arrest_codes)
+  
+  left_join(
+            data,
+            arrest_codes,
+    by = c("OffenseCharged" = "arrest_code")
+  ) %>%
+  bundle_raw(loading_problems)
 }
 
 
@@ -63,10 +78,8 @@ clean <- function(d, calculated_features_path) {
       warning_issued
     ) %>%
     mutate(
-      # TODO(journalist): we could also use Violation_Offense, but results
-      # will be scattered; how can we better determine this?
-      # https://app.asana.com/0/456927885748233/519045240013554 
-      # TODO(danj): use violation offense to pick up some more traffic
+      # NOTE: we don't have most of these, and it's dicey to reverse engineer
+      # from arrest_code_description
       incident_type = ifelse(
         matches(reason_for_stop, "Traffic Violation"),
         "vehicular",

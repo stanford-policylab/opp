@@ -67,16 +67,16 @@ load_raw <- function(raw_data_dir, n_max) {
     "vehicle_type_code",
     "vehicle_type_description"
   )
-  data <- mutate(
+
+  mutate(
     data,
     reason_checked_description = reason_checked_tr[reason_checked],
     race_description = race_tr[race],
     street_check_description = street_check_tr[street_check_type],
     vehicle_style_description = vehicle_style_tr[veh_style],
     vehicle_type_description = vehicle_type_tr[veh_type]
-  )
-
-  bundle_raw(data, loading_problems)
+  ) %>%
+  bundle_raw(loading_problems)
 }
 
 
@@ -93,7 +93,7 @@ clean <- function(d, calculated_features_path) {
     W = "white"
   )
 
-  # TODO(journalist): What is search outcome?
+  # TODO(phoebe): can we get incident_location and incident_outcome?
   # https://app.asana.com/0/456927885748233/507608374034702/f
   d$data %>%
     merge_rows(
@@ -126,6 +126,8 @@ clean <- function(d, calculated_features_path) {
       search_conducted = search_person | search_vehicle,
       # TODO(ravi): verify logic
       # https://app.asana.com/0/456927885748233/519045240013543
+      # NOTE: SUSPICIOUS PERSON / VEHICLE is one category, so this will
+      # pick up some suspicious persons unfortunately
       incident_type = first_of(
         "vehicular" = search_vehicle | matches(reason_for_stop, "VEHICLE"),
         "pedestrian" = TRUE  # default if not vehicular
@@ -152,6 +154,9 @@ clean <- function(d, calculated_features_path) {
           vehicle_search_search_based_on
         ) | search_conducted  # default
       ),
+      # TODO(phoebe): we appear to lose about 10% of searches with this policy
+      # https://app.asana.com/0/456927885748233/548400265824560 
+      search_type = ifelse(search_conducted, search_type, NA),
       frisk_performed = any_matches(
         "FRISK",
         person_search_search_based_on,

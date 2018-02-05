@@ -1,6 +1,7 @@
 library(getopt)
 library(lubridate)
 library(tidyverse)
+library(stringr)
 
 
 parse_args <- function(tbl) {
@@ -106,9 +107,9 @@ null_rate <- function(v) {
 
 is_null <- function(v) {
   if (is.character(v)) {
-    is.na(v) | v == "NA" | v == "" | v == "NULL"
+    is.na(v) || v == "NA" || v == "" || v == "NULL"
   } else {
-    is.na(v)
+    is.null(v) || missing(v) || is.na(v)
   }
 }
 
@@ -329,9 +330,9 @@ compare_current_row_to_previous <- function(tbl) {
 }
 
 
-similar_rows_report <- function(tbl) {
-  # NOTE: you probably want rows sorted using sort_all before calling
-  sim <- compare_current_row_to_previous(tbl) %>% summarise_all(mean)
+row_similarity_report <- function(tbl) {
+  tbl_sorted <- sort_all(tbl)
+  sim <- compare_current_row_to_previous(tbl_sorted) %>% summarise_all(mean)
   as_tibble(
     cbind(cols = names(sim), t(sim))
   ) %>%
@@ -412,6 +413,12 @@ str_combine_cols <- function(left, right,
   v[left_null_right_not_null] <- str_c(prefix_right,
                                        right[left_null_right_not_null])
   v
+}
+
+
+extract_inside_parens <- function(v) {
+  t <- str_extract(v, "\\([^()]+\\)") #[[1]]
+  gsub("[()]", "", t)
 }
 
 
