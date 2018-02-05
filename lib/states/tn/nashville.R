@@ -82,6 +82,7 @@ clean <- function(d) {
 
   d$data %>%
     rename(
+      # TODO(danj): use incident_num not stop_n7um
       incident_id = stop_number,
       incident_location = stop_location,
       subject_race = race,

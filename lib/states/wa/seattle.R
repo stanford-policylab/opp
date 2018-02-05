@@ -26,7 +26,7 @@ load_raw <- function(raw_data_dir, geocodes_path) {
 		data <- bind_rows(data, tbl)
 		loading_problems[[fname]] <- problems(tbl)
   }
-  data <- add_lat_lng(data, "address", geocodes_path)
+  # data <- add_lat_lng(data, "address", geocodes_path)
 
 	list(data = data, metadata = list(loading_problems = loading_problems))
 }

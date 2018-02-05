@@ -22,6 +22,14 @@ str_expr <- function(expr) {
 }
 
 
+cs <- function(v, name, val) {
+  nms <- names(v)
+  v <- c(v, val)
+  names(v) <- c(nms, name)
+  v
+}
+
+
 matches <- function(col, pattern) {
   v <- as.vector(!is.na(str_match(col, pattern)))
   v[is.na(col)] <- NA  # keep original NAs, don't impute FALSE
@@ -166,11 +174,15 @@ pretty_percent <- function(v) {
 }
 
 
-read_csv_with_types <- function(path, type_vec, na = c("", "NA", "NULL")) {
+read_csv_with_types <- function(path,
+                                type_vec,
+                                na = c("", "NA", "NULL"),
+                                n_max = Inf) {
   tbl <- read_csv(path,
                   col_names = names(type_vec),
                   col_types = str_c(type_vec, collapse = ""),
                   na = na,
+                  n_max = n_max,
                   skip = 1)
 }
 

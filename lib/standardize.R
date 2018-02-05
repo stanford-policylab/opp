@@ -69,10 +69,10 @@ sanitize <- function(d) {
   # optional
   for (col in colnames(d$data)) {
     if (endsWith(col, "age")) {
-      sanitize_schema <- c(sanitize_schema, col = sanitize_age)
+      sanitize_schema <- cs(sanitize_schema, col, sanitize_age)
     }
     if (col == "vehicle_year") {
-      sanitize_schema <- c(sanitize_schema, col = sanitize_vehicle_year)
+      sanitize_schema <- cs(sanitize_schema, col, sanitize_vehicle_year)
     }
   }
   x <- apply_schema_and_collect_null_rates(sanitize_schema, d$data)

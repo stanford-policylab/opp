@@ -118,7 +118,7 @@ valid_states <- c(
 
 
 required_schema <- c(
-  incident_id             = as.numeric,
+  incident_id             = as.character,
   incident_type           = Curry(factor, levels = valid_incident_types),
   incident_date           = as.Date,
   incident_time           = hms,
