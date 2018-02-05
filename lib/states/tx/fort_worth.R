@@ -66,6 +66,7 @@ clean <- function(d, calculated_features_path) {
       # TODO(journalist): we could also use Violation_Offense, but results
       # will be scattered; how can we better determine this?
       # https://app.asana.com/0/456927885748233/519045240013554 
+      # TODO(danj): use violation offense to pick up some more traffic
       incident_type = ifelse(
         matches(reason_for_stop, "Traffic Violation"),
         "vehicular",

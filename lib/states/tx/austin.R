@@ -1,10 +1,11 @@
 source("common.R")
 
-load_raw <- function(raw_data_dir, geocodes_path) {
+load_raw <- function(raw_data_dir, n_max) {
   loading_problems <- list()
   fname <- "data.csv"
   data <- read_csv_with_types(
-    file.path(raw_data_dir, "data.csv"),
+    file.path(raw_data_dir, fname),
+    n_max = n_max,
     c(
       street_check_case_number          = "c",
       occurred_date                     = "c",
@@ -75,11 +76,11 @@ load_raw <- function(raw_data_dir, geocodes_path) {
     vehicle_type_description = vehicle_type_tr[veh_type]
   )
 
-  list(data = data, metadata = list(loading_problems = loading_problems))
+  bundle_raw(data, loading_problems)
 }
 
 
-clean <- function(d) {
+clean <- function(d, calculated_features_path) {
   dt_fmt = "%Y/%m/%d"
   tr_race = c(
     A = "asian/pacific islander",
@@ -95,36 +96,31 @@ clean <- function(d) {
   # TODO(journalist): What is search outcome?
   # https://app.asana.com/0/456927885748233/507608374034702/f
   d$data %>%
+    merge_rows(
+      street_check_case_number
+    ) %>%
     rename(
-      incident_id = street_check_case_number,
       incident_date = occurred_date,
-      officer_id = officer,
-      reason_checked_code = reason_checked,
       reason_for_stop = reason_checked_description,
-      street_check_type_code = street_check_type,
-      subject_sex = sex,
       subject_race = race,
       subject_ethnicity = ethnicity,
+      subject_sex = sex,
       subject_yob = yob,
       search_person = person_searched,
-      search_person_race_known_before_stop = person_search_race_known,
-      search_person_reason = person_search_search_based_on,
-      search_person_discovered = person_search_search_discovered,
       search_vehicle = vehicle_searched,
-      search_vehicle_reason = vehicle_search_search_based_on,
-      search_vehicle_race_known_before_stop = vehicle_search_race_known,
-      search_vehicle_discovered = vehicle_search_search_discovered,
-      vehicle_type = veh_type,
+      officer_id = officer,
       vehicle_year = veh_year,
       vehicle_make = veh_make,
       vehicle_model = veh_model,
-      vehicle_style = veh_style,
       vehicle_registration_state = soi
     ) %>%
-    merge_rows(
-      incident_id
-    ) %>%
     mutate(
+      incident_date = parse_date(incident_date, dt_fmt),
+      subject_race =
+        tr_race[ifelse(subject_ethnicity == "H", "H", subject_race)],
+      subject_sex = tr_sex[subject_sex],
+      subject_age =
+        as.integer(format(incident_date, "%Y")) - as.integer(subject_yob),
       search_person = matches(search_person, "YES"),
       search_vehicle = matches(search_vehicle, "YES"),
       search_conducted = search_person | search_vehicle,
@@ -134,58 +130,49 @@ clean <- function(d) {
         "vehicular" = search_vehicle | matches(reason_for_stop, "VEHICLE"),
         "pedestrian" = TRUE  # default if not vehicular
       ),
-      incident_date = parse_date(incident_date, dt_fmt),
-      subject_sex = tr_sex[subject_sex],
-      # TODO(ravi): N in ethnicity was highest, H second, what is N?
-      # https://app.asana.com/0/456927885748233/519045240013543
-      subject_race =
-        tr_race[ifelse(subject_ethnicity == "H", "H", subject_race)],
-      search_person_race_known_before_stop =
-        matches(search_person_race_known_before_stop, "YES"),
-      search_vehicle_race_known_before_stop =
-        matches(search_vehicle_race_known_before_stop, "YES"),
-      search_consent = any_matches(
-        "CONSENT",
-        search_person_reason,
-        search_vehicle_reason
-      ),
-      search_plain_view = any_matches(
-        "PLAIN VIEW",
-        search_person_reason,
-        search_vehicle_reason
-      ),
-      search_incident_to_arrest = any_matches(
-        "INCIDENTAL",
-        search_person_reason,
-        search_vehicle_reason
+      search_type = first_of(
+        "plain view" = any_matches(
+          "PLAIN VIEW",
+          person_search_search_based_on,
+          vehicle_search_search_based_on
+        ),
+        "consent" = any_matches(
+          "CONSENT",
+          person_search_search_based_on,
+          vehicle_search_search_based_on
+        ),
+        "non-discretionary" = any_matches(
+          "INCIDENTAL|INVENTORY",
+          person_search_search_based_on,
+          vehicle_search_search_based_on
+        ),
+        "probable cause" = any_matches(
+          "PROBABLE",
+          person_search_search_based_on,
+          vehicle_search_search_based_on
+        ) | search_conducted  # default
       ),
       frisk_performed = any_matches(
         "FRISK",
-        search_person_reason,
-        search_vehicle_reason
+        person_search_search_based_on,
+        vehicle_search_search_based_on
       ),
-      search_probable_cause = any_matches(
-        "PROBABLE",
-        search_person_reason,
-        search_vehicle_reason
-      ),
-      search_type = first_of(
-        "plain view" = search_plain_view,
-        "consent" = search_consent,
-        "probable cause" = search_probable_cause,
-        "incident to arrest" = search_incident_to_arrest,
-        "probable cause" = search_conducted  # default
-      ),
+      # TODO(ravi): include alcohol, other?
+      # https://app.asana.com/0/456927885748233/519045240013543
       contraband_found = any_matches(
-        # TODO(ravi): include alcohol, other?
-        # https://app.asana.com/0/456927885748233/519045240013543
         "ALCOHOL|CASH|DRUGS|OTHER|WEAPONS",
-        search_person_discovered,
-        search_vehicle_discovered
+        person_search_search_discovered,
+        vehicle_search_search_discovered
       ),
-      contraband_recovered_from_search = str_combine_cols(
-        search_person_discovered, search_vehicle_discovered,
-        prefix_left = "subject=", prefix_right = "vehicle="
+      contraband_drugs = any_matches(
+        "DRUGS",
+        person_search_search_discovered,
+        vehicle_search_search_discovered
+      ),
+      contraband_weapons = any_matches(
+        "WEAPONS",
+        person_search_search_discovered,
+        vehicle_search_search_discovered
       )
     ) %>%
     standardize(d$metadata)
