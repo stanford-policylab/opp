@@ -124,8 +124,6 @@ clean <- function(d, calculated_features_path) {
       search_person = matches(search_person, "YES"),
       search_vehicle = matches(search_vehicle, "YES"),
       search_conducted = search_person | search_vehicle,
-      # TODO(ravi): verify logic
-      # https://app.asana.com/0/456927885748233/519045240013543
       # NOTE: SUSPICIOUS PERSON / VEHICLE is one category, so this will
       # pick up some suspicious persons unfortunately
       incident_type = first_of(
@@ -162,8 +160,6 @@ clean <- function(d, calculated_features_path) {
         person_search_search_based_on,
         vehicle_search_search_based_on
       ),
-      # TODO(ravi): include alcohol, other?
-      # https://app.asana.com/0/456927885748233/519045240013543
       contraband_found = any_matches(
         "ALCOHOL|CASH|DRUGS|OTHER|WEAPONS",
         person_search_search_discovered,
@@ -174,11 +170,13 @@ clean <- function(d, calculated_features_path) {
         person_search_search_discovered,
         vehicle_search_search_discovered
       ),
+      contraband_drugs = ifelse(contraband_found, contraband_drugs, NA),
       contraband_weapons = any_matches(
         "WEAPONS",
         person_search_search_discovered,
         vehicle_search_search_discovered
-      )
+      ),
+      contraband_weapons = ifelse(contraband_found, contraband_weapons, NA)
     ) %>%
     standardize(d$metadata)
 }
