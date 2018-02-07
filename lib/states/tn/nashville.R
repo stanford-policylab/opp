@@ -84,22 +84,19 @@ clean <- function(d) {
   )
 
   d$data %>%
+    merge_rows(
+      stop_number
+    ) %>%
     rename(
-      # TODO(danj): use incident_num not stop_n7um
-      incident_id = stop_number,
       incident_location = stop_location,
       subject_race = race,
       search_conducted = search_occurred,
       arrest_made = custodial_arrest_issued,
-      citation_issued = traffic_citation_issued | misd_state_citation_issued,
       subject_sex = sex,
       subject_age = age_of_suspect,
       officer_id = officer_employee_number,
       vehicle_registration_state = vehicle_tag_state,
       search_vehicle = vehicle_searched,
-      frisk_performed = pat_down_search,
-      search_driver = driver_searched,
-      search_passenger = passenger_searched,
       search_incident_to_arrest = search_arrest
     ) %>%
     separate_cols(
@@ -133,6 +130,9 @@ clean <- function(d) {
     ) %>%
     mutate(
       incident_type = "vehicular",
+      citation_issued = traffic_citation_issued | misd_state_citation_issued,
+      frisk_performed = pat_down_search,
+      search_person = driver_searched | passenger_searched,
       reason_for_stop = tr_stop_type[stop_type],
       incident_date = parse_date(incident_date, "%m/%d/%Y"),
       incident_time = parse_time(incident_time, "%I:%M:%S %p"),
