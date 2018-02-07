@@ -1,6 +1,6 @@
 source("common.R")
 
-load_raw <- function(raw_data_dir, geocodes_path) {
+load_raw <- function(raw_data_dir, n_max) {
   data <- tibble()
   loading_problems <- list()
   for (year in 2010:2016) {
@@ -53,9 +53,12 @@ load_raw <- function(raw_data_dir, geocodes_path) {
     )
     data <- bind_rows(data, tbl)
     loading_problems[[fname]] <- problems(tbl)
+    if (nrow(data) > n_max) {
+      data <- data[1:n_max]
+      break
+    }
   }
-  list(data = add_lat_lng(data, "stop_location", geocodes_path),
-       metadata = list(loading_problems = loading_problems))
+  bundle_raw(data, loading_problems)
 }
 
 

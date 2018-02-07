@@ -107,9 +107,9 @@ null_rate <- function(v) {
 
 is_null <- function(v) {
   if (is.character(v)) {
-    is.na(v) || v == "NA" || v == "" || v == "NULL"
+    is.na(v) | v == "NA" | v == "" | v == "NULL"
   } else {
-    is.null(v) || missing(v) || is.na(v)
+    is.na(v)
   }
 }
 

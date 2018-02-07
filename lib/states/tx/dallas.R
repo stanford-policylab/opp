@@ -47,6 +47,16 @@ clean <- function(d, calculated_features_path) {
   d$data %>%
     # TODO(journalist): how can we dedup this correctly?
     # https://app.asana.com/0/456927885748233/475749789858290 
+    # NOTE: yields about the same as merging on HA_ARREST_KEY, 1.8M rows
+    # merge_rows(
+    #   HA_OFFICER_ID,
+    #   HA_ROAD_LOC,
+    #   HA_ARREST_DATE
+    # ) %>%
+    # NOTE: yields about 1.8M rows
+    # merge_rows(
+    #   HA_ARREST_KEY
+    # ) %>%
     rename(
       incident_location = HA_ROAD_LOC,
       incident_lat = HA_LATITUDE,

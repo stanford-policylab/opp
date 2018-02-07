@@ -10,6 +10,11 @@ opp_load <- function(state, city) {
 }
 
 
+opp_load_data <- function(state, city) {
+  opp_load(state, city)$data
+}
+
+
 opp_clean_data_path <- function(state, city) {
   # NOTE: all clean data is stored and loaded in RDS format to
   # maintain data types
@@ -42,6 +47,11 @@ normalize_city <- function(city) {
 opp_load_raw <- function(state, city, n_max = Inf) {
   source(opp_processor_path(state, city), local = TRUE)
   load_raw(opp_raw_data_dir(state, city), n_max)
+}
+
+
+opp_load_raw_data <- function(state, city, n_max = Inf) {
+  opp_load_raw(state, city, n_max)$data
 }
 
 
