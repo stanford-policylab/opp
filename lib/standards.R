@@ -34,7 +34,7 @@ valid_search_types <- c(
   "plain view",
   "consent",
   "probable cause",
-  "non-discretionary"  # arrest/warrant, probation/parole, inventory
+  "non-discretionary"  # NOTE: arrest/warrant, probation/parole, inventory
 )
 
 
@@ -52,7 +52,7 @@ valid_sexes <- c(
 )
 
 
-# if ethnicity, i.e. hispanic use it, else default to race
+# NOTE: if ethnicity, i.e. hispanic use it, else default to race
 valid_races <- c(
   "asian/pacific islander",
   "black",
@@ -139,19 +139,19 @@ extra_schema <- c(
   subject_dob                       = as.Date,
   subject_age                       = as.numeric,
   officer_id                        = as.character,
-  vehicle_year                      = as.integer,
   vehicle_color                     = as.character,
   vehicle_make                      = as.character,
   vehicle_model                     = as.character,
   vehicle_registration_state        = Curry(factor, levels = valid_states),
+  vehicle_year                      = as.integer,
   warning_issued                    = as.logical,
   citation_issued                   = as.logical,
   arrest_made                       = as.logical,
   frisk_performed                   = as.logical,
   search_person                     = as.logical,
   search_vehicle                    = as.logical,
-  contraband_weapons                = as.logical,
   contraband_drugs                  = as.logical,
+  contraband_weapons                = as.logical,
   reason_for_search                 = as.character,
   reason_for_frisk                  = as.character,
   reason_for_arrest                 = as.character,
