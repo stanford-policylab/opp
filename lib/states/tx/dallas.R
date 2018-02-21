@@ -45,7 +45,8 @@ clean <- function(d, calculated_features_path) {
   )
 
   d$data %>%
-    # TODO(journalist): how can we dedup this correctly?
+    # TODO(journalist): how can we dedup this correctly? merging causes null
+    # rates to skyrocket
     # https://app.asana.com/0/456927885748233/475749789858290 
     # NOTE: yields about the same as merging on HA_ARREST_KEY, 1.8M rows
     # merge_rows(
@@ -61,6 +62,9 @@ clean <- function(d, calculated_features_path) {
       incident_location = HA_ROAD_LOC,
       incident_lat = HA_LATITUDE,
       incident_lng = HA_LONGITUDE,
+      # TODO(phoebe): what are HA_REGION and HA_DISTRICT?
+      # https://app.asana.com/0/456927885748233/553393937447381
+      precinct = HA_PRECINCT,
       search_conducted = HA_SEARCHED,
       search_consent = HA_SEARCH_CONCENT,
       search_probable_cause = HA_SEARCH_PC,
@@ -102,7 +106,7 @@ clean <- function(d, calculated_features_path) {
       incident_lng = as.numeric(incident_lng) / 1E6,
       citation_issued = not_null(AD_VIOLATION_CODE),
       warning_issued = not_null(AW_VIOLATION_CODE),
-      # TODO(journalist): how can we determine whether an arrest happened?
+      # TODO(phoebe): how can we determine whether an arrest happened?
       # https://app.asana.com/0/456927885748233/475749789858290 
       arrest_made = !citation_issued && !warning_issued,
       incident_outcome = first_of(
@@ -116,7 +120,7 @@ clean <- function(d, calculated_features_path) {
         "non-discretionary" = search_incident_to_arrest,
         "probable cause" = search_conducted # default
       ),
-      # TODO(journalist): what should we use as reason for stop?
+      # TODO(phoebe): what should we use as reason for stop?
       # https://app.asana.com/0/456927885748233/475749789858290 
       subject_race = tr_race[subject_race],
       subject_sex = tr_sex[subject_sex],

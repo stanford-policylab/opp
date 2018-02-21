@@ -5,6 +5,14 @@ library(stringr)
 source("utils.R")
 
 
+clear <- function() {
+  env = globalenv()
+  rm(list=ls(envir = env), envir = env)
+  source("opp.R")
+}
+cl <- clear
+
+
 opp_load <- function(state, city) {
   readRDS(opp_clean_data_path(state, city))
 }
@@ -156,7 +164,7 @@ opp_population <- function(state, city) {
     # https://www.census.gov/geo/reference/codes/place.html, only [A]ctive
     FUNCSTAT == "A",
     STUSAB == toupper(state),
-    matches(NAME, capitalize_first_letters(city))
+    str_detect(NAME, format_proper_noun(city))
   ) %>%
   summarize(
     population = max(CENSUS2010POP, na.rm = TRUE)

@@ -135,6 +135,8 @@ required_schema <- c(
 extra_schema <- c(
   incident_lat                      = as.numeric,
   incident_lng                      = as.numeric,
+  beat                              = as.character,
+  precinct                          = as.character,
   subject_sex                       = Curry(factor, levels = valid_sexes),
   subject_dob                       = as.Date,
   subject_age                       = as.numeric,
@@ -144,8 +146,8 @@ extra_schema <- c(
   vehicle_model                     = as.character,
   vehicle_registration_state        = Curry(factor, levels = valid_states),
   vehicle_year                      = as.integer,
-  warning_issued                    = as.logical,
   citation_issued                   = as.logical,
+  warning_issued                    = as.logical,
   arrest_made                       = as.logical,
   frisk_performed                   = as.logical,
   search_person                     = as.logical,
@@ -160,10 +162,21 @@ extra_schema <- c(
 )
 
 
+# NOTE: these are to enforce consistent treatment; i.e. if search_conducted
+# was marked FALSE, but search_type had a value, assume search_conducted
+# takes precedence as it is more general
+predicated_columns <- list(
+  search_type = list(predicate = "search_conducted", if_not = NA),
+  reason_for_search = list(predicate = "search_conducted", if_not = NA),
+  reason_for_arrest = list(predicate = "arrest_made", if_not = NA),
+  contraband_drugs = list(predicate = "contraband_found", if_not = FALSE),
+  contraband_weapons = list(predicate = "contraband_found", if_not = FALSE)
+)
+
 # NOTE: these are dependencies for reporting null rates only,
 # i.e. contraband_weapons null rate will only be the null rate
 # only where contraband_found is TRUE
-predicated_columns <- c(
+reporting_predicated_columns <- c(
   search_type = "search_conducted",
   reason_for_search = "search_conducted",
   reason_for_arrest = "arrest_made",

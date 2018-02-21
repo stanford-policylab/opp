@@ -6,7 +6,7 @@ source("opp.R")
 source("standards.R")
 
 
-title <- str_c(capitalize_first_letters(city), toupper(state), sep = ", ")
+title <- str_c(format_proper_noun(city), toupper(state), sep = ", ")
 
 
 d <- opp_load(state, city)
@@ -21,8 +21,10 @@ by_incident_type <- group_by(d$data, incident_type) %>% count
 by_incident_type_table <- kable(by_incident_type)
 
 
-null_rates_table <- kable(predicated_null_rates(d$data, predicated_columns),
-                          align = c("l", "r"))
+null_rates_table <- kable(
+  predicated_null_rates(d$data, reporting_predicated_columns),
+  align = c("l", "r")
+)
 
 
 by_year <- group_by(d$data, year = year(incident_date)) %>% count

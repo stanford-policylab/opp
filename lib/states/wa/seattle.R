@@ -82,7 +82,7 @@ clean <- function(d, calculated_features_path) {
       subject_sex = tr_sex[subject_sex],
       arrest_made = str_sub(disposition_description, 1, 1) == "A",
       # NOTE: includes criminal and non-criminal citations
-      citation_issued = matches(disposition_description, "CITATION"),
+      citation_issued = str_detect(disposition_description, "CITATION"),
       incident_outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued

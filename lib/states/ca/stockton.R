@@ -1,14 +1,13 @@
 source("common.R")
 
-load_raw <- function(raw_data_dir, geocodes_path) {
-  data <- tibble()
+load_raw <- function(raw_data_dir, n_max) {
 	loading_problems <- list()
   r <- function(fname) {
     tbl <- read_csv(file.path(raw_data_dir, fname))
     loading_problems[[fname]] <<- problems(tbl)
     tbl
   }
-  # TODO(journalist): how do we join these sets of files? 
+  # TODO(phoebe): how do we join these sets of files? 
   # stop_files contain date, time, location, officer demographics
   stop_files <- c(
     "jenna_fowler_013117_-_stocktonpd_cad_tstops_2012_2013_sheet_1.csv",
@@ -16,22 +15,18 @@ load_raw <- function(raw_data_dir, geocodes_path) {
     "jenna_fowler_013117_-_stocktonpd_tstops_aug_dec2016_sheet_1.csv"
   )
   # survey_files contain date, outcome, subject demographics
-  survey_files <- c(
-    "jenna_fowler_013117_-_stocktonpd_trafficstopsurvey_2012_july_2016_sheet_1.csv",
-    "jenna_fowler_013117_-_stocktonpd_trafficstopsurvey_aug_dec2016_sheet_1.csv"
+  data <- bind_rows(
+    r("jenna_fowler_013117_-_stocktonpd_trafficstopsurvey_2012_july_2016_sheet_1.csv"),
+    r("jenna_fowler_013117_-_stocktonpd_trafficstopsurvey_aug_dec2016_sheet_1.csv")
   )
-  data <- bind_rows(r(survey_files[1]), r(survey_files[2]))
-
-  # TODO(danj): location is in the stop files, but let's wait to
-  # geocode until we are sure we are going to use those files
-  # data <- add_lat_lng(data, "address", geocodes_path)
-
-	list(data = data, metadata = list(loading_problems = loading_problems))
+  if (nrow(data) > n_max) {
+    data <- data[1:n_max, ]
+  }
+  bundle_raw(data, loading_problems)
 }
 
 
-clean <- function(d) {
-  names(d$data) <- tolower(names(d$data))
+clean <- function(d, calculated_features_path) {
   tr_sex <- c(
     Female = "female",
     Male = "male"
@@ -50,40 +45,45 @@ clean <- function(d) {
     "3-Verbal Warning" = "warning"
     # 4-Public Service
   )
-  # TODO(ravi): what should we classify these other search types as
   tr_search_type <- c(
     # 1-No Search Conducted
     "2-Consent" = "consent",
     "3-Probable Cause (Terry)" = "probable cause",
-    # 4-Two Inventory Search
-    "5-Incidental to Lawful Arrest" = "incident to arrest"
-    # 6-Pursuant to Lawful Search Warrant
-    # 7-Probation/Parole Search
+    "4-Tow Inventory Search" = "non-discretionary",
+    "5-Incidental to Lawful Arrest" = "non-discretionary",
+    "6-Pursuant to Lawful Search Warrant" = "non-discretionary",
+    "7-Probation/Parole Search" = "non-discretionary"
   )
 
+  names(d$data) <- tolower(names(d$data))
   d$data %>%
-    select(
-      -x3  # empty column
-    ) %>%
+    # TODO(danj): location is in the stop files, but let's wait to
+    # geocode until we are sure we are going to use those files
+    # (currently we can't join them to the survey_files)
+    # add_lat_lng(
+    #   "address",
+    #   calculated_features_path
+    # ) %>%
     rename(
       incident_date = in_date,   
-      officer_id_1 = officer_id,
-      officer_id_2 = officer2_id,
       subject_age = age,
-      subject_sex = gender,
-      subject_race = race,
-      probable_cause = probcause
+      reason_for_stop = probcause
     ) %>%
     mutate(
-      incident_id = trafsurvey_id,
+      # NOTE: all stops are traffic stops as per reply letter
+      incident_type = "vehicular",
       incident_outcome = tr_outcome[result],
-      search_type = tr_search_type[search],
-      subject_sex = tr_sex[subject_sex],
-      subject_race = tr_race[subject_race],
       search_conducted = !startsWith(search, "1-No Search"),
+      search_type = tr_search_type[search],
+      subject_sex = tr_sex[gender],
+      subject_race = tr_race[race],
       arrest_made = result == "1-In-Custody Arrest",
       citation_issued = result == "2-Citation Issued",
-      warning_issued = result == "3-Verbal Warning"
+      warning_issued = result == "3-Verbal Warning",
+      # NOTE: officer_id is ~90% null; officer2_id is ~50% null;
+      # coalescing, there are 2,151 instances where both officers are listed
+      # and we only take the first
+      officer_id = coalesce(officer_id, officer2_id)
     ) %>%
     standardize(d$metadata)
 }
