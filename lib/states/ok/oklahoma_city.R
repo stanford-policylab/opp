@@ -1,11 +1,11 @@
 source("common.R")
 
-load_raw <- function(raw_data_dir, geocodes_path) {
+load_raw <- function(raw_data_dir, n_max) {
   data <- tibble()
 	loading_problems <- list()
 
   stops_fname = 'orr_20171017191427.csv'
-  stops <- read_csv(file.path(raw_data_dir, stops_fname))
+  stops <- read_csv(file.path(raw_data_dir, stops_fname), n_max = n_max)
   loading_problems[[stops_fname]] <- problems(stops)
 
   officer_fname = 'orr_-_okcpd_roster_2007-2017_sheet_1.csv'
@@ -18,18 +18,13 @@ load_raw <- function(raw_data_dir, geocodes_path) {
     officer,
     by = c("ofc_badge_no" = "ID #")
   ) %>%
-  add_lat_lng(
-    "violLocation",
-    geocodes_path
-  )
-
-	list(data = data, metadata = list(loading_problems = loading_problems))
+  bundle_raw(loading_problems)
 }
 
 
-clean <- function(d) {
+clean <- function(d, calculated_features_path) {
   # TODO(ravi): check this race mapping
-  tr_race_subject = c(
+  tr_race = c(
     A = "asian/pacific islander",
     B = "black",
     I = "other/unknown",
@@ -40,84 +35,48 @@ clean <- function(d) {
     W = "white",
     X = "other/unknown"
   )
-  tr_race_officer <- c(
-    "AMERICAN INDIAN" = "other/unknown",
-    "ASIAN" = "asian/pacific islander",
-    "BLACK" = "black",
-    "HISPANIC" = "hispanic",
-    "PACIFIC ISLANDER" = "asian/pacific islander",
-    "WHITE" = "white"
-  )
-  tr_sex_officer <- c(
-    MALE = "male",
-    FEMALE = "female"
-  )
-  tr_active <- c(
-    ACTIVE = TRUE,
-    INACTIVE = FALSE
-  )
 
   d$data %>%
-    select(
-      -X1  # index column
+    add_lat_lng(
+      "violLocation",
+      calculated_features_path
+    ) %>%
+    # TODO(ravi): check these classifications
+    # https://app.asana.com/0/456927885748233/521735743717408
+    add_incident_types(
+      "OffenseDesc",
+      calculated_features_path
+    ) %>%
+    filter(
+      incident_type != "other"
     ) %>%
     rename(
-      citation_number = Citation_No,
       incident_date = violDate,
       incident_time = violTime,
       incident_location = violLocation,
-      accident_occurred = Accident,
-      violation_offense = viol_offense,
-      violation_description = OffenseDesc,
-      violation_posted_speed = viol_post_spd,
-      violation_actual_speed = viol_actl_spd,
-      # TODO(ravi): what does orel_Desc mean? (cit_original_release is code)
-      # categories are CHARGED OUT OF CUSTODY, FIELD RELEASE, JAILED, JUVENILE
-      # CENTER RELEASE, and HOSPITAL RELEASE
-      # https://app.asana.com/0/456927885748233/521735743717408
-      citation_original_release = cit_original_release,
-      orel_description = orel_Desc,
       subject_race = DfndRace,
       subject_sex = DfndSex,
       subject_dob = DfndDOB,
-      officer_badge_number = ofc_badge_no,
-      officer_agency = ofc_agy,
-      officer_name = Officer,
-      vehicle_year = veh_year,
-      vehicle_color_1 = veh_color_1,
-      vehicle_color_2 = veh_color_2,
+      reason_for_stop = OffenseDesc,
+      officer_id = ofc_badge_no,
+      # NOTE: veh_color_2 is null 99.8% of the time
+      vehicle_color = veh_color_1,
       vehicle_make = veh_make,
       vehicle_model = veh_model,
-      vehicle_style = veh_style,
+      # TODO(phoebe): what is veh_tag_st TU? roughly 10% are these
+      # https://app.asana.com/0/456927885748233/521735743717410
       vehicle_registration_state = veh_tag_st,
-      vehicle_registration_year = veh_tag_yr,
-      officer_hire_date = `HIRE DATE`,
-      officer_is_active = ACTIVE,
-      officer_dob = DOB,
-      officer_race = RACE,
-      officer_sex = GENDER,
-      officer_termination_date = `TERM DATE`
+      vehicle_year = veh_year
     ) %>%
     mutate(
-      incident_id = citation_number,
-      # TODO(ravi):
-      # https://app.asana.com/0/456927885748233/521735743717408
-      incident_type = "vehicular",
+      # NOTE: these are all citations
+      citation_issued = TRUE,
+      incident_outcome = "citation",
       incident_date = parse_date(incident_date, "%Y%m%d"),
       incident_time = parse_time_int(incident_time),
-      accident_occurred = yn_to_tf[accident_occurred],
-      subject_race = tr_race_subject[subject_race],
+      subject_race = tr_race[subject_race],
       subject_sex = tr_sex[subject_sex],
-      subject_dob = parse_date(subject_dob, "%Y%m%d"),
-      officer_is_active = tr_active[officer_is_active],
-      officer_dob = parse_date(officer_dob),
-      officer_race = tr_race_officer[officer_race],
-      officer_sex = tr_sex_officer[officer_sex],
-      reason_for_stop = violation_description,
-      officer_termination_date = parse_date(officer_termination_date),
-      citation_issued = TRUE  # these are all citations
+      subject_dob = parse_date(subject_dob, "%Y%m%d")
     ) %>%
-    # TODO(journalist): what is veh_tag_st TU? roughly 10% are these
-    # https://app.asana.com/0/456927885748233/521735743717410
     standardize(d$metadata)
 }

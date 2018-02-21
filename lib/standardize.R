@@ -19,6 +19,7 @@ standardize <- function(data, metadata) {
       metadata = list()
     ) %>%
     add_missing_required_columns %>%
+    predication_correction %>%
     enforce_types %>%
     sanitize %>%
     select_schema_cols
@@ -46,6 +47,21 @@ add_missing_required_columns <- function(d) {
     }
   }
   d$metadata[["add_missing_required_columns"]] <- sort(added)
+  d
+}
+
+
+predication_correction <- function(d) {
+  print("correcting predicated columns...")
+  for (predicated_column in names(predicated_columns)) {
+    if (predicated_column %in% colnames(d$data)) {
+      predicate = predicated_columns[[predicated_column]]$predicate
+      if_not = predicated_columns[[predicated_column]]$if_not
+      d$data[[predicated_column]] <- ifelse(as.logical(d$data[[predicate]]),
+                                            d$data[[predicated_column]],
+                                            if_not)
+    }
+  }
   d
 }
 

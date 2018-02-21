@@ -81,7 +81,7 @@ clean <- function(d, calculated_features_path) {
       # NOTE: we don't have most of these, and it's dicey to reverse engineer
       # from arrest_code_description
       incident_type = ifelse(
-        matches(reason_for_stop, "Traffic Violation"),
+        str_detect(reason_for_stop, "Traffic Violation"),
         "vehicular",
         "pedestrian"
       ),

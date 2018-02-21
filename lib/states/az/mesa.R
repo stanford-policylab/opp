@@ -1,54 +1,19 @@
 source("common.R")
 
-load_raw <- function(raw_data_dir, geocodes_path) {
-	loading_problems <- list()
+load_raw <- function(raw_data_dir, n_max) {
   fname <- "2014-03-17_citations_data_prr_sheet_1.csv"
-  data <- read_csv_with_types(
-      file.path(raw_data_dir, fname),
-      c(
-        incident_no       = "n",
-        arrest_no         = "n",
-        cite_no           = "n",
-        sex               = "c",
-        race              = "c",
-        race_fixed        = "c",
-        ehtnic            = "c",
-        ethnicity_fixed   = "c",
-        age               = "i",
-        date              = "D",
-        time              = "i",
-        block             = "i",
-        city              = "c",
-        ofcr_lnme         = "c",
-        ofcr_id           = "i",
-        charge_seq        = "i",
-        charge            = "c",
-        charge_desc       = "c",
-        warning           = "c"
-      )
-    ) %>%
-    # NOTE: normally mutates are reserved for cleaning but this is required
-    # to add geocoding data
-    mutate(
-      incident_location = str_trim(
-        str_c(
-          block,
-          city,
-          sep = ", "
-        )
-      )
-    ) %>%
-    add_lat_lng(
-      "incident_location",
-       geocodes_path
-    )
-
+  data <- read_csv(
+    file.path(raw_data_dir, fname),
+    col_types = cols(CITE_NO = col_numeric()),
+    n_max = n_max
+  )
+	loading_problems <- list()
   loading_problems[[fname]] <- problems(data)
-	list(data = data, metadata = list(loading_problems = loading_problems))
+  bundle_raw(data, loading_problems)
 }
 
 
-clean <- function(d) {
+clean <- function(d, calculated_features_path) {
   tr_race <- c(
     A = "asian/pacific islander",
     B = "black",
@@ -61,41 +26,49 @@ clean <- function(d) {
     YES = TRUE,
     NO = FALSE
   )
-
+  colnames(d$data) <- tolower(colnames(d$data))
   d$data %>%
-    select(
-      -race,    # race_fixed replaces this
-      -ehtnic   # ethnicity_fixed replaces this
+    mutate(
+      incident_location = str_trim(
+        str_c(
+          block,
+          city,
+          sep = ", "
+        )
+      )
+    ) %>%
+    add_lat_lng(
+      "incident_location",
+       calculated_features_path
     ) %>%
     rename(
-      incident_id = incident_no,
       incident_date = date,
-      incident_time = time,
-      incident_location = block,
-      citation_number = cite_no,
-      subject_sex = sex,
-      subject_race = race_fixed,
-      subject_ethnicity = ethnicity_fixed,
       subject_age = age,
-      officer_last_name = ofcr_lnme,
       officer_id = ofcr_id,
-      charge_made = charge_seq,
-      charge_code = charge,
-      charge_description = charge_desc,
-      warning_issued = warning
+      reason_for_stop = charge_desc
     ) %>%
     mutate(
-      incident_time = parse_time_int(incident_time),
+      charge_prefix = str_extract(charge, "[0-9]+"),
+      # TODO(ravi): ped vs veh, and what should we filter out?
+      # https://app.asana.com/0/456927885748233/521735743717414 
+      incident_type = ifelse(
+        charge_prefix == "28" & !str_detect(reason_for_stop, "BICYC"),
+        "vehicular",
+        NA
+      ),
+      incident_time = parse_time_int(time),
       arrest_made = !is.na(arrest_no),
       citation_issued = !is.na(cite_no),
-      subject_sex = tr_sex[subject_sex],
+      warning_issued = yn_to_tf[warning],
+      incident_outcome = first_of(
+        arrest = arrest_made,
+        citation = citation_issued,
+        warning = warning_issued
+      ),
+      subject_sex = tr_sex[sex],
       subject_race = tr_race[
-        ifelse(subject_ethnicity == "H", "H", subject_race)
-      ],
-      reason_for_stop = charge_description,
-      # TODO(ravi): how to classify vehicular vs pedestrian 
-      # https://app.asana.com/0/456927885748233/521735743717414 
-      warning_issued = yn_to_tf[warning_issued]
+        ifelse(ethnicity_fixed == "H", "H", race_fixed)
+      ]
     ) %>%
     standardize(d$metadata)
 }

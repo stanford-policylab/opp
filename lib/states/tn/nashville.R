@@ -54,7 +54,7 @@ load_raw <- function(raw_data_dir, n_max) {
     data <- bind_rows(data, tbl)
     loading_problems[[fname]] <- problems(tbl)
     if (nrow(data) > n_max) {
-      data <- data[1:n_max]
+      data <- data[1:n_max, ]
       break
     }
   }
@@ -62,7 +62,7 @@ load_raw <- function(raw_data_dir, n_max) {
 }
 
 
-clean <- function(d) {
+clean <- function(d, calculated_features_path) {
   tr_race <- c(
     A = "asian/pacific islander",
     B = "black",
@@ -89,38 +89,41 @@ clean <- function(d) {
     ) %>%
     rename(
       incident_location = stop_location,
+      beat = zone,
+      frisk_performed = pat_down_search,
       subject_race = race,
-      search_conducted = search_occurred,
       arrest_made = custodial_arrest_issued,
       subject_sex = sex,
       subject_age = age_of_suspect,
       officer_id = officer_employee_number,
       vehicle_registration_state = vehicle_tag_state,
+      search_conducted = search_occurred,
       search_vehicle = vehicle_searched,
       search_incident_to_arrest = search_arrest
+    ) %>%
+    add_lat_lng(
+      "incident_location",
+      calculated_features_path
     ) %>%
     separate_cols(
       stop_datetime = c("incident_date", "incident_time")
     ) %>%
     apply_translator_to(
       yn_to_tf,
-      "county_resident",
       "verbal_warning_issued",
       "written_warning_issued",
-      "citation_issued",
+      "traffic_citation_issued",
       "misd_state_citation_issued",
       "arrest_made",
-      "action_against_driver",
-      "action_against_passenger",
       "search_conducted",
       "evidence_seized",
       "drugs_seized",
       "weapons_seized",
       "other_seized",
-      "search_vehicle",
       "frisk_performed",
-      "search_driver",
-      "search_passenger",
+      "driver_searched",
+      "passenger_searched",
+      "search_vehicle",
       "search_consent",
       "search_probable_cause",
       "search_incident_to_arrest",
@@ -130,39 +133,44 @@ clean <- function(d) {
     ) %>%
     mutate(
       incident_type = "vehicular",
-      citation_issued = traffic_citation_issued | misd_state_citation_issued,
-      frisk_performed = pat_down_search,
-      search_person = driver_searched | passenger_searched,
-      reason_for_stop = tr_stop_type[stop_type],
       incident_date = parse_date(incident_date, "%m/%d/%Y"),
       incident_time = parse_time(incident_time, "%I:%M:%S %p"),
+      citation_issued = traffic_citation_issued | misd_state_citation_issued,
+      warning_issued = verbal_warning_issued | written_warning_issued,
       incident_outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued,
-        warning = verbal_warning_issued | written_warning_issued
+        warning = warning_issued
       ),
+      reason_for_stop = tr_stop_type[stop_type],
+      search_person = driver_searched | passenger_searched,
       subject_race =
         tr_race[ifelse(suspect_ethnicity == "H", "H", subject_race)],
       subject_sex = tr_sex[subject_sex],
+      search_type = first_of(
+        "plain view" = search_plain_view,
+        "consent" = search_consent,
+        "non-discretionary" = (
+          search_incident_to_arrest
+          | search_warrant
+          | search_inventory
+        ),
+        "probable cause" = (
+          search_person
+          | search_vehicle
+          | search_probable_cause
+          | search_conducted  # default
+        )
+      ),
       contraband_found = (
         evidence_seized
         | drugs_seized
         | weapons_seized
         | other_seized
       ),
-      search_type = first_of(
-        "plain view" = search_plain_view,
-        "consent" = search_consent,
-        "probable cause" = (
-          search_driver
-          | search_passenger
-          | search_vehicle
-          | search_inventory
-          | search_warrant
-          | search_probable_cause
-        ),
-        "incident to arrest" = search_incident_to_arrest
-      )
+      contraband_drugs = drugs_seized,
+      contraband_weapons = weapons_seized,
+      notes = officers_comments
     ) %>%
     standardize(d$metadata)
 }

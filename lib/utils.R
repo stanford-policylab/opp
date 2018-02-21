@@ -31,15 +31,8 @@ cs <- function(v, name, val) {
 }
 
 
-matches <- function(col, pattern) {
-  v <- as.vector(!is.na(str_match(col, pattern)))
-  v[is.na(col)] <- NA  # keep original NAs, don't impute FALSE
-  v
-}
-
-
 any_matches <- function(pattern, ...) {
-  Reduce(function(a, b) { a | b }, lapply(list(...), matches, pattern))
+  Reduce(function(a, b) { a | b }, lapply(list(...), str_detect, pattern))
 }
 
 
@@ -77,7 +70,12 @@ predicated_null_rates <- function(tbl, pred_v) {
   for (colname in colnames(tbl)) {
     if (colname %in% names(pred_v)) {
       idx <- tbl[[pred_v[colname]]]
-      pnr[colname] <- null_rate(tbl[[colname]][idx])
+      idx <- idx & !is.na(idx)
+      if (any(idx)) {
+        pnr[colname] <- null_rate(tbl[[colname]][idx])
+      } else {  # idx is all FALSE, which probably means predicate is all NA
+        pnr[colname] <- 1
+      }
     } else {
       pnr[colname] <- null_rate(tbl[[colname]])
     }
@@ -228,10 +226,6 @@ add_contraband_types <- function(tbl, join_col, calculated_features_path) {
   rename(
     contraband_drugs = d,
     contraband_weapons = w
-  ) %>%
-  mutate(
-    contraband_drugs = ifelse(contraband_found, contraband_drugs, FALSE),
-    contraband_weapons = ifelse(contraband_found, contraband_weapons, FALSE)
   )
 }
 
@@ -253,12 +247,29 @@ add_search_types <- function(tbl, join_col, calculated_features_path) {
     "search_types.csv",
     "cc"
   ) %>%
-  rename(
-    search_type = label
+  mutate(
+    search_type = tr_search_type[label]
+  )
+}
+
+
+add_incident_types <- function(tbl, join_col, calculated_features_path) {
+  join_on <- c("text")
+  names(join_on) <- c(join_col)
+  tr_incident_type <- c(
+    p = "pedestrian",
+    v = "vehicular",
+    o = "other"
+  )
+  add_calculated_feature(
+    tbl,
+    join_on,
+    calculated_features_path,
+    "offense_desc.csv",
+    "cc"
   ) %>%
   mutate(
-    search_type = tr_search_type[search_type],
-    search_type = ifelse(search_conducted, search_type, NA_character_)
+    incident_type = tr_incident_type[label]
   )
 }
 
@@ -443,6 +454,11 @@ capitalize_first_letters <- function(x) {
   s <- strsplit(x, " ")[[1]]
   paste(toupper(substring(s, 1,1)), substring(s, 2),
       sep="", collapse=" ")
+}
+
+
+format_proper_noun <- function(x) {
+  capitalize_first_letters(str_replace(x, "_", " "))
 }
 
 
