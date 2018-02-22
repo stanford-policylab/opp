@@ -1,4 +1,5 @@
 library(functional)
+library(readr)
 library(lubridate)
 
 
@@ -121,7 +122,9 @@ required_schema <- c(
   incident_id             = as.character,
   incident_type           = Curry(factor, levels = valid_incident_types),
   incident_date           = as.Date,
-  incident_time           = hms,
+  # NOTE: lubridate's hms does not play well with dplyr
+  # https://github.com/tidyverse/dplyr/issues/2520
+  incident_time           = parse_time,
   incident_location       = as.character,
   incident_outcome        = Curry(factor, levels = valid_outcomes),
   subject_race            = Curry(factor, levels = valid_races),

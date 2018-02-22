@@ -65,7 +65,9 @@ clean <- function(d, calculated_features_path) {
   )
 
   # TODO(phoebe): is ServArea precinct or beat?
+  # https://app.asana.com/0/456927885748233/569484839430729
   # TODO(phoebe): can we get incident_location?
+  # https://app.asana.com/0/456927885748233/569484839430728
   d$data %>%
     rename(
       incident_date = StopDate,
