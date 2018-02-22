@@ -174,7 +174,6 @@ if ("contraband_drugs" %in% colnames(d$data)) {
   predicated_contraband_drugs_by_race_plot <- 
     plot_prop_by_race(contraband_drugs, search_conducted)
 }
-predicated_contraband_weapons_by_race_plot <- NA
 if ("contraband_weapons" %in% colnames(d$data)) {
   predicated_contraband_weapons_by_race_plot <- 
     plot_prop_by_race(contraband_weapons, search_conducted)
