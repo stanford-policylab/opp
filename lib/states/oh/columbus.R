@@ -1,54 +1,15 @@
 source("common.R")
 
-load_raw <- function(raw_data_dir, geocodes_path) {
+load_raw <- function(raw_data_dir, n_max) {
   loading_problems <- list()
   fname <- "columbus_oh_data_sheet_1.csv"
-  data <- read_csv_with_types(
-    file.path(raw_data_dir, fname),
-    c(
-      incident_id                 = "c",
-      stop_date                   = "c",
-      contact_end_date            = "c",
-      system_entry_date           = "c",
-      type_of_stop                = "c",
-      cruiser_district            = "c",
-      stop_reason                 = "c",
-      enforcement_taken           = "c",
-      gender                      = "c",
-      ethnicity                   = "c",
-      traffic_stop_street         = "c",
-      traffic_stop_cross_street   = "c",
-      violation_street            = "c",
-      violation_cross_street      = "c"
-    )
-  )
+  data <- read_csv(file.path(raw_data_dir, fname), n_max = n_max)
   loading_problems[[fname]] <- problems(data)
-
-  # NOTE: normally mutates are reserved for cleaning, but
-  # here it's required to join to geolocation data
-  # NOTE: stop location is null about 2/3 of the time,
-  # so using violation location
-  data <- mutate(
-    data,
-    incident_location = str_trim(
-      str_c(
-        violation_street,
-        violation_cross_street,
-        sep = " and "
-      )
-    )
-  ) %>%
-  add_lat_lng(
-    "incident_location",
-    geocodes_path
-  )
-
-	list(data = data, metadata = list(loading_problems = loading_problems))
+  bundle_raw(data, loading_problems)
 }
 
 
-clean <- function(d) {
-  dt_fmt = "%Y/%m/%d"
+clean <- function(d, calculated_features_path) {
   tr_race = c(
     Asian = "asian/pacific islander",
     Black = "black",
@@ -62,34 +23,43 @@ clean <- function(d) {
   )
 
   d$data %>%
+    mutate(
+      # NOTE: stop location is null about 2/3 of the time,
+      # so using violation location
+      incident_location = str_trim(
+        str_c(
+          ViolationStreet,
+          ViolationCrossStreet,
+          sep = " and "
+        )
+      )
+    ) %>%
+    add_lat_lng(
+      "incident_location",
+      calculated_features_path
+    ) %>%
     rename(
-      stop_road_type = type_of_stop,
-      reason_for_stop = stop_reason,
-      subject_race = ethnicity,
-      subject_sex = gender
+      reason_for_stop = `Stop Reason`,
+      # TODO(phoebe): is this precinct?
+      # https://app.asana.com/0/456927885748233/569484839430730<Paste>
+      precinct = `Cruiser District`
     ) %>%
     separate_cols(
-      stop_date = c("incident_date", "incident_time"),
-      contact_end_date = c("contact_end_date", "contact_end_time"),
-      system_entry_date = c("system_entry_date", "system_entry_time")
+      `Stop Date` = c("incident_date", "incident_time")
     ) %>%
     mutate(
+      # NOTE: all stop reasons are vehicle related
       incident_type = "vehicular",
-      incident_date = parse_date(incident_date, dt_fmt),
-      incident_time = parse_time(incident_time),
-      contact_end_date = parse_date(contact_end_date, dt_fmt),
-      contact_end_time = parse_time(contact_end_time),
-      system_entry_date = parse_date(system_entry_date, dt_fmt),
-      system_entry_time = parse_time(system_entry_time),
-      subject_race = tr_race[subject_race],
-      subject_sex = tr_sex[subject_sex],
-      search_conducted = enforcement_taken %in%
+      incident_date = parse_date(incident_date, "%Y/%m/%d"),
+      subject_race = tr_race[Ethnicity],
+      subject_sex = tr_sex[Gender],
+      search_conducted = `Enforcement Taken` %in%
         c("Vehicle Search", "Driver Search"),
       search_type = ifelse(search_conducted, "probable cause", NA), 
-      arrest_made = enforcement_taken == "Arrest",
-      citation_issued = enforcement_taken %in%
+      arrest_made = `Enforcement Taken` == "Arrest",
+      citation_issued = `Enforcement Taken` %in%
         c("Traffic Citation", "Misd. Citation or Summons"),
-      warning_issued = enforcement_taken == "Verbal Warning",
+      warning_issued = `Enforcement Taken` == "Verbal Warning",
       incident_outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued,

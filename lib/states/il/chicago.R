@@ -1,6 +1,6 @@
 source("common.R")
 
-load_raw <- function(raw_data_dir, geocodes_path) {
+load_raw <- function(raw_data_dir, n_max) {
   loading_problems <- list()
   arrests_file <- "arrests.csv"
   arrests <- read_csv_with_types(
@@ -56,7 +56,7 @@ load_raw <- function(raw_data_dir, geocodes_path) {
   )
   loading_problems[[citations_file]] <- problems(citations)
 
-  data <- full_join(
+  full_join(
     arrests,
     citations,
     by = c(
@@ -69,33 +69,16 @@ load_raw <- function(raw_data_dir, geocodes_path) {
       "street_direction" = "street_direction"
       )
     ) %>%
-    # coalesce remaining identical columns, preferring arrests to citations
+    # NOTE: coalesce identical columns, preferring arrests to citations data
     left_coalesce_cols_by_suffix(
       ".x",
       ".y"
     ) %>%
-    # NOTE: normally mutates are reserved for cleaning, but
-    # here it's required to join to geolocation data
-    mutate(
-      incident_location = str_trim(
-        str_c(
-          street_no,
-          street_name,
-          street_direction,
-          sep = " "
-        )
-      )
-    ) %>%
-    add_lat_lng(
-      "incident_location",
-      geocodes_path
-    )
-
-	list(data = data, metadata = list(loading_problems = loading_problems))
+		bundle_raw(loading_problems)
 }
 
 
-clean <- function(d) {
+clean <- function(d, calculated_features_path) {
   tr_race = c(
     "AMER IND/ALASKAN NATIVE" = "other/unknown",
     "ASIAN/PACIFIC ISLANDER" = "asian/pacific islander",
@@ -107,25 +90,33 @@ clean <- function(d) {
 
   d$data %>%
     rename(
-      citation_issued = citation,
       incident_date = arrest_date,
       reason_for_stop = statute_description,
-      subject_age = subject_age
+      citation_issued = citation,
+			officer_id = officer_employee_no
     ) %>%
     mutate(
-      # arrest_id and contact_card_id have different ranges, so this is ok
-      incident_id = coalesce(arrest_id, contact_card_id),
       incident_type = "vehicular",
       incident_time = parse_time(arrest_hour, "%H"),
+      incident_location = str_trim(
+        str_c(
+          street_no,
+          street_name,
+          street_direction,
+          sep = " "
+        )
+      ),
       subject_race = tr_race[coalesce(subject_race, driver_race)],
       subject_sex = tr_sex[coalesce(subject_gender, driver_gender)],
-      officer_sex = tr_sex[officer_gender],
-      officer_race = tr_race[officer_race],
       arrest_made = !is.na(arrest_id),
       incident_outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued
       )
+    ) %>%
+    add_lat_lng(
+      "incident_location",
+      calculated_features_path
     ) %>%
     standardize(d$metadata)
 }

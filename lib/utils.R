@@ -290,17 +290,17 @@ bundle_raw <- function(data, loading_problems) {
 
 
 left_coalesce_cols_by_suffix <- function(tbl, left_suffix, right_suffix) {
-  left_names <- names_ending_with(names(tbl), left_suffix)
-  right_names <- str_replace(left_names, left_suffix, right_suffix)
-  new_names <- str_replace(left_names, left_suffix, "")
+  left_names <- which_ends_with(names(tbl), left_suffix)
+  right_names <- str_replace(left_names, fixed(left_suffix), right_suffix)
+  new_names <- str_replace(left_names, fixed(left_suffix), "")
   for (i in seq_along(new_names)) {
     tbl[[new_names[i]]] = coalesce(tbl[[left_names[i]]], tbl[[right_names[i]]])
   }
-  select(tbl, -dplyr::matches(str_c(left_suffix, right_suffix, sep = "|")))
+  select(tbl, -dplyr::ends_with(left_suffix), -dplyr::ends_with(right_suffix))
 }
 
 
-names_ending_with <- function(v, ending) {
+which_ends_with <- function(v, ending) {
   names(which(sapply(v, endsWith, ending)))
 }
 

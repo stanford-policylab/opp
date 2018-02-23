@@ -169,13 +169,11 @@ clean <- function(d, calculated_features_path) {
         person_search_search_discovered,
         vehicle_search_search_discovered
       ),
-      contraband_drugs = ifelse(contraband_found, contraband_drugs, NA),
       contraband_weapons = any_matches(
         "WEAPONS",
         person_search_search_discovered,
         vehicle_search_search_discovered
-      ),
-      contraband_weapons = ifelse(contraband_found, contraband_weapons, NA)
+      )
     ) %>%
     standardize(d$metadata)
 }
