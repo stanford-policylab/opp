@@ -1,40 +1,32 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-  data <- tibble()
 	loading_problems <- list()
-  for (year in 2006:2015) {
-    fname <- str_c("trafs_evs_", year, "_sheet_1.csv")
-    tbl <- read_csv_with_types(
-      file.path(raw_data_dir, fname),
-      c(
-        rin                       = "c",
-        datetime                  = "c",
-        address                   = "c",
-        type                      = "c",
-        pri                       = "i",
-        mir_and_description       = "c",
-        disposition_description   = "c",
-        veh                       = "c",
-        possible_race_and_sex     = "c",
-        subject_dob               = "c",
-        officer_no_name_1         = "c",
-        officer_no_name_2         = "c",
-        empty                     = "c"
-      )
-    )
-		data <- bind_rows(data, tbl)
-		loading_problems[[fname]] <- problems(tbl)
-    if (nrow(data) > n_max) {
-      data <- data[1:n_max, ]
-      break
-    }
-  }
+  fname <- "data_from_muni_clerk_sheet_1.csv"
+  data <- read_csv(file.path(raw_data_dir, fname), n_max = n_max)
+  loading_problems[[fname]] <- problems(data)
   bundle_raw(data, loading_problems)
 }
 
 
 clean <- function(d, calculated_features_path) {
+# "Offense Date"
+# Time
+# Citationýnumber
+# Offense
+# Race
+# Sex
+# Location
+# Intersection
+# "Veh Make"
+# "Veh Model"
+# "Veh Color"
+# "Veh Year"
+# "Vehicle Vrn St"
+# Search
+# Consent
+# Contraband
+# Officer
   dui_450 = "450: DRIVING UNDER THE INFLUENCE"
   mov_460 = "460: MOVING VIOLATION"
   mis_465 = "465: MISCELLANEOUS"
