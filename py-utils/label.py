@@ -193,9 +193,10 @@ def should_train_model(df, retrain_every_n):
 
 def sample_and_remove_n(superset, n):
     subset = random.sample(superset, min(n, len(superset)))
-    if n == 1:
+    superset -= set(subset)
+    if len(subset) == 1:
         subset = subset[0]
-    return subset, superset - set(subset)
+    return subset, superset
 
 
 def save(df, output_csv):

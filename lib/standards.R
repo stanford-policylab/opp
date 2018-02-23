@@ -121,7 +121,7 @@ valid_states <- c(
 required_schema <- c(
   incident_id             = as.character,
   incident_type           = Curry(factor, levels = valid_incident_types),
-  incident_date           = as.Date,
+  incident_date           = parse_date,
   # NOTE: lubridate's hms does not play well with dplyr
   # https://github.com/tidyverse/dplyr/issues/2520
   incident_time           = parse_time,
