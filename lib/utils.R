@@ -126,16 +126,20 @@ apply_schema_and_collect_null_rates <- function(schema, data) {
 
 
 create_null_rates_tbl <- function(null_rates_list) {
-	null_rates_matrix <- t(bind_rows(null_rates_list))
-	tbl <- as_tibble(rownames_to_column(as.data.frame(null_rates_matrix)))
-	colnames(tbl) <- c("col", "null_rate_before", "null_rate_after")
-	mutate(
-    tbl,
-    null_rate_after_less_before = null_rate_after - null_rate_before
-  ) %>%
-  arrange(
-    desc(null_rate_after_less_before)
-  )
+  if (length(null_rates_list) == 0) {
+    tibble()
+  } else {
+    null_rates_matrix <- t(bind_rows(null_rates_list))
+    tbl <- as_tibble(rownames_to_column(as.data.frame(null_rates_matrix)))
+    colnames(tbl) <- c("col", "null_rate_before", "null_rate_after")
+    mutate(
+      tbl,
+      null_rate_after_less_before = null_rate_after - null_rate_before
+    ) %>%
+    arrange(
+      desc(null_rate_after_less_before)
+    )
+  }
 }
 
 
@@ -341,7 +345,7 @@ compare_current_row_to_previous <- function(tbl) {
 }
 
 
-row_similarity_report <- function(tbl) {
+similar_rows_report <- function(tbl) {
   tbl_sorted <- sort_all(tbl)
   sim <- compare_current_row_to_previous(tbl_sorted) %>% summarise_all(mean)
   as_tibble(
@@ -424,6 +428,13 @@ str_combine_cols <- function(left, right,
   v[left_null_right_not_null] <- str_c(prefix_right,
                                        right[left_null_right_not_null])
   v
+}
+
+
+extract_and_add_lat_lng <- function(tbl, colname) {
+  mtx <- do.call(rbind, str_extract_all(tbl[[colname]], "-?[0-9.]+"))
+  colnames(mtx) <- c("incident_lat", "incident_lng")
+  bind_cols(tbl, as_tibble(mtx))
 }
 
 

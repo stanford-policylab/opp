@@ -63,5 +63,12 @@ clean <- function(d, calculated_features_path) {
       ),
       contraband_found = yn_to_tf[Contraband]
     ) %>%
+    # TODO(phoebe): how can we dedupe these to match number of drivers?
+    # https://app.asana.com/0/456927885748233/573247093484087
+    merge_rows(
+      incident_location,
+      incident_date,
+      incident_time
+    ) %>%
     standardize(d$metadata)
 }

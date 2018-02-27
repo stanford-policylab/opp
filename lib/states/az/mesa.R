@@ -4,7 +4,7 @@ load_raw <- function(raw_data_dir, n_max) {
   fname <- "2014-03-17_citations_data_prr_sheet_1.csv"
   data <- read_csv(
     file.path(raw_data_dir, fname),
-    col_types = cols(CITE_NO = col_numeric()),
+    col_types = cols(CITE_NO = col_number()),
     n_max = n_max
   )
 	loading_problems <- list()

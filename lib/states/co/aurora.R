@@ -46,11 +46,13 @@ clean <- function(d, calculated_features_path) {
       "incident_location",
       calculated_features_path
     ) %>%
-    # TODO(danj): incident_type
-    # add_incident_types(
-    #   reason_for_stop,
-    #   calculated_features_path
-    # ) %>%
+    add_incident_types(
+      "reason_for_stop",
+      calculated_features_path
+    ) %>%
+    filter(
+      incident_type != "other"
+    ) %>%
     mutate(
       # TODO(phoebe): do we really only get citations?
       # https://app.asana.com/0/456927885748233/570989790365270
@@ -59,7 +61,7 @@ clean <- function(d, calculated_features_path) {
       subject_race = tr_race[
         ifelse(Ethnicity == "HISPANIC OR LATINO", "HISPANIC", Race)
       ],
-      subject_sex = tr_sex[Sex]
+      subject_sex = tr_sex[sex]
     ) %>%
     standardize(d$metadata)
 }

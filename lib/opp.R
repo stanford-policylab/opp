@@ -104,6 +104,7 @@ opp_process <- function(state, city, n_max = Inf) {
 
 
 opp_report <- function(state, city) {
+  print("building report...")
   output_dir = file.path("..", "reports")
   dir.create(output_dir, showWarnings = FALSE)
   render(
@@ -164,7 +165,7 @@ opp_population <- function(state, city) {
     # https://www.census.gov/geo/reference/codes/place.html, only [A]ctive
     FUNCSTAT == "A",
     STUSAB == toupper(state),
-    str_detect(NAME, format_proper_noun(city))
+    str_detect(NAME, str_replace(format_proper_noun(city), "Saint", "St."))
   ) %>%
   summarize(
     population = max(CENSUS2010POP, na.rm = TRUE)

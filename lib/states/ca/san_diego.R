@@ -36,7 +36,7 @@ clean <- function(d, calculated_features_path) {
   tr_stop_cause = c(
     "MUNI, County, H&S Code" = "MUNI, County, H&S Code",
     "Muni, County, H&S Code" = "MUNI, County, H&S Code",
-    "Suspect Info (I.S., Bulletin, Log)" = "Suspect Info (I.S., Bulletin, Log)",
+    "Suspect Info (I.S., Bulletin, Log)" = "Suspect Info",
     "UNI, &County, H&&S Code" = "MUNI, County, H&S Code",
     "&Equipment Violation" = "Equipment Violation",
     "&Moving Violation" = "Moving Violation",
