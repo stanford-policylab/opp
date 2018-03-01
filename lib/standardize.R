@@ -19,10 +19,10 @@ standardize <- function(data, metadata) {
       metadata = list()
     ) %>%
     add_missing_required_columns %>%
+    select_schema_cols %>%
     predication_correction %>%
     enforce_types %>%
-    sanitize %>%
-    select_schema_cols
+    sanitize
 
   # put all local metadata in standarize sublist of all metadata
   metadata[["standardize"]] <- d$metadata
@@ -47,6 +47,15 @@ add_missing_required_columns <- function(d) {
     }
   }
   d$metadata[["add_missing_required_columns"]] <- sort(added)
+  d
+}
+
+
+select_schema_cols <- function(d) {
+  print("selecting schema columns first...")
+  req <- names(required_schema)
+  extra <- Filter(function(n) { n %in% colnames(d$data) }, names(extra_schema))
+  d$data <- select_(d$data, .dots = c(req, extra))
   d
 }
 
@@ -94,14 +103,5 @@ sanitize <- function(d) {
   x <- apply_schema_and_collect_null_rates(sanitize_schema, d$data)
   d$data <- x$data
   d$metadata[["sanitize"]] <- x$null_rates
-  d
-}
-
-
-select_schema_cols <- function(d) {
-  print("selecting schema columns first...")
-  req <- names(required_schema)
-  extra <- Filter(function(n) { n %in% colnames(d$data) }, names(extra_schema))
-  d$data <- select_(d$data, .dots = c(req, extra))
   d
 }
