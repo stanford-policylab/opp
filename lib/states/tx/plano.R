@@ -326,5 +326,9 @@ clean <- function(d, calculated_features_path) {
         )
       )
     ) %>%
+    add_lat_lng(
+      "incident_location",
+      calculated_features_path
+    ) %>%
     standardize(d$metadata)
 }
