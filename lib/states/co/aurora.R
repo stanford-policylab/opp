@@ -40,7 +40,8 @@ clean <- function(d, calculated_features_path) {
       incident_date = `Ticket Date`,
       incident_time = `Ticket Time`,
       incident_location = `Ticket Location`,
-      reason_for_stop = `Incident Violation`
+      reason_for_stop = `Incident Violation`,
+      subject_dob = `Date of Birth`
     ) %>%
     add_lat_lng(
       "incident_location",

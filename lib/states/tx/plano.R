@@ -241,12 +241,6 @@ clean <- function(d, calculated_features_path) {
 
   d$data %>%
     rename(
-      # NOTE: offense seems to be the closest thing to reason for stop
-      # violation_description is 73.81% null
-      # primary_violation is 99.35% null
-      # type is 98.16% null
-      # offense is 49.69% null
-      reason_for_stop = offense,
       notes = notes,
       vehicle_make = make,
       vehicle_model = model,
@@ -263,7 +257,7 @@ clean <- function(d, calculated_features_path) {
         as.Date(parse_datetime(date, "%Y/%m/%d %H:%M:%S"))
       ),
       incident_time = coalesce(
-        parse_time(time, "%H:%M"),
+        parse_time(str_replace(time, "24:00", "00:00"), "%H:%M"),
         parse_time(time, "%H:%M:%S"),
         parse_time(
           format(
@@ -324,7 +318,13 @@ clean <- function(d, calculated_features_path) {
           contraband,
           contraband_found
         )
-      )
+      ),
+      # NOTE: offense seems to be the closest thing to reason for stop
+      # violation_description is 73.81% null
+      # primary_violation is 99.35% null
+      # type is 98.16% null
+      # offense is 49.69% null
+      reason_for_stop = coalesce(offense, offense_1)
     ) %>%
     add_lat_lng(
       "incident_location",

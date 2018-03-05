@@ -30,6 +30,7 @@ load_raw <- function(raw_data_dir, n_max) {
       break
     }
   }
+  # TODO(danj): read and translate types.csv -> types col
   types_fname <- "types.csv"
   types <- read_csv(file.path(raw_data_dir, types_fname))
   loading_problems[[types_fname]] <- problems(types)

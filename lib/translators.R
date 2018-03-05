@@ -1,4 +1,7 @@
-tr_sex = c(M = "male", F = "female")
+tr_sex = c(
+  M = "male",
+  F = "female"
+)
 
 tr_race <- c(
   A = "asian/pacific islander",

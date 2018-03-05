@@ -493,6 +493,6 @@ translate_by_char <- function(str_vec, translator, sep = "|") {
 }
 
 
-parse_time_int <- function(v, pad_num = 4, format = "%H%M") {
-  parse_time(str_pad(v, pad_num, pad = "0"), "%H%M")
+parse_time_int <- function(v, fmt = "%H%M", pad_num = 4) {
+  parse_time(str_pad(v, pad_num, pad = "0"), fmt)
 }
