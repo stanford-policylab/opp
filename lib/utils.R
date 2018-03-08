@@ -36,8 +36,8 @@ any_matches <- function(pattern, ...) {
 }
 
 
-named_vector_from_list_firsts <- function(lst) {
-  unlist(lapply(lst, `[[`, 1), recursive = FALSE)
+elements_from_sublists <- function(lst, idx) {
+  unlist(lapply(lst, `[`, idx), recursive = FALSE)
 }
 
 
@@ -160,7 +160,7 @@ apply_and_collect_null_rates <- function(f, v) {
 transpose_one_line_table <- function(tbl,
                                      colnames = c("names", "values"),
                                      f = identity) {
-  v <- named_vector_from_list_firsts(tbl)
+  v <- elements_from_sublists(tbl, 1)
   tbl <- tibble(names(v), f(v))
   names(tbl) <- colnames
   tbl
@@ -408,10 +408,21 @@ fill_null <- function(v, fill = NA) {
 }
 
 
+str_c_na <- function(..., sep = "", collapse = NULL) {
+  # same as str_c, but ignores rather than propagates NAs when joining
+  args <- lapply(list(...), str_replace_na)
+  args[["sep"]] = sep
+  args[["collapse"]] = collapse
+  joined <- do.call(str_c, args)
+  pattern <- str_c(str_c(sep, "NA"), str_c("NA", sep), "NA", sep = "|")
+  str_replace_all(joined, pattern, "")
+}
+
+
 str_combine_cols <- function(left, right,
                              prefix_left = "", prefix_right = "",
                              sep = "||") {
-
+  # this is the same as str_c but gracefully handles NAs and allows prefixes
   left_null <- is_null(left)
   right_null <- is_null(right)
   both_null <- left_null & right_null
