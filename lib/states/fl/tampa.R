@@ -1,16 +1,23 @@
 source("common.R")
 
+# NOTE: data sources:
+# https://publicrec.hillsclerk.com/Traffic/Civil_Traffic_Name_Index_files/
+# https://publicrec.hillsclerk.com/Traffic/Criminal_Traffic_Name_Index_files/
 load_raw <- function(raw_data_dir, n_max) {
   data <- tibble()
   loading_problems <- list()
-  for (year in 2006:2017) {
-    fname <- str_c("Civil_Traffic_Name_Index_", year, ".csv")
-    tbl <- read_csv(file.path(raw_data_dir, fname))
-    loading_problems[[fname]] <- problems(tbl)
-    data <- bind_rows(data, tbl)
-    if (nrow(data) > n_max) {
-      data <- data[1:n_max,]
-      break
+  fname_prefixes = c("Civil", "Criminal")
+  for (year in 2003:2017) {
+    for (prefix in fname_prefixes) {
+      fname <- str_c(prefix, "_Traffic_Name_Index_", year, ".csv")
+      tbl <- read_csv(file.path(raw_data_dir, fname),
+                      col_types = cols(.default = "c"))
+      loading_problems[[fname]] <- problems(tbl)
+      data <- bind_rows(data, tbl)
+      if (nrow(data) > n_max) {
+        data <- data[1:n_max,]
+        break
+      }
     }
   }
   bundle_raw(data, loading_problems)
@@ -44,13 +51,13 @@ clean <- function(d, calculated_features_path) {
       reason_for_stop = `Statute Description`,
       vehicle_registration_state = `Tag State`
     ) %>%
-    # TODO(danj): filter by agency?
-    # filter(
-    #   `Law Enf Agency Name` == "Tampa Police Department"
-    # ) %>%
+    filter(
+      `Law Enf Agency Name` == "Tampa Police Department",
+    ) %>%
     mutate(
-      # TODO(phoebe): are these all traffic stops? More specifically, what are
-      # Statute Number prefixes 893 and 999, everything else looks like traffic
+      # TODO(phoebe): What is the difference between Criminal and Civil traffic
+      # stops? More specifically, what are Statute Number prefixes 893 and
+      # 999, everything else looks like traffic
       # https://app.asana.com/0/456927885748233/583463577237763
       incident_type = "vehicular",
       incident_date = parse_date(`Offense Date`, "%m/%d/%Y"),
