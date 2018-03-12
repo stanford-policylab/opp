@@ -55,6 +55,43 @@ load_raw <- function(raw_data_dir, n_max) {
 
 clean <- function(d, calculated_features_path) {
 
+  tr_race <- c(
+    "AMER IND/ALASKAN" = "other/unknown",
+    "ASIAN" = "asian/pacific islander",
+    "BLACK" = "black",
+    "WHITE" = "white"
+  )
+
+  # TODO(phoebe): can we get search/contraband data?
+  # https://app.asana.com/0/456927885748233/586847974785232
   d$data %>%
+    rename(
+      incident_location = `VIOLATION EXACT LOCATION`,
+      incident_lat = `VIOLATION LAT DECIMAL`,
+      incident_lng = `VIOLATION LONG DECIMAL`,
+      vehicle_registration_state = `REGISTRATION STATE`,
+      officer_id = `OFFICER BADGE/ID NUMBER`
+    ) %>%
+    mutate(
+      incident_date = parse_date(`CITATION DATE`, "%Y/%m/%d"),
+      # NOTE: use the first violation under the assumption that this is the
+      # "main" violation and likely the reason for the stop
+      reason_for_stop = `Violation Description 1`,
+      subject_race = tr_race[RACE],
+      subject_sex = tr_sex[GENDER],
+      subject_dob = parse_date(`BIRTH DATE`, "%Y/%m/%d"),
+      # TODO(phoebe): all citations with sometimes arrests? warnings?
+      # https://app.asana.com/0/456927885748233/586847974785233
+      citation_issued = TRUE,
+      arrest_made = yn_to_tf[`ARREST INDICATOR`],
+      incident_outcome = first_of(
+        arrest = arrest_made,
+        citation = citation_issued
+      )
+    ) %>%
+    add_incident_types(
+      "Violation Description 1",
+      calculated_features_path
+    ) %>%
     standardize(d$metadata)
 }

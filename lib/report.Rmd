@@ -59,10 +59,12 @@ by_year_by_hour_of_day_plot
 race_pct_plot
 ```
 
-```{r reason_for_stop_top_20_plot}
+\newpage
+```{r reason_for_stop_top_20_plot, fig.height = 15, fig.width = 10}
 reason_for_stop_top_20_plot
 ```
 
+\newpage
 ```{r search_types_plot}
 search_types_plot
 ```
