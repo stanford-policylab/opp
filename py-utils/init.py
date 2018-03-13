@@ -39,7 +39,7 @@ def make_lib_dirs(state):
 
 
 def copy_template(template_path, state, city):
-    dst = os.path.join('lib', 'city_template.R')
+    dst = os.path.join('lib', 'states', state, city + '.R')
     if not os.path.exists(dst):
         copyfile(template_path, dst)
     return
@@ -47,7 +47,7 @@ def copy_template(template_path, state, city):
 
 def parse_args(argv):
     desc = 'initializes the data and lib directories for a new city'
-    default_template = 'lib/states/wa/seattle.R'
+    default_template = 'lib/city_template.R'
     parser = argparse.ArgumentParser(prog=argv[0], description=desc)
     parser.add_argument('state')
     parser.add_argument('city', nargs='+')
