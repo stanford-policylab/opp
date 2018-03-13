@@ -24,7 +24,7 @@ clean <- function(d, calculated_features_path) {
     ) %>%
     mutate(
       # TODO(phoebe): what does "SS" stop type mean?
-      #
+      # https://app.asana.com/0/456927885748233/590576541432182<Paste>
       incident_type = ifelse(Type == "T", "vehicular", "pedestrian"),
       incident_date = parse_date(Date, "%Y/%m/%d"),
       incident_time = parse_time(Time, "%H:%M:%S"),
@@ -41,10 +41,9 @@ clean <- function(d, calculated_features_path) {
         warning = warning_issued
       )
     ) %>%
-    # TODO(danj): add lat/lng data
-    # add_lat_lng(
-    #   "incident_location",
-    #   calculated_features_path
-    # ) %>%
+    add_lat_lng(
+      "incident_location",
+      calculated_features_path
+    ) %>%
     standardize(d$metadata)
 }
