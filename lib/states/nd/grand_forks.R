@@ -81,7 +81,7 @@ clean <- function(d, calculated_features_path) {
         parse_time_int(time),
         parse_time_int(time, fmt = "%H%M%S")
       ),
-      incident_location = str_combine_cols(house, street, sep = " "),
+      incident_location = str_c_na(house, street, sep = " "),
       warning_issued = !is.na(contact),
       citation_issued = !is.na(citation_number),
       # TODO(phoebe): can we get arrests?

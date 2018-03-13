@@ -16,14 +16,17 @@ load_raw <- function(raw_data_dir, n_max) {
 	# NOTE: the updated files have completely new (but consistent) formats
 	# ss_new_format <- "ss_july_16_to_sep_17_sheet_2.csv"
 	# ts_new_format <- "ts_july_25_to_dec_31_2016_sheet_1.csv" 
-  bind_rows(
+  data <- bind_rows(
     r("ss_2008_to_2016_sheet_3.csv"),
     bind_rows(
       r("ts_aug_2008_to_dec_2012_sheet_4.csv"),
       r("ts_jan_2013_to_july_2016_sheet_4.csv")
     )
-	) %>%
-  bundle_raw(loading_problems)
+	)
+	if (nrow(data) > n_max) {
+		data <- data[1:n_max,]
+	}
+  bundle_raw(data, loading_problems)
 }
 
 
