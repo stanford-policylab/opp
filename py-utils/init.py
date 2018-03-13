@@ -39,7 +39,7 @@ def make_lib_dirs(state):
 
 
 def copy_template(template_path, state, city):
-    dst = os.path.join('lib', 'states', state, city + '.R')
+    dst = os.path.join('lib', 'city_template.R')
     if not os.path.exists(dst):
         copyfile(template_path, dst)
     return
