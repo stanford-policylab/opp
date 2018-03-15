@@ -1,9 +1,11 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-  data <- tibble()
+  fname <- "green_bay.csv"
+  data <- read_csv(file.path(raw_data_dir, fname), n_max = n_max)
   loading_problems <- list()
-  bundle_raw(loading_problems)
+  loading_problems[[fname]] <- problems(data)
+  bundle_raw(data, loading_problems)
 }
 
 
