@@ -41,14 +41,8 @@ elements_from_sublists <- function(lst, idx) {
 }
 
 
-top_n_by <- function(tbl, ..., top_n = 10) {
-  tbl %>%
-    group_by(...) %>%
-    count %>%
-    ungroup %>%
-    mutate(rank = row_number(-n)) %>%
-    filter(rank <= top_n) %>%
-    arrange(rank)
+top <- function(tbl, ..., n = 50) {
+  tbl %>% group_by(...) %>% count %>% arrange(desc(n)) %>% print(n = n)
 }
 
 

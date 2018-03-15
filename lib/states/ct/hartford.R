@@ -3,7 +3,8 @@ source("common.R")
 load_raw <- function(raw_data_dir, n_max) {
   fname <- "hartford_data_13-16_sheet_1.csv" 
   data <- read_csv(file.path(raw_data_dir, fname), n_max = n_max)
-  loading_problems <- list(fname = problems(data))
+  loading_problems <- list()
+  loading_problems[[fname]] <- problems(data)
   bundle_raw(data, loading_problems)
 }
 

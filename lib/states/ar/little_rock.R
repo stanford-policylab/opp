@@ -6,7 +6,9 @@ load_raw <- function(raw_data_dir, n_max) {
 	# ytd_traffic_stops_from_rms_data_export_tool_sheet_1.csv	
 	# https://app.asana.com/0/456927885748233/592025853254518
   data <- read_csv(file.path(raw_data_dir, fname), n_max = n_max)
-  bundle_raw(data, list(fname = problems(data)))
+  loading_problems <- list()
+  loading_problems[[fname]] <- problems(data)
+  bundle_raw(data, loading_problems)
 }
 
 

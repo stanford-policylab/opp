@@ -2,18 +2,14 @@ source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
   fname <- "pdr100317tpdstops_sheet_1.csv"
-  read_csv(
-    file.path(raw_data_dir, fname),
-    n_max = n_max
-  ) %>%
-  bundle_raw(
-    list(fname <- problems(tbl))
-  )
+  data <- read_csv(file.path(raw_data_dir, fname), n_max = n_max)
+  loading_problems <- list()
+  loading_problems[[fname]] <- problems(data)
+  bundle_raw(data, loading_problems)
 }
 
 
 clean <- function(d, calculated_features_path) {
-
   # TODO(phoebe): can we get reason_for_stop/search/contraband information?
   # https://app.asana.com/0/456927885748233/590576541432180
   # TODO(phoebe): can we get race information?
