@@ -42,7 +42,7 @@ elements_from_sublists <- function(lst, idx) {
 
 
 top <- function(tbl, ..., n = 50) {
-  tbl %>% group_by(...) %>% count %>% arrange(desc(n)) %>% print(n = n)
+  tbl %>% group_by(...) %>% count %>% arrange(desc(n)) %>% slice(1:n)
 }
 
 

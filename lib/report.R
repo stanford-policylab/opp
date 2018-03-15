@@ -103,7 +103,7 @@ race_pct_plot <- ggplot(race_pct_tbl) +
 	))
 
 
-reason_for_stop_top_20 <- top_n_by(d$data, reason_for_stop, top_n = 20)
+reason_for_stop_top_20 <- top(d$data, reason_for_stop, n = 20)
 reason_for_stop_top_20_pct <-
   pretty_percent(sum(reason_for_stop_top_20$n) / nrow(d$data))
 reason_for_stop_top_20_plot <- ggplot(reason_for_stop_top_20) +
