@@ -26,7 +26,8 @@ clean <- function(d, calculated_features_path) {
     "B" = "black",
     "I" = "other/unknown",
     "U" = "other/unknown",
-    "W" = "white"
+    "W" = "white",
+    "H" = "hispanic"
   )
 
   # TODO(phoebe): can we get reason_for_stop/search/contraband fields?
@@ -36,7 +37,7 @@ clean <- function(d, calculated_features_path) {
     filter(
       # NOTE: filter out PARKING related charges
       !str_detect(charge_description, "PARKING")
-    ),
+    ) %>%
     rename(
       subject_age = defendant_age,
       # TODO(ravi): is this acceptable? should we filter out anything else?
@@ -46,9 +47,11 @@ clean <- function(d, calculated_features_path) {
     mutate(
       # NOTE: all charge descriptions appear to be vehicle related
       incident_type = "vehicular",
+      # TODO(danj): fix date
       incident_datetime = coalesce(
+        parse_datetime(citation_date_time, locale = locale(tz = "US/Central")),
         parse_datetime(citation_date_time, "%Y/%m/%d %H:%M:%S"),
-        parse_date(citation_date_time, "%Y/%m/%d")
+        parse_datetime(citation_date_time, "%Y/%m/%d")
       ),
       incident_date = as.Date(incident_datetime),
       incident_time = format(incident_datetime, "%H:%M:%S"),
@@ -63,10 +66,12 @@ clean <- function(d, calculated_features_path) {
         sep = ", "
       ),
       incident_outcome = "citation",
-      subject_race = tr_race[
-        ifelse(defendant_ethnicity == "H", "H", defendant_race)
-      ],
-      subject_sex = tr_sex[defendant_race]
+      subject_race = tr_race[ifelse(
+        defendant_ethnicity == "H" | is.na(defendant_ethnicity),
+        "H",
+        defendant_race
+      )],
+      subject_sex = tr_sex[defendant_sex]
     ) %>%
     add_lat_lng(
       "incident_location",
