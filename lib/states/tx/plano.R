@@ -227,7 +227,7 @@ clean <- function(d, calculated_features_path) {
   tr_race <- c(
     A = "asian/pacific islander",
     B = "black",
-    HIS = "other/unknown",
+    HIS = "hispanic",
     I = "other/unknown",
     MDE = "other/unknown",
     P = "other/unknown",
@@ -291,7 +291,11 @@ clean <- function(d, calculated_features_path) {
         citation = citation_issued,
         warning = warning_issued
       ),
-      subject_race = tr_race[race],
+      subject_race = tr_race[ifelse(
+        !is.na(ethnicity) & (ethnicity == "HIS" | ethnicity == "His"),
+        "HIS",
+        race
+      )],
       subject_sex = tr_sex[sex],
       subject_age = age,
       search_conducted = is_true(

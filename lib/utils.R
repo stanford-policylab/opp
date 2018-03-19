@@ -3,7 +3,7 @@ library(lubridate)
 library(tidyverse)
 library(stringr)
 
-p <- function(obj) { print(n = Inf) }
+p <- function(obj) { print(obj, n = Inf) }
 
 parse_args <- function(tbl) {
   argument_types <- c("none", "required", "optional")

@@ -26,12 +26,12 @@ clean <- function(d, calculated_features_path) {
     "Chinese" = "asian/pacific islander",
     "Filipino" = "asian/pacific islander",
     "Guamanian" = "asian/pacific islander",
-    "Hawaiian" = "other/unknown",
+    "Hawiian" = "other/unknown",
     "Japanese" = "asian/pacific islander",
     "Korean" = "asian/pacific islander",
     "Laotian" = "asian/pacific islander",
     "Mex/Lat/Hisp" = "hispanic",
-    "Other" = "other",
+    "Other" = "other/unknown",
     "Pacific Isl" = "asian/pacific islander",
     "Samoan" = "asian/pacific islander",
     "Unknown" = "other/unknown",
@@ -70,9 +70,9 @@ clean <- function(d, calculated_features_path) {
       subject_race = tr_race[Race],
       subject_sex = tr_sex[Sex]
     ) %>%
-    # add_lat_lng(
-    #   "incident_location",
-    #   calculated_features_path
-    # ) %>%
+    add_lat_lng(
+      "incident_location",
+      calculated_features_path
+    ) %>%
     standardize(d$metadata)
 }

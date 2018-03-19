@@ -28,7 +28,7 @@ clean <- function(d, calculated_features_path) {
     "BLACK/AFRICAN AMERICAN" = "black",
     "HISPANIC" = "hispanic",
     "NATIVE HAWAIIAN/PACIFIC I" = "asian/pacific islander",
-    "NULL" = "other/unknown",
+    "NULL" = NA_character_,
     "UNKNOWN" = "other/unknown",
     "WHITE" = "white"
   )

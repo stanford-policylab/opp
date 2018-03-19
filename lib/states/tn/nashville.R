@@ -144,8 +144,12 @@ clean <- function(d, calculated_features_path) {
       ),
       reason_for_stop = tr_stop_type[stop_type],
       search_person = driver_searched | passenger_searched,
-      subject_race =
-        tr_race[ifelse(suspect_ethnicity == "H", "H", subject_race)],
+      subject_race = tr_race[ifelse(
+        !is.na(suspect_ethnicity)
+          & (suspect_ethnicity == "H" | suspect_ethnicity == "LATINO"),
+        "H",
+        subject_race
+      )],
       subject_sex = tr_sex[subject_sex],
       search_type = first_of(
         "plain view" = search_plain_view,

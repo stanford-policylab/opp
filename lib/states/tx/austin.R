@@ -116,8 +116,11 @@ clean <- function(d, calculated_features_path) {
     ) %>%
     mutate(
       incident_date = parse_date(incident_date, dt_fmt),
-      subject_race =
-        tr_race[ifelse(subject_ethnicity == "H", "H", subject_race)],
+      subject_race = tr_race[ifelse(
+        !is.na(subject_ethnicity) & subject_ethnicity == "H",
+        "H",
+        subject_race
+      )],
       subject_sex = tr_sex[subject_sex],
       subject_age =
         as.integer(format(incident_date, "%Y")) - as.integer(subject_yob),
