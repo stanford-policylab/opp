@@ -1,8 +1,10 @@
 library(knitr)
 library(rmarkdown)
 library(stringr)
+library(here)
 
 source("utils.R")
+source("standards.R")
 
 
 clear <- function() {
@@ -23,6 +25,16 @@ opp_load_data <- function(state, city) {
 }
 
 
+opp_load_required_data <- function(state, city) {
+  opp_load_data(state, city) %>% select_(.dots = opp_required_fields())
+}
+
+
+opp_required_fields <- function() {
+  names(required_schema)
+}
+
+
 opp_clean_data_path <- function(state, city) {
   # NOTE: all clean data is stored and loaded in RDS format to
   # maintain data types
@@ -32,8 +44,7 @@ opp_clean_data_path <- function(state, city) {
 
 
 opp_data_dir <- function(state, city) {
-  file.path(
-    "..",
+  here::here(
     "data",
     "states",
     normalize_state(state),
@@ -64,7 +75,8 @@ opp_load_raw_data <- function(state, city, n_max = Inf) {
 
 
 opp_processor_path <- function(state, city) {
-  file.path(
+  here::here(
+    "lib",
     "states",
     normalize_state(state),
     str_c(normalize_city(city), ".R")
@@ -105,7 +117,7 @@ opp_process <- function(state, city, n_max = Inf) {
 
 opp_report <- function(state, city) {
   print("building report...")
-  output_dir = file.path("..", "reports")
+  output_dir = here::here("reports")
   dir.create(output_dir, showWarnings = FALSE)
   render(
     "report.Rmd",
@@ -126,7 +138,7 @@ pdf_filename <- function(state, city) {
 
 opp_plot <- function(state, city) {
   source("plot.R", local = TRUE)
-  output_dir = file.path("..", "plots")
+  output_dir = here::here("plots")
   dir.create(output_dir, showWarnings = FALSE)
   plot_cols(
     opp_load(state, city),
@@ -138,7 +150,7 @@ opp_plot <- function(state, city) {
 opp_population <- function(state, city) {
 
   p <- read_csv(
-    file.path("..", "data", "populations.csv"),
+    here::here("data", "populations.csv"),
     col_types = cols_only(
       STATE = "c",
       NAME = "c",
@@ -148,7 +160,7 @@ opp_population <- function(state, city) {
     )
   )
   fips <- read_delim(
-    file.path("..", "data", "fips.csv"),
+    here::here("data", "fips.csv"),
     delim = "|",
     col_types = cols_only(
       STATE = "c",

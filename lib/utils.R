@@ -2,8 +2,16 @@ library(getopt)
 library(lubridate)
 library(tidyverse)
 library(stringr)
+library(here)
+
 
 p <- function(obj) { print(obj, n = Inf) }
+
+
+create_title <- function(state, city) {
+  str_c(format_proper_noun(city), toupper(state), sep = ", ")
+}
+
 
 parse_args <- function(tbl) {
   argument_types <- c("none", "required", "optional")
@@ -39,6 +47,11 @@ any_matches <- function(pattern, ...) {
 
 elements_from_sublists <- function(lst, idx) {
   unlist(lapply(lst, `[`, idx), recursive = FALSE)
+}
+
+
+extract_token_from_path <- function(path, idx) {
+  strsplit(path, "\\/")[[1]][idx]
 }
 
 
@@ -104,6 +117,11 @@ is_null <- function(v) {
   } else {
     is.na(v)
   }
+}
+
+
+coverage_rate <- function(v) {
+  1 - null_rate(v)
 }
 
 

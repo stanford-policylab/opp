@@ -6,7 +6,7 @@ source("opp.R")
 source("standards.R")
 
 
-title <- str_c(format_proper_noun(city), toupper(state), sep = ", ")
+title <- create_title(state, city)
 
 
 d <- opp_load(state, city)
