@@ -15,6 +15,26 @@ clear <- function() {
 cl <- clear
 
 
+opp_data_paths <- function() {
+  here::here(
+    "data",
+    list.files(here::here("data"), ".*\\.rds$", recursive = TRUE)
+  )
+}
+
+
+opp_extract_state_from_path <- function(path) {
+  tokens <- tokenize_path(path)
+  toupper(tokens[which(tokens == "states") + 1])
+}
+
+
+opp_extract_city_from_path <- function(path) {
+  tokens <- tokenize_path(path)
+  format_proper_noun(tokens[which(tokens == "states") + 2])
+}
+
+
 opp_load <- function(state, city) {
   readRDS(opp_clean_data_path(state, city))
 }

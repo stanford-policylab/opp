@@ -22,6 +22,11 @@ parse_args <- function(tbl) {
 }
 
 
+modified_time <- function(files) {
+  file.info(file)$mtime
+}
+
+
 not_null <- function(v) {
   !is.null(v)
 }
@@ -50,8 +55,8 @@ elements_from_sublists <- function(lst, idx) {
 }
 
 
-extract_token_from_path <- function(path, idx) {
-  strsplit(path, "\\/")[[1]][idx]
+tokenize_path <- function(path) {
+  strsplit(path, "\\/")[[1]]
 }
 
 
