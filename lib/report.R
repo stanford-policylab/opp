@@ -105,9 +105,9 @@ race_pct_plot <- ggplot(race_pct_tbl) +
 
 reason_for_stop_top_20 <- top(d$data, reason_for_stop, n = 20)
 reason_for_stop_top_20_pct <-
-  pretty_percent(sum(reason_for_stop_top_20$n) / nrow(d$data))
+  pretty_percent(sum(reason_for_stop_top_20$count) / nrow(d$data))
 reason_for_stop_top_20_plot <- ggplot(reason_for_stop_top_20) +
-  geom_bar(aes(x = reorder(reason_for_stop, -n), y = n), stat = "identity") +
+  geom_bar(aes(x = reorder(reason_for_stop, -count), y = count), stat = "identity") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   xlab(str_c(
 		"reason for stop",

@@ -22,7 +22,7 @@ parse_args <- function(tbl) {
 }
 
 
-modified_time <- function(files) {
+modified_time <- function(file) {
   file.info(file)$mtime
 }
 
@@ -61,7 +61,11 @@ tokenize_path <- function(path) {
 
 
 top <- function(tbl, ..., n = 50) {
-  tbl %>% group_by(...) %>% count %>% arrange(desc(n)) %>% slice(1:n)
+  tbl %>%
+    group_by(...) %>%
+    summarize(count = n()) %>%
+    arrange(desc(count)) %>%
+    slice(1:n)
 }
 
 
