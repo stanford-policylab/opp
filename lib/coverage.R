@@ -8,18 +8,18 @@ coverage <- function() {
   cache_file <- here::here("cache", "coverage.rds")
   cvg <- get_or_create_cache(cache_file)
   cvg_to_update <- filter(cvg, is.na(nrows)) %>% select(-nrows)
-  cvg_updates <- cvg_to_update %>% 
-    select(state, city) %>%
-    pmap(city_coverage) %>%
-    bind_rows()
+  if (nrow(cvg_to_update) > 0) {
+    cvg_updates <- cvg_to_update %>% 
+      select(state, city) %>%
+      pmap(city_coverage) %>%
+      bind_rows()
 
-  cvg <- bind_rows(
-    filter(cvg, !is.na(nrows)),
-    left_join(cvg_to_update, cvg_updates)
-  ) %>%
-  arrange(
-    desc(nrows)
-  )
+    cvg <- bind_rows(
+      filter(cvg, !is.na(nrows)),
+      left_join(cvg_to_update, cvg_updates)
+    )
+  }
+  cvg <- arrange(cvg, desc(nrows))
   saveRDS(cvg, cache_file)
   cvg
 }
@@ -37,7 +37,7 @@ get_or_create_cache <- function(cache_file) {
     cvg <- left_join(cvg, readRDS(cache_file))
   }
   # TODO(danj): hack to create signal column; think of something clearer
-  mutate(cvg, nrows = if (exists("nrow", where = cvg)) nrows else NA)
+  mutate(cvg, nrows = if (exists("nrows", where = cvg)) nrows else NA)
 }
 
 

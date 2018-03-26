@@ -12,6 +12,8 @@ main <- function() {
     opp_report(args$state, args$city)
   if (not_null(args$plot))
     opp_plot(args$state, args$city)
+  if (not_null(args$coverage))
+    opp_coverage()
   print("Finished!")
   q(status = 0)
 }
@@ -26,6 +28,7 @@ get_args <- function() {
                  "[--plot]",
                  "-s <state_code>",
                  "-c <city_name>",
+                 "[--coverage]",
                  sep = " ")
   spec <- tribble(
     ~long_name,   ~short_name,  ~argument_type, ~data_type,
@@ -34,8 +37,9 @@ get_args <- function() {
     "n_max",      "n",          "none",         "integer",
     "report",     "r",          "none",         "logical",
     "plot",       "p",          "none",         "logical",
-    "state",      "s",          "required",     "character",
-    "city",       "c",          "required",     "character"
+    "state",      "s",          "none",         "character",
+    "city",       "c",          "none",         "character",
+    "coverage",   "v",          "none",         "logical"
   )
   args <- parse_args(spec)
 
@@ -44,7 +48,11 @@ get_args <- function() {
     q(status = 0)
   }
 
-  if (is.null(args$state) || is.null(args$city)) {
+  if (
+    (not_null(args$process) || not_null(args$report) || not_null(args$plot))
+    &&
+    (is.null(args$state) || is.null(args$city))
+  ) {
     print(usage)
     q(status = 1)
   }

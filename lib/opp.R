@@ -206,3 +206,15 @@ opp_population <- function(state, city) {
 	# return scalar, not tibble
 	as.integer(v)
 }
+
+
+opp_coverage <- function() {
+  print("assessing coverage...")
+  output_dir = here::here("coverage")
+  dir.create(output_dir, showWarnings = FALSE)
+  render(
+    "coverage.Rmd",
+    "pdf_document",
+    file.path(output_dir, "coverage.pdf")
+  )
+}
