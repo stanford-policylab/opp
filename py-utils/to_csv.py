@@ -74,17 +74,123 @@ def xml_to_csv(in_file, **kwargs):
         data.append(inner)
         inner = {}
     df = pd.DataFrame(data)
-    df.to_csv(to_csv_ext(in_file))
+    to_csv(df, in_file)
     return
 
 
 def txt_to_csv(in_file, sep, **kwargs):
     df = pd.read_table(in_file, sep=sep)
-    df.to_csv(to_csv_ext(in_file))
+    to_csv(df, in_file)
     return
 
 
-###############################################################################
+def dat_to_csv(in_file, sas_load_file, **kwargs):
+    mapping = extract_mapping(sas_load_file)
+    colnames, colspecs, colmaps = extract_column_properties(mapping)
+    df = pd.read_fwf(
+        in_file,
+        header=None,
+        names=colnames,
+        colspecs=colspecs,
+        dtype=str,
+    )
+    # NOTE: for some reason, df.replace does not work
+    for col in df:
+        df[col] = df[col].replace(colmaps[col])
+    to_csv(df, in_file)
+    return
+
+
+def extract_column_properties(mapping):
+    cols = []
+    colmaps = {}
+    for name, d in mapping.items():
+        colmaps[d['full_name']] = d['translations']
+        cols.append((d['start_index'], d['end_index'], d['full_name']))
+    cols_sorted = sorted(cols)
+    colspecs = []
+    colnames = []
+    for col in cols_sorted:
+        colspecs.append((col[0], col[1]))
+        colnames.append(col[2])
+    return colnames, colspecs, colmaps
+
+
+def extract_mapping(sas_load_file):
+    with open(sas_load_file) as f:
+        text = f.read()
+    translations = extract_translations(text)
+    labels = extract_labels(text)
+    indices = extract_indices(text)
+    mapping = {}
+    for name, full_name in labels.items():
+        mapping[name] = {
+            'full_name': full_name,
+            'start_index': indices[name]['start'],
+            'end_index': indices[name]['end'],
+            'translations': translations.get(name, {})
+        }
+    return mapping
+
+
+def extract_translations(text):
+    blocks = extract_blocks('value', text)
+    return dict(map(parse_value_block, blocks))
+
+
+def extract_blocks(block_type, text):
+    return re.findall(block_type + '(.*?)\n;\n', text, re.DOTALL)
+
+
+def parse_value_block(block):
+    name, block = block.split('\n', 1)
+    return (name.strip().replace('_f', ''), parse_translation_block(block))
+
+
+def parse_translation_block(block):
+    # re.findall('\s+(\w+)\s+=\s+"(.*?)"(\s+"(.*?)")?', s, re.DOTALL)
+    # NOTE: this function only captures the first and second lines of a
+    # key-value match (have yet to see one with 3 lines)
+    pattern = re.compile(r'''
+        \s+         # beginning whitespace 
+        (\w+)       # key
+        \s+         # space before '='
+        =           # key-value delimiter 
+        \s+         # space after '='
+        "(.*?)"     # non-greedy inside-quotes match for first line
+        (           # start of optional match for second line
+            \s+     # newline and preceding whitespace for second line
+            "(.*?)" # second line match
+        )?          # end of optional match for second line
+    ''', re.DOTALL | re.VERBOSE)
+    d = {}
+    for match in re.findall(pattern, block):
+        # NOTE: match[2] is optional outer capture for second group
+        key, line_1, line_2 = match[0], match[1], match[3]
+        d[key] = line_1 + line_2
+    return d
+
+
+def extract_labels(text):
+    block = extract_blocks('label', text)[0]
+    return parse_translation_block(block)
+
+
+def extract_indices(text):
+    block = extract_blocks('input', text)[0]
+    # 'input' line examples:
+    # DATANUM 5-6
+    # HHWT 15-24 0.2
+    # NOTE: care about column name and indices (not the last column, i.e. 0.2)
+    lines = [line.strip().split()[:2] for line in block.split('\n') if line]
+    def extract_indices(lst):
+        name, (start, end) = lst[0], lst[1].split('-')
+        # NOTE: return [start, end) for easy use in other python functions
+        return (name, {'start': int(start) - 1, 'end': int(end)})
+    return dict(map(extract_indices, lines))
+
+
+############################### COMMON ########################################
 
 def convert(files_or_dirs, **kwargs):
     for f_or_d in files_or_dirs:
@@ -200,6 +306,11 @@ def normalize_filename(filename):
     return filename.lower().replace(' ', '_')
 
 
+def to_csv(df, in_file):
+    df.to_csv(to_csv_ext(in_file), index=False)
+    return
+
+
 def parse_args(argv):
     desc = 'supported file types: ' + ', '.join(supported_file_types())
     parser = argparse.ArgumentParser(prog=argv[0], description=desc)
@@ -207,9 +318,15 @@ def parse_args(argv):
                         help='a.xlsx b.xls c.mdb d.xml e.txt data/')
     parser.add_argument('-s', '--sep', default='|',
                         help='separator for txt files (default: "|"')
+    parser.add_argument('-sas', '--sas_load_file',
+                        help='SAS load file provided by IPUMS')
     return parser.parse_args(argv[1:])
 
 
 if __name__ == '__main__':
     args = parse_args(sys.argv)
-    convert(args.files_or_dirs, sep=args.sep)
+    convert(
+        args.files_or_dirs,
+        sep=args.sep,
+        sas_load_file=args.sas_load_file,
+    )
