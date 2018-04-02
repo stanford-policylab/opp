@@ -53,14 +53,13 @@ clean <- function(d, calculated_features_path) {
     rename(
       incident_location = Location,
       subject_age = Age,
-      # TODO(phoebe): can we confirm "Year" is vehicle year?
-      # https://app.asana.com/0/456927885748233/596075286170965
+      # NOTE: this is vehicle year, confirmed with department
       vehicle_year = Year,
       officer_id = `Officer DID`
     ) %>%
     mutate(
       incident_date = parse_date(Date, "%m/%d/%Y"),
-      # TODO(phoebe): are these all vehicle stops?
+      # TODO(phoebe): use data dictionary to improve classification
       # https://app.asana.com/0/456927885748233/596075286170966
       incident_type = "vehicular",
       # TODO(phoebe): can we get outcomes (warnings, arrests)?
