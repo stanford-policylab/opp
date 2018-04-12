@@ -26,8 +26,8 @@ get_args <- function() {
                  "[--n_max]",
                  "[--report]",
                  "[--plot]",
-                 "-s <state_code>",
-                 "-c <city_name>",
+                 "--state <state_code>",
+                 "--city <city_name>",
                  "[--coverage]",
                  sep = " ")
   spec <- tribble(
@@ -43,7 +43,7 @@ get_args <- function() {
   )
   args <- parse_args(spec)
 
-  if (not_null(args$help)) {
+  if (not_null(args$help) || length(args) == 1) {
     print(usage)
     q(status = 0)
   }

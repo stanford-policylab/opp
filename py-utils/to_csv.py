@@ -84,9 +84,9 @@ def txt_to_csv(in_file, sep, **kwargs):
     return
 
 
-def dat_to_csv(in_file, sas_load_file, **kwargs):
-    mapping = extract_mapping(sas_load_file)
-    colnames, colspecs, colmaps = extract_column_properties(mapping)
+def ipums_dat_to_csv(in_file, sas_load_file, **kwargs):
+    mapping = sas_extract_mapping(sas_load_file)
+    colnames, colspecs, colmaps = sas_extract_column_properties(mapping)
     df = pd.read_fwf(
         in_file,
         header=None,
@@ -101,7 +101,7 @@ def dat_to_csv(in_file, sas_load_file, **kwargs):
     return
 
 
-def extract_column_properties(mapping):
+def sas_extract_column_properties(mapping):
     cols = []
     colmaps = {}
     for name, d in mapping.items():
@@ -116,12 +116,12 @@ def extract_column_properties(mapping):
     return colnames, colspecs, colmaps
 
 
-def extract_mapping(sas_load_file):
+def sas_extract_mapping(sas_load_file):
     with open(sas_load_file) as f:
         text = f.read()
-    translations = extract_translations(text)
-    labels = extract_labels(text)
-    indices = extract_indices(text)
+    translations = sas_extract_translations(text)
+    labels = sas_extract_labels(text)
+    indices = sas_extract_indices(text)
     mapping = {}
     for name, full_name in labels.items():
         mapping[name] = {
@@ -133,21 +133,21 @@ def extract_mapping(sas_load_file):
     return mapping
 
 
-def extract_translations(text):
-    blocks = extract_blocks('value', text)
-    return dict(map(parse_value_block, blocks))
+def sas_extract_translations(text):
+    blocks = sas_extract_blocks('value', text)
+    return dict(map(sas_parse_value_block, blocks))
 
 
-def extract_blocks(block_type, text):
+def sas_extract_blocks(block_type, text):
     return re.findall(block_type + '(.*?)\n;\n', text, re.DOTALL)
 
 
-def parse_value_block(block):
+def sas_parse_value_block(block):
     name, block = block.split('\n', 1)
-    return (name.strip().replace('_f', ''), parse_translation_block(block))
+    return (name.strip().replace('_f', ''), sas_parse_translation_block(block))
 
 
-def parse_translation_block(block):
+def sas_parse_translation_block(block):
     # re.findall('\s+(\w+)\s+=\s+"(.*?)"(\s+"(.*?)")?', s, re.DOTALL)
     # NOTE: this function only captures the first and second lines of a
     # key-value match (have yet to see one with 3 lines)
@@ -171,13 +171,13 @@ def parse_translation_block(block):
     return d
 
 
-def extract_labels(text):
-    block = extract_blocks('label', text)[0]
-    return parse_translation_block(block)
+def sas_extract_labels(text):
+    block = sas_extract_blocks('label', text)[0]
+    return sas_parse_translation_block(block)
 
 
-def extract_indices(text):
-    block = extract_blocks('input', text)[0]
+def sas_extract_indices(text):
+    block = sas_extract_blocks('input', text)[0]
     # 'input' line examples:
     # DATANUM 5-6
     # HHWT 15-24 0.2
@@ -190,7 +190,25 @@ def extract_indices(text):
     return dict(map(extract_indices, lines))
 
 
+def sql_server_to_csv(in_file, sql_server_load_file, **kwargs):
+    # NOTE: this works for the versions of files we have, but may need
+    # to be extended if the format file structures change
+    df_fmt = pd.read_fwf(sql_server_load_file, header=None, skiprows=2)
+    width_col = 3
+    colname_col = 6
+    df = pd.read_fwf(
+        in_file,
+        header=None,
+        names=list(df_fmt[colname_col]),
+        widths=list(df_fmt[width_col]),
+        dtype=str
+    )
+    to_csv(df, in_file)
+    return
+
+
 ############################### COMMON ########################################
+
 
 def convert(files_or_dirs, **kwargs):
     for f_or_d in files_or_dirs:
@@ -208,8 +226,9 @@ def convert(files_or_dirs, **kwargs):
 
 def convert_file(filename, **kwargs):
     perr('converting %s...' % filename, end='')
-    if is_supported(get_file_type(filename)):
-        get_converter(filename)(filename, **kwargs)
+    file_type = get_file_type(filename)
+    if is_supported(file_type):
+        get_converter(file_type, **kwargs)(filename, **kwargs)
         perr('done')
         return
     perr(" is not a supported file type for conversion!")
@@ -238,9 +257,21 @@ def perr(*args, **kwargs):
     return
 
 
-def get_converter(filename):
-    file_type = get_file_type(filename)
+def get_converter(
+        file_type,
+        sas_load_file=None,
+        sql_server_load_file=None,
+        **kwargs
+    ):
     func_name = file_type + '_to_csv'
+    # NOTE: IPUMS provides fixed width dat files with custom load scripts;
+    # SAS are the easiest to parse and convert
+    if sas_load_file:
+        func_name = 'ipums_dat_to_csv'
+    # NOTE: sql server files are txt files, but have fixed width fields
+    # specified in <file>_format.txt files
+    if sql_server_load_file:
+        func_name = 'sql_server_to_csv'
     return globals()[func_name]
 
 
@@ -314,12 +345,25 @@ def to_csv(df, in_file):
 def parse_args(argv):
     desc = 'supported file types: ' + ', '.join(supported_file_types())
     parser = argparse.ArgumentParser(prog=argv[0], description=desc)
-    parser.add_argument('files_or_dirs', nargs='+',
-                        help='a.xlsx b.xls c.mdb d.xml e.txt data/')
-    parser.add_argument('-s', '--sep', default='|',
-                        help='separator for txt files (default: "|"')
-    parser.add_argument('-sas', '--sas_load_file',
-                        help='SAS load file provided by IPUMS')
+    parser.add_argument(
+        'files_or_dirs',
+        nargs='+',
+        help='a.xlsx b.xls c.mdb d.xml e.txt data/'
+    )
+    parser.add_argument(
+        '-s', '--sep',
+        default='|',
+        help='separator for txt files (default: "|"'
+    )
+    parser.add_argument(
+        '-sas', '--sas_load_file',
+        help='SAS load file provided by IPUMS'
+    )
+    parser.add_argument(
+        '-ss', '--sql_server_load_file',
+        help='https://docs.microsoft.com/en-us/sql/relational-databases/'
+             'import-export/non-xml-format-files-sql-server'
+    )
     return parser.parse_args(argv[1:])
 
 
@@ -329,4 +373,5 @@ if __name__ == '__main__':
         args.files_or_dirs,
         sep=args.sep,
         sas_load_file=args.sas_load_file,
+        sql_server_load_file=args.sql_server_load_file,
     )
