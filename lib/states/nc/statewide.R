@@ -87,7 +87,7 @@ load_raw <- function(raw_data_dir, n_max) {
   # associated with the SearchID was a Driver or Passenger -->
   # group_by(j, Type, DriverSearch, PersonSearch) %>% count
   left_join(
-    search,
+    select(search, -PersonID),
     by = c("StopID")
   ) %>%
   # NOTE: again, not joining also on PersonID here because the search basis is
@@ -102,7 +102,7 @@ load_raw <- function(raw_data_dir, n_max) {
   # There are, however, multiple SearchBasisIDs per <StopID,SearchID>, so
   # we collapsed those above
   left_join(
-    collapsed_search_basis,
+    select(collapsed_search_basis, -PersonID),
     by = c("StopID", "SearchID")
   ) %>%
   # NOTE: same reasoning as above, except there is only one ContrabandID per
@@ -110,16 +110,16 @@ load_raw <- function(raw_data_dir, n_max) {
   # group_by(contraband, StopID, SearchID) %>% count %>% nrow
   # == group_by(contraband, StopID, SearchID, ContrabandID) %>% count %>% nrow
   left_join(
-    contraband,
+    select(contraband, -PersonID),
     by = c("StopID", "SearchID")
   ) %>%
-  # mutate(
-  #   race_description = tr_race[Race],
-  #   action_description = tr_action[Action],
-  #   search_type_description = tr_search_type[Type], 
-  #   stop_purpose_description = tr_stop_purpose[Purpose],
-  #   county = tr_county[StopLocation]
-  # ) %>%
+  mutate(
+    race_description = tr_race[Race],
+    action_description = tr_action[Action],
+    search_type_description = tr_search_type[Type], 
+    stop_purpose_description = tr_stop_purpose[Purpose],
+    county = tr_county[StopLocation]
+  ) %>%
   bundle_raw(loading_problems)
 }
 
