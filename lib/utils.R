@@ -345,6 +345,14 @@ sort_all <- function(tbl) {
 }
 
 
+duplicate_row_count <- function(tbl) {
+  tbl %>% group_by_(.dots=colnames(.)) %>%
+    count %>%
+    filter(n > 1) %>%
+    arrange(desc(n))
+}
+
+
 rolling_row_similarity <- function(tbl) {
   # NOTE: you probably want rows sorted using sort_all before calling
   compare_current_row_to_previous(tbl) %>% mutate(sim = rowMeans(.)) %>%

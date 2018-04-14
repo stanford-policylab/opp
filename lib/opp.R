@@ -94,6 +94,11 @@ opp_load_raw_data <- function(state, city, n_max = Inf) {
 }
 
 
+opp_load_raw_data_file <- function(state, city, file, n_max = Inf) {
+  read_csv(file.path(opp_raw_data_dir(state, city), file), n_max = n_max)
+}
+
+
 opp_processor_path <- function(state, city) {
   here::here(
     "lib",
