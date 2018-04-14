@@ -66,7 +66,7 @@ load_raw <- function(raw_data_dir, n_max) {
   # so we filtered out passengers above to prevent duplicates
   left_join(
     stop,
-    drivers_only
+    only_drivers
   ) %>%
   # NOTE: by not joining search also on PersonID, we are getting the search
   # associated with whomever was searched, Driver or Passenger; curiously,
