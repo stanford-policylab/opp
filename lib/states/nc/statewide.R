@@ -73,7 +73,14 @@ load_raw <- function(raw_data_dir, n_max) {
   # with this data, there is a 1:1 correspondence between StopID and SearchID,
   # (as well as between SearchID and PersonID) meaning that only the Driver or
   # Passenger is associated with the SearchID, even though this has no bearing
-  # on DriverSearched and PassengerSearched fields in the search table:
+  # on DriverSearched and PassengerSearched fields in the search table; in
+  # other words, one person from each stop was selected to link the stop and
+  # search tables, i.e.
+  #
+  # StopID, PersonID, Type, SearchID, DriverSearched, PassengerSearched
+  # 123   , 1       , D   , NA      , NA            , NA
+  # 123   , 2       , P   , 7889,   , 1             , 1
+  # 123   , 3       , P   , NA      , NA            , NA
   #
   # SearchID:StopID is 1:1 -->
   # group_by(search, SearchID, StopID) %>% count %>% nrow == nrow(search)
@@ -126,16 +133,73 @@ load_raw <- function(raw_data_dir, n_max) {
 
 clean <- function(d, calculated_features_path) {
 
-  # TODO(phoebe): can we get reason_for_stop/search/contraband fields?
-  #
+  tr_race <- c(
+    "A" = "asian/pacific islander",
+    "B" = "black",
+    "I" = "other/unknown",
+    "U" = "other/unknown",
+    "W" = "white",
+    "H" = "hispanic"
+  )
+
   d$data %>%
     rename(
+      department_name = AgencyDescription,
+      officer_id = OfficerId,
+      reason_for_search = Basis,
+      reason_for_stop = stop_purpose_description,
+      search_vehicle = VehicleSearch,
+      subject_age = Age
     ) %>%
     mutate(
+      # NOTE: all persons are either Drivers or Passengers (no Pedestrians)
+      incident_type = "vehicular",
+      incident_datetime = parse_datetime(StopDate),
+      incident_date = as.Date(incident_datetime),
+      incident_time = format(incident_datetime, "%H:%M:%S"),
+      # TODO(phoebe): can we get better location data?
+      # https://app.asana.com/0/456927885748233/635930602677956
+      incident_location = str_c_na(
+        StopCity,
+        str_c(county, " County"),
+        sep = ", "
+      ),
+      arrest_made = str_detect(action_description, "Arrest"),
+      citation_issued = str_detect(action_description, "Citation"),
+      warning_issued = str_detect(action_description, "Warning"),
+      incident_outcome = first_of(
+        "arrest" = arrest_made,
+        "citation" = citation_issued,
+        "warning" = warning_issued
+      ),
+      subject_race = tr_race[ifelse(Ethnicity == "H", "H", Race)],
+      subject_sex = tr_sex[Gender],
+      search_conducted = !is.na(SearchID),
+      search_person = as.logical(DriverSearch) | as.logical(PassengerSearch),
+      frisk_performed = search_type_description == "Protective Frisk",
+      reason_for_frisk = ifelse(frisk_performed, reason_for_search, NA),
+      search_type = first_of(
+        "non-discretionary" = str_detect(
+          search_type_description,
+          "Search Incident to Arrest|Search Warrant"
+        ),
+        "consent" = search_type_description == "Consent",
+        "probable cause" = (
+          search_type_description == "Probable Cause"
+          | frisk_performed
+        )
+      ),
+      contraband_found = !is.na(ContrabandID),
+      # TODO(phoebe): what are "gallons" and "pints" typically of?
+      # https://app.asana.com/0/456927885748233/635930602677955
+      contraband_drugs = (
+        Ounces > 0
+        | Pounds > 0
+        | Kilos > 0
+        | Grams > 0
+        | Dosages > 0
+      ),
+      contraband_weapons = Weapons > 0
     ) %>%
-    # add_lat_lng(
-    #   "incident_location",
-    #   calculated_features_path
-    # ) %>%
     standardize(d$metadata)
 }

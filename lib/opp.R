@@ -202,7 +202,8 @@ opp_population <- function(state, city) {
     # https://www.census.gov/geo/reference/codes/place.html, only [A]ctive
     FUNCSTAT == "A",
     STUSAB == toupper(state),
-    str_detect(NAME, str_replace(format_proper_noun(city), "Saint", "St."))
+    str_detect(NAME, str_replace(format_proper_noun(city), "Saint", "St.")),
+    !str_detect(NAME, "County")
   ) %>%
   summarize(
     population = max(CENSUS2010POP, na.rm = TRUE)

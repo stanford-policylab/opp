@@ -140,6 +140,7 @@ extra_schema <- c(
   incident_lng                      = as.numeric,
   beat                              = as.character,
   precinct                          = as.character,
+  department_name                   = as.character,
   subject_sex                       = Curry(factor, levels = valid_sexes),
   subject_dob                       = as.Date,
   subject_age                       = as.numeric,
