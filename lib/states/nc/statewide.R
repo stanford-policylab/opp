@@ -142,6 +142,10 @@ clean <- function(d, calculated_features_path) {
     "H" = "hispanic"
   )
 
+  gt_0 <- function(col) {
+    !is.na(col) & col > 0
+  }
+
   d$data %>%
     rename(
       department_name = AgencyDescription,
@@ -157,6 +161,8 @@ clean <- function(d, calculated_features_path) {
       incident_datetime = parse_datetime(StopDate),
       incident_date = as.Date(incident_datetime),
       incident_time = format(incident_datetime, "%H:%M:%S"),
+      # NOTE: the majority of times are midnight, which signify missing data
+      incident_time = ifelse(incident_time == "00:00:00", NA, incident_time),
       # TODO(phoebe): can we get better location data?
       # https://app.asana.com/0/456927885748233/635930602677956
       incident_location = str_c_na(
@@ -167,6 +173,8 @@ clean <- function(d, calculated_features_path) {
       arrest_made = str_detect(action_description, "Arrest"),
       citation_issued = str_detect(action_description, "Citation"),
       warning_issued = str_detect(action_description, "Warning"),
+      # NOTE: a small percentage of these are "No Action Taken" which will
+      # be coerced to NAs during standardization
       incident_outcome = first_of(
         "arrest" = arrest_made,
         "citation" = citation_issued,
@@ -192,14 +200,17 @@ clean <- function(d, calculated_features_path) {
       contraband_found = !is.na(ContrabandID),
       # TODO(phoebe): what are "gallons" and "pints" typically of?
       # https://app.asana.com/0/456927885748233/635930602677955
-      contraband_drugs = (
-        Ounces > 0
-        | Pounds > 0
-        | Kilos > 0
-        | Grams > 0
-        | Dosages > 0
+      contraband_drugs = ifelse(
+        contraband_found,
+        (gt_0(Ounces)
+         | gt_0(Pounds)
+         | gt_0(Kilos)
+         | gt_0(Grams)
+         | gt_0(Dosages)
+        ),
+        NA
       ),
-      contraband_weapons = Weapons > 0
+      contraband_weapons = ifelse(contraband_found, gt_0(Weapons), NA)
     ) %>%
     standardize(d$metadata)
 }
