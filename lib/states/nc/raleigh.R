@@ -14,13 +14,13 @@ source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
   d <- opp_load_raw("nc", "statewide")
-  d$data <- filter(d$data, str_detect(AgencyDescription, "Charlotte"))
+  d$data <- filter(d$data, str_detect(AgencyDescription, "Raleigh"))
   d
 }
 
 
 clean <- function(d, calculated_features_path) {
   d <- opp_load("nc", "statewide")
-  d$data <- filter(d$data, str_detect(department_name, "Charlotte"))
+  d$data <- filter(d$data, str_detect(department_name, "Raleigh"))
   d
 }
