@@ -26,7 +26,12 @@ import xml.etree.ElementTree as et
 
 ############################### CONVERTERS ####################################
 
+
 def xls_to_csv(in_file, **kwargs):
+    return ssconvert(in_file, **kwargs)
+
+
+def ssconvert(in_file, **kwargs):
     require('ssconvert', "try installing 'gnumeric' package on linux")
     out_file = to_csv_ext(in_file)
     run(['ssconvert', '--export-file-per-sheet', in_file, out_file])
@@ -39,7 +44,11 @@ def xls_to_csv(in_file, **kwargs):
 
 
 def xlsx_to_csv(in_file, **kwargs):
-    return xls_to_csv(in_file)
+    return ssconvert(in_file, **kwargs)
+
+
+def xltx_to_csv(in_file, **kwargs):
+    return ssconvert(in_file, **kwargs)
 
 
 def mdb_to_csv(in_file, **kwargs):

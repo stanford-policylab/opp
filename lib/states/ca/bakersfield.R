@@ -1,5 +1,6 @@
 source("common.R")
 
+# TODO(danj): why do we have duplicate data for early years?
 load_raw <- function(raw_data_dir, n_max) {
   data <- tibble()
   loading_problems <- list()
