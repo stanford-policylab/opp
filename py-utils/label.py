@@ -225,10 +225,10 @@ def get_labels_in_bulk(get_label, label_classes, df_to_label):
 def get_edit_indices(df_to_label):
     display(df_to_label)
     while True:
-        res = input('edit indices: ')
+        res = input('edit indices [sep is space]: ')
         if not res:
             return []
-        edit_indices = [int(idx) for idx in res.split(',')]
+        edit_indices = [int(idx) for idx in res.split()]
         if set(edit_indices).issubset(set(df_to_label.index.values)):
             return edit_indices
 

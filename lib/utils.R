@@ -65,6 +65,7 @@ top <- function(tbl, ..., n = 50) {
     group_by(...) %>%
     summarize(count = n()) %>%
     arrange(desc(count)) %>%
+    ungroup() %>%
     slice(1:n)
 }
 
@@ -279,7 +280,12 @@ add_search_types <- function(tbl, join_col, calculated_features_path) {
 }
 
 
-add_incident_types <- function(tbl, join_col, calculated_features_path) {
+add_incident_types <- function(
+		tbl,
+		join_col,
+		calculated_features_path,
+		filename = "offense_desc.csv"
+	) {
   join_on <- c("text")
   names(join_on) <- c(join_col)
   tr_incident_type <- c(
@@ -291,7 +297,7 @@ add_incident_types <- function(tbl, join_col, calculated_features_path) {
     tbl,
     join_on,
     calculated_features_path,
-    "offense_desc.csv",
+		filename,
     "cc"
   ) %>%
   mutate(
@@ -536,4 +542,10 @@ translate_by_char <- function(str_vec, translator, sep = "|") {
 
 parse_time_int <- function(v, fmt = "%H%M", pad_num = 4) {
   parse_time(str_pad(v, pad_num, pad = "0"), fmt)
+}
+
+
+format_two_digit_year <- function(yr, cutoff = year(Sys.Date())) {
+  yr_int <- as.integer(yr)
+  ifelse(yr_int <= cutoff - 2000, 2000 + yr_int, 1900 + yr_int)
 }

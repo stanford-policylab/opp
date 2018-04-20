@@ -4,7 +4,7 @@ load_raw <- function(raw_data_dir, n_max) {
   data <- tibble()
 	loading_problems <- list()
   for (year in 2006:2015) {
-    fname <- str_c("trafs_evs_", year, "_sheet_1.csv")
+    fname <- str_c("trafs_evs_", year, ".csv")
     tbl <- read_csv_with_types(
       file.path(raw_data_dir, fname),
       c(
