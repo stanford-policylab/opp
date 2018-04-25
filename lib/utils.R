@@ -6,6 +6,7 @@ library(here)
 
 
 p <- function(obj) { print(obj, n = Inf) }
+tna <- function(v) { sum(is.na(v)) }
 
 
 create_title <- function(state, city) {
@@ -542,6 +543,15 @@ translate_by_char <- function(str_vec, translator, sep = "|") {
 
 parse_time_int <- function(v, fmt = "%H%M", pad_num = 4) {
   parse_time(str_pad(v, pad_num, pad = "0"), fmt)
+}
+
+
+seconds_to_hms <- function(v) {
+  h = v %/% 60^2
+  v = v %% 60^2
+  m = v %/% 60
+  s = v %% 60
+  sprintf("%02d:%02d:%02d", h, m, s)
 }
 
 

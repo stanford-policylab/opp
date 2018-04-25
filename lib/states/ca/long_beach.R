@@ -12,7 +12,19 @@ load_raw <- function(raw_data_dir, n_max) {
       data <- data[1:n_max,]
     }
   }
-  bundle_raw(data, loading_problems)
+  dd_fname <- "data_dictionary.csv"
+  dd <- read_csv(file.path(raw_data_dir, dd_fname))
+  loading_problems[[dd_fname]] <- problems(dd)
+
+  left_join(data, dd, by = c("Violation 1" = "CODE")) %>%
+    rename(violation_1_description = TRANSLATION) %>%
+  left_join(dd, by = c("Violation 2" = "CODE")) %>%
+    rename(violation_2_description = TRANSLATION) %>%
+  left_join(dd, by = c("Violation 3" = "CODE")) %>%
+    rename(violation_3_description = TRANSLATION) %>%
+  left_join(dd, by = c("Violation 4" = "CODE")) %>%
+    rename(violation_4_description = TRANSLATION) %>%
+  bundle_raw(loading_problems)
 }
 
 
@@ -47,8 +59,13 @@ clean <- function(d, calculated_features_path) {
   # for reason_for_stop, maybe we need the data dictionary for Violation codes?
   # https://app.asana.com/0/456927885748233/596075286170964
   d$data %>%
+    add_incident_types(
+      "violation_1_description",
+      calculated_features_path
+    ) %>%
     filter(
-      Sex != "Business"
+      Sex != "Business",
+      incident_type != "other"
     ) %>%
     rename(
       incident_location = Location,
@@ -59,9 +76,6 @@ clean <- function(d, calculated_features_path) {
     ) %>%
     mutate(
       incident_date = parse_date(Date, "%m/%d/%Y"),
-      # TODO(phoebe): use data dictionary to improve classification
-      # https://app.asana.com/0/456927885748233/596075286170966
-      incident_type = "vehicular",
       # TODO(phoebe): can we get outcomes (warnings, arrests)?
       # https://app.asana.com/0/456927885748233/596075286170967
       citation_issued = TRUE,
