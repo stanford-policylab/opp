@@ -173,6 +173,8 @@ opp_plot <- function(state, city) {
 
 
 opp_population <- function(state, city) {
+  # NOTE: returns 2010 population; using this because
+  # it has more cities than ACS annual samples (< 200)
 
   p <- read_csv(
     here::here("data", "populations.csv"),
@@ -211,6 +213,18 @@ opp_population <- function(state, city) {
 
 	# return scalar, not tibble
 	as.integer(v)
+}
+
+
+opp_demographics <- function(state, city) {
+  city_query <- str_c(format_proper_noun(city), toupper(state), sep = ", ")
+  print(city_query)
+  read_csv(
+    here::here("data", "acs_agg.csv")
+  ) %>%
+  filter(
+    str_detect(city, city_query)
+  )
 }
 
 

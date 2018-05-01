@@ -93,6 +93,11 @@ def txt_to_csv(in_file, sep, **kwargs):
     return
 
 
+def dat_to_csv(in_file, **kwargs):
+    perr('please pass an additional config file to parse dat!')
+    return
+
+
 def ipums_dat_to_csv(in_file, sas_load_file, **kwargs):
     mapping = sas_extract_mapping(sas_load_file)
     colnames, colspecs, colmaps = sas_extract_column_properties(mapping)
@@ -103,7 +108,6 @@ def ipums_dat_to_csv(in_file, sas_load_file, **kwargs):
         colspecs=colspecs,
         dtype=str,
     )
-    # NOTE: for some reason, df.replace does not work
     for col in df:
         df[col] = df[col].replace(colmaps[col])
     to_csv(df, in_file)
@@ -366,12 +370,13 @@ def parse_args(argv):
     )
     parser.add_argument(
         '-sas', '--sas_load_file',
-        help='SAS load file provided by IPUMS'
+        help='SAS load file provided by IPUMS to complement dat file'
     )
     parser.add_argument(
         '-ss', '--sql_server_load_file',
         help='https://docs.microsoft.com/en-us/sql/relational-databases/'
-             'import-export/non-xml-format-files-sql-server'
+             'import-export/non-xml-format-files-sql-server to complement '
+             'fixed width text file'
     )
     return parser.parse_args(argv[1:])
 
