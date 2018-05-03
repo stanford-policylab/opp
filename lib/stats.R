@@ -31,10 +31,15 @@ fltr <- function(colname) {
   }
 }
 
-rate <- function(state, city, filter_func = function(x) { x }) {
-  d <- filter_func(opp_load_data(state, city))
+rate <- function(
+  state,
+  city,
+  data_pre_func = function(x) { x },
+  dem_pre_func = function(x) { x }
+) {
+  d <- data_pre_func(opp_load_data(state, city))
   if (!is.na(d) && nrow(d) != 0) {
-    dem <- opp_demographics(state, city)
+    dem <- dem_pre_func(opp_demographics(state, city))
     mutate(
       d,
       year = year(incident_date)
