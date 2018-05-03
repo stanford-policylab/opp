@@ -218,13 +218,13 @@ opp_population <- function(state, city) {
 
 opp_demographics <- function(state, city) {
   city_query <- str_c(format_proper_noun(city), toupper(state), sep = ", ")
-  print(city_query)
   read_csv(
     here::here("data", "acs_agg.csv")
   ) %>%
   filter(
     str_detect(city, city_query)
-  )
+  ) %>%
+  select(-city)
 }
 
 
