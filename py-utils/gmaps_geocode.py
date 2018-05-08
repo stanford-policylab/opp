@@ -128,6 +128,7 @@ if __name__ == '__main__':
         errors = csv.writer(ecsv)
         if not output_file_csv_already_exists:
             output.writerow(['loc', 'lat', 'lng'])
+        total = len(locs)
         for loc in locs:
             try:
                 lat, lng = gm.geocode(loc + args.address_suffix)
@@ -139,3 +140,4 @@ if __name__ == '__main__':
             count += 1
             if count > args.n:
                 break
+            print("%d remaining..." % (total - count))
