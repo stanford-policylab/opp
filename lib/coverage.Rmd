@@ -1,12 +1,15 @@
 ---
-title: "Open Policing Project - City Coverage"
+title: "Open Policing Project - City: Coverage Rates"
 classoption: landscape
 ---
 
 ```{r echo = FALSE, message = FALSE, warning = FALSE}
 library(kableExtra)
 source("coverage.R")
-cvg <- coverage() %>% select(-path, -modified_time, -state, -incident_id)
-kable(cvg, row.names = TRUE, format = "latex", booktabs = TRUE) %>%
+cvg <- coverage() %>%
+  select(-path, -modified_time, -incident_id) %>%
+  arrange(state, city)
+  
+kable(cvg, row.names = TRUE, format = "latex", booktabs = TRUE, align = 'r') %>%
   kable_styling(latex_options = "scale_down")
 ```

@@ -101,6 +101,7 @@ def single_review(df,
         save(df, output_csv)
         if should_train_model(df, retrain_every_n):
             model = train(df.text, df[label_cols], save_model)
+        print('remaining: %d' % len(unlabeled_texts))
     return df, unlabeled_texts
 
 

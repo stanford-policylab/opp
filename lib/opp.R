@@ -176,7 +176,8 @@ opp_population <- function(state, city) {
   # NOTE: returns 2010 population; using this because
   # it has more cities than ACS annual samples (< 200)
 
-  p <- read_csv(
+  # NOTE: some rows have 'A' instead of integer populations; ignore this
+  p <- suppressWarnings(read_csv(
     here::here("data", "populations.csv"),
     col_types = cols_only(
       STATE = "c",
@@ -185,7 +186,7 @@ opp_population <- function(state, city) {
       FUNCSTAT = "c",
       CENSUS2010POP = "i"
     )
-  )
+  ))
   fips <- read_delim(
     here::here("data", "fips.csv"),
     delim = "|",

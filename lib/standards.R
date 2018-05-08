@@ -161,6 +161,8 @@ extra_schema <- c(
   reason_for_search                 = as.character,
   reason_for_frisk                  = as.character,
   reason_for_arrest                 = as.character,
+  use_of_force_description          = as.character,
+  use_of_force_reason               = as.character,
   complaint_filed_by_subject        = as.logical,
   notes                             = as.character
 )

@@ -517,7 +517,7 @@ capitalize_first_letters <- function(x) {
 
 
 format_proper_noun <- function(x) {
-  capitalize_first_letters(str_replace(x, "_", " "))
+  str_to_title(str_replace(x, "_", " "))
 }
 
 

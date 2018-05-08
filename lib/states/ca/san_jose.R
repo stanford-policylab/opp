@@ -70,8 +70,8 @@ clean <- function(d, calculated_features_path) {
   )
 
   tr_contraband <- c(
-    "S" = FALSE,  # search, contraband_found
-    "Z" = TRUE   # search, no contraband found 
+    "S" = TRUE, # search, contraband_found
+    "Z" = FALSE   # search, no contraband found 
   )
 
   tr_reason <- c(
@@ -121,6 +121,21 @@ clean <- function(d, calculated_features_path) {
     "SUSPICIOUS PERSON",
     "USE OF CONTROLLED SUBSTANCE",
     sep = "|"
+  )
+
+  tr_force <- c(
+    "H" = "handcuffed",
+    "N" = "no curb, no handcuff, no police vehicle",
+    "V" = "sat in police vehicle"
+  )
+
+  tr_force_reason <- c(
+    "M" = "medical condition",
+    "N" = "no curb, no handcuff, no police vehicle",
+    "O" = "other",
+    "P" = "safety concern during prior contact(s)",
+    "S" = "officer safety concerns",
+    "W" = "weapons / violence related event"
   )
 
   # TODO(ravi): this has interesting variables -- handcuffed as part of
@@ -173,7 +188,9 @@ clean <- function(d, calculated_features_path) {
       reason_for_stop = tr_reason[`REASON FOR STOP`],
       subject_race = tr_race[RACE],
       search_conducted = tr_search[SEARCH],
-      contraband_found = tr_contraband[SEARCH]
+      contraband_found = tr_contraband[SEARCH],
+      use_of_force_description = tr_force[`DETENTION TYPE`],
+      use_of_force_reason = tr_force_reason[`DETENTION REASON`]
     ) %>%
     add_lat_lng(
       "incident_location",

@@ -7,7 +7,17 @@ source("opp.R")
 coverage <- function() {
   cache_file <- here::here("cache", "coverage.rds")
   cvg <- get_or_create_cache(cache_file)
-  cvg_to_update <- filter(cvg, is.na(nrows)) %>% select(-nrows)
+  cvg_to_update <- filter(
+    cvg,
+    is.na(nrows)
+  ) %>%
+  select(
+    path,
+    state,
+    city,
+    modified_time
+  )
+
   if (nrow(cvg_to_update) > 0) {
     cvg_updates <- cvg_to_update %>% 
       select(state, city) %>%
@@ -19,7 +29,6 @@ coverage <- function() {
       left_join(cvg_to_update, cvg_updates)
     )
   }
-  cvg <- arrange(cvg, desc(nrows))
   saveRDS(cvg, cache_file)
   cvg
 }
@@ -32,8 +41,15 @@ get_or_create_cache <- function(cache_file) {
     state = sapply(paths, opp_extract_state_from_path),
     city = sapply(paths, opp_extract_city_from_path),
     modified_time = sapply(paths, modified_time)
+  ) %>% 
+  filter(
+    # NOTE: sometimes we have statewide data that is processed once for all
+    # cities; however, each will show up independently so no need to report
+    city != "Statewide"
   )
   if (file.exists(cache_file)) {
+    # NOTE: joins by: path, state, city, modified_time
+    # so if the modified time isn't the same, all fields are NA
     cvg <- left_join(cvg, readRDS(cache_file))
   }
   # TODO(danj): hack to create signal column; think of something clearer
@@ -43,7 +59,7 @@ get_or_create_cache <- function(cache_file) {
 
 city_coverage <- function(state, city) {
   data <- opp_load_required_data(state, city)
-  date_range = range(data$incident_date)
+  date_range = range(data$incident_date, na.rm = TRUE)
   c(
     list(
       state = state,
@@ -53,6 +69,6 @@ city_coverage <- function(state, city) {
       start_date = date_range[1],
       end_date = date_range[2]
     ),
-    lapply(data, coverage_rate)
+    lapply(lapply(data, coverage_rate), pretty_percent)
   )
 }
