@@ -32,7 +32,7 @@ clean <- function(d, calculated_features_path) {
   # https://app.asana.com/0/456927885748233/663043550621572
   d$data %>%
     rename(
-      vehicle_color = `V  Color`,
+      vehicle_color = `V Color`,
       vehicle_make = `V Make`,
       vehicle_model = `V Model`,
       reason_for_stop = `Violation Description`
@@ -52,15 +52,13 @@ clean <- function(d, calculated_features_path) {
       citation_issued = !is.na(`Citataion Num`),
       # TODO(phoebe): can we get other outcomes? arrests/warnings?
       # https://app.asana.com/0/456927885748233/663043550621574
-      indicent_outcome = first_of(
+      incident_outcome = first_of(
         "citation" = citation_issued
       )
     ) %>%
-    # TODO(danj): do this
-		# https://app.asana.com/0/456927885748233/663043550621576
-    # add_lat_lng(
-    #   "incident_location",
-    #   calculated_features_path
-    # ) %>%
+    add_lat_lng(
+      "incident_location",
+      calculated_features_path
+    ) %>%
     standardize(d$metadata)
 }
