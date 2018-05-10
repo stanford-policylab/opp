@@ -27,7 +27,13 @@ def init(args):
 
 def make_data_dirs(state, city):
     parent_dir = os.path.join('data', 'states', state, city)
-    sub_dirs = ['raw', 'raw_csv', 'clean', 'calculated_features']
+    sub_dirs = [
+        'raw',
+        'raw_csv',
+        'clean',
+        'calculated_features',
+        'shapefiles'
+    ]
     for sub_dir in sub_dirs:
         make_dir(os.path.join(parent_dir, sub_dir))
     return
