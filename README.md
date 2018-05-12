@@ -14,3 +14,6 @@ Open Policing Project -- City Data
 * jsonlite
 * rgdal
   
+## TODO:
+* split utils.py into several files
+* remove zone/district -> precinct coercions

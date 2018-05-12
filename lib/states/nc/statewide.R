@@ -212,5 +212,9 @@ clean <- function(d, calculated_features_path) {
       ),
       contraband_weapons = ifelse(contraband_found, gt_0(Weapons), NA)
     ) %>%
+    filter(
+      # NOTE: 2000-2001 data is incomplete, so removing
+      year(incident_date) > 2001
+    ) %>%
     standardize(d$metadata)
 }

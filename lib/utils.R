@@ -223,7 +223,6 @@ separate_cols <- function(tbl, ..., sep = " ") {
 }
 
 
-
 add_lat_lng <- function(tbl, join_col, calculated_features_path) {
   join_on <- c("loc")
   names(join_on) <- c(join_col)
@@ -237,6 +236,23 @@ add_lat_lng <- function(tbl, join_col, calculated_features_path) {
   rename(
     incident_lat = lat,
     incident_lng = lng
+  )
+}
+
+
+add_geolocation_features <- function(
+  tbl,
+  calculated_features_path,
+  filename,
+  col_types,
+  join_on = c("incident_lat" = "latitude", "incident_lng" = "longitude")
+) {
+  add_calculated_feature(
+    tbl,
+    join_on,
+    calculated_features_path,
+    filename,
+    col_types
   )
 }
 
@@ -307,9 +323,13 @@ add_incident_types <- function(
 }
 
 
-add_calculated_feature <- function(tbl, join_on, calculated_features_path,
-                                   filename, col_types) {
-
+add_calculated_feature <- function(
+  tbl,
+  join_on,
+  calculated_features_path,
+  filename,
+  col_types
+) {
   feats <- read_csv(file.path(calculated_features_path, filename),
                     col_types = col_types)
   left_join(tbl, feats, by = join_on)
@@ -552,6 +572,11 @@ seconds_to_hms <- function(v) {
   m = v %/% 60
   s = v %% 60
   sprintf("%02d:%02d:%02d", h, m, s)
+}
+
+
+rename_with_str <- function(tbl, from, to) {
+  rename_(tbl, .dots=setNames(names(tbl), gsub(from, to, names(tbl))))
 }
 
 

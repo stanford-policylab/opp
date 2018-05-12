@@ -121,6 +121,12 @@ opp_calculated_features_path <- function(state, city) {
 }
 
 
+opp_shapefiles_path <- function(state, city) {
+  data_dir = opp_data_dir(state, city)
+  file.path(data_dir, "shapefiles")
+}
+
+
 opp_clean <- function(d, state, city) {
   source(opp_processor_path(state, city), local = TRUE)
   clean(d, opp_calculated_features_path(state, city))

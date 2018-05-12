@@ -38,11 +38,15 @@ clean <- function(d, calculated_features_path) {
       "incident_location",
       calculated_features_path
     ) %>%
+    # TODO(phoebe): what is cruiser district?
+    # https://app.asana.com/0/456927885748233/569484839430730<Paste>
+    add_geolocation_features(
+      calculated_features_path,
+      "zones_and_precincts.csv",
+      "ddcc"
+    ) %>%
     rename(
-      reason_for_stop = `Stop Reason`,
-      # TODO(phoebe): is this precinct?
-      # https://app.asana.com/0/456927885748233/569484839430730<Paste>
-      precinct = `Cruiser District`
+      reason_for_stop = `Stop Reason`
     ) %>%
     separate_cols(
       `Stop Date` = c("incident_date", "incident_time")
