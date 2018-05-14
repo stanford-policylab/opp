@@ -19,43 +19,60 @@ clean <- function(d, calculated_features_path) {
     H = "hispanic"
   )
 
-  # TODO(phoebe): what is Intervention{Reason,Technique,Duration}Code
-  # https://app.asana.com/0/456927885748233/586847974785240 
+  tr_search_type <- c(
+    C = "consent",
+    # NOTE: inventory
+    I = "non-discrentionary",
+    # NOTE: Other includes: Probable Cause, Incident to Arrest,
+    # Reasonable Suspicion, Plain View Contraband, Drug Dog Alert, and
+    # Exigent Circumstances; since most of these are "probable cause" related
+    # reasons, we have made it probable cause even though it's possible to have
+    # a non-discretionary search here (like incident to arrest)
+    O = "probable cause"
+  )
+
+  tr_reason_for_stop <- c(
+    I = "Investigation, Criminal",
+    V = "Violation, Motor Vehicle",
+    E = "Equipment, Motor Vehicle"
+  )
+
   d$data %>%
     rename(
     # NOTE: lat/lng provided in the data are 99.99% null
       incident_location = InterventionLocationDescriptionText,
-      reason_for_stop = StatutoryReasonForStop,
       search_vehicle = VehicleSearchedIndicator,
       contraband_found = ContrabandIndicator,
-      subject_age = SubjectAge,
-      arrest_made = CustodialArrestIndicator
+      subject_age = SubjectAge
     ) %>%
     mutate(
       incident_datetime = parse_datetime(
         InterventionDateTime,
         "%Y/%m/%d %H:%M:%S"
       ),
-      # NOTE: all the StatutoryReasonForStop values appear vehicle-related
+      # NOTE: all InterventionReasonCodes are vehicle related
       incident_type = "vehicular",
       incident_date = as.Date(incident_datetime),
       incident_time = format(incident_datetime, "%H:%M:%S"),
       subject_race = tr_race[
         ifelse(SubjectEthnicityCode == "H", "H", SubjectRaceCode)
       ],
+      search_type = tr_search_type[SearchAuthorizationCode],
       subject_sex = tr_sex[SubjectSexCode],
-      # TODO(phoebe): is vehicle search only type of search conducted?
-      # https://app.asana.com/0/456927885748233/586847974785241 
-      search_conducted = search_vehicle,
-      # TODO(phoebe): C, I, N, O for SearchAuthorizationCode? (search_type)
-      # https://app.asana.com/0/456927885748233/586847974785242
-      reason_for_search = SearchAuthorizationCode,
-      # TODO(phoebe): I, M, N, U, V, W for InterventionDispositionCode?
-      # / are these all citations except where CustodialArrestIndicator is true?
-      # https://app.asana.com/0/456927885748233/586847974785243
+      search_conducted = search_vehicle | SearchAuthorizationCode != "N",
+      reason_for_stop = tr_reason_for_stop[InterventionReasonCode],
+      # NOTE: U = "Uniform Arrest Report"
+      arrest_made = CustodialArrestIndicator
+        | InterventionDispositionCode == "U",
+      # NOTE: I = "Infraction"
+      citation_issued = InterventionDispositionCode == "I",
+      # NOTE: W = "Written Warning", V = "Verbal Warning"
+      warning_issued = InterventionDispositionCode == "W"
+        | InterventionDispositionCode == "V",
       incident_outcome = first_of(
         arrest = arrest_made,
-        citation = TRUE
+        citation = citation_issued,
+        warning = warning_issued
       ),
       officer_id = ReportingOfficerIdentificationID
     ) %>%

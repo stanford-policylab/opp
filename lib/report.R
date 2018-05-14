@@ -14,7 +14,7 @@ d <- opp_load(state, city)
 
 population <- opp_population(state, city)
 total_rows <- nrow(d$data)
-date_range <- range(d$data$incident_date)
+date_range <- range(d$data$incident_date, na.rm = TRUE)
 
 
 by_incident_type <- group_by(d$data, incident_type) %>% count

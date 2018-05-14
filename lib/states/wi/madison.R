@@ -1,6 +1,7 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
+  # NOTE: "IBM" is the officers department ID
   loading_problems <- list()
   r <- function(fname) {
     tbl <- read_csv(
@@ -30,7 +31,7 @@ clean <- function(d, calculated_features_path) {
   )
 
   # TODO(phoebe): can we get reason_for_stop/search/contraband data?
-  #  https://app.asana.com/0/456927885748233/595493946182539
+  # https://app.asana.com/0/456927885748233/595493946182539
   d$data %>%
     rename(
       # TODO(ravi): is this misleading?
@@ -40,8 +41,6 @@ clean <- function(d, calculated_features_path) {
       vehicle_model = Model,
       vehicle_year = Year,
       vehicle_color = Color,
-      # TODO(phoebe): is state vehicle registration state?
-      # https://app.asana.com/0/456927885748233/595493946182541
       vehicle_registration_state = State
     ) %>%
     mutate(
@@ -49,8 +48,6 @@ clean <- function(d, calculated_features_path) {
       incident_type = "vehicular",
       incident_date = parse_date(Date, "%Y/%m/%d"),
       incident_time = parse_time(Time, "%H:%M:%S"),
-      # TODO(phoebe): what is IBM?
-      # https://app.asana.com/0/456927885748233/595493946182542
       incident_location = coalesce(onStreet, onStreetName),
       warning_issued = is.na(`Ticket #`),
       citation_issued = !is.na(`Ticket #`),

@@ -12,7 +12,7 @@ load_raw <- function(raw_data_dir, n_max) {
 	}
   # TODO(ravi): should we separately process the new data files, even though
   # we'll only have like 6 months of data?
-  #
+  # https://app.asana.com/0/456927885748233/592025853254509
 	# NOTE: the updated files have completely new (but consistent) formats
 	# ss_new_format <- "ss_july_16_to_sep_17_sheet_2.csv"
 	# ts_new_format <- "ts_july_25_to_dec_31_2016_sheet_1.csv" 
@@ -55,23 +55,20 @@ clean <- function(d, calculated_features_path) {
     "VEHICLE" = "VEHICLE"
   )
 
-  # TODO(phoebe): can we get reason_for_stop/search/contraband fields?
-  # https://app.asana.com/0/456927885748233/592025853254511
+  # NOTE: reason_for_stop/search/contraband fields aren't recorded unless
+  # a case is opened
   d$data %>%
     rename(
       subject_age = age,
-      # TODO(phoebe): looks like race/sex are always null?
-      # https://app.asana.com/0/456927885748233/592025853254512
+      # NOTE: race and sex are not on the ID driver's license
+      # the only extant values must have been filled in manually
+      # i.e. getting race and sex for the remaining stops is not possible
       subject_race = race,
       subject_sex = sex,
-      # TODO(phoebe): what is 'zone'? precinct?
-      # https://app.asana.com/0/456927885748233/592025853254514
-      precinct = zone,
       officer_id = officerid
     ) %>%
     mutate(
-      # TODO(phoebe): what is a SS stop?
-      # https://app.asana.com/0/456927885748233/592025853254515
+      # NOTE: TS is Traffic Stop; SS is Subject Stop
       incident_type = ifelse(naturecode == "TS", "vehicular", "pedestrian"),
       incident_date = parse_date(actdate, "%Y/%m/%d"),
       incident_time = parse_time_int(acttime),
