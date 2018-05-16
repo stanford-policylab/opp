@@ -129,7 +129,7 @@ opp_clean <- function(d, state, city) {
 
 
 opp_add_lat_lng_func <- function(state, city) {
-  function(tbl, join_col) {
+  function(tbl, join_col = "incident_location") {
     join_on <- c("loc")
     names(join_on) <- c(join_col)
     add_data(

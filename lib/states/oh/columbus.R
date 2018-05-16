@@ -35,7 +35,6 @@ clean <- function(d, helpers) {
       )
     ) %>%
     helpers$add_lat_lng(
-      "incident_location"
     ) %>%
     # TODO(phoebe): what is cruiser district?
     # https://app.asana.com/0/456927885748233/569484839430730<Paste>
