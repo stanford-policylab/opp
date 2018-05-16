@@ -10,7 +10,11 @@ tna <- function(v) { sum(is.na(v)) }
 
 
 create_title <- function(state, city) {
-  str_c(format_proper_noun(city), toupper(state), sep = ", ")
+  str_c(
+    format_proper_noun(city),
+    toupper(state),
+    sep = ", "
+  )
 }
 
 
@@ -33,16 +37,8 @@ not_null <- function(v) {
 }
 
 
-str_expr <- function(expr) {
-  deparse(substitute(expr))
-}
-
-
-cs <- function(v, name, val) {
-  nms <- names(v)
-  v <- c(v, val)
-  names(v) <- c(nms, name)
-  v
+to_str <- function(expression) {
+  deparse(substitute(expression))
 }
 
 
@@ -181,9 +177,11 @@ apply_and_collect_null_rates <- function(f, v) {
 }
 
 
-transpose_one_line_table <- function(tbl,
-                                     colnames = c("names", "values"),
-                                     f = identity) {
+transpose_one_line_table <- function(
+  tbl,
+  colnames = c("names", "values"),
+  f = identity
+) {
   v <- elements_from_sublists(tbl, 1)
   tbl <- tibble(names(v), f(v))
   names(tbl) <- colnames
@@ -201,138 +199,77 @@ pretty_percent <- function(v) {
 }
 
 
-read_csv_with_types <- function(path,
-                                type_vec,
-                                na = c("", "NA", "NULL"),
-                                n_max = Inf) {
-  tbl <- read_csv(path,
-                  col_names = names(type_vec),
-                  col_types = str_c(type_vec, collapse = ""),
-                  na = na,
-                  n_max = n_max,
-                  skip = 1)
+read_csv_with_types <- function(
+  path,
+  type_vec,
+  na = c("", "NA", "NULL"),
+  n_max = Inf
+) {
+  tbl <- read_csv(
+    path,
+    col_names = names(type_vec),
+    col_types = str_c(type_vec, collapse = ""),
+    na = na,
+    n_max = n_max,
+    skip = 1
+  )
 }
 
 
 separate_cols <- function(tbl, ..., sep = " ") {
   lst = list(...)
   for (colname in names(lst)) {
-    tbl <- separate_(tbl, colname, lst[[colname]], sep = sep, extra = "merge")
+    tbl <- separate_(
+      tbl,
+      colname,
+      lst[[colname]],
+      sep = sep,
+      extra = "merge"
+    )
   }
   tbl
 }
 
 
-add_lat_lng <- function(tbl, join_col, calculated_features_path) {
-  join_on <- c("loc")
-  names(join_on) <- c(join_col)
-  add_calculated_feature(
-    tbl,
-    join_on,
-    calculated_features_path,
-    "geocoded_locations.csv",
-    "cdd"
-  ) %>%
-  rename(
-    incident_lat = lat,
-    incident_lng = lng
-  )
-}
-
-
-add_geolocation_features <- function(
+add_data <- function(
   tbl,
-  calculated_features_path,
-  filename,
-  col_types,
-  join_on = c("incident_lat" = "latitude", "incident_lng" = "longitude")
-) {
-  add_calculated_feature(
-    tbl,
-    join_on,
-    calculated_features_path,
-    filename,
-    col_types
-  )
-}
-
-
-add_contraband_types <- function(tbl, join_col, calculated_features_path) {
-  join_on <- c("text")
-  names(join_on) <- c(join_col)
-  add_calculated_feature(
-    tbl,
-    join_on,
-    calculated_features_path,
-    "contraband_types.csv",
-    "iic"
-  ) %>%
-  rename(
-    contraband_drugs = d,
-    contraband_weapons = w
-  )
-}
-
-
-add_search_types <- function(tbl, join_col, calculated_features_path) {
-  join_on <- c("text")
-  names(join_on) <- c(join_col)
-  tr_search_type <- c(
-    k9 = "k9",
-    pv = "plain view" ,
-    cn = "consent",
-    pc = "probable cause",
-    nd = "non-discretionary"
-  )
-  add_calculated_feature(
-    tbl,
-    join_on,
-    calculated_features_path,
-    "search_types.csv",
-    "cc"
-  ) %>%
-  mutate(
-    search_type = tr_search_type[label]
-  )
-}
-
-
-add_incident_types <- function(
-		tbl,
-		join_col,
-		calculated_features_path,
-		filename = "offense_desc.csv"
-	) {
-  join_on <- c("text")
-  names(join_on) <- c(join_col)
-  tr_incident_type <- c(
-    p = "pedestrian",
-    v = "vehicular",
-    o = "other"
-  )
-  add_calculated_feature(
-    tbl,
-    join_on,
-    calculated_features_path,
-		filename,
-    "cc"
-  ) %>%
-  mutate(
-    incident_type = tr_incident_type[label]
-  )
-}
-
-
-add_calculated_feature <- function(
-  tbl,
+  csv_path,
   join_on,
-  calculated_features_path,
-  filename,
-  col_types
+  col_types = cols(.default = "c"),
+  rename_map = c(),
+  translators = list()
 ) {
-  feats <- read_csv(file.path(calculated_features_path, filename),
-                    col_types = col_types)
-  left_join(tbl, feats, by = join_on)
+  left_join(
+    tbl,
+    read_csv(csv_path, col_types = col_types),
+    by = join_on
+  ) %>%
+  rename_cols(
+    rename_map
+  ) %>%
+  apply_translators(
+    translators
+  )
+}
+
+
+rename_cols <- function(tbl, rename_map) {
+  # NOTE: rename_map format: c("from_1" = "to_1", "from_2" = "to_2")
+  nms <- colnames(tbl)
+  names(nms) <- nms
+  nms[names(rename_map)] <- rename_map
+  colnames(tbl) <- nms
+  tbl
+}
+
+
+apply_translators <- function(tbl, translators) {
+  # NOTE: translators format: list("col_1": c("a" = "b", "z" = "w")...)
+  for (colname in names(translators)) {
+    tr <- labels_tbl_translators[colname]
+    tbl[[colname]] <- tr[tbl[[colname]]]
+  }
+  tbl
 }
 
 

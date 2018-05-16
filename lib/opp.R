@@ -115,9 +115,137 @@ opp_raw_data_dir <- function(state, city) {
 }
 
 
+opp_clean <- function(d, state, city) {
+  source(opp_processor_path(state, city), local = TRUE)
+  helpers <- c(
+    "add_lat_lng" = opp_add_lat_lng_func(state, city),
+    "add_search_type" = opp_add_search_type_func(state, city),
+    "add_incident_type" = opp_add_incident_type_func(state, city),
+    "add_contraband_types_func" = opp_add_contraband_types_func(state, city),
+    "add_shapefiles_data" = opp_add_shapefiles_data_func(state, city)
+  )
+  clean(d, helpers)
+}
+
+
+opp_add_lat_lng_func <- function(state, city) {
+  function(tbl, join_col) {
+    join_on <- c("loc")
+    names(join_on) <- c(join_col)
+    add_data(
+      tbl,
+      file.path(
+        opp_calculated_features_path(state, city),
+        "geocoded_locations.csv"
+      ),
+      join_on,
+      col_types = "cdd",
+      rename_map = c(
+        "lat" = "incident_lat",
+        "lng" = "incident_lng"
+      )
+    )
+  }
+  
+}
+
+
+opp_add_search_type_func <- function(state, city) {
+  function(tbl, join_col) {
+    join_on <- c("text")
+    names(join_on) <- c(join_col)
+    add_data(
+      tbl,
+      file.path(
+        opp_calculated_features_path(state, city),
+        "search_types.csv"
+      ),
+      join_on,
+      col_types = "cc",
+      rename_map = c("label" = "search_type"),
+      translators = list(
+        "search_type" = c(
+          k9 = "k9",
+          pv = "plain view" ,
+          cn = "consent",
+          pc = "probable cause",
+          nd = "non-discretionary"
+        )
+      )
+    )
+  }
+}
+
+
 opp_calculated_features_path <- function(state, city) {
   data_dir = opp_data_dir(state, city)
   file.path(data_dir, "calculated_features")
+}
+
+
+opp_add_incident_type_func <- function(state, city) {
+  function(tbl, join_col) {
+    join_on <- c("text")
+    names(join_on) <- c(join_col)
+    add_data(
+      tbl,
+      file.path(
+        opp_calculated_features_path(state, city),
+        "incident_types.csv"
+      ),
+      join_on,
+      col_types = "cc",
+      rename_map = c("label" = "incident_type"),
+      translators = list(
+        "search_type" = c(
+          p = "pedestrian",
+          v = "vehicular",
+          o = "other"
+        )
+      )
+    )
+  }
+}
+
+
+opp_add_contraband_types_func <- function(state, city) {
+  function(tbl, join_col) {
+    join_on <- c("text")
+    names(join_on) <- c(join_col)
+    add_data(
+      tbl,
+      file.path(
+        opp_calculated_features_path(state, city),
+        "contraband_types.csv"
+      ),
+      join_on,
+      col_types = "iic",
+      rename_map = c(
+        "d" = "contraband_drugs",
+        "w" = "contraband_weapons"
+      )
+    )
+  }
+}
+
+
+opp_add_shapefiles_data_func <- function(state, city) {
+  function(tbl) {
+    source(here::here("lib", "shapefiles.R"), local = TRUE)
+    shapes_obj <- opp_load_shapefiles(state, city)
+    add_shapefiles_data(
+      tbl,
+      shapes_obj,
+      "incident_lng",
+      "incident_lat"
+    )
+  }
+}
+
+
+opp_load_shapefiles <- function(state, city) {
+  source(here::here("lib", "shapefiles.R"), local = TRUE)
+  load_shapefiles(opp_shapefiles_path(state, city))
 }
 
 
@@ -125,13 +253,6 @@ opp_shapefiles_path <- function(state, city) {
   data_dir = opp_data_dir(state, city)
   file.path(data_dir, "shapefiles")
 }
-
-
-opp_clean <- function(d, state, city) {
-  source(opp_processor_path(state, city), local = TRUE)
-  clean(d, opp_calculated_features_path(state, city))
-}
-
 
 opp_save <- function(d, state, city) {
   saveRDS(d, opp_clean_data_path(state, city))
@@ -168,7 +289,7 @@ pdf_filename <- function(state, city) {
 
 
 opp_plot <- function(state, city) {
-  source("plot.R", local = TRUE)
+  source(here::here("lib", "plot.R"), local = TRUE)
   output_dir = here::here("plots")
   dir.create(output_dir, showWarnings = FALSE)
   plot_cols(

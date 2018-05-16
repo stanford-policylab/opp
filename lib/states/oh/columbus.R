@@ -2,14 +2,14 @@ source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
   loading_problems <- list()
-  fname <- "columbus_oh_data_sheet_1.csv"
+  fname <- "columbus_oh_data.csv"
   data <- read_csv(file.path(raw_data_dir, fname), n_max = n_max)
   loading_problems[[fname]] <- problems(data)
   bundle_raw(data, loading_problems)
 }
 
 
-clean <- function(d, calculated_features_path) {
+clean <- function(d, helpers) {
   tr_race = c(
     Asian = "asian/pacific islander",
     Black = "black",
@@ -34,19 +34,17 @@ clean <- function(d, calculated_features_path) {
         )
       )
     ) %>%
-    add_lat_lng(
-      "incident_location",
-      calculated_features_path
+    helpers$add_lat_lng(
+      "incident_location"
     ) %>%
     # TODO(phoebe): what is cruiser district?
     # https://app.asana.com/0/456927885748233/569484839430730<Paste>
-    add_geolocation_features(
-      calculated_features_path,
-      "zones_and_precincts.csv",
-      "ddcc"
+    helpers$add_shapefiles_data(
     ) %>%
     rename(
-      reason_for_stop = `Stop Reason`
+      reason_for_stop = `Stop Reason`,
+      zone = POL_ZONE,
+      precinct = POL_PRECNT
     ) %>%
     separate_cols(
       `Stop Date` = c("incident_date", "incident_time")
