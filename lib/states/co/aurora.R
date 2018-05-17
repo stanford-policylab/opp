@@ -21,7 +21,7 @@ load_raw <- function(raw_data_dir, n_max) {
 }
 
 
-clean <- function(d, calculated_features_path) {
+clean <- function(d, helpers) {
   tr_race <- c(
     "AMERICAN INDIAN/ALASKAN N" = "other/unknown",
     "ASIAN" = "asian/pacific islander",
@@ -43,13 +43,9 @@ clean <- function(d, calculated_features_path) {
       reason_for_stop = `Incident Violation`,
       subject_dob = `Date of Birth`
     ) %>%
-    add_lat_lng(
-      "incident_location",
-      calculated_features_path
+    helpers$add_lat_lng(
     ) %>%
-    add_incident_types(
-      "reason_for_stop",
-      calculated_features_path
+    helpers$add_incident_type(
     ) %>%
     filter(
       incident_type != "other"

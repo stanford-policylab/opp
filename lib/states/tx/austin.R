@@ -80,7 +80,7 @@ load_raw <- function(raw_data_dir, n_max) {
 }
 
 
-clean <- function(d, calculated_features_path) {
+clean <- function(d, helpers) {
   dt_fmt = "%Y/%m/%d"
   tr_race = c(
     A = "asian/pacific islander",

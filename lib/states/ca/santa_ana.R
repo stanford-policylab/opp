@@ -9,7 +9,7 @@ load_raw <- function(raw_data_dir, n_max) {
 }
 
 
-clean <- function(d, calculated_features_path) {
+clean <- function(d, helpers) {
 
   tr_race <- c(
     "H" = "hispanic",
@@ -29,9 +29,7 @@ clean <- function(d, calculated_features_path) {
       officer_id = `Officer (Badge)`,
       reason_for_stop = `Violation Description`
     ) %>%
-    add_incident_types(
-      "reason_for_stop",
-      calculated_features_path
+    helpers$add_incident_type(
     ) %>%
     filter(
       incident_type != "other"
@@ -46,9 +44,7 @@ clean <- function(d, calculated_features_path) {
         "citation" = citation_issued
       )
     ) %>%
-    add_lat_lng(
-      "incident_location",
-      calculated_features_path
+    helpers$add_lat_lng(
     ) %>%
     standardize(d$metadata)
 }

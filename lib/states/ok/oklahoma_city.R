@@ -22,7 +22,7 @@ load_raw <- function(raw_data_dir, n_max) {
 }
 
 
-clean <- function(d, calculated_features_path) {
+clean <- function(d, helpers) {
   # TODO(ravi): check this race mapping
   tr_race = c(
     A = "asian/pacific islander",
@@ -37,19 +37,6 @@ clean <- function(d, calculated_features_path) {
   )
 
   d$data %>%
-    add_lat_lng(
-      "violLocation",
-      calculated_features_path
-    ) %>%
-    # TODO(ravi): check these classifications
-    # https://app.asana.com/0/456927885748233/521735743717408
-    add_incident_types(
-      "OffenseDesc",
-      calculated_features_path
-    ) %>%
-    filter(
-      incident_type != "other"
-    ) %>%
     rename(
       incident_date = violDate,
       incident_time = violTime,
@@ -67,6 +54,15 @@ clean <- function(d, calculated_features_path) {
       # https://app.asana.com/0/456927885748233/521735743717410
       vehicle_registration_state = veh_tag_st,
       vehicle_year = veh_year
+    ) %>%
+    helpers$add_lat_lng(
+    ) %>%
+    # TODO(ravi): check these classifications
+    # https://app.asana.com/0/456927885748233/521735743717408
+    helpers$add_incident_type(
+    ) %>%
+    filter(
+      incident_type != "other"
     ) %>%
     mutate(
       # NOTE: these are all citations

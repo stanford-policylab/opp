@@ -7,7 +7,7 @@ load_raw <- function(raw_data_dir, n_max) {
 }
 
 
-clean <- function(d, calculated_features_path) {
+clean <- function(d, helpers) {
 
   # TODO(phoebe): can we get reason_for_stop/search/contraband fields?
   #
@@ -16,9 +16,7 @@ clean <- function(d, calculated_features_path) {
     ) %>%
     mutate(
     ) %>%
-    add_lat_lng(
-      "incident_location",
-      calculated_features_path
+    helpers$add_lat_lng(
     ) %>%
     standardize(d$metadata)
 }

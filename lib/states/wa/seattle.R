@@ -43,9 +43,9 @@ load_raw <- function(raw_data_dir, n_max) {
 }
 
 
-clean <- function(d, calculated_features_path) {
+clean <- function(d, helpers) {
 
-  vehicle <- fromJSON(file.path(calculated_features_path, "vehicle.json"))
+  vehicle <- helpers$load_json("vehicle.json")
   ped_pattern <- paste(c(
     "DISTURBANCE",
     "FOOT",
@@ -65,12 +65,10 @@ clean <- function(d, calculated_features_path) {
     filter(
       !is.na(rin)
     ) %>%
-    add_lat_lng(
-      "address",
-      calculated_features_path
-    ) %>%
     rename(
       incident_location = address
+    ) %>%
+    helpers$add_lat_lng(
     ) %>%
     separate_cols(
       possible_race_and_sex = c("subject_race", "subject_sex"),

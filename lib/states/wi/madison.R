@@ -21,7 +21,7 @@ load_raw <- function(raw_data_dir, n_max) {
 }
 
 
-clean <- function(d, calculated_features_path) {
+clean <- function(d, helpers) {
   tr_race <- c(
     "A" = "asian/pacific islander",
     "B" = "black",
@@ -60,9 +60,7 @@ clean <- function(d, calculated_features_path) {
       subject_race = tr_race[Race],
       subject_sex = tr_sex[Sex]
     ) %>%
-    add_lat_lng(
-      "incident_location",
-      calculated_features_path
+    helpers$add_lat_lng(
     ) %>%
     standardize(d$metadata)
 }

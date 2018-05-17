@@ -19,7 +19,7 @@ load_raw <- function(raw_data_dir, n_max) {
 }
 
 
-clean <- function(d, calculated_features_path) {
+clean <- function(d, helpers) {
   d <- opp_load("nc", "statewide")
   d$data <- filter(d$data, str_detect(department_name, "Raleigh"))
   d

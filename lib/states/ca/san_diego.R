@@ -9,7 +9,7 @@ load_raw <- function(raw_data_dir, n_max) {
 }
 
 
-clean <- function(d, calculated_features_path) {
+clean <- function(d, helpers) {
   # TODO(ravi): check this map
   # https://app.asana.com/0/456927885748233/519045240013538
   tr_race = c(

@@ -9,7 +9,7 @@ load_raw <- function(raw_data_dir, n_max) {
 }
 
 
-clean <- function(d, calculated_features_path) {
+clean <- function(d, helpers) {
   # TODO(phoebe): can we get reason_for_stop/search/contraband information?
   # https://app.asana.com/0/456927885748233/590576541432180
   # TODO(phoebe): can we get race information?
@@ -37,9 +37,7 @@ clean <- function(d, calculated_features_path) {
         warning = warning_issued
       )
     ) %>%
-    add_lat_lng(
-      "incident_location",
-      calculated_features_path
+    helpers$add_lat_lng(
     ) %>%
     standardize(d$metadata)
 }

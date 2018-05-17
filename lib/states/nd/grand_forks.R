@@ -50,7 +50,7 @@ load_raw <- function(raw_data_dir, n_max) {
 }
 
 
-clean <- function(d, calculated_features_path) {
+clean <- function(d, helpers) {
 
   tr_race <- c(
     A = "asian/pacific islander",
@@ -65,9 +65,8 @@ clean <- function(d, calculated_features_path) {
   # TODO(phoebe): can we get contraband fields?
   # https://app.asana.com/0/456927885748233/579650153274289
   d$data %>%
-    add_incident_types(
-      "desc",
-      calculated_features_path
+    helpers$add_incident_type(
+      "desc"
     ) %>%
     filter(
       incident_type != "other"
@@ -93,9 +92,7 @@ clean <- function(d, calculated_features_path) {
       subject_race = tr_race[race],
       subject_sex = tr_sex[sex]
     ) %>%
-    add_lat_lng(
-      "incident_location",
-      calculated_features_path
+    helpers$add_lat_lng(
     ) %>%
     standardize(d$metadata)
 }

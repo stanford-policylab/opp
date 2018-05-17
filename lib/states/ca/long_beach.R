@@ -28,7 +28,7 @@ load_raw <- function(raw_data_dir, n_max) {
 }
 
 
-clean <- function(d, calculated_features_path) {
+clean <- function(d, helpers) {
   tr_race <- c(
     "Amer Indian" = "other/unknown",
     "Asian" = "asian/pacific islander",
@@ -59,9 +59,8 @@ clean <- function(d, calculated_features_path) {
   # for reason_for_stop, maybe we need the data dictionary for Violation codes?
   # https://app.asana.com/0/456927885748233/596075286170964
   d$data %>%
-    add_incident_types(
-      "violation_1_description",
-      calculated_features_path
+    helpers$add_incident_type(
+      "violation_1_description"
     ) %>%
     filter(
       Sex != "Business",
@@ -83,9 +82,7 @@ clean <- function(d, calculated_features_path) {
       subject_race = tr_race[Race],
       subject_sex = tr_sex[Sex]
     ) %>%
-    add_lat_lng(
-      "incident_location",
-      calculated_features_path
+    helpers$add_lat_lng(
     ) %>%
     standardize(d$metadata)
 }

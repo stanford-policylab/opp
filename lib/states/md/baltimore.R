@@ -20,7 +20,7 @@ load_raw <- function(raw_data_dir, n_max) {
 }
 
 
-clean <- function(d, calculated_features_path) {
+clean <- function(d, helpers) {
 
   # TODO(phoebe): can we get reason_for_stop/search/contraband fields?
   # https://app.asana.com/0/456927885748233/672314799705085
@@ -71,9 +71,7 @@ clean <- function(d, calculated_features_path) {
     ) %>%
     # TODO(phoebe): can we get incident_location?
     # https://app.asana.com/0/456927885748233/672314799705094
-    # add_lat_lng(
-    #   "incident_location",
-    #   calculated_features_path
+    # helpers$add_lat_lng(
     # ) %>%
     standardize(d$metadata)
 }

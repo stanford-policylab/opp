@@ -266,8 +266,7 @@ rename_cols <- function(tbl, rename_map) {
 apply_translators <- function(tbl, translators) {
   # NOTE: translators format: list("col_1": c("a" = "b", "z" = "w")...)
   for (colname in names(translators)) {
-    tr <- labels_tbl_translators[colname]
-    tbl[[colname]] <- tr[tbl[[colname]]]
+    tbl[colname] <- translators[[colname]][tbl[[colname]]]
   }
   tbl
 }
@@ -292,6 +291,14 @@ left_coalesce_cols_by_suffix <- function(tbl, left_suffix, right_suffix) {
 
 which_ends_with <- function(v, ending) {
   names(which(sapply(v, endsWith, ending)))
+}
+
+
+append_to <- function(v, name, val) {
+  nms <- c(names(v), name)
+  v <- c(v, val)
+  names(v) <- nms
+  v
 }
 
 

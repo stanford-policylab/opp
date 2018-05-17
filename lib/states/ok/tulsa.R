@@ -17,7 +17,7 @@ load_raw <- function(raw_data_dir, n_max) {
 }
 
 
-clean <- function(d, calculated_features_path) {
+clean <- function(d, helpers) {
 
   tr_race <- c(
     "A" = "asian/pacific islander",
@@ -62,9 +62,7 @@ clean <- function(d, calculated_features_path) {
       vehicle_model = model,
       vehicle_registration_state = tagstate
     ) %>%
-    add_incident_types(
-      "reason_for_stop",
-      calculated_features_path
+    helpers$add_incident_type(
     ) %>%
     filter(
       incident_type != "other"
@@ -80,9 +78,7 @@ clean <- function(d, calculated_features_path) {
       subject_sex = tr_sex[sex],
       vehicle_year = format_two_digit_year(year, cutoff = 2017)
     ) %>%
-    add_lat_lng(
-      "incident_location",
-      calculated_features_path
+    helpers$add_lat_lng(
     ) %>%
     standardize(d$metadata)
 }

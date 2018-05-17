@@ -1,6 +1,7 @@
 library(knitr)
 library(rmarkdown)
 library(stringr)
+library(jsonlite)
 library(here)
 
 source("utils.R")
@@ -122,7 +123,8 @@ opp_clean <- function(d, state, city) {
     "add_search_type" = opp_add_search_type_func(state, city),
     "add_incident_type" = opp_add_incident_type_func(state, city),
     "add_contraband_types_func" = opp_add_contraband_types_func(state, city),
-    "add_shapefiles_data" = opp_add_shapefiles_data_func(state, city)
+    "add_shapefiles_data" = opp_add_shapefiles_data_func(state, city),
+    "load_json" = opp_load_json(state, city)
   )
   clean(d, helpers)
 }
@@ -184,7 +186,7 @@ opp_calculated_features_path <- function(state, city) {
 
 
 opp_add_incident_type_func <- function(state, city) {
-  function(tbl, join_col) {
+  function(tbl, join_col = "reason_for_stop") {
     join_on <- c("text")
     names(join_on) <- c(join_col)
     add_data(
@@ -197,7 +199,7 @@ opp_add_incident_type_func <- function(state, city) {
       col_types = "cc",
       rename_map = c("label" = "incident_type"),
       translators = list(
-        "search_type" = c(
+        "incident_type" = c(
           p = "pedestrian",
           v = "vehicular",
           o = "other"
@@ -252,6 +254,15 @@ opp_load_shapefiles <- function(state, city) {
 opp_shapefiles_path <- function(state, city) {
   data_dir = opp_data_dir(state, city)
   file.path(data_dir, "shapefiles")
+}
+
+opp_load_json <- function(state, city) {
+  function(json_filename) {
+    fromJSON(file.path(
+      opp_calculated_features_path(state, city),
+      json_filename
+    ))
+  }
 }
 
 opp_save <- function(d, state, city) {

@@ -53,7 +53,7 @@ load_raw <- function(raw_data_dir, n_max) {
 }
 
 
-clean <- function(d, calculated_features_path) {
+clean <- function(d, helpers) {
 
   tr_race <- c(
     "AMER IND/ALASKAN" = "other/unknown",
@@ -89,9 +89,8 @@ clean <- function(d, calculated_features_path) {
         citation = citation_issued
       )
     ) %>%
-    add_incident_types(
-      "Violation Description 1",
-      calculated_features_path
+    helpers$add_incident_type(
+      "Violation Description 1"
     ) %>%
     standardize(d$metadata)
 }

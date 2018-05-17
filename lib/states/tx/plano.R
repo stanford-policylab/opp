@@ -222,7 +222,7 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 
-clean <- function(d, calculated_features_path) {
+clean <- function(d, helpers) {
 
   tr_race <- c(
     A = "asian/pacific islander",
@@ -330,9 +330,7 @@ clean <- function(d, calculated_features_path) {
       # offense is 49.69% null
       reason_for_stop = coalesce(offense, offense_1)
     ) %>%
-    add_lat_lng(
-      "incident_location",
-      calculated_features_path
+    helpers$add_lat_lng(
     ) %>%
     standardize(d$metadata)
 }

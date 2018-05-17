@@ -20,7 +20,7 @@ load_raw <- function(raw_data_dir, n_max) {
 }
 
 
-clean <- function(d, calculated_features_path) {
+clean <- function(d, helpers) {
 
   # TODO(phoebe): can we get search/contraband information?
   # https://app.asana.com/0/456927885748233/585201226756920
@@ -50,9 +50,7 @@ clean <- function(d, calculated_features_path) {
         warning = warning_issued
       )
     ) %>%
-    add_lat_lng(
-      "incident_location",
-      calculated_features_path
+    helpers$add_lat_lng(
     ) %>%
     standardize(d$metadata)
 }

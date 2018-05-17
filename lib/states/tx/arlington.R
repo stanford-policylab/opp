@@ -21,7 +21,7 @@ load_raw <- function(raw_data_dir, n_max) {
 }
 
 
-clean <- function(d, calculated_features_path) {
+clean <- function(d, helpers) {
 
   tr_race <- c(
     "W" = "white",
@@ -65,9 +65,7 @@ clean <- function(d, calculated_features_path) {
       incident_time = seconds_to_hms(InitiateTime),
       incident_location = coalesce(Address1, Address2)
     ) %>%
-    add_lat_lng(
-      "incident_location",
-      calculated_features_path
+    helpers$add_lat_lng(
     ) %>%
     standardize(d$metadata)
 }

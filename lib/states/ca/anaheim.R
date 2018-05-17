@@ -11,7 +11,7 @@ load_raw <- function(raw_data_dir, n_max) {
 
 # TODO(phoebe): is this all we can get? we got almost nothing other than date
 # https://app.asana.com/0/456927885748233/573247093484079 
-clean <- function(d, calculated_features_path) {
+clean <- function(d, helpers) {
   d$data %>%
     rename(
       incident_date = `Occ Date`,

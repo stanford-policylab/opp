@@ -26,7 +26,7 @@ load_raw <- function(raw_data_dir, n_max) {
 }
 
 
-clean <- function(d, calculated_features_path) {
+clean <- function(d, helpers) {
   tr_sex <- c(
     Female = "female",
     Male = "male"
@@ -60,9 +60,8 @@ clean <- function(d, calculated_features_path) {
     # TODO(danj): location is in the stop files, but let's wait to
     # geocode until we are sure we are going to use those files
     # (currently we can't join them to the survey_files)
-    # add_lat_lng(
-    #   "address",
-    #   calculated_features_path
+    # helpers$add_lat_lng(
+    #   "address"
     # ) %>%
     rename(
       incident_date = in_date,   

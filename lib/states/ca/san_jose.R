@@ -23,7 +23,7 @@ load_raw <- function(raw_data_dir, n_max) {
 }
 
 
-clean <- function(d, calculated_features_path) {
+clean <- function(d, helpers) {
 
   tr_race <- c(
     "H" = "hispanic",
@@ -192,9 +192,7 @@ clean <- function(d, calculated_features_path) {
       use_of_force_description = tr_force[`DETENTION TYPE`],
       use_of_force_reason = tr_force_reason[`DETENTION REASON`]
     ) %>%
-    add_lat_lng(
-      "incident_location",
-      calculated_features_path
+    helpers$add_lat_lng(
     ) %>%
     standardize(d$metadata)
 }
