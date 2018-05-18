@@ -15,5 +15,7 @@ Open Policing Project -- City Data
 * rgdal
   
 ## TODO:
-* split utils.py into several files
 * remove zone/district -> precinct coercions
+* query census API to get block group level race data by city
+* write script to download all block group shapefiles
+* write script to assign block group populations to police divisions

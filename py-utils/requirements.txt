@@ -1,2 +1,5 @@
-pandas
+census
 googlemaps
+nltk
+pandas
+sklearn
