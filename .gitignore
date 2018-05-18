@@ -9,4 +9,5 @@ plots
 plots/*
 reports/*
 gmaps_api.key
+census_api.key
 .Rhistory
