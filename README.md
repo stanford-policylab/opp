@@ -1,7 +1,7 @@
 # opp-city
 Open Policing Project -- City Data
 
-## Required System Packages: Fedora
+## Required System Packages -- Fedora
 * R
 * gdal-devel
 * proj-nad
@@ -14,8 +14,9 @@ Open Policing Project -- City Data
 * jsonlite
 * rgdal
   
-## TODO:
+## TODO
 * remove zone/district -> precinct coercions
+* write script to get county and block group listing for a city
 * query census API to get block group level race data by city
 * write script to download all block group shapefiles
 * write script to assign block group populations to police divisions
