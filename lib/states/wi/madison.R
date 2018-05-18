@@ -62,5 +62,11 @@ clean <- function(d, helpers) {
     ) %>%
     helpers$add_lat_lng(
     ) %>%
+    helpers$add_shapefiles_data(
+    ) %>%
+    rename(
+      sector = Sector,
+      district = District
+    ) %>%
     standardize(d$metadata)
 }

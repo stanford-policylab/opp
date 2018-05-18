@@ -60,7 +60,6 @@ clean <- function(d, helpers) {
 
   d$data %>%
     rename(
-      incident_date = Stop_Date,
       incident_location = Address,
       contraband_found = Contraband_Found,
       arrest_made = Arrest,
@@ -85,7 +84,9 @@ clean <- function(d, helpers) {
         "vehicular",
         "pedestrian"
       ),
-      incident_time = format(as.POSIXct(incident_date), "%H:%M:%S"),
+      incident_datetime = parse_datetime(Stop_Date),
+      incident_date = as.Date(incident_datetime),
+      incident_time = format(incident_datetime, "%H:%M:%S"),
       incident_outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued,

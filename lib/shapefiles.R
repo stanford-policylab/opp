@@ -7,7 +7,7 @@ library(tibble)
 
 load_shapefiles <- function(dir) {
   shape_filename = list.files(dir, pattern = ".shp")
-  layer_name = tools::file_path_sans_ext(shape_filename)
+  layer_name = tools::file_path_sans_ext(shape_filename)[1]
   readOGR(dir, layer = layer_name)
 }
 
@@ -24,13 +24,13 @@ add_shapefiles_data <- function(
   crs_proj4string =
     "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 ) {
-  # NOTE: creating this intermediate data.frame is necessary since you can't
-  # run the `over` function on the entire dataset if it contains any NA values
   locs <- select_(tbl, longitude_colname, latitude_colname) %>%
     distinct() %>% na.omit()
   lng_lat_colnames <- c(longitude_colname, latitude_colname)
   sp::coordinates(locs) <- lng_lat_colnames
   proj4string(locs) <- crs_proj4string
+  # NOTE: make sure the CRS systems are the same
+  shapes_obj <- spTransform(shapes_obj, CRS(crs_proj4string))
   spatial_polygons <- as(shapes_obj, "SpatialPolygons")
   data <- slot(shapes_obj, "data")
   # NOTE: this assumes that the polygon index is corresponds to the index
