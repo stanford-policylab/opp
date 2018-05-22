@@ -10,22 +10,19 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
-  # TODO(phoebe): can we get reason_for_stop/search/contraband information?
-  # https://app.asana.com/0/456927885748233/590576541432180
-  # TODO(phoebe): can we get race information?
-  # https://app.asana.com/0/456927885748233/590576541432181
+  # NOTE: reason for stop not recorded
+  # NOTE: search/contraband not in database, only in written reports
+  # NOTE: subject race is not recorded
   d$data %>%
     rename(
-      incident_location = Location
+      incident_location = Location,
+      officer_id = Unit
     ) %>%
     mutate(
-      # TODO(phoebe): what does "SS" stop type mean?
-      # https://app.asana.com/0/456927885748233/590576541432182<Paste>
+      # NOTE: T = "Traffic Stop", SS = "Subject Stop"
       incident_type = ifelse(Type == "T", "vehicular", "pedestrian"),
       incident_date = parse_date(Date, "%Y/%m/%d"),
       incident_time = parse_time(Time, "%H:%M:%S"),
-      # TODO(phoebe): what is "Unit"? Police Unit?
-      # https://app.asana.com/0/456927885748233/590576541432182
       warning_issued = str_detect(Disposition, "Warning"),
       citation_issued = str_detect(Disposition, "Citation"),
       arrest_made = str_detect(Disposition, "Arrest"),

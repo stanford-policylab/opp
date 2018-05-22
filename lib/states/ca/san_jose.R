@@ -138,12 +138,8 @@ clean <- function(d, helpers) {
     "W" = "weapons / violence related event"
   )
 
-  # TODO(ravi): this has interesting variables -- handcuffed as part of
-  # DETENTION TYPE / DETENTION REASON -- can we do anything with this?
-  # https://app.asana.com/0/456927885748233/649920459235534
-
-  # TODO(phoebe): can we get search_type?
-  # https://app.asana.com/0/456927885748233/649920459235535
+  # NOTE: search type may be included in the narrative, but this is
+  # not a separate or searchable field in their database
   d$data %>%
     rename(
       call_desc = `TYCOD DESCRIPTION`

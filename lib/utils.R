@@ -37,6 +37,11 @@ not_null <- function(v) {
 }
 
 
+simple_map <- function(v, func) {
+  unlist(map(v, func))
+}
+
+
 to_str <- function(expression) {
   deparse(substitute(expression))
 }

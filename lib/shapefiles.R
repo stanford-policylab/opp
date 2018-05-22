@@ -3,16 +3,26 @@ library(dplyr)
 library(sp)
 library(tibble)
 
+source("utils.R")
 
 
-load_shapefiles <- function(dir) {
-  shape_filename = list.files(dir, pattern = ".shp")
-  layer_name = tools::file_path_sans_ext(shape_filename)[1]
-  readOGR(dir, layer = layer_name)
+load_all_shapefiles_objects <- function(dir) {
+  simple_map(
+    available_layers(dir),
+    function(layer) { readOGR(dir, layer = layer) }
+  )
 }
 
 
-add_shapefiles_data <- function(
+available_layers <- function(dir) {
+  simple_map(
+    list.files(dir, pattern = ".shp$"),
+    function(fname) { tools::file_path_sans_ext(fname)[1] }
+  )
+}
+
+
+add_shapes_obj_data <- function(
   tbl,
   shapes_obj,
   longitude_colname,

@@ -234,24 +234,27 @@ opp_add_contraband_types_func <- function(state, city) {
 opp_add_shapefiles_data_func <- function(state, city) {
   function(tbl) {
     source(here::here("lib", "shapefiles.R"), local = TRUE)
-    shapes_obj <- opp_load_shapefiles(state, city)
-    add_shapefiles_data(
-      tbl,
-      shapes_obj,
-      "incident_lng",
-      "incident_lat"
-    )
+    shapes_objs <- opp_load_all_shapefiles_objects(state, city)
+    for (shapes_obj in shapes_objs) {
+      tbl <- add_shapes_obj_data(
+          tbl,
+          shapes_obj,
+          "incident_lng",
+          "incident_lat"
+        )
+    }
+    tbl
   }
 }
 
 
-opp_load_shapefiles <- function(state, city) {
+opp_load_all_shapefiles_objects <- function(state, city) {
   source(here::here("lib", "shapefiles.R"), local = TRUE)
-  load_shapefiles(opp_shapefiles_path(state, city))
+  load_all_shapefiles_objects(opp_shapefiles_dir(state, city))
 }
 
 
-opp_shapefiles_path <- function(state, city) {
+opp_shapefiles_dir <- function(state, city) {
   data_dir = opp_data_dir(state, city)
   file.path(data_dir, "shapefiles")
 }

@@ -78,14 +78,20 @@ clean <- function(d, helpers) {
       contraband_found = tr_yn[`Contraband Or Evidence`],
       arrest_made = tr_yn[arrest_made],
       citation_issued = !is.na(`Citation #`),
-      # TODO(phoebe): can we get warnings?
-      # https://app.asana.com/0/456927885748233/661513016681938
+      # NOTE: warnings are not recorded
       incident_outcome = first_of(
         "arrest" = arrest_made,
         "citation" = citation_issued
       )
     ) %>%
     helpers$add_lat_lng(
+    ) %>%
+    helpers$add_shapefiles_data(
+    ) %>%
+    rename(
+      district = DISTRICT
+      # TODO(phoebe): what are SECTION and SUBCODE?
+      # https://app.asana.com/0/456930159055660/665206850829187 
     ) %>%
     standardize(d$metadata)
 }

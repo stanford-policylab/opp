@@ -70,5 +70,11 @@ clean <- function(d, helpers) {
     ) %>%
     helpers$add_lat_lng(
     ) %>%
+    helpers$add_shapefiles_data(
+    ) %>%
+    rename(
+      # NOTE: BEAT_ID is the id, USER_FLAG is the human-readable beat name
+      beat = USER_FLAG
+    ) %>%
     standardize(d$metadata)
 }
