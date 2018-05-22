@@ -2,32 +2,72 @@ source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
   # NOTE: commercial vehicle inspections is not currently processed but exists
-  # in the raw_data_dir
+  # in the raw_data_dir; same with some of their lookup tables:
+  # txdps_lookups_lkup_lw_bus_cat.csv
+  # txdps_lookups_lkup_lw_bus_class.csv
+  # txdps_lookups_lkup_sids_reas_stop.csv
+  # txdps_lookups_lkup_sids_vehicle_type.csv
   loading_problems <- list()
   r <- function(fname) {
-    tbl <- read_csv(file.path(raw_data_dir, fname), n_max = n_max)
+    tbl <- read_csv(
+      file.path(raw_data_dir, fname),
+      col_types = cols(.default = "c"),
+      n_max = n_max
+    )
     loading_problems[[fname]] <<- problems(tbl)
     tbl
   }
+  add_lookup <- function(tbl, name, join_col = str_c("HA_", toupper(name))) {
+    fname <- str_c("txdps_lookups_lkup_", name, ".csv")
+    join_on <- c("LK_Code")
+    names(join_on) <- c(join_col)
+    left_join(
+      tbl,
+      r(fname) %>%
+        select(LK_Code, LK_Description) %>%
+        rename_with_str("LK_Description", name),
+      by = join_on
+    )
+  }
 
-  stops <- r('txdps_2016_statewide_stops.csv')
-  citations <- r('txdps_2016_statewide_citation_violations.csv')
-  warnings <- r('txdps_2016_statewide_warning_violations.csv')
-  weather <- r('txdps_lookups.csv')
+  violation_codes <- r('txdps_lookups_lkup_violation.csv') %>%
+    select(LK_Code, LK_description)
 
   left_join(
-    stops,
-    citations,
+    r('txdps_2016_statewide_stops.csv'),
+    r('txdps_2016_statewide_citation_violations.csv'),
     by = c("HA_ARREST_KEY" = "AD_ARREST_KEY")
   ) %>%
   left_join(
-    warnings,
+    r('txdps_2016_statewide_warning_violations.csv'),
     by = c("HA_ARREST_KEY" = "AW_ARREST_KEY")
   ) %>%
   left_join(
-    weather,
-    by = c("HA_WEATHER" = "LK_Code")
+    violation_codes %>%
+      rename_with_str("LK_description", "citation_violation"),
+    by = c("AD_VIOLATION_CODE" = "LK_Code") 
   ) %>%
+  left_join(
+    violation_codes %>%
+      rename_with_str("LK_description", "warning_violation"),
+    by = c("AW_VIOLATION_CODE" = "LK_Code") 
+  ) %>%
+  mutate(
+    violation = coalesce(citation_violation, warning_violation)
+  ) %>%
+  add_lookup("county") %>%
+  add_lookup("court") %>%
+  add_lookup("day_of_week") %>%
+  add_lookup("race_sex") %>%
+  add_lookup("road_class") %>%
+  add_lookup("service") %>%
+  add_lookup("ticket_type") %>%
+  add_lookup("traffic") %>%
+  add_lookup("vehicle_color", "HA_VEH_COLOR") %>%
+  add_lookup("vehicle_make", "HA_VEH_MAKE") %>%
+  add_lookup("vehicle_model", "HA_VEH_MODEL") %>%
+  add_lookup("vehicle_type") %>%
+  add_lookup("weather") %>%
   bundle_raw(loading_problems)
 }
 
@@ -75,9 +115,6 @@ clean <- function(d, helpers) {
       contraband_is_other = HA_CONTRAB_OTHER,
       contraband_is_weapon = HA_CONTRAB_WEAPON,
       officer_id = HA_OFFICER_ID,
-      vehicle_color = HA_VEH_COLOR,
-      vehicle_make = HA_VEH_MAKE,
-      vehicle_model = HA_VEH_MODEL,
       vehicle_year = HA_VEH_YEAR
     ) %>%
     mutate_each(
@@ -100,12 +137,13 @@ clean <- function(d, helpers) {
       sep = 1
     ) %>%
     mutate(
+      # NOTE: top 100 violations all appear vehicle related
       incident_type = "vehicular",
       incident_date = parse_date(incident_date, "%m/%d/%y"),
       incident_lat = as.numeric(incident_lat) / 1E6,
       incident_lng = as.numeric(incident_lng) / 1E6,
-      citation_issued = not_null(AD_VIOLATION_CODE),
-      warning_issued = not_null(AW_VIOLATION_CODE),
+      citation_issued = !is.na(AD_VIOLATION_CODE),
+      warning_issued = !is.na(AW_VIOLATION_CODE),
       # TODO(phoebe): how can we determine whether an arrest happened?
       # https://app.asana.com/0/456927885748233/475749789858290 
       arrest_made = !citation_issued && !warning_issued,
