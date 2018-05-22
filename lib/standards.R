@@ -141,6 +141,7 @@ extra_schema <- c(
   beat                              = as.character,
   district                          = as.character,
   precinct                          = as.character,
+  region                            = as.character,
   sector                            = as.character,
   zone                              = as.character,
   department_name                   = as.character,

@@ -16,7 +16,7 @@ Open Policing Project -- City Data
   
 ## TODO
 * remove zone/district -> precinct coercions
-* write script to get county and block group listing for a city
-* query census API to get block group level race data by city
-* write script to download all block group shapefiles
+* find .mdb .aacdb files -> to_csv updated to correctly convert
+* write script to get block group containment by police geographic division
 * write script to assign block group populations to police divisions
+* write script to download all block group shapefiles

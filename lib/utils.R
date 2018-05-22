@@ -394,7 +394,8 @@ merge_rows <- function(tbl, ..., null_fill = "NA", sep = "|") {
   }
   group_by(tbl, ...) %>%
     mutate(unmerged_row_count = n()) %>%
-    summarise_all(m)
+    summarise_all(m) %>%
+    ungroup()
 }
 
 

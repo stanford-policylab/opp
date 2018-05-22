@@ -54,12 +54,16 @@ def xltx_to_csv(in_file, **kwargs):
 def mdb_to_csv(in_file, **kwargs):
     require('mdb-tables', "try installing 'mdbtools' package on linux")
     require('mdb-export', "try installing 'mdbtools' package on linux")
-    out_file = to_csv_ext(in_file)
+    basename = normalized_basename(in_file)
     stdout = run(['mdb-tables', '-1', in_file])
     tbls = [tbl for tbl in stdout.split('\n') if tbl != '']
     for tbl in tbls:
         contents = run(['mdb-export', in_file, tbl])
-        with open(out_file, 'w') as f:
+        tablename = normalize(tbl)
+        out_file = basename
+        if tablename != basename:
+            out_file += '_' + normalize(tbl)
+        with open(out_file + '.csv', 'w') as f:
             f.write(contents)
     return
 
@@ -337,17 +341,18 @@ def run(cmd, **kwargs):
 
 
 def to_csv_ext(filename):
-    base = filename_without_ext(filename)
-    base_norm = normalize_filename(base)
-    return base_norm + '.csv'
+    return normalized_basename(filename) + '.csv'
+
+def normalized_basename(filename):
+    return normalize(filename_without_ext(filename))
 
 
 def filename_without_ext(filename):
     return os.path.splitext(os.path.basename(filename))[0]
 
 
-def normalize_filename(filename):
-    return filename.lower().replace(' ', '_')
+def normalize(text):
+    return text.lower().replace(' ', '_')
 
 
 def to_csv(df, in_file):

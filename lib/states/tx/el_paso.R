@@ -40,6 +40,13 @@ clean <- function(d, helpers) {
     ) %>%
     helpers$add_lat_lng(
     ) %>%
+    helpers$add_shapefiles_data(
+    ) %>%
+    rename(
+      # NOTE: DISTRICT2 appears to be a simpler version of DISTRICT
+      district = DISTRICT2,
+      region = REGION
+    ) %>%
     helpers$add_incident_type(
     ) %>%
     filter(
