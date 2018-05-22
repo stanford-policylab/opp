@@ -19,7 +19,7 @@ clean <- function(d, helpers) {
   d$data %>%
     rename(
       incident_date = Date,
-      precinct = District,
+      district = District,
       officer_id = `Officer ID`
     ) %>%
     mutate(

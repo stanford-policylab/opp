@@ -64,8 +64,6 @@ clean <- function(d, helpers) {
     "not secified" = "None"
   )
 
-  # TODO(phoebe): is ServArea precinct or beat?
-  # https://app.asana.com/0/456927885748233/569484839430729
   # TODO(phoebe): can we get incident_location?
   # https://app.asana.com/0/456927885748233/569484839430728
   d$data %>%
@@ -76,7 +74,8 @@ clean <- function(d, helpers) {
       search_conducted = Searched,
       search_consent = ObtainedConsent,
       contraband_found = ContrabandFound,
-      arrest_made = Arrested
+      arrest_made = Arrested,
+      service_area = ServArea
     ) %>%
     apply_translator_to(
       yn_to_tf,

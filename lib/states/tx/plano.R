@@ -245,9 +245,8 @@ clean <- function(d, helpers) {
       vehicle_make = make,
       vehicle_model = model,
       vehicle_color = color,
-      beat = occur_beat
-      # TODO(phoebe): is sector precinct?
-      # https://app.asana.com/0/456927885748233/578330939300966
+      beat = occur_beat,
+      sector = sector
     ) %>%
     mutate(
       incident_type = ifelse(is_true(mv_stop), "vehicular", "pedestrian"),

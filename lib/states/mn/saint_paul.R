@@ -31,9 +31,7 @@ clean <- function(d, helpers) {
 
   d$data %>%
     rename(
-      # TODO(phoebe): does POLICE GRID NUMBER mean precinct?
-      # https://app.asana.com/0/456927885748233/573247093484091
-      precinct = `POLICE GRID NUMBER`,
+      police_grid_number = `POLICE GRID NUMBER`,
       subject_age = `AGE OF DRIVER`
     ) %>%
     extract_and_add_lat_lng(

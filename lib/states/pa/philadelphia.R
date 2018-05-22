@@ -42,13 +42,14 @@ clean <- function(d, helpers) {
     rename(
       subject_age = age,
       incident_location = location,
-      precinct = districtoccur,
+      district = districtoccur,
       arrest_made = individual_arrested,
       search_person = individual_searched,
       search_vehicle = vehicle_searched,
       incident_lat = lat,
       incident_lng = lng,
-      beat = psa
+      # police service area
+      service_area = psa
     ) %>%
     mutate(
       incident_datetime = parse_datetime(datetimeoccur),
