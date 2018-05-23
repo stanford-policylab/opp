@@ -534,3 +534,20 @@ format_two_digit_year <- function(yr, cutoff = year(Sys.Date())) {
   yr_int <- as.integer(yr)
   ifelse(yr_int <= cutoff - 2000, 2000 + yr_int, 1900 + yr_int)
 }
+
+
+load_years(start_year, end_year, dir, fname_prefix, fname_suffix) {
+  data <- tibble()
+  loading_problems <- list()
+  for (year in start_year:end_year) {
+    fname <- str_c(fname_prefix, year, fname_suffix)
+    tbl <- read_csv(file.path(dir, fname))
+    data <- bind_rows(data, tbl)
+    loading_problems[[fname]] <- problems(tbl)
+    if (nrow(data) > n_max) {
+      data <- data[1:n_max, ]
+      break
+    }
+  }
+  c(data = data, loading_problems = loading_problems)
+}
