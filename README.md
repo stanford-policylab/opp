@@ -13,6 +13,7 @@ Open Policing Project -- City Data
 * stringr
 * jsonlite
 * rgdal
+* rgeos
   
 ## TODO
 * write script to get block group containment by police geographic division

@@ -536,7 +536,14 @@ format_two_digit_year <- function(yr, cutoff = year(Sys.Date())) {
 }
 
 
-load_years(start_year, end_year, dir, fname_prefix, fname_suffix) {
+# TODO(danj): use this in city data
+load_years <- function(
+  start_year,
+  end_year,
+  dir,
+  fname_prefix,
+  fname_suffix
+) {
   data <- tibble()
   loading_problems <- list()
   for (year in start_year:end_year) {
