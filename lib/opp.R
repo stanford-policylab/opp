@@ -234,11 +234,11 @@ opp_add_contraband_types_func <- function(state, city) {
 opp_add_shapefiles_data_func <- function(state, city) {
   function(tbl) {
     source(here::here("lib", "shapefiles.R"), local = TRUE)
-    shapes_objs <- opp_load_all_shapefiles_objects(state, city)
-    for (shapes_obj in shapes_objs) {
+    shapes_dfs <- opp_load_all_shapefile_dfs(state, city)
+    for (shapes_df in shapes_dfs) {
       tbl <- add_shapes_obj_data(
           tbl,
-          shapes_obj,
+          shapes_df,
           "incident_lng",
           "incident_lat"
         )
@@ -248,9 +248,9 @@ opp_add_shapefiles_data_func <- function(state, city) {
 }
 
 
-opp_load_all_shapefiles_objects <- function(state, city) {
+opp_load_all_shapefiles_dfs <- function(state, city) {
   source(here::here("lib", "shapefiles.R"), local = TRUE)
-  load_all_shapefiles_objects(opp_shapefiles_dir(state, city))
+  load_all_shapefile_dfs(opp_shapefiles_dir(state, city))
 }
 
 
@@ -274,7 +274,7 @@ opp_load_block_group_shapefiles <- function(state) {
   # NOTE: there should only be one shapefile layer for each state, so 1st index
   load_all_shapefiles_objects(
     here::here("data", "block_group_shapefiles", "2017", state)
-  )
+  )[[1]]
 }
 
 opp_save <- function(d, state, city) {

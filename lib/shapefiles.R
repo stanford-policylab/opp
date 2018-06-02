@@ -6,7 +6,7 @@ library(tibble)
 source("utils.R")
 
 
-load_all_shapefiles_objects <- function(dir) {
+load_all_shapefiles_dfs <- function(dir) {
   simple_map(
     available_layers(dir),
     function(layer) { readOGR(dir, layer = layer) }
@@ -22,9 +22,9 @@ available_layers <- function(dir) {
 }
 
 
-add_shapes_obj_data <- function(
+add_shapes_df_data <- function(
   tbl,
-  shapes_obj,
+  shapes_df,
   longitude_colname,
   latitude_colname,
   # NOTE: this is the Coordinate Reference System (CRS) for the provided
@@ -40,9 +40,9 @@ add_shapes_obj_data <- function(
   sp::coordinates(locs) <- lng_lat_colnames
   proj4string(locs) <- crs_proj4string
   # NOTE: make sure the CRS systems are the same
-  shapes_obj <- spTransform(shapes_obj, CRS(crs_proj4string))
-  spatial_polygons <- as(shapes_obj, "SpatialPolygons")
-  data <- slot(shapes_obj, "data")
+  shapes_df <- spTransform(shapes_df, CRS(crs_proj4string))
+  spatial_polygons <- as(shapes_df, "SpatialPolygons")
+  data <- slot(shapes_df, "data")
   # NOTE: this assumes that the polygon index is corresponds to the index
   # in the "data" slot; usually eachy polygon in the "polygons" slot will
   # have an associated "ID" slot --> this should match with the index in the
@@ -57,3 +57,24 @@ add_shapes_obj_data <- function(
 }
 
 
+intersect_shapes_dfs <- function(below_shapes_df, above_shapes_df) {
+  # A typical call here might be:
+  # intersect_shapes_dfs(police_zones_shapes_df, block_group_shapes_df)
+  # NOTE: ensure the CRS is the same
+  projection(below_shapes_df) <- projection(above_shapes_df)
+  below_shapes_df$area_below <- raster::area(below_shapes_df)
+  above_shapes_df$area_above <- raster::area(above_shapes_df)
+  overlap_df <- raster::intersect(below_shapes_df, above_shapes_df)
+  overlap_df$area <- raster::area(overlap_df)
+  overlap_df$area_below_pct <- overlap_df$area / overlap_df$area_below
+  overlap_df$area_above_pct <- overlap_df$area / overlap_df$area_above
+  overlap_df
+}
+
+
+plot_intersection_of_shapes_dfs <- function(below_shapes_df, above_shapes_df) {
+  overlap_df <- intersect_shapes_dfs(below_shapes_df, above_shapes_df)
+  plot(below_shapes_df, axes=T, col="blue")
+  plot(above_shapes_df, add=T)
+  plot(overlap_df, add=T, col="red")
+}
