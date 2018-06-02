@@ -268,6 +268,15 @@ opp_load_json <- function(state, city) {
   }
 }
 
+opp_load_block_group_shapefiles <- function(state) {
+  source(here::here("lib", "shapefiles.R"), local = TRUE)
+  # NOTE: all these block group shapefiles are from 2017
+  # NOTE: there should only be one shapefile layer for each state, so 1st index
+  load_all_shapefiles_objects(
+    here::here("data", "block_group_shapefiles", "2017", state)
+  )
+}
+
 opp_save <- function(d, state, city) {
   saveRDS(d, opp_clean_data_path(state, city))
 }
@@ -328,9 +337,8 @@ opp_population <- function(state, city) {
       CENSUS2010POP = "i"
     )
   ))
-  fips <- read_delim(
+  fips <- read_csv(
     here::here("data", "fips.csv"),
-    delim = "|",
     col_types = cols_only(
       STATE = "c",
       STUSAB = "c",
