@@ -72,6 +72,13 @@ intersect_shapes_dfs <- function(below_shapes_df, above_shapes_df) {
 }
 
 
+# TODO(danj): finish
+extract_block_group_data <- function(overlap_df, col) {
+  slot(overlap_df, "data") %>% select_(col, "GEOID", "area_above_pct") %>%
+    rename(block_group_geoid = GEOID, pct_of_block_group_area = area_above_pct)
+}
+
+
 plot_intersection_of_shapes_dfs <- function(below_shapes_df, above_shapes_df) {
   overlap_df <- intersect_shapes_dfs(below_shapes_df, above_shapes_df)
   plot(below_shapes_df, axes=T, col="blue")
