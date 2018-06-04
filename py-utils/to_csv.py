@@ -17,6 +17,7 @@ csv extension, so /path/to/file.xls saves to file.csv
 import argparse
 import os
 import re
+import string
 import sys
 
 import pandas as pd
@@ -370,7 +371,12 @@ def parse_args(argv):
     parser.add_argument(
         'files_or_dirs',
         nargs='+',
-        help='a.xlsx b.xls c.mdb d.xml e.txt data/'
+        help=', '.join([
+            name + '.' + ext for name, ext in zip(
+                list(string.ascii_lowercase),
+                supported_file_types()
+            )
+        ] + ['data/'])
     )
     parser.add_argument(
         '-s', '--sep',
