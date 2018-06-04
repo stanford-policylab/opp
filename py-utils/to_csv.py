@@ -362,7 +362,11 @@ def to_csv(df, in_file):
 
 def parse_args(argv):
     desc = 'supported file types: ' + ', '.join(supported_file_types())
-    parser = argparse.ArgumentParser(prog=argv[0], description=desc)
+    parser = argparse.ArgumentParser(
+        prog=argv[0],
+        description=desc,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     parser.add_argument(
         'files_or_dirs',
         nargs='+',
@@ -371,7 +375,7 @@ def parse_args(argv):
     parser.add_argument(
         '-s', '--sep',
         default='|',
-        help='separator for txt files (default: "|"'
+        help='separator for txt files'
     )
     parser.add_argument(
         '-sas', '--sas_load_file',
