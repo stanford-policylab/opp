@@ -23,3 +23,4 @@ Open Policing Project -- City Data
 * change standardization to not differentiate between require/extra for final
   data output
 * benchmark to 2010 block data for race distributions?
+* use load_years in all opp_city

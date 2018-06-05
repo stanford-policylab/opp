@@ -278,7 +278,7 @@ apply_translators <- function(tbl, translators) {
 
 
 bundle_raw <- function(data, loading_problems) {
-  data <- mutate(data, incident_id = seq_len(n()))
+  data <- mutate(data, raw_row_number = seq_len(n()))
 	list(data = data, metadata = list(loading_problems = loading_problems))
 }
 
@@ -536,19 +536,13 @@ format_two_digit_year <- function(yr, cutoff = year(Sys.Date())) {
 }
 
 
-# TODO(danj): use this in city data
-load_years <- function(
-  start_year,
-  end_year,
-  dir,
-  fname_prefix,
-  fname_suffix
-) {
+load_years <- function(dir, n_max = Inf, col_types = cols(.default = "c")) {
   data <- tibble()
   loading_problems <- list()
-  for (year in start_year:end_year) {
-    fname <- str_c(fname_prefix, year, fname_suffix)
-    tbl <- read_csv(file.path(dir, fname))
+  # NOTE: all files that have the years 2000-2029 in their name
+  for (fname in list.files(dir, '20[0-2][0-9]')) {
+    print(str_c('loading ', fname))
+    tbl <- read_csv(file.path(dir, fname), col_types = col_types)
     data <- bind_rows(data, tbl)
     loading_problems[[fname]] <- problems(tbl)
     if (nrow(data) > n_max) {
@@ -556,5 +550,5 @@ load_years <- function(
       break
     }
   }
-  c(data = data, loading_problems = loading_problems)
+  list(data = data, loading_problems = loading_problems)
 }

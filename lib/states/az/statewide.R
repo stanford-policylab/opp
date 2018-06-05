@@ -1,9 +1,8 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-  data <- tibble()
-  loading_problems <- list()
-  bundle_raw(loading_problems)
+  d <- load_years(raw_data_dir, n_max)
+  bundle_raw(d$data, d$loading_problems)
 }
 
 

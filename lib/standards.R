@@ -12,7 +12,7 @@ valid_vehicle_end_year <- lubridate::year(Sys.Date()) + 1
 
 
 valid_age_start <- 10
-valid_age_end <- 100
+valid_age_end <- 110
 
 
 valid_dob_start_date <- ymd(Sys.Date()) - valid_age_end
@@ -146,6 +146,7 @@ extra_schema <- c(
   sector                            = as.character,
   service_area                      = as.character,
   zone                              = as.character,
+  county_name                       = as.character,
   department_name                   = as.character,
   subject_sex                       = Curry(factor, levels = valid_sexes),
   subject_dob                       = as.Date,
