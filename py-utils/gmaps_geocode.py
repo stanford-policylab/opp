@@ -42,7 +42,8 @@ def extract_locations(csv_files,
     locs = set()
     for csv_file in csv_files:
         # NOTE(jnu): read all location columns as strings, so that the
-        # formatting of numeric columns like zipcodes is preserved.
+        # formatting of numeric columns like zipcodes is preserved (e.g.,
+        # prevent Pandas from formatting the zip 05658 as 5658.0).
         dtype = {col: str for col in location_column_names}
         df = pd.read_csv(csv_file, dtype=dtype)
         df = add_loc_col(df, location_column_names, location_column_sep)
