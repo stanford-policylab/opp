@@ -3,6 +3,7 @@
 *.pdf
 *.nfs*
 *.Rproj
+.RData
 */__pycache__/*
 data
 data/*
