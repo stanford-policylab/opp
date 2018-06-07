@@ -19,8 +19,8 @@ clean <- function(d, helpers) {
     # NOTE: SRS is a "reasonable suspicion" consent search.
     SRS = "consent",
     SW = "non-discretionary",
-    # NOTE: Passenger search conducted in Winooski don't specify the specific
-    # reason; we assume they are based on probable cause.
+    # NOTE: Passenger searches conducted in Winooski don't specify a reason;
+    # we assume they are based on probable cause.
     `_PSS` = "probable cause"
   )
 
