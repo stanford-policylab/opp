@@ -23,9 +23,7 @@ clean <- function(d, helpers) {
     SW = "non-discretionary",
     # NOTE: Passenger searches conducted in Winooski don't specify a reason;
     # we assume they are based on probable cause.
-    `_PSS` = "probable cause",
-    # No search conducted
-    NS = NA
+    `_PSS` = "probable cause"
   )
 
   # Normalization for race
@@ -51,9 +49,7 @@ clean <- function(d, helpers) {
     # Arrest for violation
     A = "arrest",
     # Arrest on warrant
-    AW = "arrest",
-    # No action
-    N = NA
+    AW = "arrest"
   )
 
   d$data %>%
