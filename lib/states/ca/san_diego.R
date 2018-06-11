@@ -78,7 +78,7 @@ clean <- function(d, helpers) {
       service_area = ServArea
     ) %>%
     apply_translator_to(
-      yn_to_tf,
+      tr_yn,
       "search_conducted",
       "search_consent",
       "contraband_found",

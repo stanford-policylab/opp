@@ -18,8 +18,6 @@ standardize <- function(data, metadata) {
       # collect metadata local to standardize here
       metadata = list()
     ) %>%
-    add_missing_required_columns %>%
-    select_schema_cols %>%
     predication_correction %>%
     enforce_types %>%
     sanitize
@@ -30,33 +28,6 @@ standardize <- function(data, metadata) {
     data = d$data,
     metadata = metadata
   )
-}
-
-
-add_missing_required_columns <- function(d) {
-  print("adding missing required columns...")
-  added <- c()
-  for (name in names(required_schema)) {
-    if (!(name %in% colnames(d$data))) {
-      if (name == "incident_id") {
-        d$data[[name]] <- seq.int(nrow(d$data))
-      } else {
-        d$data[[name]] <- NA
-      }
-      added <- c(added, name)
-    }
-  }
-  d$metadata[["add_missing_required_columns"]] <- sort(added)
-  d
-}
-
-
-select_schema_cols <- function(d) {
-  print("selecting schema columns first...")
-  req <- names(required_schema)
-  extra <- Filter(function(n) { n %in% colnames(d$data) }, names(extra_schema))
-  d$data <- select_(d$data, .dots = c(req, extra))
-  d
 }
 
 
@@ -77,10 +48,9 @@ predication_correction <- function(d) {
 
 enforce_types <- function(d) {
   print("enforcing standard types...")
-  req <- apply_schema_and_collect_null_rates(required_schema, d$data)
-  ext <- apply_schema_and_collect_null_rates(extra_schema, req$data)
-  d$data <- ext$data
-  d$metadata[["enforce_types"]] <- bind_rows(req$null_rates, ext$null_rates)
+  res <- apply_schema_and_collect_null_rates(schema, d$data)
+  d$data <- res$data
+  d$metadata[["enforce_types"]] <- res$null_rates
   d
 }
 

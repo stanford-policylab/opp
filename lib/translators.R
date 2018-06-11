@@ -10,7 +10,7 @@ tr_race <- c(
   W = "white"
 )
 
-yn_to_tf = c(
+tr_yn = c(
   Y = TRUE,
   N = FALSE
 )

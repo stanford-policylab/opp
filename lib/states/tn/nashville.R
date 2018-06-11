@@ -107,7 +107,7 @@ clean <- function(d, helpers) {
       stop_datetime = c("incident_date", "incident_time")
     ) %>%
     apply_translator_to(
-      yn_to_tf,
+      tr_yn,
       "verbal_warning_issued",
       "written_warning_issued",
       "traffic_citation_issued",

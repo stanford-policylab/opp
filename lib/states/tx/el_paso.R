@@ -59,12 +59,12 @@ clean <- function(d, helpers) {
       citation_issued = TRUE,
       subject_race = tr_race[Race],
       subject_sex = tr_sex[Sex],
-      search_conducted = yn_to_tf[Search],
+      search_conducted = tr_yn[Search],
       search_type = first_of(
-        "consent" = yn_to_tf[Consent],
+        "consent" = tr_yn[Consent],
         "probable cause" = search_conducted  # default
       ),
-      contraband_found = yn_to_tf[Contraband]
+      contraband_found = tr_yn[Contraband]
     ) %>%
     # TODO(phoebe): how can we dedupe these to match number of drivers?
     # https://app.asana.com/0/456927885748233/573247093484087

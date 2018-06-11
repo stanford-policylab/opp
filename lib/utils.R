@@ -220,6 +220,11 @@ read_csv_with_types <- function(
   )
 }
 
+col_match <- function(d, pattern) {
+  cols <- colnames(d)
+  cols[str_detect(cols, pattern)]
+}
+
 
 separate_cols <- function(tbl, ..., sep = " ") {
   lst = list(...)
@@ -503,11 +508,27 @@ translator_from_tbl <- function(tbl, from, to) {
 }
 
 
-translate_by_char <- function(str_vec, translator, sep = "|") {
-  tr <- function(v) {
-    str_c(str_replace_na(translator[v]), collapse = sep)
+translate_by_char <- function(char_vec, translator, collapse = "|") {
+  # translate each character in a string using translator
+  tr <- function(char) {
+    str_c(str_replace_na(translator[char]), collapse = collapse)
   }
-  unlist(lapply(str_split(str_vec, ""), tr))
+  unlist(lapply(str_split(char_vec, ""), tr))
+}
+
+
+translate_by_char_group <- function(
+  char_vec,
+  translator,
+  group_sep,
+  collapse = "|"
+) {
+  # translate each grouping in a string using translator i.e. AB,CD ->
+  # i.e. tr = c("AB" = 1, "BC" = 2); f("AB,CD", tr, ",") -> "1|2"
+  tr <- function(char_chunk) {
+    str_c(str_replace_na(translator[char_chunk]), collapse = collapse)
+  }
+  unlist(lapply(str_split(char_vec, group_sep), tr))
 }
 
 

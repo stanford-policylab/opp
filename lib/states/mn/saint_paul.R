@@ -23,7 +23,7 @@ clean <- function(d, helpers) {
     "Male" = "male",
     "No Data" = NA
   )
-  yn_to_tf <- c(
+  tr_yn <- c(
     "No" = FALSE,
     "Yes" = TRUE,
     "No Data" = NA
@@ -43,9 +43,9 @@ clean <- function(d, helpers) {
       incident_date = as.Date(dt),
       incident_time = format(dt, "%H:%M:%S"),
       incident_type = "vehicular",
-      citation_issued = yn_to_tf[`CITATION ISSUED?`],
-      frisk_performed = yn_to_tf[`DRIVER FRISKED?`],
-      search_vehicle = yn_to_tf[`VEHICLE SEARCHED?`],
+      citation_issued = tr_yn[`CITATION ISSUED?`],
+      frisk_performed = tr_yn[`DRIVER FRISKED?`],
+      search_vehicle = tr_yn[`VEHICLE SEARCHED?`],
       search_conducted = frisk_performed | search_vehicle,
       # TODO(phoebe): can we get other outcomes?
       # https://app.asana.com/0/456927885748233/573247093484092

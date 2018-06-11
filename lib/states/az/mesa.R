@@ -22,7 +22,7 @@ clean <- function(d, helpers) {
     U = "other/unknown",
     W = "white"
   )
-  yn_to_tf = c(
+  tr_yn = c(
     YES = TRUE,
     NO = FALSE
   )
@@ -57,7 +57,7 @@ clean <- function(d, helpers) {
       incident_time = parse_time_int(time),
       arrest_made = !is.na(arrest_no),
       citation_issued = !is.na(cite_no),
-      warning_issued = yn_to_tf[warning],
+      warning_issued = tr_yn[warning],
       incident_outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued,

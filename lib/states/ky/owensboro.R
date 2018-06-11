@@ -83,7 +83,7 @@ clean <- function(d, helpers) {
       # TODO(phoebe): all citations with sometimes arrests? warnings?
       # https://app.asana.com/0/456927885748233/586847974785233
       citation_issued = TRUE,
-      arrest_made = yn_to_tf[`ARREST INDICATOR`],
+      arrest_made = tr_yn[`ARREST INDICATOR`],
       incident_outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued

@@ -3,8 +3,8 @@ library(readr)
 library(lubridate)
 
 
-valid_incident_start_date <- ymd("2000-01-01")
-valid_incident_end_date <- ymd(Sys.Date())
+valid_start_date <- ymd("2000-01-01")
+valid_end_date <- ymd(Sys.Date())
 
 
 valid_vehicle_start_year <- 1800
@@ -23,7 +23,7 @@ valid_yob_start <- year(Sys.Date()) - valid_age_end
 valid_yob_end <- year(Sys.Date()) - valid_age_start
 
 
-valid_incident_types <- c(
+valid_types <- c(
   "pedestrian",
   "vehicular"
 )
@@ -118,60 +118,64 @@ valid_states <- c(
 )
 
 
-required_schema <- c(
-  incident_id             = as.character,
-  incident_type           = Curry(factor, levels = valid_incident_types),
-  incident_date           = parse_date,
-  # NOTE: lubridate's hms does not play well with dplyr
-  # https://github.com/tidyverse/dplyr/issues/2520
-  incident_time           = parse_time,
-  incident_location       = as.character,
-  incident_outcome        = Curry(factor, levels = valid_outcomes),
-  subject_race            = Curry(factor, levels = valid_races),
-  reason_for_stop         = as.character,
-  search_conducted        = as.logical,
-  search_type             = Curry(factor, levels = valid_search_types),
-  contraband_found        = as.logical
-)
+schema <- c(
+  # when
+  date                          = parse_date,
+  time                          = parse_time,
 
+  # where
+  location                      = as.character,
+  lat                           = as.numeric,
+  lng                           = as.numeric,
+  county_name                   = as.character,
+  beat                          = as.character,
+  district                      = as.character,
+  police_grid_number            = as.character,
+  precinct                      = as.character,
+  region                        = as.character,
+  sector                        = as.character,
+  service_area                  = as.character,
+  zone                          = as.character,
 
-extra_schema <- c(
-  incident_lat                      = as.numeric,
-  incident_lng                      = as.numeric,
-  beat                              = as.character,
-  district                          = as.character,
-  police_grid_number                = as.character,
-  precinct                          = as.character,
-  region                            = as.character,
-  sector                            = as.character,
-  service_area                      = as.character,
-  zone                              = as.character,
-  county_name                       = as.character,
-  department_name                   = as.character,
-  subject_sex                       = Curry(factor, levels = valid_sexes),
-  subject_dob                       = as.Date,
-  subject_age                       = as.numeric,
-  officer_id                        = as.character,
-  vehicle_color                     = as.character,
-  vehicle_make                      = as.character,
-  vehicle_model                     = as.character,
-  vehicle_registration_state        = Curry(factor, levels = valid_states),
-  vehicle_year                      = as.integer,
-  citation_issued                   = as.logical,
-  warning_issued                    = as.logical,
-  arrest_made                       = as.logical,
-  frisk_performed                   = as.logical,
-  search_person                     = as.logical,
-  search_vehicle                    = as.logical,
-  contraband_drugs                  = as.logical,
-  contraband_weapons                = as.logical,
-  reason_for_search                 = as.character,
-  reason_for_frisk                  = as.character,
-  reason_for_arrest                 = as.character,
-  use_of_force_description          = as.character,
-  use_of_force_reason               = as.character,
-  complaint_filed_by_subject        = as.logical,
-  notes                             = as.character
+  # who
+  subject_age                   = as.numeric,
+  subject_dob                   = as.Date,
+  subject_race                  = Curry(factor, levels = valid_races),
+  subject_sex                   = Curry(factor, levels = valid_sexes),
+  officer_id                    = as.character,
+  department_name               = as.character,
+
+  # what
+  type                          = Curry(factor, levels = valid_types),
+  violation                     = as.character,
+  arrest_made                   = as.logical,
+  citation_issued               = as.logical,
+  warning_issued                = as.logical,
+  outcome                       = Curry(factor, levels = valid_outcomes),
+  contraband_found              = as.logical
+  contraband_drugs              = as.logical,
+  contraband_weapons            = as.logical,
+  frisk_performed               = as.logical,
+  search_conducted              = as.logical,
+  search_person                 = as.logical,
+  search_vehicle                = as.logical,
+  search_type                   = Curry(factor, levels = valid_search_types),
+
+  # why
+  reason_for_arrest             = as.character,
+  reason_for_frisk              = as.character,
+  reason_for_search             = as.character,
+  reason_for_stop               = as.character,
+
+  # other
+  use_of_force_description      = as.character,
+  use_of_force_reason           = as.character,
+  vehicle_color                 = as.character,
+  vehicle_make                  = as.character,
+  vehicle_model                 = as.character,
+  vehicle_registration_state    = Curry(factor, levels = valid_states),
+  vehicle_year                  = as.integer,
+  notes                         = as.character
 )
 
 
