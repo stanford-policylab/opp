@@ -59,7 +59,8 @@ sanitize <- function(d) {
   print("sanitizing...")
   # required
   sanitize_schema = c(
-    incident_date = sanitize_incident_date 
+    date = sanitize_date 
+    date = sanitize_date 
   )
   # optional
   for (col in colnames(d$data)) {

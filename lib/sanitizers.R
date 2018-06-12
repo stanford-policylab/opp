@@ -1,8 +1,8 @@
 source("standards.R")
 
 
-sanitize_incident_date <- function(val) {
-  sanitize_date(val, valid_incident_start_date, valid_incident_end_date)
+sanitize_date <- function(val) {
+  sanitize_date(val, valid_start_date, valid_end_date)
 }
 
 
