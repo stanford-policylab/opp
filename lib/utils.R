@@ -567,6 +567,25 @@ format_two_digit_year <- function(yr, cutoff = year(Sys.Date())) {
 }
 
 
+recent_years_regex <- function() {
+  "20[0-2][0-9]"
+}
+
+
+range_of_years_from_filenames <- function(dir, file_pattern = "") {
+  all_files <- files_with_recent_year_in_name(dir)
+  filtered_matches <- all_files[str_detect(all_files, file_pattern)]
+  v <- as.integer(str_extract(filtered_matches, recent_years_regex()))
+  seq(min(v), max(v))
+}
+
+
+# NOTE: all files that have the years 2000-2029 in their name
+files_with_recent_year_in_name <- function(dir) {
+  list.files(dir, recent_years_regex())
+}
+
+
 load_years <- function(
   dir,
   n_max = Inf,
@@ -574,8 +593,7 @@ load_years <- function(
 ) {
   data <- tibble()
   loading_problems <- list()
-  # NOTE: all files that have the years 2000-2029 in their name
-  for (fname in list.files(dir, '20[0-2][0-9]')) {
+  for (fname in files_with_recent_year_in_name(dir)) {
     print(str_c('loading ', fname))
     tbl <- read_csv(file.path(dir, fname), col_types = col_types)
     data <- bind_rows(data, tbl)

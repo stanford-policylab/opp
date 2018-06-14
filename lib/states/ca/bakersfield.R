@@ -1,13 +1,13 @@
 source("common.R")
 
-# NOTE: we have data for 2007, but it doesn't have any useful information; it
-# looks like the schema was updated in 2008 and for serveral years they
-# recorded in both formats; here, we use the assumed new format, which has
-# separate files for ticket and person data for each year
+# TODO(phoebe): what are the differences between the files that have only a
+# year, i.e. 2007-2012 and the other files that seem to only have to do with
+# traffic citations?
+# https://app.asana.com/0/456927885748233/711489574452817
 load_raw <- function(raw_data_dir, n_max) {
   data <- tibble()
   loading_problems <- list()
-  for (year in 2008:2018) {
+  for (year in range_of_years_from_filenames(raw_data_dir, "_traffic_")) {
     t_fname <- str_c(year, "_traffic_citation_ticket_data_fields.csv")
     p_fname <- str_c(year, "_traffic_citation_person_details.csv")
     t_tbl <- read_csv(
@@ -56,14 +56,14 @@ clean <- function(d, helpers) {
     mutate(
       # TODO(danj): improve this once we figure out the statutes
       # https://app.asana.com/0/456927885748233/645792862056547
-      incident_type = "vehicular",
-      incident_date = parse_date(occ_date),
-      incident_time = parse_time_int(occ_time),
-      incident_location = str_replace(street_name, "/", "AND"),
+      type = "vehicular",
+      date = parse_date(occ_date),
+      time = parse_time_int(occ_time),
+      location = str_replace(street_name, "/", "AND"),
       # TODO(phoebe): can we get other outcomes (warnings, arrests)?
       # https://app.asana.com/0/456927885748233/645792862056548
       citation_issued = TRUE,
-      incident_outcome = "citation",
+      outcome = "citation",
       subject_race = tr_race[ifelse(ethnicity == "H", "H", race)],
       subject_sex = tr_sex[gender_code],
       subject_dob = parse_date(date_of_birth)
