@@ -30,8 +30,13 @@ clean <- function(d, helpers) {
 		rename(
       subject_age = `Defendant Age`,
       lat = Latitude,
-      lng = Longitude
+      lng = Longitude,
+      vehicle_type = `Vehicle Body Type`
 		) %>%
+    separate_cols(
+      `Reporting Officer` = c("officer_last_name", "officer_first_name"),
+      sep = " - "
+    ) %>%
 		mutate(
       datetime = parse_datetime(DateTime, "%m/%d/%Y %I:%M:%S %p"),
       date = as.Date(datetime),
