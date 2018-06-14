@@ -265,6 +265,7 @@ calculate_if_cols(
   }
 )
 
+# NOTE: convert to char because of weird print representation of some numbers
 loading_problems <- metadata$loading_problems %>%
   lapply(function(x) mutate_each(x, funs('as.character'))) %>%
   bind_rows()
@@ -278,7 +279,7 @@ if (nrow(loading_problems) > 0) {
     ) %>%
     count
 
-  loading_problems_count_table <- kable(
+  loading_problems_count_table <<- kable(
     loading_problems_count,
     caption = "Loading problems"
   )
@@ -302,7 +303,7 @@ if (nrow(loading_problems) > 0) {
       actual
     )	
 
-  loading_problems_random_sample_sorted_table <- kable(
+  loading_problems_random_sample_sorted_table <<- kable(
     loading_problems_random_sample_sorted,
     caption = "20 Random loading problem errors, sorted"
   )

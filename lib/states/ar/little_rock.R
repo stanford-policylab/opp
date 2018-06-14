@@ -6,7 +6,8 @@ load_raw <- function(raw_data_dir, n_max) {
 	# https://app.asana.com/0/456927885748233/592025853254518
   load_single_file(
     raw_data_dir,
-    "traffic_citation_stats_-_year-to-date_2017.csv"
+    "traffic_citation_stats_-_year-to-date_2017.csv",
+    n_max
   )
 }
 
