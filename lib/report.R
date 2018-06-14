@@ -142,22 +142,24 @@ by_year_by_day_of_week_plot <- ggplot(d_yw) +
   xlab("day of week") +
   ylab("count")
 
-d_yh <- mutate(
-		data,
-		yr = year(date),
-		hr = hour(time)
-	) %>%
-  group_by(
-		yr,
-		hr
-	) %>%
-  count
+calculate_if_col("time", function() {
+  d_yh <- mutate(
+      data,
+      yr = year(date),
+      hr = hour(time)
+    ) %>%
+    group_by(
+      yr,
+      hr
+    ) %>%
+    count
 
-by_year_by_hour_of_day_plot <- ggplot(d_yh) +
-  geom_bar(aes(x = hr, y = n), stat = "identity") +
-  facet_grid(yr ~ .) +
-  xlab("hour of day") +
-  ylab("count")
+  by_year_by_hour_of_day_plot <<- ggplot(d_yh) +
+    geom_bar(aes(x = hr, y = n), stat = "identity") +
+    facet_grid(yr ~ .) +
+    xlab("hour of day") +
+    ylab("count")
+})
 
 calculate_if_col("subject_race", function() {
   race_pct_tbl <- pct_tbl(data$subject_race, c("race", "percent"))

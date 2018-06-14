@@ -39,15 +39,15 @@ clean <- function(d, helpers) {
   #
   d$data %>%
     rename(
-      incident_date = DateOfStop,
+      date = DateOfStop,
       officer_id = BadgeNumber,
-      incident_location = OtherLocation
+      location = OtherLocation
     ) %>%
     mutate(
       # NOTE: there doesn't seem to be any other way to suss out whether this
       # was a pedestrian stop; presumably this is quite low, since these are
       # state patrol stops; PE = Pedestrian, BI = Bicyclist
-      incident_type = ifelse(
+      type = ifelse(
         str_detect(TypeOfSearch, "PE|BI"),
         "pedestrian",
         "vehicular"

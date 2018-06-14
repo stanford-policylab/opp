@@ -1,11 +1,11 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-	loading_problems <- list()
-  fname <- "2012-2016trafficstops-_plank_sheet_2.csv"
-  data <- read_csv(file.path(raw_data_dir, fname), n_max = n_max)
-  loading_problems[[fname]] <- problems(data)
-  bundle_raw(data, loading_problems)
+  load_single_file(
+    raw_data_dir,
+    "2012-2016trafficstops-_plank_sheet_2.csv",
+    n_max
+  )
 }
 
 
@@ -14,12 +14,14 @@ load_raw <- function(raw_data_dir, n_max) {
 clean <- function(d, helpers) {
   d$data %>%
     rename(
-      incident_date = `Occ Date`,
+      date = `Occ Date`,
+      # NOTE: this isn't really a reason for the stop, this is more like
+      # a mix of reason for stop, stop category, and violation in one
       reason_for_stop = `Final Case Type D`
     ) %>%
     mutate(
       # NOTE: these are only traffic stops according to the correspondence
-      incident_type = "vehicular"
+      type = "vehicular"
     ) %>%
     standardize(d$metadata)
 }

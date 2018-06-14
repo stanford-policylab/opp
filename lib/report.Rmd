@@ -52,7 +52,7 @@ by_year_by_day_of_week_plot
 ```
 
 ```{r by_year_by_hour_of_day, fig.height = 10}
-by_year_by_hour_of_day_plot
+display_if_exists("by_year_by_hour_of_day_plot")
 ```
 
 ```{r race_pct_plot}
