@@ -1,11 +1,12 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-  load_single_file(
+  d <- load_single_file(
     raw_data_dir,
     "2012-2016trafficstops-_plank_sheet_2.csv",
     n_max
   )
+  bundle_raw(d$data, d$loading_problems)
 }
 
 
