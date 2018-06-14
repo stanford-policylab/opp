@@ -121,7 +121,7 @@ opp_clean <- function(d, state, city) {
   helpers <- c(
     "add_lat_lng" = opp_add_lat_lng_func(state, city),
     "add_search_type" = opp_add_search_type_func(state, city),
-    "add_incident_type" = opp_add_incident_type_func(state, city),
+    "add_type" = opp_add_type_func(state, city),
     "add_contraband_types_func" = opp_add_contraband_types_func(state, city),
     "add_shapefiles_data" = opp_add_shapefiles_data_func(state, city),
     "load_json" = opp_load_json(state, city)
@@ -131,7 +131,7 @@ opp_clean <- function(d, state, city) {
 
 
 opp_add_lat_lng_func <- function(state, city) {
-  function(tbl, join_col = "incident_location") {
+  function(tbl, join_col = "location") {
     join_on <- c("loc")
     names(join_on) <- c(join_col)
     add_data(
@@ -141,11 +141,7 @@ opp_add_lat_lng_func <- function(state, city) {
         "geocoded_locations.csv"
       ),
       join_on,
-      col_types = "cdd",
-      rename_map = c(
-        "lat" = "incident_lat",
-        "lng" = "incident_lng"
-      )
+      col_types = "cdd"
     )
   }
   
@@ -185,7 +181,7 @@ opp_calculated_features_path <- function(state, city) {
 }
 
 
-opp_add_incident_type_func <- function(state, city) {
+opp_add_type_func <- function(state, city) {
   function(tbl, join_col = "reason_for_stop") {
     join_on <- c("text")
     names(join_on) <- c(join_col)
@@ -193,13 +189,13 @@ opp_add_incident_type_func <- function(state, city) {
       tbl,
       file.path(
         opp_calculated_features_path(state, city),
-        "incident_types.csv"
+        "types.csv"
       ),
       join_on,
       col_types = "cc",
-      rename_map = c("label" = "incident_type"),
+      rename_map = c("label" = "type"),
       translators = list(
-        "incident_type" = c(
+        "type" = c(
           p = "pedestrian",
           v = "vehicular",
           o = "other"
@@ -239,8 +235,8 @@ opp_add_shapefiles_data_func <- function(state, city) {
       tbl <- add_shapes_obj_data(
           tbl,
           shapes_df,
-          "incident_lng",
-          "incident_lat"
+          "lng",
+          "lat"
         )
     }
     tbl

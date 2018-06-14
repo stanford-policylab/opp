@@ -3,8 +3,8 @@ library(readr)
 library(lubridate)
 
 
-valid_start_date <- ymd("2000-01-01")
-valid_end_date <- ymd(Sys.Date())
+valid_start_date <- parse_date("2000-01-01")
+valid_end_date <- parse_date(Sys.Date())
 
 
 valid_vehicle_start_year <- 1800
@@ -143,6 +143,8 @@ schema <- c(
   subject_race                  = Curry(factor, levels = valid_races),
   subject_sex                   = Curry(factor, levels = valid_sexes),
   officer_id                    = as.character,
+  officer_first_name            = as.character,
+  officer_last_name             = as.character,
   department_name               = as.character,
 
   # what
@@ -152,7 +154,7 @@ schema <- c(
   citation_issued               = as.logical,
   warning_issued                = as.logical,
   outcome                       = Curry(factor, levels = valid_outcomes),
-  contraband_found              = as.logical
+  contraband_found              = as.logical,
   contraband_drugs              = as.logical,
   contraband_weapons            = as.logical,
   frisk_performed               = as.logical,
@@ -173,6 +175,7 @@ schema <- c(
   vehicle_color                 = as.character,
   vehicle_make                  = as.character,
   vehicle_model                 = as.character,
+  vehicle_type                  = as.character,
   vehicle_registration_state    = Curry(factor, levels = valid_states),
   vehicle_year                  = as.integer,
   notes                         = as.character

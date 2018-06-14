@@ -42,7 +42,7 @@ rate <- function(
     dem <- dem_pre_func(opp_demographics(state, city))
     mutate(
       d,
-      year = year(incident_date)
+      year = year(date)
     ) %>%
     rename(
       race = subject_race

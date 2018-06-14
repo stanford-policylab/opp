@@ -1,39 +1,59 @@
 source("standards.R")
 
 
-sanitize_date <- function(val) {
-  sanitize_date(val, valid_start_date, valid_end_date)
-}
-
-
-sanitize_date <- function(val, start, end) {
-  out_of_bounds_to(val, start, end, as.Date(NA))
-}
-
-
-out_of_bounds_to <- function(val, start, end, fill) {
+# NOTE: for obscure reasons, NA must be "typed" or it sometimes causes the data
+# to fall apart, i.e. dates will revert to POSIX integers
+enforce_bounds <- function(val, start, end, fill) {
+  # NOTE: standard ifelse loses the datatype, i.e. Dates will become numeric
   if_else(val < start | val > end, fill, val)
 }
 
 
+sanitize_date <- function(val) {
+  enforce_bounds(
+    val,
+    valid_start_date,
+    valid_end_date,
+    as.Date(NA)
+  )
+}
+
+
 sanitize_dob <- function(val) {
-  sanitize_date(val, valid_dob_start_date, valid_dob_end_date)
+  enforce_bounds(
+    val,
+    valid_dob_start_date,
+    valid_dob_end_date,
+    as.Date(NA)
+  )
 }
 
 
 sanitize_yob <- function(val) {
-  out_of_bounds_to(val, valid_yob_start, valid_yob_end, as.integer(NA))
+  enforce_bounds(
+    val,
+    valid_yob_start,
+    valid_yob_end,
+    as.integer(NA)
+  )
 }
 
 
 sanitize_age <- function(val) {
-  out_of_bounds_to(val, valid_age_start, valid_age_end, as.numeric(NA))
+  enforce_bounds(
+    val,
+    valid_age_start,
+    valid_age_end,
+    as.numeric(NA)
+  )
 }
 
 
 sanitize_vehicle_year <- function(val) {
-  out_of_bounds_to(val,
-                   valid_vehicle_start_year,
-                   valid_vehicle_end_year,
-                   as.integer(NA))
+  enforce_bounds(
+    val,
+    valid_vehicle_start_year,
+    valid_vehicle_end_year,
+    as.integer(NA)
+  )
 }

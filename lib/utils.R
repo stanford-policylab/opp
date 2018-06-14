@@ -18,6 +18,11 @@ create_title <- function(state, city) {
 }
 
 
+calculate_if <- function(pred_fun, func) {
+  ifelse(pred_func(), func(), NA)
+}
+
+
 parse_args <- function(tbl) {
   argument_types <- c("none", "required", "optional")
   tmp <- mutate(tbl,
@@ -42,8 +47,13 @@ simple_map <- function(v, func) {
 }
 
 
-to_str <- function(expression) {
-  deparse(substitute(expression))
+expr_to_str <- function(expr) {
+  deparse(substitute(expr))
+}
+
+
+str_to_expr <- function(expr_str) {
+  eval(parse(text = expr_str))
 }
 
 
@@ -456,7 +466,7 @@ str_combine_cols <- function(left, right,
 
 extract_and_add_lat_lng <- function(tbl, colname) {
   mtx <- do.call(rbind, str_extract_all(tbl[[colname]], "-?[0-9.]+"))
-  colnames(mtx) <- c("incident_lat", "incident_lng")
+  colnames(mtx) <- c("lat", "lng")
   bind_cols(tbl, as_tibble(mtx))
 }
 
@@ -557,7 +567,11 @@ format_two_digit_year <- function(yr, cutoff = year(Sys.Date())) {
 }
 
 
-load_years <- function(dir, n_max = Inf, col_types = cols(.default = "c")) {
+load_years <- function(
+  dir,
+  n_max = Inf,
+  col_types = cols(.default = "c")
+) {
   data <- tibble()
   loading_problems <- list()
   # NOTE: all files that have the years 2000-2029 in their name
@@ -571,5 +585,18 @@ load_years <- function(dir, n_max = Inf, col_types = cols(.default = "c")) {
       break
     }
   }
-  list(data = data, loading_problems = loading_problems)
+  bundle_raw(data, loading_problems)
+}
+
+
+load_single_file <- function(
+  dir,
+  fname,
+  n_max = Inf,
+  col_types = cols(.default = "c")
+) {
+  data <- read_csv(file.path(dir, fname), n_max = n_max)
+  loading_problems <- list()
+  loading_problems[[fname]] <- problems(data)
+  bundle_raw(data, loading_problems)
 }

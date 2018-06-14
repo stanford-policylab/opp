@@ -59,7 +59,7 @@ get_or_create_cache <- function(cache_file) {
 
 city_coverage <- function(state, city) {
   data <- opp_load_required_data(state, city)
-  date_range = range(data$incident_date, na.rm = TRUE)
+  date_range = range(data$date, na.rm = TRUE)
   c(
     list(
       state = state,

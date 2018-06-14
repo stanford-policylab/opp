@@ -18,6 +18,7 @@ standardize <- function(data, metadata) {
       # collect metadata local to standardize here
       metadata = list()
     ) %>%
+    select_only_schema_cols %>%
     predication_correction %>%
     enforce_types %>%
     sanitize
@@ -28,6 +29,13 @@ standardize <- function(data, metadata) {
     data = d$data,
     metadata = metadata
   )
+}
+
+
+select_only_schema_cols <- function(d) {
+  cols = intersect(names(schema), colnames(d$data))
+  d$data <- select_(d$data, .dots = cols)
+  d
 }
 
 
@@ -57,13 +65,11 @@ enforce_types <- function(d) {
 
 sanitize <- function(d) {
   print("sanitizing...")
-  # required
-  sanitize_schema = c(
-    date = sanitize_date 
-    date = sanitize_date 
-  )
-  # optional
+  sanitize_schema <- c()
   for (col in colnames(d$data)) {
+    if (endsWith(col, "date")) {
+      sanitize_schema <- append_to(sanitize_schema, col, sanitize_date)
+    }
     if (endsWith(col, "age")) {
       sanitize_schema <- append_to(sanitize_schema, col, sanitize_age)
     }
