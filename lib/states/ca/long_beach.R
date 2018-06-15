@@ -90,5 +90,15 @@ clean <- function(d, helpers) {
     ) %>%
     helpers$add_lat_lng(
     ) %>%
+    helpers$add_shapefiles_data(
+    ) %>%
+    rename(
+      beat = PO_BEAT_NO,
+      # NOTE: Police Reporting District Number
+      # PO_DIST_NO is just the first 2 digits of this
+      district = PO_RD_NO,
+      subdistrict = PO_SUBDIST,
+      division = PO_DIV
+    ) %>%
     standardize(d$metadata)
 }

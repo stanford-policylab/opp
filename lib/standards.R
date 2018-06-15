@@ -130,6 +130,8 @@ schema <- c(
   county_name                   = as.character,
   beat                          = as.character,
   district                      = as.character,
+  subdistrict                   = as.character,
+  division                      = as.character,
   police_grid_number            = as.character,
   precinct                      = as.character,
   region                        = as.character,
@@ -153,6 +155,8 @@ schema <- c(
 
   # what
   type                          = Curry(factor, levels = valid_types),
+  # NOTE: violation here is used for charge and violation
+  disposition                   = as.character,
   violation                     = as.character,
   arrest_made                   = as.logical,
   citation_issued               = as.logical,

@@ -1,11 +1,8 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-  fname <- "stop_data.csv"
-  data <- read_csv(file.path(raw_data_dir, fname), n_max = n_max)
-  loading_problems <- list()
-  loading_problems[[fname]] <- problems(data)
-  bundle_raw(data, loading_problems)
+  d <- load_single_file(raw_data_dir, "stop_data.csv", n_max)
+  bundle_raw(d$data, d$loading_problems)
 }
 
 
@@ -20,18 +17,19 @@ clean <- function(d, helpers) {
   # https://app.asana.com/0/456927885748233/594103520238659
   d$data %>%
     rename(
-      incident_location = Address
+      location = Address,
+      disposition = Disposition
     ) %>%
     mutate(
-      incident_datetime = parse_datetime(CreateDatetime, "%Y/%m/%d %H:%M:%S"),
-      incident_date = as.Date(incident_datetime),
-      incident_time = format(incident_datetime, "%H:%M:%S"),
+      datetime = parse_datetime(CreateDatetime, "%Y/%m/%d %H:%M:%S"),
+      date = as.Date(datetime),
+      time = format(datetime, "%H:%M:%S"),
       # TODO(phoebe): CallType T = Traffic? CKS = ?
       # https://app.asana.com/0/456927885748233/594103520238660
-      incident_type = ifelse(CallType == "T", "vehicular", "pedestrian"),
-      citation_issued = ifelse(Disposition == "CIT", TRUE, FALSE),
-      arrest_made = ifelse(Disposition == "ARR", TRUE, FALSE),
-      incident_outcome = first_of(
+      type = ifelse(CallType == "T", "vehicular", "pedestrian"),
+      citation_issued = ifelse(disposition == "CIT", TRUE, FALSE),
+      arrest_made = ifelse(disposition == "ARR", TRUE, FALSE),
+      outcome = first_of(
         citation = citation_issued,
         arrest = arrest_made
       )
