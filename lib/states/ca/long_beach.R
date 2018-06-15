@@ -1,17 +1,9 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-  data <- tibble()
-  loading_problems <- list()
-  for (year in 2008:2017) {
-    fname <- str_c(year, ".csv")
-    tbl <- read_csv(file.path(raw_data_dir, fname))
-    loading_problems[[fname]] <- problems(tbl)
-    data <- bind_rows(data, tbl)
-    if (nrow(data) > n_max) {
-      data <- data[1:n_max,]
-    }
-  }
+  d <- load_years(raw_data_dir, n_max)
+  data <- d$data
+  loading_problems <- d$loading_problems
   dd_fname <- "data_dictionary.csv"
   dd <- read_csv(file.path(raw_data_dir, dd_fname))
   loading_problems[[dd_fname]] <- problems(dd)
@@ -29,6 +21,7 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
+
   tr_race <- c(
     "Amer Indian" = "other/unknown",
     "Asian" = "asian/pacific islander",
@@ -50,6 +43,7 @@ clean <- function(d, helpers) {
     "Vietnamese" = "other/unknown",
     "White" = "white"
   )
+
   tr_sex <- c(
     "Female" = "female",
     "Male" = "male"
@@ -59,28 +53,40 @@ clean <- function(d, helpers) {
   # for reason_for_stop, maybe we need the data dictionary for Violation codes?
   # https://app.asana.com/0/456927885748233/596075286170964
   d$data %>%
-    helpers$add_incident_type(
+    helpers$add_type(
       "violation_1_description"
     ) %>%
     filter(
       Sex != "Business",
-      incident_type != "other"
+      type != "other"
     ) %>%
     rename(
-      incident_location = Location,
+      location = Location,
       subject_age = Age,
+      vehicle_make = Make,
+      vehicle_registration_state = State,
       # NOTE: this is vehicle year, confirmed with department
       vehicle_year = Year,
-      officer_id = `Officer DID`
+      officer_age = `Officer Age`,
+      officer_years_of_service = `Years of Service`,
+      department_id = `Officer DID`
     ) %>%
     mutate(
-      incident_date = parse_date(Date, "%m/%d/%Y"),
+      date = parse_date(Date, "%m/%d/%Y"),
+      violation = str_c_na(
+        violation_1_description,
+        violation_2_description,
+        violation_3_description,
+        violation_4_description
+      ),
       # TODO(phoebe): can we get outcomes (warnings, arrests)?
       # https://app.asana.com/0/456927885748233/596075286170967
       citation_issued = TRUE,
-      incident_outcome = "citation",
+      outcome = "citation",
       subject_race = tr_race[Race],
-      subject_sex = tr_sex[Sex]
+      subject_sex = tr_sex[Sex],
+      officer_race = tr_race[`Officer Race`],
+      officer_sex = tr_sex[`Officer Sex`]
     ) %>%
     helpers$add_lat_lng(
     ) %>%

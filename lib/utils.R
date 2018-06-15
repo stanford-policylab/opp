@@ -603,7 +603,7 @@ load_years <- function(
       break
     }
   }
-  bundle_raw(data, loading_problems)
+  list(data = data, loading_problems = loading_problems)
 }
 
 
@@ -616,5 +616,5 @@ load_single_file <- function(
   data <- read_csv(file.path(dir, fname), n_max = n_max)
   loading_problems <- list()
   loading_problems[[fname]] <- problems(data)
-  bundle_raw(data, loading_problems)
+  list(data = data, loading_problems = loading_problems)
 }
