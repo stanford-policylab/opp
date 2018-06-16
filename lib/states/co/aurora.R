@@ -22,13 +22,13 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
+
   tr_race <- c(
     "AMERICAN INDIAN/ALASKAN N" = "other/unknown",
     "ASIAN" = "asian/pacific islander",
     "BLACK/AFRICAN AMERICAN" = "black",
     "HISPANIC" = "hispanic",
     "NATIVE HAWAIIAN/PACIFIC I" = "asian/pacific islander",
-    "NULL" = NA_character_,
     "UNKNOWN" = "other/unknown",
     "WHITE" = "white"
   )
@@ -37,23 +37,24 @@ clean <- function(d, helpers) {
   # https://app.asana.com/0/456927885748233/570989790365269 
   d$data %>%
     rename(
-      incident_date = `Ticket Date`,
-      incident_time = `Ticket Time`,
-      incident_location = `Ticket Location`,
-      reason_for_stop = `Incident Violation`,
+      date = `Ticket Date`,
+      time = `Ticket Time`,
+      location = `Ticket Location`,
+      violation = `Incident Violation`,
       subject_dob = `Date of Birth`
     ) %>%
     helpers$add_lat_lng(
     ) %>%
-    helpers$add_incident_type(
+    helpers$add_type(
+      "violation"
     ) %>%
     filter(
-      incident_type != "other"
+      type != "other"
     ) %>%
     mutate(
       # TODO(phoebe): do we really only get citations?
       # https://app.asana.com/0/456927885748233/570989790365270
-      incident_outcome = "citation",
+      outcome = "citation",
       citation_issued = TRUE,
       subject_race = tr_race[
         ifelse(Ethnicity == "HISPANIC OR LATINO", "HISPANIC", Race)

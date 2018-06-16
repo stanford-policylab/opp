@@ -1,11 +1,12 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-  loading_problems <- list()
-  fname <- "pra_16-1288_vehiclestop2014-2015_sheet_1.csv"
-  data <- read_csv(file.path(raw_data_dir, fname), n_max = n_max)
-  loading_problems[[fname]] <- problems(data)
-  bundle_raw(data, loading_problems)
+  d <- load_single_file(
+    raw_data_dir,
+    "pra_16-1288_vehiclestop2014-2015_sheet_1.csv",
+    n_max
+  )
+  bundle_raw(d$data, d$loading_problems)
 }
 
 
@@ -33,6 +34,7 @@ clean <- function(d, helpers) {
     "X" = "other/unknown",
     "Z" = "other/unknown"
   )
+
   tr_stop_cause = c(
     "MUNI, County, H&S Code" = "MUNI, County, H&S Code",
     "Muni, County, H&S Code" = "MUNI, County, H&S Code",
@@ -64,18 +66,19 @@ clean <- function(d, helpers) {
     "not secified" = "None"
   )
 
-  # TODO(phoebe): can we get incident_location?
+  # TODO(phoebe): can we get location?
   # https://app.asana.com/0/456927885748233/569484839430728
   d$data %>%
     rename(
-      incident_date = StopDate,
-      incident_time = StopTime,
+      date = StopDate,
+      time = StopTime,
       subject_age = age,
       search_conducted = Searched,
       search_consent = ObtainedConsent,
       contraband_found = ContrabandFound,
       arrest_made = Arrested,
-      service_area = ServArea
+      service_area = ServArea,
+      department_name = Agency
     ) %>%
     apply_translator_to(
       tr_yn,
@@ -85,8 +88,8 @@ clean <- function(d, helpers) {
       "arrest_made"
     ) %>%
     mutate(
-      incident_type = "vehicular",
-      incident_outcome = ifelse(arrest_made, "arrest", NA),
+      type = "vehicular",
+      outcome = ifelse(arrest_made, "arrest", NA),
       subject_race = tr_race[Race],
       subject_sex = tr_sex[Sex],
       search_type = first_of(

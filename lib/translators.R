@@ -1,6 +1,10 @@
 tr_sex = c(
   M = "male",
-  F = "female"
+  F = "female",
+  m = "male",
+  f = "female",
+  Male = "male",
+  Female = "female"
 )
 
 tr_race <- c(
@@ -11,6 +15,12 @@ tr_race <- c(
 )
 
 tr_yn = c(
+  Yes = TRUE,
   Y = TRUE,
-  N = FALSE
+  yes = TRUE,
+  y = TRUE,
+  No = FALSE,
+  N = FALSE,
+  no = FALSE,
+  n = FALSE
 )

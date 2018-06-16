@@ -27,10 +27,7 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
-  tr_sex <- c(
-    Female = "female",
-    Male = "male"
-  )
+
   tr_race <- c(
     "Asian" = "asian/pacific islander",
     "Black/African American" = "black",
@@ -38,6 +35,7 @@ clean <- function(d, helpers) {
     "Others" = "other/unknown",
     "White/Caucasian" = "white"
   )
+
   # TODO(ravi): what to do about this outcome?
   tr_outcome <- c(
     "1-In-Custody Arrest" = "arrest",
@@ -45,6 +43,7 @@ clean <- function(d, helpers) {
     "3-Verbal Warning" = "warning"
     # 4-Public Service
   )
+
   tr_search_type <- c(
     # 1-No Search Conducted
     "2-Consent" = "consent",
@@ -64,14 +63,14 @@ clean <- function(d, helpers) {
     #   "address"
     # ) %>%
     rename(
-      incident_date = in_date,   
+      date = in_date,   
       subject_age = age,
       reason_for_stop = probcause
     ) %>%
     mutate(
       # NOTE: all stops are traffic stops as per reply letter
-      incident_type = "vehicular",
-      incident_outcome = tr_outcome[result],
+      type = "vehicular",
+      outcome = tr_outcome[result],
       search_conducted = !startsWith(search, "1-No Search"),
       search_type = tr_search_type[search],
       subject_sex = tr_sex[gender],

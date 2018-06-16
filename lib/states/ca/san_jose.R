@@ -70,8 +70,8 @@ clean <- function(d, helpers) {
   )
 
   tr_contraband <- c(
-    "S" = TRUE, # search, contraband_found
-    "Z" = FALSE   # search, no contraband found 
+    "S" = TRUE,  # search, contraband_found
+    "Z" = FALSE  # search, no contraband found 
   )
 
   tr_reason <- c(
@@ -138,6 +138,8 @@ clean <- function(d, helpers) {
     "W" = "weapons / violence related event"
   )
 
+  # TODO(phoebe): what is `NUMBER OF STOPS`? and `DETENTION DISPO`?
+  # https://app.asana.com/0/504031459709086/713013387495383
   # NOTE: search type may be included in the narrative, but this is
   # not a separate or searchable field in their database
   d$data %>%
@@ -160,24 +162,23 @@ clean <- function(d, helpers) {
       )
     ) %>%
     mutate(
-      incident_type = ifelse(
+      type = ifelse(
         str_detect(call_desc, vehicle_keywords),
         "vehicular",
         "pedestrian"
       ),
-      incident_date = parse_date(`REPORT DATE`, "%Y%m%d"),
-      incident_time_period = seconds_to_period(`REPORT TIME (HMS)`),
-      incident_time = seconds_to_hms(`REPORT TIME (HMS)`),
+      date = parse_date(`REPORT DATE`, "%Y%m%d"),
+      time = seconds_to_hms(`REPORT TIME (HMS)`),
       # NOTE: COMMONPLACE seems to be a name for places with addresses,
       # i.e. OVERFELT GARDENS, SAFEWAY, WALMART, etc...
-      incident_location = coalesce(
+      location = coalesce(
         ADDRESS,
         str_c(XSTREET1, XSTREET2, sep = " AND ")
       ),
       event_desc = tr_event[`EVENT DISPO`],
       # TODO(ravi): should we filter out the other outcomes?
       # https://app.asana.com/0/456927885748233/649920459235533
-      incident_outcome = first_of(
+      outcome = first_of(
         "arrest" = str_detect(event_desc, "ARREST"),
         "citation" = str_detect(event_desc, "CITATION")
       ),

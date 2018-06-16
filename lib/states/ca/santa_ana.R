@@ -1,11 +1,8 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-  fname <- "citation_audit_summary.csv"
-  data <- read_csv(file.path(raw_data_dir, fname), n_max = n_max)
-  loading_problems <- list()
-  loading_problems[[fname]] <- problems(data)
-  bundle_raw(data, loading_problems)
+  d <- load_single_file(raw_data_dir, "citation_audit_summary.csv", n_max)
+  bundle_raw(d$data, d$loading_problems)
 }
 
 
@@ -24,25 +21,25 @@ clean <- function(d, helpers) {
   # https://app.asana.com/0/456927885748233/663043550621580
   d$data %>%
     rename(
-      incident_date = Date,
-      incident_location = `Primary Street`,
+      date = Date,
+      location = `Primary Street`,
       officer_id = `Officer (Badge)`,
-      reason_for_stop = `Violation Description`
+      violation = `Violation Description`
     ) %>%
-    helpers$add_incident_type(
+    helpers$add_type(
+      "violation"
     ) %>%
     filter(
-      incident_type != "other"
+      type != "other"
     ) %>%
     mutate(
       subject_race = tr_race[Race],
       subject_sex = tr_sex[Sex],
-      citation_issued = !is.na(`Citation #`),
+      # NOTE: Stop Results are all CITATION
+      citation_issued = TRUE,
       # TODO(phoebe): can we get other outcomes? arrests/warnings?
       # https://app.asana.com/0/456927885748233/663043550621581
-      incident_outcome = first_of(
-        "citation" = citation_issued
-      )
+      outcome = "citation"
     ) %>%
     helpers$add_lat_lng(
     ) %>%
