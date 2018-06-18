@@ -34,7 +34,7 @@ def xls_to_csv(in_file, **kwargs):
 
 
 def ssconvert(in_file, **kwargs):
-    require('ssconvert', "try installing 'gnumeric' package on linux")
+    require('ssconvert', 'try installing "gnumeric" package on linux')
     out_file = to_csv_ext(in_file)
     run(['ssconvert', '--export-file-per-sheet', in_file, out_file])
     basenames = defaultdict(int)
@@ -45,6 +45,7 @@ def ssconvert(in_file, **kwargs):
             new_out_filename = '%s_sheet_%d.csv' % (basename, int(index) + 1)
             os.rename(filename, new_out_filename)
     for basename, count in basenames.items():
+        # NOTE: if there is only one sheet output, remove _sheet_1 suffix
         if count == 1:
             os.rename(basename + '_sheet_1.csv', basename + '.csv')
     return

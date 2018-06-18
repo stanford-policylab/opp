@@ -567,6 +567,7 @@ format_two_digit_year <- function(yr, cutoff = year(Sys.Date())) {
 }
 
 
+# NOTE: years 2000-2029
 recent_years_regex <- function() {
   "20[0-2][0-9]"
 }
@@ -580,24 +581,24 @@ range_of_years_from_filenames <- function(dir, file_pattern = "") {
 }
 
 
-# NOTE: all files that have the years 2000-2029 in their name
 files_with_recent_year_in_name <- function(dir) {
   list.files(dir, recent_years_regex())
 }
 
 
-load_years <- function(
-  dir,
+load_similar_files <- function(
+  paths,
   n_max = Inf,
   col_types = cols(.default = "c")
 ) {
   data <- tibble()
   loading_problems <- list()
-  for (fname in files_with_recent_year_in_name(dir)) {
-    print(str_c('loading ', fname))
-    tbl <- read_csv(file.path(dir, fname), col_types = col_types)
+  for (path in paths) {
+    bn <- basename(path)
+    print(str_c('loading ', bn))
+    tbl <- read_csv(path, col_types = col_types)
     data <- bind_rows(data, tbl)
-    loading_problems[[fname]] <- problems(tbl)
+    loading_problems[[bn]] <- problems(tbl)
     if (nrow(data) > n_max) {
       data <- data[1:n_max, ]
       break
@@ -607,14 +608,30 @@ load_years <- function(
 }
 
 
+load_years <- function(
+  dir,
+  n_max = Inf,
+  col_types = cols(.default = "c")
+) {
+  load_similar_files(files_with_recent_year_in_name(dir), n_max, col_types)
+}
+
+
+load_regex <- function(
+  dir,
+  regex,
+  n_max = Inf,
+  col_types = cols(.default = "c")
+) {
+  load_similar_files(list.files(dir, regex, full.names=T), n_max, col_types)
+}
+
+
 load_single_file <- function(
   dir,
   fname,
   n_max = Inf,
   col_types = cols(.default = "c")
 ) {
-  data <- read_csv(file.path(dir, fname), n_max = n_max)
-  loading_problems <- list()
-  loading_problems[[fname]] <- problems(data)
-  list(data = data, loading_problems = loading_problems)
+  load_regex(dir, str_c("^", fname, "$"), n_max, col_types)
 }

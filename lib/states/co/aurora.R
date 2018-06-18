@@ -1,23 +1,12 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-  data <- tibble()
-	loading_problems <- list()
-  for (i in 1:5) {
-    prefix <- "aurora_colorado_orr_3253_traf_tix_w_demos_sheet_"
-    fname <- str_c(prefix, i, ".csv")
-    tbl <- read_csv(
-      file.path(raw_data_dir, fname),
-      col_types = cols(`Date of Birth` = col_date())
-    )
-		loading_problems[[fname]] <- problems(tbl)
-    data <- bind_rows(data, tbl)
-    if (nrow(data) > n_max) {
-      data <- data[1:n_max, ]
-      break
-    }
-  }
-  bundle_raw(data, loading_problems)
+  d <- load_regex(
+    raw_data_dir,
+    "^aurora_colorado_orr_3253_traf_tix_w_demos_sheet_",
+    n_max
+  )
+  bundle_raw(d$data, d$loading_problems)
 }
 
 
