@@ -41,7 +41,12 @@ def extract_locations(csv_files,
                       errors_file_csv):
     locs = set()
     for csv_file in csv_files:
-        df = pd.read_csv(csv_file)
+        # NOTE: read all location columns as strings, so that the
+        # formatting of numeric columns like zipcodes is preserved (e.g.,
+        # prevent Pandas from interpretting a zip like 05658 as numeric and
+        # formatting it into the address string as 5658.0).
+        dtype = {col: str for col in location_column_names}
+        df = pd.read_csv(csv_file, dtype=dtype)
         df = add_loc_col(df, location_column_names, location_column_sep)
         locs.update(df['loc'].unique())
     existing_locs = set()

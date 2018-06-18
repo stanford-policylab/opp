@@ -2,6 +2,8 @@
 *.swp
 *.pdf
 *.nfs*
+*.Rproj
+.RData
 */__pycache__/*
 data
 data/*
@@ -11,3 +13,4 @@ reports/*
 gmaps_api.key
 census_api.key
 .Rhistory
+.Rproj.user
