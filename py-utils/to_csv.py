@@ -24,6 +24,7 @@ import pandas as pd
 import subprocess as sub
 import xml.etree.ElementTree as et
 
+from collections import defaultdict
 
 ############################### CONVERTERS ####################################
 
@@ -36,11 +37,16 @@ def ssconvert(in_file, **kwargs):
     require('ssconvert', "try installing 'gnumeric' package on linux")
     out_file = to_csv_ext(in_file)
     run(['ssconvert', '--export-file-per-sheet', in_file, out_file])
+    basenames = defaultdict(int)
     for filename in os.listdir('.'):
         if '.csv.' in filename:
             basename, index = filename.split('.csv.')
+            basenames[basename] += 1
             new_out_filename = '%s_sheet_%d.csv' % (basename, int(index) + 1)
             os.rename(filename, new_out_filename)
+    for basename, count in basenames.items():
+        if count == 1:
+            os.rename(basename + '_sheet_1.csv', basename + '.csv')
     return
 
 
