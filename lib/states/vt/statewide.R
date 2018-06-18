@@ -2,9 +2,9 @@ source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
   loading_problems <- list()
-  fname <- "vsp_traffic_stops_20160218_public"
+  fname <- "vsp_traffic_stops_20160218_public.csv"
   data <- read_csv(
-    file.path(raw_data_dir, str_c(fname, "_sheet1.csv")),
+    file.path(raw_data_dir, fname),
     n_max = n_max,
     col_types = cols("Officer ID" = col_character())
   )
@@ -14,19 +14,15 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
-  # Normalization for search types
   tr_search_type <- c(
-    SPC = "probable cause",
-    # "reasonable suspicion" consent search.
-    SRS = "consent",
-    # Search based on warrant
-    SW = "non-discretionary",
+    "SPC" = "probable cause",
+    "SRS" = "consent",
+    "SW" = "non-discretionary",
     # NOTE: Passenger searches conducted in Winooski don't specify a reason;
     # we assume they are based on probable cause.
-    `_PSS` = "probable cause"
+    "_PSS" = "probable cause"
   )
 
-  # Normalization for race
   tr_race <- c(
     W = "white",
     B = "black",
@@ -38,17 +34,11 @@ clean <- function(d, helpers) {
     N = "other/unknown"
   )
 
-  # Normalization for stop outcome
   tr_outcome <- c(
-    # Written warning
     W = "warning",
-    # Verbal warning
     V = "warning",
-    # Ticket / VCVC
     T = "citation",
-    # Arrest for violation
     A = "arrest",
-    # Arrest on warrant
     AW = "arrest"
   )
 
@@ -60,7 +50,9 @@ clean <- function(d, helpers) {
       reason_for_stop = `Stop Reason Description`,
       subject_age = `Driver Age`
     ) %>%
-    separate_cols(`Stop Date` = c("incident_date", "incident_time")) %>%
+    separate_cols(
+      `Stop Date` = c("incident_date", "incident_time")
+    ) %>%
     mutate(
       incident_date = parse_date(incident_date, "%m/%d/%Y"),
       incident_time = parse_time(incident_time, "%I:%M:%S%p"),
