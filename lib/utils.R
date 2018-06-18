@@ -613,7 +613,7 @@ load_single_file <- function(
   n_max = Inf,
   col_types = cols(.default = "c")
 ) {
-  data <- read_csv(file.path(dir, fname), n_max = n_max)
+  data <- read_csv(file.path(dir, fname), n_max = n_max, col_types = col_types)
   loading_problems <- list()
   loading_problems[[fname]] <- problems(data)
   list(data = data, loading_problems = loading_problems)

@@ -1,15 +1,13 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-  loading_problems <- list()
-  fname <- "vsp_traffic_stops_20160218_public.csv"
-  data <- read_csv(
-    file.path(raw_data_dir, fname),
+  d <- load_single_file(
+    raw_data_dir,
+    "vsp_traffic_stops_20160218_public.csv",
     n_max = n_max,
     col_types = cols("Officer ID" = col_character())
   )
-  loading_problems[[fname]] <- problems(data)
-  bundle_raw(data, loading_problems)
+  bundle_raw(d$data, d$loading_problems)
 }
 
 
@@ -51,13 +49,13 @@ clean <- function(d, helpers) {
       subject_age = `Driver Age`
     ) %>%
     separate_cols(
-      `Stop Date` = c("incident_date", "incident_time")
+      `Stop Date` = c("date", "time")
     ) %>%
     mutate(
-      incident_date = parse_date(incident_date, "%m/%d/%Y"),
-      incident_time = parse_time(incident_time, "%I:%M:%S%p"),
-      incident_type = "vehicular",
-      incident_location = str_c_na(
+      date = parse_date(date, "%m/%d/%Y"),
+      time = parse_time(time, "%I:%M:%S%p"),
+      type = "vehicular",
+      location = str_c_na(
         `Stop Address`,
         `Stop City`,
         `Stop State`,
@@ -70,7 +68,7 @@ clean <- function(d, helpers) {
       warning_issued = str_detect("W|V", `Stop Outcome`),
       citation_issued = str_detect("T", `Stop Outcome`),
       arrest_made = str_detect("A|AW", `Stop Outcome`),
-      incident_outcome = first_of(
+      outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued,
         warning = warning_issued
