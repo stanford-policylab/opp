@@ -5,6 +5,7 @@
 *.Rproj
 .RData
 */__pycache__/*
+lib/report.*.md
 data
 data/*
 plots
