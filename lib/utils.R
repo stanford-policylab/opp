@@ -594,8 +594,8 @@ files_with_recent_year_in_name <- function(dir) {
 # NOTE: this is useful when a column is mostly NA, since R's c() function
 # used as a lookup table has memory management issues
 fast_tr <- function(v, translator) {
-  dummy = "__default"
-  str_replace(translator[str_replace_na(v, dummy)], dummy, NA)
+  dummy <- "__default"
+  str_replace(translator[str_replace_na(v, dummy)], dummy, NA_character_)
 } 
 
 

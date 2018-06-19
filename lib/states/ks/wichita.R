@@ -1,26 +1,14 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-  data <- tibble()
-  loading_problems <- list()
-  for (year in 2006:2016) {
-    fname <- str_c("citations_", year, "_sheet_1.csv")
-    tbl <- read_csv(
-      file.path(raw_data_dir, fname),
-      col_types = cols(.default = "c")
-    )
-    loading_problems[[fname]] <- problems(tbl)
-    data <- bind_rows(data, tbl)
-    if (nrow(data) > n_max) {
-      data <- data[1:n_max,]
-      break
-    }
-  }
-  bundle_raw(data, loading_problems)
+  d <- load_years(raw_data_dir, n_max)
+  colnames(d$data) <- make_ergonomic(colnames(d$data))
+  bundle_raw(d$data, d$loading_problems)
 }
 
 
 clean <- function(d, helpers) {
+
   tr_race <- c(
     "A" = "asian/pacific islander",
     "B" = "black",
@@ -32,7 +20,6 @@ clean <- function(d, helpers) {
 
   # TODO(phoebe): can we get reason_for_stop/search/contraband fields?
   # https://app.asana.com/0/456927885748233/595493946182532
-  colnames(d$data) <- tolower(colnames(d$data))
   d$data %>%
     filter(
       # NOTE: filter out PARKING related charges
@@ -55,6 +42,7 @@ clean <- function(d, helpers) {
       ),
       date = as.Date(datetime),
       time = format(datetime, "%H:%M:%S"),
+      # NOTE: all the files are named citations_<year>.csv
       citation_issued = TRUE,
       # TODO(phoebe): can we get other outcomes (warnings, arrests)?
       # https://app.asana.com/0/456927885748233/595493946182534
