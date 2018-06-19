@@ -57,7 +57,8 @@ clean <- function(d, helpers) {
       # i.e. getting race and sex for the remaining stops is not possible
       subject_race = race,
       subject_sex = sex,
-      officer_id = officerid
+      officer_id = officerid,
+      division = emdivision
     ) %>%
     mutate(
       # NOTE: TS is Traffic Stop; SS is Subject Stop

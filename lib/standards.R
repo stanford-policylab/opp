@@ -140,6 +140,8 @@ schema <- c(
   subject_race                  = Curry(factor, levels = valid_races),
   subject_sex                   = Curry(factor, levels = valid_sexes),
   officer_id                    = as.character,
+  officer_age                   = as.numeric,
+  officer_dob                   = as.Date,
   officer_race                  = Curry(factor, levels = valid_races),
   officer_sex                   = Curry(factor, levels = valid_sexes),
   officer_first_name            = as.character,
