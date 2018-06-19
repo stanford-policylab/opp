@@ -18,6 +18,11 @@ create_title <- function(state, city) {
 }
 
 
+make_ergonomic <- function(strs) {
+  tolower(str_replace_all(strs, " ", "_"))
+}
+
+
 calculate_if <- function(pred_fun, func) {
   ifelse(pred_func(), func(), NA)
 }
@@ -584,6 +589,14 @@ range_of_years_from_filenames <- function(dir, file_pattern = "") {
 files_with_recent_year_in_name <- function(dir) {
   list.files(dir, recent_years_regex(), full.names=T)
 }
+
+
+# NOTE: this is useful when a column is mostly NA, since R's c() function
+# used as a lookup table has memory management issues
+fast_tr <- function(v, translator) {
+  dummy = "__default"
+  str_replace(translator[str_replace_na(v, dummy)], dummy, NA)
+} 
 
 
 load_similar_files <- function(

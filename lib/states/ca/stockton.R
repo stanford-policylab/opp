@@ -1,28 +1,24 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-	loading_problems <- list()
-  r <- function(fname) {
-    tbl <- read_csv(file.path(raw_data_dir, fname))
-    loading_problems[[fname]] <<- problems(tbl)
-    tbl
-  }
   # TODO(phoebe): how do we join these sets of files? 
   # stop_files contain date, time, location, officer demographics
   stop_files <- c(
-    "jenna_fowler_013117_-_stocktonpd_cad_tstops_2012_2013_sheet_1.csv",
-    "jenna_fowler_013117_-_stocktonpd_cad_tstops__2014_july_2016_sheet_1.csv",
-    "jenna_fowler_013117_-_stocktonpd_tstops_aug_dec2016_sheet_1.csv"
+    "jenna_fowler_013117_-_stocktonpd_cad_tstops_2012_2013.csv",
+    "jenna_fowler_013117_-_stocktonpd_cad_tstops__2014_july_2016.csv",
+    "jenna_fowler_013117_-_stocktonpd_tstops_aug_dec2016.csv"
   )
   # survey_files contain date, outcome, subject demographics
-  data <- bind_rows(
-    r("jenna_fowler_013117_-_stocktonpd_trafficstopsurvey_2012_july_2016_sheet_1.csv"),
-    r("jenna_fowler_013117_-_stocktonpd_trafficstopsurvey_aug_dec2016_sheet_1.csv")
+  d <- load_regex(
+    raw_data_dir,
+    str_c(
+      "jenna_fowler_013117_-_stocktonpd_trafficstopsurvey_2012_july_2016.csv",
+      "jenna_fowler_013117_-_stocktonpd_trafficstopsurvey_aug_dec2016.csv",
+      sep = "|"
+    ),
+    n_max
   )
-  if (nrow(data) > n_max) {
-    data <- data[1:n_max, ]
-  }
-  bundle_raw(data, loading_problems)
+  bundle_raw(d$data, d$loading_problems)
 }
 
 

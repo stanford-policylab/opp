@@ -1,22 +1,18 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-	loading_problems <- list()
-  r <- function(fname) {
-    tbl <- read_csv(file.path(raw_data_dir, fname), n_max = n_max)
-    loading_problems[[fname]] <<- problems(tbl)
-    tbl  
-  }
   # NOTE: Roster.csv (police officer info) is available in raw data, but
   # doesn't join cleanly to stops data; first names are often truncated and
   # nicknames are used, i.e.  Manny vs Manuel; it can be loaded and reviewed
   # manually if desired.
-  r("Traffic stops.csv") %>%
-    left_join(
-      r("Dispositions.csv"),
-      by = c("Disposition" = "Abbreviation")
-    ) %>%
-    bundle_raw(loading_problems)
+  stops <- load_single_file(raw_data_dir, "Traffic stops.csv", n_max)
+  disps <- load_single_file(raw_data_dir, "Dispositions.csv", n_max)
+  left_join(
+    stops$data,
+    disps$data,
+    by = c("Disposition" = "Abbreviation")
+  ) %>%
+  bundle_raw(c(stops$loading_problems, disps$loading_problems))
 }
 
 
@@ -31,6 +27,9 @@ clean <- function(d, helpers) {
   d$data %>%
     rename(
       location = `Incident address`
+    ) %>%
+    separate_cols(
+      `Responsible Officer` = c("officer_last_name", "officer_first_name")
     ) %>%
     mutate(
       # NOTE: `Incident nature` is all "30 TRAFFIC STOP" so vehicular stops
