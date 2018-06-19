@@ -40,16 +40,16 @@ clean <- function(d, helpers) {
     mutate(
       # NOTE: all stops are vehicular
       dt = parse_datetime(`DATE OF STOP`, "%m/%d/%Y %I:%M:%S %p"),
-      incident_date = as.Date(dt),
-      incident_time = format(dt, "%H:%M:%S"),
-      incident_type = "vehicular",
+      date = as.Date(dt),
+      time = format(dt, "%H:%M:%S"),
+      type = "vehicular",
       citation_issued = tr_yn[`CITATION ISSUED?`],
       frisk_performed = tr_yn[`DRIVER FRISKED?`],
       search_vehicle = tr_yn[`VEHICLE SEARCHED?`],
       search_conducted = frisk_performed | search_vehicle,
       # TODO(phoebe): can we get other outcomes?
       # https://app.asana.com/0/456927885748233/573247093484092
-      incident_outcome = first_of(
+      outcome = first_of(
         citation = citation_issued
       ),
       # TODO(phoebe): can we get contraband?

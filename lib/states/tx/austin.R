@@ -93,19 +93,18 @@ clean <- function(d, helpers) {
     W = "white"
   )
 
-  # TODO(phoebe): can we get incident_location and incident_outcome?
+  # TODO(phoebe): can we get location and outcome?
   # https://app.asana.com/0/456927885748233/507608374034702/f
   d$data %>%
     merge_rows(
       street_check_case_number
     ) %>%
     rename(
-      incident_date = occurred_date,
+      date = occurred_date,
       reason_for_stop = reason_checked_description,
       subject_race = race,
       subject_ethnicity = ethnicity,
       subject_sex = sex,
-      subject_yob = yob,
       search_person = person_searched,
       search_vehicle = vehicle_searched,
       officer_id = officer,
@@ -115,21 +114,20 @@ clean <- function(d, helpers) {
       vehicle_registration_state = soi
     ) %>%
     mutate(
-      incident_date = parse_date(incident_date, dt_fmt),
+      date = parse_date(date, dt_fmt),
       subject_race = tr_race[ifelse(
         !is.na(subject_ethnicity) & subject_ethnicity == "H",
         "H",
         subject_race
       )],
       subject_sex = tr_sex[subject_sex],
-      subject_age =
-        as.integer(format(incident_date, "%Y")) - as.integer(subject_yob),
+      subject_age = as.integer(format(date, "%Y")) - as.integer(yob),
       search_person = str_detect(search_person, "YES"),
       search_vehicle = str_detect(search_vehicle, "YES"),
       search_conducted = search_person | search_vehicle,
       # NOTE: SUSPICIOUS PERSON / VEHICLE is one category, so this will
       # pick up some suspicious persons unfortunately
-      incident_type = first_of(
+      type = first_of(
         "vehicular" = search_vehicle | str_detect(reason_for_stop, "VEHICLE"),
         "pedestrian" = TRUE  # default if not vehicular
       ),

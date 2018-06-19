@@ -157,15 +157,15 @@ clean <- function(d, helpers) {
     ) %>%
     mutate(
       # NOTE: all persons are either Drivers or Passengers (no Pedestrians)
-      incident_type = "vehicular",
-      incident_datetime = parse_datetime(StopDate),
-      incident_date = as.Date(incident_datetime),
-      incident_time = format(incident_datetime, "%H:%M:%S"),
+      type = "vehicular",
+      datetime = parse_datetime(StopDate),
+      date = as.Date(datetime),
+      time = format(datetime, "%H:%M:%S"),
       # NOTE: the majority of times are midnight, which signify missing data
-      incident_time = ifelse(incident_time == "00:00:00", NA, incident_time),
+      time = ifelse(time == "00:00:00", NA, time),
       # TODO(phoebe): can we get better location data?
       # https://app.asana.com/0/456927885748233/635930602677956
-      incident_location = str_c_na(
+      location = str_c_na(
         StopCity,
         str_c(county, " County"),
         sep = ", "
@@ -175,7 +175,7 @@ clean <- function(d, helpers) {
       warning_issued = str_detect(action_description, "Warning"),
       # NOTE: a small percentage of these are "No Action Taken" which will
       # be coerced to NAs during standardization
-      incident_outcome = first_of(
+      outcome = first_of(
         "arrest" = arrest_made,
         "citation" = citation_issued,
         "warning" = warning_issued
@@ -214,7 +214,7 @@ clean <- function(d, helpers) {
     ) %>%
     filter(
       # NOTE: 2000-2001 data is incomplete, so removing
-      year(incident_date) > 2001
+      year(date) > 2001
     ) %>%
     standardize(d$metadata)
 }

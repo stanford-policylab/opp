@@ -26,7 +26,7 @@ clean <- function(d, helpers) {
     mutate(
       # NOTE: stop location is null about 2/3 of the time,
       # so using violation location
-      incident_location = str_trim(
+      location = str_trim(
         str_c(
           ViolationStreet,
           ViolationCrossStreet,
@@ -46,12 +46,12 @@ clean <- function(d, helpers) {
       precinct = POL_PRECNT
     ) %>%
     separate_cols(
-      `Stop Date` = c("incident_date", "incident_time")
+      `Stop Date` = c("date", "time")
     ) %>%
     mutate(
       # NOTE: all stop reasons are vehicle related
-      incident_type = "vehicular",
-      incident_date = parse_date(incident_date, "%Y/%m/%d"),
+      type = "vehicular",
+      date = parse_date(date, "%Y/%m/%d"),
       subject_race = tr_race[Ethnicity],
       subject_sex = tr_sex[Gender],
       search_conducted = `Enforcement Taken` %in%
@@ -61,7 +61,7 @@ clean <- function(d, helpers) {
       citation_issued = `Enforcement Taken` %in%
         c("Traffic Citation", "Misd. Citation or Summons"),
       warning_issued = `Enforcement Taken` == "Verbal Warning",
-      incident_outcome = first_of(
+      outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued,
         warning = warning_issued

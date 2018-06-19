@@ -88,7 +88,7 @@ clean <- function(d, helpers) {
       stop_number
     ) %>%
     rename(
-      incident_location = stop_location,
+      location = stop_location,
       beat = zone,
       frisk_performed = pat_down_search,
       subject_race = race,
@@ -104,7 +104,7 @@ clean <- function(d, helpers) {
     helpers$add_lat_lng(
     ) %>%
     separate_cols(
-      stop_datetime = c("incident_date", "incident_time")
+      stop_datetime = c("date", "time")
     ) %>%
     apply_translator_to(
       tr_yn,
@@ -130,12 +130,12 @@ clean <- function(d, helpers) {
       "search_plain_view"
     ) %>%
     mutate(
-      incident_type = "vehicular",
-      incident_date = parse_date(incident_date, "%m/%d/%Y"),
-      incident_time = parse_time(incident_time, "%I:%M:%S %p"),
+      type = "vehicular",
+      date = parse_date(date, "%m/%d/%Y"),
+      time = parse_time(time, "%I:%M:%S %p"),
       citation_issued = traffic_citation_issued | misd_state_citation_issued,
       warning_issued = verbal_warning_issued | written_warning_issued,
-      incident_outcome = first_of(
+      outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued,
         warning = warning_issued

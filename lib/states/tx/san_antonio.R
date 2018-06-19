@@ -54,7 +54,7 @@ clean <- function(d, helpers) {
   d$data %>%
     rename(
       subject_age = `Age At Time Of Violation`,
-      incident_location = `Violation Location`,
+      location = `Violation Location`,
       vehicle_registration_state = `License Plate State`,
       vehicle_year = `Vehicle Year`,
       vehicle_make = `Vehicle Make`,
@@ -63,14 +63,14 @@ clean <- function(d, helpers) {
       reason_for_stop = Offense,
       arrest_made = `Custodial Arrest Made`
     ) %>%
-    helpers$add_incident_type(
+    helpers$add_type(
     ) %>%
     filter(
-      incident_type != "other"
+      type != "other"
     ) %>%
     mutate(
-      incident_date = parse_date(`Violation Date`),
-      incident_time = seconds_to_hms(`Violation Time`),
+      date = parse_date(`Violation Date`),
+      time = seconds_to_hms(`Violation Time`),
       subject_race = tr_race[Race],
       subject_sex = tr_sex[Gender],
       search_conducted = `Search Reason` %in% names(tr_search_type),
@@ -79,7 +79,7 @@ clean <- function(d, helpers) {
       arrest_made = tr_yn[arrest_made],
       citation_issued = !is.na(`Citation #`),
       # NOTE: warnings are not recorded
-      incident_outcome = first_of(
+      outcome = first_of(
         "arrest" = arrest_made,
         "citation" = citation_issued
       )

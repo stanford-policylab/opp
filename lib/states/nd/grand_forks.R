@@ -65,27 +65,27 @@ clean <- function(d, helpers) {
   # TODO(phoebe): can we get contraband fields?
   # https://app.asana.com/0/456927885748233/579650153274289
   d$data %>%
-    helpers$add_incident_type(
+    helpers$add_type(
       "desc"
     ) %>%
     filter(
-      incident_type != "other"
+      type != "other"
     ) %>%
     rename(
       reason_for_stop = desc
     ) %>%
     mutate(
-      incident_date = parse_date(date, "%Y%m%d"),
-      incident_time = coalesce(
+      date = parse_date(date, "%Y%m%d"),
+      time = coalesce(
         parse_time_int(time),
         parse_time_int(time, fmt = "%H%M%S")
       ),
-      incident_location = str_c_na(house, street, sep = " "),
+      location = str_c_na(house, street, sep = " "),
       warning_issued = !is.na(contact),
       citation_issued = !is.na(citation_number),
       # TODO(phoebe): can we get arrests?
       # https://app.asana.com/0/456927885748233/579650153274287
-      incident_outcome = first_of(
+      outcome = first_of(
         warning = warning_issued,
         citation = citation_issued
       ),

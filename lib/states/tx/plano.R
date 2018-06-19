@@ -8,7 +8,7 @@ load_raw <- function(raw_data_dir, n_max) {
   colnames_map <- list(
     "2012" = c(
       "origin",
-      "incident_type",
+      "type",
       "citation_number",
       "incident_number",
       "date",
@@ -249,13 +249,13 @@ clean <- function(d, helpers) {
       sector = sector
     ) %>%
     mutate(
-      incident_type = ifelse(is_true(mv_stop), "vehicular", "pedestrian"),
-      incident_date = coalesce(
+      type = ifelse(is_true(mv_stop), "vehicular", "pedestrian"),
+      date = coalesce(
         parse_date(date, "%Y/%m/%d"),
         parse_date(date, "%m/%d/%Y"),
         as.Date(parse_datetime(date, "%Y/%m/%d %H:%M:%S"))
       ),
-      incident_time = coalesce(
+      time = coalesce(
         parse_time(str_replace(time, "24:00", "00:00"), "%H:%M"),
         parse_time(time, "%H:%M:%S"),
         parse_time(
@@ -268,7 +268,7 @@ clean <- function(d, helpers) {
       ),
       # TODO(danj): get geolocation data
       # NOTE: each column indpendently is at least 75% null
-      incident_location = coalesce(
+      location = coalesce(
         location,
         violation_location,
         offense_location,
@@ -285,7 +285,7 @@ clean <- function(d, helpers) {
           arrested
         )
       ),
-      incident_outcome = first_of(
+      outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued,
         warning = warning_issued

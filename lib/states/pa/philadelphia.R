@@ -41,24 +41,24 @@ clean <- function(d, helpers) {
   d$data %>%
     rename(
       subject_age = age,
-      incident_location = location,
+      location = location,
       district = districtoccur,
       arrest_made = individual_arrested,
       search_person = individual_searched,
       search_vehicle = vehicle_searched,
-      incident_lat = lat,
-      incident_lng = lng,
+      lat = lat,
+      lng = lng,
       # police service area
       service_area = psa
     ) %>%
     mutate(
-      incident_datetime = parse_datetime(datetimeoccur),
-      incident_date = as.Date(incident_datetime),
-      incident_time = format(incident_datetime, "%H:%M%S"),
-      incident_type = tr_type[stoptype],
+      datetime = parse_datetime(datetimeoccur),
+      date = as.Date(datetime),
+      time = format(datetime, "%H:%M%S"),
+      type = tr_type[stoptype],
       # TODO(phoebe): can we get other outcomes - citations/warnings?
       # https://app.asana.com/0/456927885748233/658391963833527
-      incident_outcome = first_of(
+      outcome = first_of(
         "arrest" = arrest_made
       ),
       contraband_found = individual_contraband | vehicle_contraband,

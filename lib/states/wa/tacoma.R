@@ -15,20 +15,20 @@ clean <- function(d, helpers) {
   # NOTE: subject race is not recorded
   d$data %>%
     rename(
-      incident_location = Location,
+      location = Location,
       officer_id = Unit
     ) %>%
     mutate(
       # NOTE: T = "Traffic Stop", SS = "Subject Stop"
-      incident_type = ifelse(Type == "T", "vehicular", "pedestrian"),
-      incident_date = parse_date(Date, "%Y/%m/%d"),
-      incident_time = parse_time(Time, "%H:%M:%S"),
+      type = ifelse(Type == "T", "vehicular", "pedestrian"),
+      date = parse_date(Date, "%Y/%m/%d"),
+      time = parse_time(Time, "%H:%M:%S"),
       warning_issued = str_detect(Disposition, "Warning"),
       citation_issued = str_detect(Disposition, "Citation"),
       arrest_made = str_detect(Disposition, "Arrest"),
       # TODO(ravi): do we want to filter out outcomes we don't care about?
       # https://app.asana.com/0/456927885748233/590576541432184
-      incident_outcome = first_of(
+      outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued,
         warning = warning_issued

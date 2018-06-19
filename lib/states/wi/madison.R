@@ -45,15 +45,15 @@ clean <- function(d, helpers) {
     ) %>%
     mutate(
       # NOTE: Statute Descriptions all appear to be vehicle related
-      incident_type = "vehicular",
-      incident_date = parse_date(Date, "%Y/%m/%d"),
-      incident_time = parse_time(Time, "%H:%M:%S"),
-      incident_location = coalesce(onStreet, onStreetName),
+      type = "vehicular",
+      date = parse_date(Date, "%Y/%m/%d"),
+      time = parse_time(Time, "%H:%M:%S"),
+      location = coalesce(onStreet, onStreetName),
       warning_issued = is.na(`Ticket #`),
       citation_issued = !is.na(`Ticket #`),
       # TODO(phoebe): can we get arrests?
       # https://app.asana.com/0/456927885748233/595493946182543
-      incident_outcome = first_of(
+      outcome = first_of(
         citation = citation_issued,
         warning = warning_issued
       ),

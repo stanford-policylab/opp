@@ -66,7 +66,7 @@ clean <- function(d, helpers) {
       !is.na(rin)
     ) %>%
     rename(
-      incident_location = address
+      location = address
     ) %>%
     helpers$add_lat_lng(
     ) %>%
@@ -75,11 +75,11 @@ clean <- function(d, helpers) {
       sep = 1
     ) %>%
     separate_cols(
-      datetime = c("incident_date", "incident_time"),
+      datetime = c("date", "time"),
       officer_no_name_1 = c("officer_id", "officer_name")
     ) %>%
     mutate(
-      incident_type = ifelse(
+      type = ifelse(
         str_detect(mir_and_description, "PEDESTRIAN")
         | (str_detect(mir_and_description, "PURSUIT")
            & !is.na(type_description)
@@ -90,13 +90,13 @@ clean <- function(d, helpers) {
         "pedestrian",
         "vehicular"
       ),
-      incident_date = parse_date(incident_date, "%Y/%m/%d"),
+      date = parse_date(date, "%Y/%m/%d"),
       subject_race = tr_race[subject_race],
       subject_sex = tr_sex[subject_sex],
       arrest_made = str_sub(disposition_description, 1, 1) == "A",
       # NOTE: includes criminal and non-criminal citations
       citation_issued = str_detect(disposition_description, "CITATION"),
-      incident_outcome = first_of(
+      outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued
       ),

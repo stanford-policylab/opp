@@ -29,8 +29,8 @@ clean <- function(d, helpers) {
   # NOTE: officer name exists in raw data, but no officer_id
   d$data %>%
     rename(
-      incident_location = Location,
-      incident_date = `Offense Date`,
+      location = Location,
+      date = `Offense Date`,
       vehicle_make = `Veh Make`,
       vehicle_model = `Veh Model`,
       vehicle_color = `Veh Color`,
@@ -47,15 +47,15 @@ clean <- function(d, helpers) {
       district = DISTRICT2,
       region = REGION
     ) %>%
-    helpers$add_incident_type(
+    helpers$add_type(
     ) %>%
     filter(
-      incident_type != "other"
+      type != "other"
     ) %>%
     mutate(
       # NOTE: these are all citations since indexed by citation number
-      incident_outcome = "citation",
-      incident_time = parse_time(Time, "%I:%M%p"),
+      outcome = "citation",
+      time = parse_time(Time, "%I:%M%p"),
       citation_issued = TRUE,
       subject_race = tr_race[Race],
       subject_sex = tr_sex[Sex],
@@ -69,9 +69,9 @@ clean <- function(d, helpers) {
     # TODO(phoebe): how can we dedupe these to match number of drivers?
     # https://app.asana.com/0/456927885748233/573247093484087
     merge_rows(
-      incident_location,
-      incident_date,
-      incident_time
+      location,
+      date,
+      time
     ) %>%
     standardize(d$metadata)
 }

@@ -56,24 +56,24 @@ clean <- function(d, helpers) {
   d$data %>%
     rename(
       reason_for_stop = charge,
-      incident_location = violation_location,
+      location = violation_location,
       vehicle_color = color,
       vehicle_make = make,
       vehicle_model = model,
       vehicle_registration_state = tagstate
     ) %>%
-    helpers$add_incident_type(
+    helpers$add_type(
     ) %>%
     filter(
-      incident_type != "other"
+      type != "other"
     ) %>%
     mutate(
-      incident_datetime = coalesce(
+      datetime = coalesce(
         parse_datetime(violationdate, "%Y/%m/%d %H:%M:%S"),
         parse_datetime(violationdate, "%Y/%m/%d")
       ),
-      incident_date = as.Date(incident_datetime),
-      incident_time = format(incident_datetime, "%H:%M:%S"),
+      date = as.Date(datetime),
+      time = format(datetime, "%H:%M:%S"),
       subject_race = tr_race[race],
       subject_sex = tr_sex[sex],
       vehicle_year = format_two_digit_year(year, cutoff = 2017)

@@ -10,8 +10,8 @@ load_raw <- function(raw_data_dir, n_max) {
   }
   subject <- r("orr_53698_2016_subject_stops.csv")
   traffic <- r("orr_53698_2016_traffic_stops.csv")
-  subject["incident_type"] = "pedestrian"
-  traffic["incident_type"] = "vehicular"
+  subject["type"] = "pedestrian"
+  traffic["type"] = "vehicular"
   data <- bind_rows(subject, traffic)
   if (nrow(data) > n_max) {
     data <- data[1:n_max, ]
@@ -56,14 +56,14 @@ clean <- function(d, helpers) {
       reason_for_stop = `3rd digit (Reason for Stop)`,
       # TODO(phoebe): can we get a data dictionary for this? R, C, K, L?
       # https://app.asana.com/0/456927885748233/653410849000225
-      incident_outcome = `4th digit (Final Outcome)`,
+      outcome = `4th digit (Final Outcome)`,
       # TODO(phoebe): can we get a data dictionary for 6th digit (Search
       # Outcome?)
       # https://app.asana.com/0/456927885748233/653410849000225
       search_conducted = !is.na(`6th digit (Search Outcome)`),
-      incident_date = parse_date(InitiateDate),
-      incident_time = seconds_to_hms(InitiateTime),
-      incident_location = coalesce(Address1, Address2)
+      date = parse_date(InitiateDate),
+      time = seconds_to_hms(InitiateTime),
+      location = coalesce(Address1, Address2)
     ) %>%
     helpers$add_lat_lng(
     ) %>%

@@ -40,9 +40,9 @@ clean <- function(d, helpers) {
     mutate(
       # TODO(phoebe): can we confirm these are all vehicle related incidents?
       # https://app.asana.com/0/456927885748233/663043550621573
-      incident_type = "vehicular",
-      incident_date = parse_date(`Offense Date`),
-      incident_location = coalesce(
+      type = "vehicular",
+      date = parse_date(`Offense Date`),
+      location = coalesce(
         str_c(Block, Street, sep = " "),
         str_c(Street, "AND", `Scnd Street`, sep = " "),
         Street
@@ -52,7 +52,7 @@ clean <- function(d, helpers) {
       citation_issued = !is.na(`Citataion Num`),
       # TODO(phoebe): can we get other outcomes? arrests/warnings?
       # https://app.asana.com/0/456927885748233/663043550621574
-      incident_outcome = first_of(
+      outcome = first_of(
         "citation" = citation_issued
       )
     ) %>%

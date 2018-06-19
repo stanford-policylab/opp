@@ -66,14 +66,14 @@ clean <- function(d, helpers) {
   # https://app.asana.com/0/456927885748233/586847974785232
   d$data %>%
     rename(
-      incident_location = `VIOLATION EXACT LOCATION`,
-      incident_lat = `VIOLATION LAT DECIMAL`,
-      incident_lng = `VIOLATION LONG DECIMAL`,
+      location = `VIOLATION EXACT LOCATION`,
+      lat = `VIOLATION LAT DECIMAL`,
+      lng = `VIOLATION LONG DECIMAL`,
       vehicle_registration_state = `REGISTRATION STATE`,
       officer_id = `OFFICER BADGE/ID NUMBER`
     ) %>%
     mutate(
-      incident_date = parse_date(`CITATION DATE`, "%Y/%m/%d"),
+      date = parse_date(`CITATION DATE`, "%Y/%m/%d"),
       # NOTE: use the first violation under the assumption that this is the
       # "main" violation and likely the reason for the stop
       reason_for_stop = `Violation Description 1`,
@@ -84,12 +84,12 @@ clean <- function(d, helpers) {
       # https://app.asana.com/0/456927885748233/586847974785233
       citation_issued = TRUE,
       arrest_made = tr_yn[`ARREST INDICATOR`],
-      incident_outcome = first_of(
+      outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued
       )
     ) %>%
-    helpers$add_incident_type(
+    helpers$add_type(
       "Violation Description 1"
     ) %>%
     standardize(d$metadata)

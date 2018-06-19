@@ -26,7 +26,7 @@ clean <- function(d, helpers) {
   # https://app.asana.com/0/456927885748233/595493946182551
   d$data %>%
     rename(
-      incident_location = Address,
+      location = Address,
       arrest_made = Arrest_Jail,
       # TODO(phoebe): how do Charge_Ordinance, Charge_Misdemeanor, and
       # Charge_Felony map to warning, citation, arrest?
@@ -36,10 +36,10 @@ clean <- function(d, helpers) {
     mutate(
       # TODO(phoebe): looks like these are all only pedestrian stops?
       # https://app.asana.com/0/456927885748233/595493946182546
-      incident_type = "pedestrian",
-      incident_datetime = parse_datetime(Reported_Date, "%m/%d/%y %H:%M:%S"),
-      incident_date = as.Date(incident_datetime),
-      incident_time = format(incident_datetime, "%H:%M:%S"),
+      type = "pedestrian",
+      datetime = parse_datetime(Reported_Date, "%m/%d/%y %H:%M:%S"),
+      date = as.Date(datetime),
+      time = format(datetime, "%H:%M:%S"),
       subject_race = tr_race[Race],
       subject_sex = tr_sex[Sex],
       subject_dob = parse_datetime(DOB, "%m/%d/%y %H:%M:%S")

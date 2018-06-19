@@ -35,12 +35,12 @@ clean <- function(d, helpers) {
       beat = Post
     ) %>%
     mutate(
-      incident_datetime = coalesce(
+      datetime = coalesce(
         parse_datetime(`Ticket Date`, "%Y/%m/%d %H:%M:%S"),
 				parse_datetime(`Ticket Date`, "%Y/%m/%d")
       ),
-      incident_date = as.Date(incident_datetime),
-      incident_time = format(incident_datetime, "%H:%M:%S"),
+      date = as.Date(datetime),
+      time = format(datetime, "%H:%M:%S"),
       # TODO(phoebe): can we get `Ordinance Code` translations?
       # https://app.asana.com/0/456927885748233/672314799705088
       # TODO(phoebe): what are the `Enforcement Type` translations? And why are
@@ -53,7 +53,7 @@ clean <- function(d, helpers) {
       # https://app.asana.com/0/456927885748233/672314799705090
       # TODO(phoebe): is "Watch" incident type -- i.e. vehicular/pedestrian?
       # https://app.asana.com/0/456927885748233/672314799705091
-      incident_type = ifelse(
+      type = ifelse(
         Watch == "V",
         "vehicular",
         ifelse(
@@ -65,11 +65,11 @@ clean <- function(d, helpers) {
       citation_issued = !is.na(Ticket),
       # TODO(phoebe): can we get other types of outcomes? arrests/warnings?
       # https://app.asana.com/0/456927885748233/672314799705093
-      incident_outcome = first_of(
+      outcome = first_of(
         "citation" = citation_issued
       )
     ) %>%
-    # TODO(phoebe): can we get incident_location?
+    # TODO(phoebe): can we get location?
     # https://app.asana.com/0/456927885748233/672314799705094
     # helpers$add_lat_lng(
     # ) %>%

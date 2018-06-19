@@ -99,9 +99,9 @@ clean <- function(d, helpers) {
     #   HA_ARREST_KEY
     # ) %>%
     rename(
-      incident_location = HA_ROAD_LOC,
-      incident_lat = HA_LATITUDE,
-      incident_lng = HA_LONGITUDE,
+      location = HA_ROAD_LOC,
+      lat = HA_LATITUDE,
+      lng = HA_LONGITUDE,
       # TODO(phoebe): what are HA_REGION and HA_DISTRICT?
       # https://app.asana.com/0/456927885748233/553393937447381
       precinct = HA_PRECINCT,
@@ -130,7 +130,7 @@ clean <- function(d, helpers) {
       contraband_is_weapon
     ) %>%
     separate_cols(
-      HA_ARREST_DATE = c("incident_date", "incident_time")
+      HA_ARREST_DATE = c("date", "time")
     ) %>%
     separate_cols(
       HA_RACE_SEX = c("subject_race", "subject_sex"),
@@ -138,16 +138,16 @@ clean <- function(d, helpers) {
     ) %>%
     mutate(
       # NOTE: top 100 violations all appear vehicle related
-      incident_type = "vehicular",
-      incident_date = parse_date(incident_date, "%m/%d/%y"),
-      incident_lat = as.numeric(incident_lat) / 1E6,
-      incident_lng = as.numeric(incident_lng) / 1E6,
+      type = "vehicular",
+      date = parse_date(date, "%m/%d/%y"),
+      lat = as.numeric(lat) / 1E6,
+      lng = as.numeric(lng) / 1E6,
       citation_issued = !is.na(AD_VIOLATION_CODE),
       warning_issued = !is.na(AW_VIOLATION_CODE),
       # TODO(phoebe): how can we determine whether an arrest happened?
       # https://app.asana.com/0/456927885748233/475749789858290 
       arrest_made = !citation_issued && !warning_issued,
-      incident_outcome = first_of(
+      outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued,
         warning = warning_issued

@@ -30,21 +30,21 @@ clean <- function(d, helpers) {
   # https://app.asana.com/0/456927885748233/585201226756922
   d$data %>%
     rename(
-      incident_location = `Incident address`
+      location = `Incident address`
     ) %>%
     mutate(
       # NOTE: `Incident nature` is all "30 TRAFFIC STOP" so vehicular stops
-      incident_type = "vehicular",
-      incident_datetime = parse_datetime(`When reported`, "%m/%d/%Y %H:%M"),
-      incident_date = as.Date(incident_datetime),
-      incident_time = format(incident_datetime, "%H:%M"),
+      type = "vehicular",
+      datetime = parse_datetime(`When reported`, "%m/%d/%Y %H:%M"),
+      date = as.Date(datetime),
+      time = format(datetime, "%H:%M"),
       citation_issued = str_detect(Description, "CITATION"),
       warning_issued = str_detect(Description, "WARNING"),
       arrest_made = str_detect(Description, "ARREST") &
         !str_detect(Description, "NO ARREST"),
       # TODO(ravi): do we want to filter out the other types of dispositions?
       # https://app.asana.com/0/456927885748233/585201226756923
-      incident_outcome = first_of(
+      outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued,
         warning = warning_issued

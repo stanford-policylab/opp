@@ -46,26 +46,26 @@ clean <- function(d, helpers) {
     ) %>%
     mutate(
       # NOTE: all charge descriptions appear to be vehicle related
-      incident_type = "vehicular",
+      type = "vehicular",
       # TODO(danj): fix date
-      incident_datetime = coalesce(
+      datetime = coalesce(
         parse_datetime(citation_date_time, locale = locale(tz = "US/Central")),
         parse_datetime(citation_date_time, "%Y/%m/%d %H:%M:%S"),
         parse_datetime(citation_date_time, "%Y/%m/%d")
       ),
-      incident_date = as.Date(incident_datetime),
-      incident_time = format(incident_datetime, "%H:%M:%S"),
+      date = as.Date(datetime),
+      time = format(datetime, "%H:%M:%S"),
       citation_issued = TRUE,
       # TODO(phoebe): can we get other outcomes (warnings, arrests)?
       # https://app.asana.com/0/456927885748233/595493946182534
-      incident_location = str_c_na(
+      location = str_c_na(
         citation_location,
         citation_city,
         citation_state,
         citation_zip,
         sep = ", "
       ),
-      incident_outcome = "citation",
+      outcome = "citation",
       subject_race = tr_race[ifelse(
         defendant_ethnicity == "H" | is.na(defendant_ethnicity),
         "H",

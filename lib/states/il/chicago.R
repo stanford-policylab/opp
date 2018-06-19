@@ -90,15 +90,15 @@ clean <- function(d, helpers) {
 
   d$data %>%
     rename(
-      incident_date = arrest_date,
+      date = arrest_date,
       reason_for_stop = statute_description,
       citation_issued = citation,
 			officer_id = officer_employee_no
     ) %>%
     mutate(
-      incident_type = "vehicular",
-      incident_time = parse_time(arrest_hour, "%H"),
-      incident_location = str_trim(
+      type = "vehicular",
+      time = parse_time(arrest_hour, "%H"),
+      location = str_trim(
         str_c(
           street_no,
           street_name,
@@ -109,7 +109,7 @@ clean <- function(d, helpers) {
       subject_race = tr_race[coalesce(subject_race, driver_race)],
       subject_sex = tr_sex[coalesce(subject_gender, driver_gender)],
       arrest_made = !is.na(arrest_id),
-      incident_outcome = first_of(
+      outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued
       )

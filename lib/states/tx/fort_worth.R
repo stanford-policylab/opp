@@ -60,7 +60,7 @@ clean <- function(d, helpers) {
 
   d$data %>%
     rename(
-      incident_location = Address,
+      location = Address,
       contraband_found = Contraband_Found,
       arrest_made = Arrest,
       citation_issued = Citation,
@@ -79,15 +79,15 @@ clean <- function(d, helpers) {
     mutate(
       # NOTE: we don't have most of these, and it's dicey to reverse engineer
       # from arrest_code_description
-      incident_type = ifelse(
+      type = ifelse(
         str_detect(reason_for_stop, "Traffic Violation"),
         "vehicular",
         "pedestrian"
       ),
-      incident_datetime = parse_datetime(Stop_Date),
-      incident_date = as.Date(incident_datetime),
-      incident_time = format(incident_datetime, "%H:%M:%S"),
-      incident_outcome = first_of(
+      datetime = parse_datetime(Stop_Date),
+      date = as.Date(datetime),
+      time = format(datetime, "%H:%M:%S"),
+      outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued,
         warning = warning_issued

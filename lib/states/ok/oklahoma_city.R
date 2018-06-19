@@ -38,9 +38,9 @@ clean <- function(d, helpers) {
 
   d$data %>%
     rename(
-      incident_date = violDate,
-      incident_time = violTime,
-      incident_location = violLocation,
+      date = violDate,
+      time = violTime,
+      location = violLocation,
       subject_race = DfndRace,
       subject_sex = DfndSex,
       subject_dob = DfndDOB,
@@ -59,17 +59,17 @@ clean <- function(d, helpers) {
     ) %>%
     # TODO(ravi): check these classifications
     # https://app.asana.com/0/456927885748233/521735743717408
-    helpers$add_incident_type(
+    helpers$add_type(
     ) %>%
     filter(
-      incident_type != "other"
+      type != "other"
     ) %>%
     mutate(
       # NOTE: these are all citations
       citation_issued = TRUE,
-      incident_outcome = "citation",
-      incident_date = parse_date(incident_date, "%Y%m%d"),
-      incident_time = parse_time_int(incident_time),
+      outcome = "citation",
+      date = parse_date(date, "%Y%m%d"),
+      time = parse_time_int(time),
       subject_race = tr_race[subject_race],
       subject_sex = tr_sex[subject_sex],
       subject_dob = parse_date(subject_dob, "%Y%m%d")
