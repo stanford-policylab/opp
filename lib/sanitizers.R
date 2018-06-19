@@ -19,23 +19,15 @@ sanitize_date <- function(val) {
 }
 
 
-sanitize_dob <- function(val) {
-  enforce_bounds(
-    val,
-    valid_dob_start_date,
-    valid_dob_end_date,
-    as.Date(NA)
-  )
-}
-
-
-sanitize_yob <- function(val) {
-  enforce_bounds(
-    val,
-    valid_yob_start,
-    valid_yob_end,
-    as.integer(NA)
-  )
+sanitize_dob_func <- function(dates) {
+  function(v) {
+    enforce_bounds(
+      v,
+      dates - years(valid_age_end),
+      dates - years(valid_age_start),
+      as.Date(NA)
+    )
+  }
 }
 
 
@@ -49,11 +41,26 @@ sanitize_age <- function(val) {
 }
 
 
-sanitize_vehicle_year <- function(val) {
-  enforce_bounds(
-    val,
-    valid_vehicle_start_year,
-    valid_vehicle_end_year,
-    as.integer(NA)
-  )
+sanitize_dob_func <- function(dates) {
+  function(v) {
+    enforce_bounds(
+      v,
+      dates - years(valid_age_end),
+      dates - years(valid_age_start),
+      as.Date(NA)
+    )
+  }
+}
+
+
+sanitize_vehicle_year_func <- function(dates) {
+  function(v) {
+    enforce_bounds(
+      v,
+      valid_vehicle_start_year,
+      # NOTE: sometimes you can get a new car that is "next year's model"
+      dates + years(1),
+      as.integer(NA)
+    )
+  }
 }

@@ -255,6 +255,7 @@ opp_shapefiles_dir <- function(state, city) {
   file.path(data_dir, "shapefiles")
 }
 
+
 opp_load_json <- function(state, city) {
   function(json_filename) {
     fromJSON(file.path(
@@ -264,6 +265,7 @@ opp_load_json <- function(state, city) {
   }
 }
 
+
 opp_load_block_group_shapefiles <- function(state) {
   source(here::here("lib", "shapefiles.R"), local = TRUE)
   # NOTE: all these block group shapefiles are from 2017
@@ -272,6 +274,7 @@ opp_load_block_group_shapefiles <- function(state) {
     here::here("data", "block_group_shapefiles", "2017", state)
   )[[1]]
 }
+
 
 opp_save <- function(d, state, city) {
   saveRDS(d, opp_clean_data_path(state, city))

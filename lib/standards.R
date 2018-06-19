@@ -8,19 +8,11 @@ valid_end_date <- parse_date(Sys.Date())
 
 
 valid_vehicle_start_year <- 1800
-valid_vehicle_end_year <- lubridate::year(Sys.Date()) + 1
+# NOTE: end year depends on stop date
 
 
 valid_age_start <- 10
 valid_age_end <- 110
-
-
-valid_dob_start_date <- ymd(Sys.Date()) - valid_age_end
-valid_dob_end_date <- ymd(Sys.Date()) - valid_age_start
-
-
-valid_yob_start <- year(Sys.Date()) - valid_age_end
-valid_yob_end <- year(Sys.Date()) - valid_age_start
 
 
 valid_types <- c(
@@ -119,6 +111,9 @@ valid_states <- c(
 
 
 schema <- c(
+  # back-reference
+  raw_row_number                = as.numeric,
+
   # when
   date                          = parse_date,
   time                          = parse_time,

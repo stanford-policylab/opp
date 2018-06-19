@@ -19,8 +19,8 @@ standardize <- function(data, metadata) {
       metadata = list()
     ) %>%
     select_only_schema_cols %>%
-    predication_correction %>%
     enforce_types %>%
+    correct_predicates %>%
     sanitize
 
   # put all local metadata in standarize sublist of all metadata
@@ -39,15 +39,17 @@ select_only_schema_cols <- function(d) {
 }
 
 
-predication_correction <- function(d) {
+correct_predicates <- function(d) {
   print("correcting predicated columns...")
   for (predicated_column in names(predicated_columns)) {
     if (predicated_column %in% colnames(d$data)) {
       predicate = predicated_columns[[predicated_column]]$predicate
       if_not = predicated_columns[[predicated_column]]$if_not
-      d$data[[predicated_column]] <- ifelse(as.logical(d$data[[predicate]]),
-                                            d$data[[predicated_column]],
-                                            if_not)
+      d$data[[predicated_column]] <- ifelse(
+        as.logical(d$data[[predicate]]),
+        d$data[[predicated_column]],
+        if_not
+      )
     }
   }
   d
@@ -73,8 +75,19 @@ sanitize <- function(d) {
     if (endsWith(col, "age")) {
       sanitize_schema <- append_to(sanitize_schema, col, sanitize_age)
     }
+    if (endsWith(col, "dob")) {
+      sanitize_schema <- append_to(
+        sanitize_schema,
+        col,
+        sanitize_dob_func(d$data$date)
+      )
+    }
     if (col == "vehicle_year") {
-      sanitize_schema <- append_to(sanitize_schema, col, sanitize_vehicle_year)
+      sanitize_schema <- append_to(
+        sanitize_schema,
+        col,
+        sanitize_vehicle_year_func(d$data$date)
+      )
     }
   }
   x <- apply_schema_and_collect_null_rates(sanitize_schema, d$data)

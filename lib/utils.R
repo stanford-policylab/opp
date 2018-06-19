@@ -582,7 +582,7 @@ range_of_years_from_filenames <- function(dir, file_pattern = "") {
 
 
 files_with_recent_year_in_name <- function(dir) {
-  list.files(dir, recent_years_regex())
+  list.files(dir, recent_years_regex(), full.names=T)
 }
 
 
