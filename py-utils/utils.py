@@ -21,18 +21,18 @@ def is_online():
     return False
 
 
-def markup_code(code, language):
+def syntax_higlight_code(code, language):
     from pygments import highlight
-    from pygments.lexers import get_lexer_class_by_name
+    from pygments.lexers import get_lexer_by_name
     from pygments.formatters import Terminal256Formatter
     return highlight(
         code,
-        get_lexer_class_by_name(language),
-        Terminal256Formatter
+        get_lexer_by_name(language),
+        Terminal256Formatter()
     )
 
 
-def markup_code_file(path):
+def syntax_higlight_path(path):
     from pygments import highlight
     from pygments.lexers import get_lexer_for_filename
     from pygments.formatters import Terminal256Formatter
@@ -41,7 +41,7 @@ def markup_code_file(path):
     return highlight(
         code,
         get_lexer_for_filename(filename),
-        Terminal256Formatter
+        Terminal256Formatter()
     )
 
 
