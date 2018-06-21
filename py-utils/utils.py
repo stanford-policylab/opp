@@ -11,9 +11,55 @@ def chdir_to_opp_root():
     return opp_root_dir
 
 
+def is_online():
+    import socket
+    try:
+        socket.create_connection(("www.google.com", 80))
+        return True
+    except OSError:
+        pass
+    return False
+
+
+def markup_code(code, language):
+    from pygments import highlight
+    from pygments.lexers import get_lexer_class_by_name
+    from pygments.formatters import Terminal256Formatter
+    return highlight(
+        code,
+        get_lexer_class_by_name(language),
+        Terminal256Formatter
+    )
+
+
+def markup_code_file(path):
+    from pygments import highlight
+    from pygments.lexers import get_lexer_for_filename
+    from pygments.formatters import Terminal256Formatter
+    with open(path) as f:
+        code = f.read()
+    return highlight(
+        code,
+        get_lexer_for_filename(filename),
+        Terminal256Formatter
+    )
+
+
 def make_dir(d):
     if not os.path.exists(d):
         os.makedirs(d)
+    return
+
+
+def git_pull_rebase(git_dir):
+    import git
+    git.cmd.Git(git_dir).pull('--rebase')
+    return
+
+
+def git_pull_rebase_if_online(git_dir):
+    if (is_online()):
+        git_pull_rebase(git_dir)
     return
 
 

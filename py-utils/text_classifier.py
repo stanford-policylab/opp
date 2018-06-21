@@ -43,23 +43,51 @@ def predict_on(model_file, test_csv, pred_csv):
 
 
 def parse_args(argv):
-    parser = argparse.ArgumentParser(prog=argv[0],
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(
+        prog=argv[0],
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     sub = parser.add_subparsers(help='commands', dest='command')
-    train = sub.add_parser('train', help='train a model',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    train.add_argument('-f', '--train_csv', default='train.csv',
-                       help='format (per line): label,"text"')
-    train.add_argument('-m' , '--model_name', default='a.model',
-                       help='model name')
-    pred = sub.add_parser('predict', help='predict on unlabeled data',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    pred.add_argument('-m', '--model_name', default='a.model',
-                      help='model file')
-    pred.add_argument('-f', '--test_csv', default='test.csv',
-                      help='format (per line): "text"')
-    pred.add_argument('-o', '--pred_csv', default='pred.csv',
-                      help='output csv')
+    train = sub.add_parser(
+        'train',
+        help='train a model',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    train.add_argument(
+        '-f',
+        '--train_csv',
+        default='train.csv',
+        help='format (per line): label,"text"'
+    )
+    train.add_argument(
+        '-m' ,
+        '--model_name',
+        default='a.model',
+        help='model name'
+    )
+    pred = sub.add_parser(
+        'predict',
+        help='predict on unlabeled data',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    pred.add_argument(
+        '-m',
+        '--model_name',
+        default='a.model',
+        help='model file'
+    )
+    pred.add_argument(
+        '-f',
+        '--test_csv',
+        default='test.csv',
+        help='format (per line): "text"'
+    )
+    pred.add_argument(
+        '-o',
+        '--pred_csv',
+        default='pred.csv',
+        help='output csv'
+    )
     return parser.parse_args(argv[1:])
 
 

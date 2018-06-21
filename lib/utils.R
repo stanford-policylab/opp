@@ -9,6 +9,11 @@ p <- function(obj) { print(obj, n = Inf) }
 tna <- function(v) { sum(is.na(v)) }
 
 
+if_else_na <- function(pred, pred_true, pred_false_or_na) {
+  ifelse(!is.na(pred) && pred, pred_true, pred_false_or_na)
+}
+
+
 create_title <- function(state, city) {
   str_c(
     format_proper_noun(city),

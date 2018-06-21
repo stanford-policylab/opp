@@ -1,7 +1,9 @@
 bs4
 census
+gitpython
 googlemaps
 nltk
 pandas
+pygments
 sklearn
 us

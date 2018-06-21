@@ -64,7 +64,7 @@ clean <- function(d, helpers) {
       # https://app.asana.com/0/456927885748233/645792862056548
       citation_issued = TRUE,
       outcome = "citation",
-      subject_race = tr_race[ifelse(ethnicity == "H", "H", race)],
+      subject_race = tr_race[if_else_na(ethnicity == "H", "H", race)],
       subject_sex = tr_sex[gender_code],
       subject_dob = parse_date(date_of_birth)
     ) %>%

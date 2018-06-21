@@ -54,8 +54,8 @@ clean <- function(d, helpers) {
         sep = ", "
       ),
       outcome = "citation",
-      subject_race = tr_race[ifelse(
-        defendant_ethnicity == "H" | is.na(defendant_ethnicity),
+      subject_race = tr_race[if_else_na(
+        defendant_ethnicity == "H",
         "H",
         defendant_race
       )],
