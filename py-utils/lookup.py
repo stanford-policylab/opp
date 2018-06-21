@@ -61,6 +61,7 @@ def find(regex, path, n_lines_before, n_lines_after):
         code = f.read()
     if regexc.match('notes?'):
         return find_all_notes(code, n_lines_before, n_lines_after)
+    # TODO(danj): add possible assignee here
     elif regexc.match('todos?'):
         return find_all_todos(code, n_lines_before, n_lines_after)
     elif regexc.match('files?'):
