@@ -105,7 +105,10 @@ def syntax_highlight(matches):
 
 
 def display(state, city, matches):
-    print('\n------------- %s, %s -------------' % (city, state))
+    header = '\n------------- %s, %s ' % (city, state)
+    colmax = 80
+    header += '-' * (colmax - len(header))
+    print(header)
     for match in matches:
         print(match + '-------------')
     return
