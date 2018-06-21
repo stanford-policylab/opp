@@ -83,9 +83,15 @@ def find_all_todos(code, n_lines_before, n_lines_after):
 
 
 def find_all(regex, code, n_lines_before, n_lines_after):
+    line_regex = '(.*\n)'
     regexc = re.compile(
-        '(.*\n){0,%d}%s(.*\n){0,%d}' % (
-        n_lines_before, regex, n_lines_after)
+        '{before}{match}{after}'.format(
+            # NOTE: repeated matches of capture groups aren't allowed by re
+            # StackOverflow: http://www.goo.gl/aKqPFG
+            before=line_regex * n_lines_before,
+            match=regex,
+            after=line_regex * n_lines_after
+        )
     )
     matches = []
     for captures in regexc.findall(code):
