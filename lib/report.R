@@ -196,7 +196,7 @@ calculate_if_col("reason_for_stop", function() {
 calculate_if_col("search_type", function() {
   search_types_tbl <- filter(data, !is.na(search_type)) %>% 
     group_by(search_type) %>%
-    count %>%
+    summarize(n = n()) %>%
     mutate(pct = n / sum(n))
   search_types_plot <<- ggplot(search_types_tbl) +
     geom_bar(
