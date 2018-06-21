@@ -37,6 +37,10 @@ def lookup(
             cities = os.listdir(os.path.join(states_dir, state))
         for city_filename in cities:
             city_path = os.path.join(states_dir, state, city_filename)
+            # NOTE: catches degenerate case when 'all' specified for state
+            # and a specific city name provided, i.e. 'long beach'
+            if not os.path.exists(city_path):
+                continue
             matches = find(regex, city_path, n_lines_before, n_lines_after)
             matches_formatted = syntax_highlight(matches)
             state_name = state.upper()
@@ -52,14 +56,39 @@ def normalize(name):
 
 
 def find(regex, path, n_lines_before, n_lines_after):
-    regex = re.compile(regex)
-    if regex.match('notes?'):
-        return ['# NOTE']
-    elif regex.match('todos?'):
-        return ['# TODO']
-    elif regex.match('files?'):
-        return ['file']
-    return
+    regexc = re.compile(regex)
+    with open(path) as f:
+        lines = f.readlines()
+    if regexc.match('notes?'):
+        return find_all_notes(lines, n_lines_before, n_lines_after)
+    elif regexc.match('todos?'):
+        return find_all_todos(lines, n_lines_before, n_lines_after)
+    elif regexc.match('files?'):
+        return [''.join(lines)]
+    else:
+        return find_all_matches(regex, lines, n_lines_before, n_lines_after)
+
+
+def find_all_notes(lines, n_lines_before, n_lines_after):
+    regex = re.compile('#\s+NOTE:')
+
+
+def find_all_matches(regex, lines, n_lines_before, n_lines_after):
+    # NOTE: if the user provided a single token, couch it in wildcards
+    if re.compile('^\w+$').match(regex):
+        regex = re.compile('.*%s.*' % regex)
+    idxs = [i for i, line in enumerate(lines) if regex.match(line)]
+    ranges = [
+        (
+            # 0 or 'n' lines before match
+            max(0, idx - n_lines_before),
+            # last line or 'n' lines after match; + 1 because ranges in python
+            # are closed, open, i.e. [a,b)
+            min(len(lines) - 1, idx + n_lines_after + 1) # last line or
+        )
+        for idx in idxs
+    ]
+    return [''.join(lines[begin:end]) for (begin, end) in ranges]
 
 
 def syntax_highlight(matches):
@@ -67,9 +96,9 @@ def syntax_highlight(matches):
 
 
 def display(state, city, matches):
-    print('\n---------- %s, %s ----------' % (city, state))
+    print('\n------------- %s, %s -------------' % (city, state))
     for match in matches:
-        print('\n' + match + '\n')
+        print('\n' + match)
     print()
     return
 
@@ -100,18 +129,18 @@ def parse_args(argv):
         help='city or "statewide"; type "all" to get all cities within a state'
     )
     parser.add_argument(
+        '-b',
+        '--n_lines_before',
+        type=int,
+        default=0,
+        help='returns n lines of context before regex pattern match',
+    )
+    parser.add_argument(
         '-a',
         '--n_lines_after',
         type=int,
         default=3,
         help='returns n lines of context after regex pattern match',
-    )
-    parser.add_argument(
-        '-b',
-        '--n_lines_before',
-        type=int,
-        default=3,
-        help='returns n lines of context before regex pattern match',
     )
     parser.add_argument(
         '-u',
