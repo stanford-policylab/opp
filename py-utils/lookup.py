@@ -101,8 +101,7 @@ def syntax_highlight(matches):
 def display(state, city, matches):
     print('\n------------- %s, %s -------------' % (city, state))
     for match in matches:
-        print('-------------\n' + match)
-    print()
+        print(match + '-------------')
     return
 
 
