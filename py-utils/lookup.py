@@ -58,37 +58,40 @@ def normalize(name):
 def find(regex, path, n_lines_before, n_lines_after):
     regexc = re.compile(regex)
     with open(path) as f:
-        lines = f.readlines()
+        code = f.read()
     if regexc.match('notes?'):
-        return find_all_notes(lines, n_lines_before, n_lines_after)
+        return find_all_notes(code, n_lines_before, n_lines_after)
     elif regexc.match('todos?'):
-        return find_all_todos(lines, n_lines_before, n_lines_after)
+        return find_all_todos(code, n_lines_before, n_lines_after)
     elif regexc.match('files?'):
-        return [''.join(lines)]
+        return [code]
     else:
-        return find_all_matches(regex, lines, n_lines_before, n_lines_after)
+        # NOTE: if the user provided a single token, match containing line
+        if re.compile('^\w+$').match(regex):
+            regex = '(.*' + regex + '.*\n)'
+        return find_all(regex, code, n_lines_before, n_lines_after)
 
 
-def find_all_notes(lines, n_lines_before, n_lines_after):
-    regex = re.compile('#\s+NOTE:')
+def find_all_notes(code, n_lines_before, n_lines_after):
+    regex = '(.*#\s+NOTE.*\n)(.*#.*\n)*'
+    return find_all(regex, code, n_lines_before, n_lines_after)
 
 
-def find_all_matches(regex, lines, n_lines_before, n_lines_after):
-    # NOTE: if the user provided a single token, couch it in wildcards
-    if re.compile('^\w+$').match(regex):
-        regex = re.compile('.*%s.*' % regex)
-    idxs = [i for i, line in enumerate(lines) if regex.match(line)]
-    ranges = [
-        (
-            # 0 or 'n' lines before match
-            max(0, idx - n_lines_before),
-            # last line or 'n' lines after match; + 1 because ranges in python
-            # are closed, open, i.e. [a,b)
-            min(len(lines) - 1, idx + n_lines_after + 1) # last line or
-        )
-        for idx in idxs
-    ]
-    return [''.join(lines[begin:end]) for (begin, end) in ranges]
+def find_all_todos(code, n_lines_before, n_lines_after):
+    regex = '(.*#\s+TODO.*\n)(.*#.*\n)*'
+    return find_all(regex, code, n_lines_before, n_lines_after)
+
+
+def find_all(regex, code, n_lines_before, n_lines_after):
+    regexc = re.compile(
+        '(.*\n){0,%d}%s(.*\n){0,%d}' % (
+        n_lines_before, regex, n_lines_after)
+    )
+    matches = []
+    for captures in regexc.findall(code):
+        match = ''.join([capture for capture in captures if capture != ''])
+        matches.append(match)
+    return matches
 
 
 def syntax_highlight(matches):
@@ -98,7 +101,7 @@ def syntax_highlight(matches):
 def display(state, city, matches):
     print('\n------------- %s, %s -------------' % (city, state))
     for match in matches:
-        print('\n' + match)
+        print('-------------\n' + match)
     print()
     return
 
