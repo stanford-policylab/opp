@@ -65,9 +65,9 @@ clean <- function(d, helpers) {
       search_conducted = `Stop Search` != "NS",
       contraband_found = `Stop Contraband` == "C",
       search_type = tr_search_type[`Stop Search`],
-      warning_issued = str_detect("W|V", `Stop Outcome`),
-      citation_issued = str_detect("T", `Stop Outcome`),
-      arrest_made = str_detect("A|AW", `Stop Outcome`),
+      warning_issued = str_detect(`Stop Outcome`, "W|V"),
+      citation_issued = str_detect(`Stop Outcome`, "T"),
+      arrest_made = str_detect(`Stop Outcome`, "A|AW"),
       outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued,
