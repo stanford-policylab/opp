@@ -34,11 +34,13 @@ def get_key(args):
     return key
 
 
-def extract_locations(csv_files,
-                      location_column_names,
-                      location_column_sep,
-                      output_file_csv,
-                      errors_file_csv):
+def extract_locations(
+        csv_files,
+        location_column_names,
+        location_column_sep,
+        output_file_csv,
+        errors_file_csv
+    ):
     locs = set()
     for csv_file in csv_files:
         # NOTE: read all location columns as strings, so that the
@@ -82,7 +84,9 @@ def path_relative_to_this_file(file_path):
 
 def parse_args(argv):
     parser = argparse.ArgumentParser(
-        prog=argv[0], formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        prog=argv[0],
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     parser.add_argument('-f', '--csv_files', nargs='+')
     parser.add_argument(
         '-l',
