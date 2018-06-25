@@ -71,5 +71,11 @@ clean <- function(d, helpers) {
     ) %>%
     helpers$add_lat_lng(
     ) %>%
+    helpers$add_shapefiles_data(
+    ) %>%
+    rename(
+      # NOTE: no data provided here, so calling the names 'district's
+      district = `data[polygon_indices, ]`
+    ) %>%
     standardize(d$metadata)
 }

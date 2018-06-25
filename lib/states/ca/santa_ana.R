@@ -43,5 +43,11 @@ clean <- function(d, helpers) {
     ) %>%
     helpers$add_lat_lng(
     ) %>%
+    helpers$add_shapefiles_data(
+    ) %>%
+    rename(
+      region = CITY_DISTR,
+      district = REPORT_DIS
+    ) %>%
     standardize(d$metadata)
 }

@@ -84,44 +84,68 @@ def parse_args(argv):
     parser = argparse.ArgumentParser(
         prog=argv[0], formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-f', '--csv_files', nargs='+')
-    parser.add_argument('-l', '--location_column_names', nargs='+',
-                        help='if multiple, list in order to compose'
-                             ' an address')
-    parser.add_argument('-s', '--location_column_sep', nargs=1, type=str,
-                        help='separator for location columns; default space',
-                        default=' ')
-    parser.add_argument('-o', '--output_file_csv',
-                        default='geocoded_locations.csv',
-                        help='if the file already exists, the addresses'
-                             ' already present in the file will be skipped,'
-                             ' and new addresses appended;'
-                             ' default: ./geocoded_locations.csv')
-    parser.add_argument('-e', '--errors_file_csv',
-                        default='geocoded_locations_errors.csv',
-                        help='errors are output to this file; if the file'
-                             ' already exists, addresses in this file will be'
-                             ' skipped and new errors appended;'
-                             ' default: ./geocoded_locations_errors.csv')
+    parser.add_argument(
+        '-l',
+        '--location_column_names',
+        nargs='+',
+        help='if multiple, list in order to compose an address'
+    )
+    parser.add_argument(
+        '-s',
+        '--location_column_sep',
+        nargs=1,
+        type=str,
+        default=' ',
+        help='separator for location columns; default space'
+    )
+    parser.add_argument(
+        '-o',
+        '--output_file_csv',
+        default='geocoded_locations.csv',
+        help='if the file already exists, the addresses'
+             ' already present in the file will be skipped,'
+             ' and new addresses appended;'
+             ' default: ./geocoded_locations.csv'
+    )
+    parser.add_argument(
+        '-e',
+        '--errors_file_csv',
+        default='geocoded_locations_errors.csv',
+        help='errors are output to this file; if the file'
+             ' already exists, addresses in this file will be'
+             ' skipped and new errors appended;'
+             ' default: ./geocoded_locations_errors.csv'
+    )
     parser.add_argument('-api_key')
-    parser.add_argument('-api_key_file',
-                        default=path_relative_to_this_file('gmaps_api.key'))
-    parser.add_argument('-as', '--address_suffix',
-                        help='append to the end of the address,'
-                             ' i.e. ", Seattle, WA"',
-                        default='')
-    parser.add_argument('-n', help='sample the first n for testing',
-                        default=math.inf, type=float)
+    parser.add_argument(
+        '-api_key_file',
+        default=path_relative_to_this_file('gmaps_api.key')
+    )
+    parser.add_argument(
+        '-as',
+        '--address_suffix',
+        default='',
+        help='append to the end of the address, i.e. ", Seattle, WA"'
+    )
+    parser.add_argument(
+        '-n',
+        type=float,
+        default=math.inf,
+        help='sample the first n for testing'
+    )
     return parser.parse_args(argv[1:])
 
 
 if __name__ == '__main__':
     args = parse_args(sys.argv)
     gm = GM(get_key(args))
-    locs = extract_locations(args.csv_files,
-                             args.location_column_names,
-                             args.location_column_sep,
-                             args.output_file_csv,
-                             args.errors_file_csv)
+    locs = extract_locations(
+        args.csv_files,
+        args.location_column_names,
+        args.location_column_sep,
+        args.output_file_csv,
+        args.errors_file_csv
+    )
     print('Getting addresses for %d locations...' % len(locs))
     print('Writing output to ' + args.output_file_csv)
     print('Writing errors to ' + args.errors_file_csv)

@@ -24,5 +24,7 @@ clean <- function(d, helpers) {
       # NOTE: these are only traffic stops according to the correspondence
       type = "vehicular"
     ) %>%
+    # TODO(danj): we have shapefiles, but no location data yet
+    # https://app.asana.com/0/456927885748233/722199186603263
     standardize(d$metadata)
 }

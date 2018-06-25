@@ -98,5 +98,7 @@ clean <- function(d, helpers) {
       ),
       reason_for_stop = tr_stop_cause[StopCause]
     ) %>%
+    # TODO(danj): add shapefile data once we get location
+    # https://app.asana.com/0/456927885748233/681325483960257
     standardize(d$metadata)
 }

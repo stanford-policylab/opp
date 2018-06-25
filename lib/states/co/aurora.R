@@ -25,14 +25,18 @@ clean <- function(d, helpers) {
   # TODO(phoebe): get search and contraband
   # https://app.asana.com/0/456927885748233/570989790365269 
   d$data %>%
+    helpers$add_lat_lng(
+      "Ticket Location"
+    ) %>%
+    helpers$add_shapefiles_data(
+    ) %>%
     rename(
       date = `Ticket Date`,
       time = `Ticket Time`,
       location = `Ticket Location`,
       violation = `Incident Violation`,
-      subject_dob = `Date of Birth`
-    ) %>%
-    helpers$add_lat_lng(
+      subject_dob = `Date of Birth`,
+      district = POLICE_DIS
     ) %>%
     helpers$add_type(
       "violation"

@@ -33,7 +33,7 @@ clean <- function(d, helpers) {
       vehicle_registration_state = `Tag State`
     ) %>%
     filter(
-      `Law Enf Agency Name` == "Tampa Police Department"
+      `Law Enf Agency Name` == "Tampa Police Department",
     ) %>%
     separate_cols(
       `Law Enf Officer Name` = c("officer_last_name", "officer_first_name"),
@@ -66,5 +66,11 @@ clean <- function(d, helpers) {
       subject_sex = tr_sex[Gender],
       subject_dob = parse_date(`Date Of Birth`, "%m/%d/%Y")
     ) %>%
+    filter(
+      # NOTE: we only have partial data for 2000 and 2002, and none for 2001
+      year(date) > 2002
+    ) %>%
+    # TODO(danj): add lat/lng and shapefiles
+    # https://app.asana.com/0/456927885748233/722166831803681 
     standardize(d$metadata)
 }

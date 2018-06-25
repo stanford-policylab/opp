@@ -79,5 +79,7 @@ clean <- function(d, helpers) {
       # and we only take the first
       officer_id = coalesce(officer_id, officer2_id)
     ) %>%
+    # TODO(danj): add shapefile data after we figure out how to join the files
+    # https://app.asana.com/0/456927885748233/722199186603264  
     standardize(d$metadata)
 }
