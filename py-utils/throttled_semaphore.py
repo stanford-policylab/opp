@@ -34,6 +34,7 @@ class ThrottledSemaphore:
         return
 
     def stop(self):
+        # NOTE: on return, thread dies as per python API
         self.thread.stop()
         return
 
