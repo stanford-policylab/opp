@@ -92,9 +92,9 @@ top <- function(tbl, ..., n = 50) {
 }
 
 
-top_str <- function(tbl, col, n = 50) {
+top_str <- function(tbl, cols, n = 50) {
   tbl %>% 
-    group_by_(col) %>%
+    group_by_(.dots=simple_map(cols, as.name)) %>%
     summarize(count = n()) %>%
     arrange(desc(count)) %>%
     ungroup() %>%
@@ -102,10 +102,10 @@ top_str <- function(tbl, col, n = 50) {
 }
 
 
-top_all <- function(tbl, exclude, n = 50) {
+top_all <- function(tbl, exclude = c(), n = 50) {
   lapply(
     setdiff(colnames(tbl), exclude),
-    function(col) { top_str(tbl, col) }
+    function(col) { top_str(tbl, c(col)) }
   )
 }
 
