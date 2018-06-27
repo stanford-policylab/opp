@@ -45,7 +45,7 @@ correct_predicates <- function(d) {
     if (predicated_column %in% colnames(d$data)) {
       predicate = predicated_columns[[predicated_column]]$predicate
       if_not = predicated_columns[[predicated_column]]$if_not
-      d$data[[predicated_column]] <- ifelse(
+      d$data[[predicated_column]] <- if_else(
         as.logical(d$data[[predicate]]),
         d$data[[predicated_column]],
         if_not

@@ -92,6 +92,24 @@ top <- function(tbl, ..., n = 50) {
 }
 
 
+top_str <- function(tbl, col, n = 50) {
+  tbl %>% 
+    group_by_(col) %>%
+    summarize(count = n()) %>%
+    arrange(desc(count)) %>%
+    ungroup() %>%
+    slice(1:n)
+}
+
+
+top_all <- function(tbl, exclude, n = 50) {
+  lapply(
+    setdiff(colnames(tbl), exclude),
+    function(col) { top_str(tbl, col) }
+  )
+}
+
+
 get_primary_class <- function(obj) {
   class(obj)[1]
 }

@@ -191,11 +191,26 @@ schema <- c(
 # was marked FALSE, but search_type had a value, assume search_conducted
 # takes precedence as it is more general
 predicated_columns <- list(
-  search_type = list(predicate = "search_conducted", if_not = NA),
-  reason_for_search = list(predicate = "search_conducted", if_not = NA),
-  reason_for_arrest = list(predicate = "arrest_made", if_not = NA),
-  contraband_drugs = list(predicate = "contraband_found", if_not = FALSE),
-  contraband_weapons = list(predicate = "contraband_found", if_not = FALSE)
+  search_type = list(
+    predicate = "search_conducted",
+    if_not = schema$search_type(NA)
+  ),
+  reason_for_search = list(
+    predicate = "search_conducted",
+    if_not = NA_character_
+  ),
+  reason_for_arrest = list(
+    predicate = "arrest_made",
+    if_not = NA_character_
+  ),
+  contraband_drugs = list(
+    predicate = "contraband_found",
+    if_not = FALSE
+  ),
+  contraband_weapons = list(
+    predicate = "contraband_found",
+    if_not = FALSE
+  )
 )
 
 # NOTE: these are dependencies for reporting null rates only,
