@@ -57,9 +57,8 @@ clean <- function(d, helpers) {
     ) %>%
     mutate(
       date = coalesce(
-        parse_datetime(DateOfStop, "%m/%d/%Y"),
-        # NOTE: Stripping time 00:00:00 from some 2013 DateOfStop rows.
-        parse_datetime(substr(DateOfStop, 1, 10), "%Y-%m-%d")
+        parse_date(DateOfStop, "%m/%d/%Y"),
+        parse_date(DateOfStop, "%Y-%m-%d %H:%M:%S")
       ),
       time = parse_time(TimeOfStop),
       subject_yob = coalesce(
@@ -106,7 +105,7 @@ clean <- function(d, helpers) {
       ),
       reason_for_stop = if_else(
         ReasonForStop == 1,
-        str_c(
+        str_c_na(
           tr_reason_for_stop[parse_character(ReasonForStop)],
           tr_moving_violation[parse_character(TypeOfMovingViolation)],
           sep=": "
