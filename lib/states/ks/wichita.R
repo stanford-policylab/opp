@@ -29,7 +29,8 @@ clean <- function(d, helpers) {
       subject_age = defendant_age,
       # TODO(ravi): is this acceptable? should we filter out anything else?
       # https://app.asana.com/0/456927885748233/595493946182533
-      reason_for_stop = charge_description
+      violation = charge_description,
+      disposition = charge_disposition
     ) %>%
     mutate(
       # NOTE: all charge descriptions appear to be vehicle related

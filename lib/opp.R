@@ -124,7 +124,7 @@ opp_clean <- function(d, state, city) {
     "add_type" = opp_add_type_func(state, city),
     "add_contraband_types_func" = opp_add_contraband_types_func(state, city),
     "add_shapefiles_data" = opp_add_shapefiles_data_func(state, city),
-    "load_json" = opp_load_json(state, city)
+    "load_json" = opp_load_json_func(state, city)
   )
   clean(d, helpers)
 }
@@ -256,7 +256,7 @@ opp_shapefiles_dir <- function(state, city) {
 }
 
 
-opp_load_json <- function(state, city) {
+opp_load_json_func <- function(state, city) {
   function(json_filename) {
     fromJSON(file.path(
       opp_calculated_features_path(state, city),

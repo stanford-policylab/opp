@@ -67,7 +67,7 @@ clean <- function(d, helpers) {
       officer_race = fast_tr(officer_race, tr_race),
       officer_sex = fast_tr(officer_gender, tr_sex),
       arrest_made = !is.na(arrest_id),
-      citation_issued = as.logical(citation_i),
+      citation_issued = citation_i == "1",
       outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued
