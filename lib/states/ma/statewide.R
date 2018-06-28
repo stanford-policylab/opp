@@ -5,15 +5,13 @@ load_raw <- function(raw_data_dir, n_max) {
   counties <- load_single_file(raw_data_dir, "counties.csv")
   d$data %>%
     left_join(
-      counties$data %>%
         mutate(
+          counties$data,
           municipality_uppercased = toupper(Municipality)
         ),
       by = c("CITY_TOWN_NAME" = "municipality_uppercased")
     ) %>%
-    bundle_raw(
-      c(d$loading_problems, counties$loading_problems)
-    )
+    bundle_raw(c(d$loading_problems, counties$loading_problems))
 }
 
 
