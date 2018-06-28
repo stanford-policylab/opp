@@ -71,8 +71,8 @@ clean <- function(d, helpers) {
         RsltSrchDrg,
         RsltSrchWpn
       ),
-      frisk_performed = !is.na(SearchDescr) & SearchDescr == "Terry Frisk",
       search_conducted = SearchYN == "Yes" | !is.na(SearchDescr),
+      frisk_performed = search_conducted & SearchDescr == "Terry Frisk",
       search_type = fast_tr(SearchType, tr_search_type),
       reason_for_stop = str_c_na(
         if_else(Speed == "1", "Speed", NA_character_),
