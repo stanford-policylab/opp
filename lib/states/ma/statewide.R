@@ -3,15 +3,17 @@ source("common.R")
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_single_file(raw_data_dir, "FOI_Req.csv", n_max)
   counties <- load_single_file(raw_data_dir, "counties.csv")
-  joined <- d$data %>%
+  d$data %>%
     left_join(
       counties$data %>%
         mutate(
-          Municipality.upper = toupper(Municipality)
+          municipality_uppercased = toupper(Municipality)
         ),
-      by = c("CITY_TOWN_NAME" = "Municipality.upper")
+      by = c("CITY_TOWN_NAME" = "municipality_uppercased")
+    ) %>%
+    bundle_raw(
+      c(d$loading_problems, counties$loading_problems)
     )
-  bundle_raw(joined, c(d$loading_problems, counties$loading_problems))
 }
 
 
@@ -37,7 +39,11 @@ clean <- function(d, helpers) {
     rename(
       county_name = County,
       vehicle_type = RegType,
-      vehicle_registration_state = State
+      vehicle_registration_state = State,
+      # TODO(jnu): there are route numbers that we might be able to turn into
+      # more granular locations.
+      # https://app.asana.com/0/456927885748233/714838053596540
+      location = CITY_TOWN_NAME
     ) %>%
     separate_cols(
       DateIssue = c("date", "time")
@@ -45,16 +51,10 @@ clean <- function(d, helpers) {
     mutate(
       date = parse_date(date, "%Y-%m-%d"),
       time = parse_time(time, "%H:%M:%S"),
-      # TODO(jnu): there are route numbers that we might be able to turn into
-      # more granular locations.
-      # https://app.asana.com/0/456927885748233/714838053596540
-      location = str_c_na(
-        CITY_TOWN_NAME,
-        "MA"
-      ),
       subject_age = year(date) - format_two_digit_year(DOBYr),
       subject_race = fast_tr(Race, tr_race),
       subject_sex = tolower(Sex),
+      # NOTE: dataset does not include pedestrian stops
       type = "vehicular",
       arrest_made = str_detect("Arrest", ResultDescr),
       citation_issued = str_detect("Civil|Criminal", ResultDescr),
@@ -66,20 +66,18 @@ clean <- function(d, helpers) {
       ),
       contraband_drugs = RsltSrchDrg == "1",
       contraband_weapons = RsltSrchWpn == "1",
-      contraband_found = (
-        RsltSrchDrg == "1" |
-        RsltSrchWpn == "1" |
-        RsltSrchAlc == "1" |
-        RsltSrchMny == "1" |
-        RsltSrchOth == "1"
+      contraband_found = any_matches(
+        "1",
+        RsltSrchDrg,
+        RsltSrchWpn
       ),
       frisk_performed = !is.na(SearchDescr) & SearchDescr == "Terry Frisk",
-      search_conducted = SearchYN == "Y" | !is.na(SearchType),
+      search_conducted = SearchYN == "Yes" | !is.na(SearchDescr),
       search_type = fast_tr(SearchType, tr_search_type),
       reason_for_stop = str_c_na(
-        ifelse(Speed == "1", "Speed", NA),
-        ifelse(SeatBelt == "1", "SeatBelt", NA),
-        ifelse(ChildRest == "1", "ChildRest", NA)
+        if_else(Speed == "1", "Speed", NA_character_),
+        if_else(SeatBelt == "1", "SeatBelt", NA_character_),
+        if_else(ChildRest == "1", "ChildRest", NA_character_)
       )
     ) %>%
     standardize(d$metadata)
