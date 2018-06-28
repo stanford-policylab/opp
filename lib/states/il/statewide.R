@@ -8,7 +8,7 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
-  enum_col_trs <- lapply(helpers$load_json("ITSS_Field_values.json"), unlist)
+  enum_col_trs <- lapply(helpers$load_json("ITSS_Field_Values.json"), unlist)
   enum_col_names <- names(enum_col_trs)
 
   # NOTE: Enum columns should have integer values, but when encoded as
@@ -75,32 +75,32 @@ clean <- function(d, helpers) {
       citation_issued = ResultOfStop == 1,
       warning_issued = ResultOfStop == 2 | ResultOfStop == 3,
       outcome = tr_outcome[parse_character(ResultOfStop)],
-      contraband_drugs = VehicleDrugsFound == 1 |
-        VehicleDrugParaphernaliaFound == 1 |
-        VehicleDrugAmount > 0 |
-        DriverPassengerDrugsFound == 1 |
-        DriverPassengerDrugParaphernaliaFound == 1 |
-        DriverPassengerDrugAmount > 0 |
-        PoliceDogDrugsFound == 1 |
-        PoliceDogDrugParaphernaliaFound == 1 |
-        PoliceDogDrugAmount > 0,
-      contraband_weapons = VehicleWeaponFound == 1 |
-        DriverPassengerWeaponFound == 1 |
-        PoliceDogWeaponFound == 1,
+      contraband_drugs = VehicleDrugsFound == 1
+        | VehicleDrugParaphernaliaFound == 1
+        | VehicleDrugAmount > 0
+        | DriverPassengerDrugsFound == 1
+        | DriverPassengerDrugParaphernaliaFound == 1
+        | DriverPassengerDrugAmount > 0
+        | PoliceDogDrugsFound == 1
+        | PoliceDogDrugParaphernaliaFound == 1
+        | PoliceDogDrugAmount > 0,
+      contraband_weapons = VehicleWeaponFound == 1
+        | DriverPassengerWeaponFound == 1
+        | PoliceDogWeaponFound == 1,
       contraband_found = contraband_drugs | contraband_weapons,
-      search_person = DriverSearchConducted == 1 |
-        PassengerSearchConducted == 1,
-      search_vehicle = VehicleSearchConducted == 1 |
-        PoliceDogVehicleSearched == 1,
+      search_person = DriverSearchConducted == 1
+        | PassengerSearchConducted == 1,
+      search_vehicle = VehicleSearchConducted == 1
+        | PoliceDogVehicleSearched == 1,
       search_conducted = search_person | search_vehicle,
       # TODO(wkim): Confirm with Ravi that "k9" is prioritized before "consent".
       search_type = if_else(
         PoliceDogAlertIfSniffed == 1,
         "k9",
         if_else(
-          VehicleConsentGiven == 1 |
-            DriverConsentGiven == 1 |
-            PassengerConsentGiven == 1,
+          VehicleConsentGiven == 1
+            | DriverConsentGiven == 1
+            | PassengerConsentGiven == 1,
           "consent",
           NA_character_
         )
