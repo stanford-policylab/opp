@@ -50,6 +50,9 @@ clean <- function(d, helpers) {
     rename(
       location = ZIP,
       beat = BeatLocationOfStop,
+      # TODO(walterk): Determine whether Chicago should be removed from this
+      # dataset.
+      # https://app.asana.com/0/456927885748233/727769678078651
       department_name = AgencyName,
       department_id = AgencyCode,
       vehicle_make = VehicleMake,
@@ -93,7 +96,9 @@ clean <- function(d, helpers) {
       search_vehicle = VehicleSearchConducted == 1
         | PoliceDogVehicleSearched == 1,
       search_conducted = search_person | search_vehicle,
-      # TODO(wkim): Confirm with Ravi that "k9" is prioritized before "consent".
+      # TODO(walterk): Resolve the priority of "k9" vs "consent" for
+      # "search_type".
+      # https://app.asana.com/0/456927885748233/727766038302995
       search_type = if_else(
         PoliceDogAlertIfSniffed == 1,
         "k9",
