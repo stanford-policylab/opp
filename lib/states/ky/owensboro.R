@@ -106,6 +106,8 @@ clean <- function(d, helpers) {
     helpers$add_type(
       "Violation Description 1"
     ) %>%
+    # TODO(danj): figure out shapefile mismatch
+    # all x coordinates are negative...
     helpers$add_shapefiles_data(
     ) %>%
     standardize(d$metadata)
