@@ -10,7 +10,7 @@ load_raw <- function(raw_data_dir, n_max) {
     P = "OCCUPANT"
   )
 
-  joined <- d_cad$data %>%
+  d_cad$data %>%
     # CAD files contain witness, victim, etc. info; ignore that.
     filter(
       INVOLVEMENT %in% c("DRIVER", "OCCUPANT")
@@ -29,15 +29,10 @@ load_raw <- function(raw_data_dir, n_max) {
       )
     ) %>%
     left_join(
-      d_rms$data %>%
-        distinct(
-        ) %>%
-        mutate(
-          INVOLVEMENT = tr_involve[`Driver Passenger`]
-        )
-    )
-
-  bundle_raw(joined, c(d_cad$loading_problems, d_rms$loading_problems))
+      distinct(d_rms$data) %>%
+        mutate(INVOLVEMENT = tr_involve[`Driver Passenger`])
+    ) %>%
+    bundle_raw(c(d_cad$loading_problems, d_rms$loading_problems))
 }
 
 
@@ -68,22 +63,21 @@ clean <- function(d, helpers) {
     ) %>%
     rename(
       officer_id = BADGE,
-      department_id = UNIT
+      department_id = UNIT,
+      vehicle_color = VEH_COLOR,
+      vehicle_make = VEH_MAKE,
+      vehicle_model = VEH_MODEL,
+      vehicle_registration_state = VEH_STATE
     ) %>%
     separate_cols(
-      `DATE_TIME` = c("date", "time")
+      DATE_TIME = c("date", "time")
     ) %>%
     mutate(
-      date = mdy(date),
+      date = parse_date(date, "%m/%d/%Y"),
       time = parse_time(time, "%I:%M:%S%p"),
       # TODO(jnu): Geocode locations.
       # https://app.asana.com/0/456927885748233/722133259228546
-      location = str_c_na(
-        LOCATION,
-        TOWNSHIP,
-        "NJ",
-        sep = ", "
-      ),
+      location = str_c_na(LOCATION, TOWNSHIP, sep = ", "),
       subject_race = tr_race[RACE],
       subject_sex = tr_sex[GENDER],
       type = "vehicular",
@@ -97,20 +91,16 @@ clean <- function(d, helpers) {
       ),
       frisk_performed = any(Frisk == "Y"),
       search_conducted = any(Searched == "Y"),
-      vehicle_color = VEH_COLOR,
-      vehicle_make = VEH_MAKE,
-      vehicle_model = VEH_MODEL,
-      vehicle_registration_state = VEH_STATE,
-      tmp.has_driver = any(INVOLVEMENT == "DRIVER")
+      has_driver = any(INVOLVEMENT == "DRIVER")
     ) %>%
     # NOTE: Data are grouped by stop ID; rows represent individuals. Try to
-    # take the first driver row for each stop. A few stops don't have a row
-    # for the driver, in which case select arbitrarily the first row.
+    # take the first driver row for each stop. If there's not exactly one
+    # driver row, just take the first row in the group.
     filter(
-      !tmp.has_driver | INVOLVEMENT == "DRIVER"
+      !has_driver | INVOLVEMENT == "DRIVER"
     ) %>%
-    filter(
-      row_number() == 1
+    slice(
+      1
     ) %>%
     standardize(d$metadata)
 }

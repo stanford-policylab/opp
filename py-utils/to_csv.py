@@ -15,10 +15,13 @@ csv extension, so /path/to/file.xls saves to file.csv
 
 
 import argparse
+import csv
 import os
 import re
+import shutil
 import string
 import sys
+import tempfile
 
 import pandas as pd
 import subprocess as sub
@@ -27,6 +30,63 @@ import xml.etree.ElementTree as et
 from collections import defaultdict
 
 ############################### CONVERTERS ####################################
+
+
+def csv_to_csv(in_file, csv_null_byte_replace='', csv_row_headers=None, **kwargs):
+    """Normalize a CSV.
+
+    Note this is *not* optimized to a simple copy operation if no corrections
+    need to be performed.
+
+    Arguments:
+        :csv_null_byte_replace: Replace null bytes with the given character.
+        :csv_row_headers: The number of cells at the beginning of the file
+        which represent the headers. In the normal case, headers are not
+        included in each row.
+    """
+    real_fn = os.path.join(os.getcwd(), os.path.basename(in_file))
+    assert not os.path.exists(real_fn),\
+            '{} exists; aborting to avoid overwrite!'.format(real_fn)
+    fh_out = tempfile.SpooledTemporaryFile(mode='w+')
+    fh_tmp_in = tempfile.SpooledTemporaryFile(mode='w+')
+
+    # Correct null bytes if neessary
+    with open(in_file, 'r') as fh_in:
+        while True:
+            chunk = fh_in.read(1024)
+            if not chunk:
+                break
+            fh_tmp_in.write(chunk.replace('\0', csv_null_byte_replace))
+    # Rewind byte-corrected file to read rows
+    fh_tmp_in.seek(0)
+
+    # Read file as CSV
+    rdr_in = csv.reader(fh_tmp_in)
+    rdr_out = csv.writer(fh_out)
+    headers = []
+    ncol = csv_row_headers * 2 if csv_row_headers else None
+    hcol = csv_row_headers
+    for i, line in enumerate(rdr_in):
+        # Detect headers if necessary
+        if not headers:
+            headers = line[:hcol]
+            rdr_out.writerow(headers)
+            # If not using row headers (default), skip to next row
+            if not csv_row_headers:
+                continue
+        if ncol and len(line) != ncol:
+            perr('Warning! Line {} has wrong number of rows! '
+                 '{}, expected {}. Truncating this row.'.format(i, len(line), ncol))
+        rdr_out.writerow(line[hcol:ncol])
+ 
+    # Move to the real location.
+    with open(real_fn, 'w') as fh:
+        fh_out.seek(0)
+        shutil.copyfileobj(fh_out, fh)
+
+    fh_out.close()
+    fh_tmp_in.close()
+    return
 
 
 def xls_to_csv(in_file, **kwargs):
@@ -400,6 +460,17 @@ def parse_args(argv):
              'import-export/non-xml-format-files-sql-server to complement '
              'fixed width text file'
     )
+    parser.add_argument(
+        '--csv_row_headers',
+        type=int,
+        default=None,
+        help="Number of header cells included in each row"
+    )
+    parser.add_argument(
+        '--csv_null_byte_replace',
+        default='',
+        help='Character to replace null bytes with'
+    )
     return parser.parse_args(argv[1:])
 
 
@@ -410,4 +481,6 @@ if __name__ == '__main__':
         sep=args.sep,
         sas_load_file=args.sas_load_file,
         sql_server_load_file=args.sql_server_load_file,
+        csv_row_headers=args.csv_row_headers,
+        csv_null_byte_replace=args.csv_null_byte_replace
     )
