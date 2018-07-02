@@ -59,10 +59,6 @@ def xltx_to_csv(in_file, **kwargs):
     return ssconvert(in_file, **kwargs)
 
 
-def xps_to_csv(in_file, **kwargs):
-    return ssconvert(in_file, **kwargs)
-
-
 def mdb_to_csv(in_file, **kwargs):
     require('mdb-tables', "try installing 'mdbtools' package on linux")
     require('mdb-export', "try installing 'mdbtools' package on linux")
