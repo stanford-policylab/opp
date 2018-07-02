@@ -59,6 +59,10 @@ def xltx_to_csv(in_file, **kwargs):
     return ssconvert(in_file, **kwargs)
 
 
+def xps_to_csv(in_file, **kwargs):
+    return ssconvert(in_file, **kwargs)
+
+
 def mdb_to_csv(in_file, **kwargs):
     require('mdb-tables', "try installing 'mdbtools' package on linux")
     require('mdb-export', "try installing 'mdbtools' package on linux")
@@ -386,16 +390,19 @@ def parse_args(argv):
         ] + ['data/'])
     )
     parser.add_argument(
-        '-s', '--sep',
+        '-s',
+        '--sep',
         default='|',
         help='separator for txt files'
     )
     parser.add_argument(
-        '-sas', '--sas_load_file',
+        '-sas',
+        '--sas_load_file',
         help='SAS load file provided by IPUMS to complement dat file'
     )
     parser.add_argument(
-        '-ss', '--sql_server_load_file',
+        '-ss',
+        '--sql_server_load_file',
         help='https://docs.microsoft.com/en-us/sql/relational-databases/'
              'import-export/non-xml-format-files-sql-server to complement '
              'fixed width text file'

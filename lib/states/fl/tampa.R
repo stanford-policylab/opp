@@ -33,7 +33,7 @@ clean <- function(d, helpers) {
       vehicle_registration_state = `Tag State`
     ) %>%
     filter(
-      `Law Enf Agency Name` == "Tampa Police Department",
+      `Law Enf Agency Name` == "Tampa Police Department"
     ) %>%
     separate_cols(
       `Law Enf Officer Name` = c("officer_last_name", "officer_first_name"),
@@ -72,5 +72,15 @@ clean <- function(d, helpers) {
     ) %>%
     # TODO(danj): add lat/lng and shapefiles
     # https://app.asana.com/0/456927885748233/722166831803681 
+    helpers$add_lat_lng(
+    ) %>%
+    helpers$add_shapefiles_data(
+    ) %>%
+    rename(
+      district = TPD_DISTRI.x,
+      police_grid_number = TPD_GRID,
+      sector = TPD_SECTOR.x,
+      zone = TPD_ZONE
+    ) %>%
     standardize(d$metadata)
 }

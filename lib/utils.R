@@ -1,6 +1,7 @@
 library(getopt)
 library(lubridate)
 library(tidyverse)
+library(stringi)
 library(stringr)
 library(here)
 
@@ -258,6 +259,7 @@ read_csv_with_types <- function(
   )
 }
 
+
 col_match <- function(d, pattern) {
   cols <- colnames(d)
   cols[str_detect(cols, pattern)]
@@ -274,6 +276,19 @@ separate_cols <- function(tbl, ..., sep = " ") {
       sep = sep,
       extra = "merge"
     )
+  }
+  tbl
+}
+
+
+right_separate_cols <- function(tbl, ..., sep = " ") {
+  lst = list(...)
+  for (colname in names(lst)) {
+    splits <- stri_split_fixed(stri_reverse(tbl[[colname]]), sep, n = 2)
+    left_name <- lst[[colname]][1]
+    right_name <- lst[[colname]][2]
+    tbl[[left_name]] <- stri_reverse(elements_from_sublists(splits, 2))
+    tbl[[right_name]] <- stri_reverse(elements_from_sublists(splits, 1))
   }
   tbl
 }

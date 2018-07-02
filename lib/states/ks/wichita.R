@@ -32,10 +32,12 @@ clean <- function(d, helpers) {
       violation = charge_description,
       disposition = charge_disposition
     ) %>%
+    right_separate_cols(
+      officer_name = c("officer_first_name", "officer_last_name")
+    ) %>%
     mutate(
       # NOTE: all charge descriptions appear to be vehicle related
       type = "vehicular",
-      # TODO(danj): fix date
       datetime = coalesce(
         parse_datetime(citation_date_time, locale = locale(tz = "US/Central")),
         parse_datetime(citation_date_time, "%Y/%m/%d %H:%M:%S"),

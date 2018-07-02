@@ -8,8 +8,10 @@ load_raw <- function(raw_data_dir, n_max) {
   # (preferable given the formatting) that have more officer information.
   loading_problems <- list()
   r <- function(fname) {
-    tbl <- read_csv(file.path(raw_data_dir, fname),
-                    col_types = cols(.default = "c"))
+    tbl <- read_csv(
+      file.path(raw_data_dir, fname),
+      col_types = cols(.default = "c")
+    )
     loading_problems[[fname]] <<- problems(tbl)
     tbl
   }
@@ -34,10 +36,13 @@ load_raw <- function(raw_data_dir, n_max) {
     data <- data[1:n_max,]
   }
 
+  # NOTE: the data table has fixed-width, 0-padded violation codes
   violations <- r("violation_codes_sheet_1.csv") %>%
     rename(code = `Viol. Code`) %>%
     mutate(code = str_pad(code, width = 5, pad = "0"))
   violations_colnames <- colnames(violations)
+  # NOTE: column names are of the format 'VIOLATION CODE <N>' in data
+  # join the violation codes table onto the data table once for each violation
   for (i in seq(1:9)) {
     colnames(violations) <- str_c(violations_colnames, " ", i)
     join_by <- c(str_c("code ", i))
@@ -64,9 +69,10 @@ clean <- function(d, helpers) {
 
   # TODO(phoebe): can we get search/contraband data?
   # https://app.asana.com/0/456927885748233/586847974785232
+  # TODO(phoebe): what are TOTAL COUNTS? is each row in citations multiple?
+  # https://app.asana.com/0/456927885748233/730396938648773
   d$data %>%
     rename(
-      location = `VIOLATION EXACT LOCATION`,
       lat = `VIOLATION LAT DECIMAL`,
       lng = `VIOLATION LONG DECIMAL`,
       vehicle_registration_state = `REGISTRATION STATE`,
@@ -74,8 +80,16 @@ clean <- function(d, helpers) {
     ) %>%
     mutate(
       date = parse_date(`CITATION DATE`, "%Y/%m/%d"),
+      time = parse_time_int(`VIOLATION TIME`),
       # NOTE: use the first violation under the assumption that this is the
       # "main" violation and likely the reason for the stop
+      location = str_c_na(
+        `VIOLATION EXACT LOCATION`,
+        `ADDRESS CITY`,
+        `ADDRESS STATE`,
+        `ADDRESS ZIP`,
+        sep = ", "
+      ),
       reason_for_stop = `Violation Description 1`,
       subject_race = tr_race[RACE],
       subject_sex = tr_sex[GENDER],
@@ -91,6 +105,8 @@ clean <- function(d, helpers) {
     ) %>%
     helpers$add_type(
       "Violation Description 1"
+    ) %>%
+    helpers$add_shapefiles_data(
     ) %>%
     standardize(d$metadata)
 }
