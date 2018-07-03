@@ -32,18 +32,45 @@ from collections import defaultdict
 ############################### CONVERTERS ####################################
 
 
-def csv_to_csv(in_file, csv_null_byte_replace='', csv_row_headers=None, **kwargs):
+def csv_to_csv(in_file,
+               process_csvs=False,
+               csv_null_byte_replace='',
+               csv_row_headers=None,
+               **kwargs):
     """Normalize a CSV.
 
     Note this is *not* optimized to a simple copy operation if no corrections
     need to be performed.
 
     Arguments:
+        :process_csvs: Flag to run CSV processing. If this is false (default)
+        then this function is a no-op.
         :csv_null_byte_replace: Replace null bytes with the given character.
         :csv_row_headers: The number of cells at the beginning of the file
         which represent the headers. In the normal case, headers are not
         included in each row.
+
+    Examples:
+        csv_row_headers is used to fix files that list column headers on each
+        row. For example, a CSV with three "real" columns might look like:
+
+            Header1,Header2,Header3,Value1 A,Value2 A,Value3 A
+            Header1,Header2,Header3,Value1 B,Value2 B,Value3 B
+            Header1,Header2,Header3,Value1 C,Value2 C,Value3 C,Junk
+
+        Setting csv_row_headers=3 will transform this CSV into:
+
+            Header1,Header2,Header3
+            Value1 A,Value2 A,Value3 A
+            Value1 B,Value2 B,Value3 B
+            Value1 C,Value2 C,Value3 C
+
+        Note that the last "Junk" cell from line three was dropped.
     """
+    if not process_csvs:
+        perr("Warning! Ignoring CSV {}".format(in_file))
+        return
+
     real_fn = os.path.join(os.getcwd(), os.path.basename(in_file))
     assert not os.path.exists(real_fn),\
             '{} exists; aborting to avoid overwrite!'.format(real_fn)
@@ -64,7 +91,9 @@ def csv_to_csv(in_file, csv_null_byte_replace='', csv_row_headers=None, **kwargs
     rdr_in = csv.reader(fh_tmp_in)
     rdr_out = csv.writer(fh_out)
     headers = []
+    # The total number of cols to pull from each row (None means "all cols")
     ncol = csv_row_headers * 2 if csv_row_headers else None
+    # Number of header columns in each row (may be None to mean 0)
     hcol = csv_row_headers
     for i, line in enumerate(rdr_in):
         # Detect headers if necessary
@@ -74,6 +103,7 @@ def csv_to_csv(in_file, csv_null_byte_replace='', csv_row_headers=None, **kwargs
             # If not using row headers (default), skip to next row
             if not csv_row_headers:
                 continue
+        # Warn if trimming columns unexpectedly
         if ncol and len(line) != ncol:
             perr('Warning! Line {} has wrong number of rows! '
                  '{}, expected {}. Truncating this row.'.format(i, len(line), ncol))
@@ -461,6 +491,13 @@ def parse_args(argv):
              'fixed width text file'
     )
     parser.add_argument(
+        '-c', '--process_csvs',
+        action='store_true',
+        help='Process files that are already CSVs. See the csv_* arguments '
+             'for more processing options. By default CSVs passed into this '
+             'script will be ignored'
+    )
+    parser.add_argument(
         '--csv_row_headers',
         type=int,
         default=None,
@@ -481,6 +518,7 @@ if __name__ == '__main__':
         sep=args.sep,
         sas_load_file=args.sas_load_file,
         sql_server_load_file=args.sql_server_load_file,
+        process_csvs=args.process_csvs,
         csv_row_headers=args.csv_row_headers,
         csv_null_byte_replace=args.csv_null_byte_replace
     )
