@@ -143,7 +143,7 @@ clean <- function(d, helpers) {
       violation = DMV_INFRACTION_REASON_CDE
     ) %>%
     mutate(
-      date = mdy(INFRACTION_DATE),
+      date = parse_date(INFRACTION_DATE, "%m/%d/%Y"),
       time = parse_time(INFRACTION_TIME, "%I:%M %p"),
       location = str_c_na(
         INFRACTION_LOCATION_TXT,

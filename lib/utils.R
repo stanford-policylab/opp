@@ -708,9 +708,17 @@ parse_coord <- Vectorize(function(coord) {
     coord,
     "([WNES])\\s*(\\d+)\\s+(\\d+(?:\\.\\d+)?)'(?:\\s+(\\d+(?:\\.\\d+)?)\")?"
   )
-  val <- as.double(parts[3]) + as.double(parts[4]) / 60.0 + if_else(is.na(parts[5]), 0.0, as.double(parts[5]) / 3600.0)
-  if (!is.na(parts[2])) {
-    if (parts[2] == "W" | parts[2] == "S") {
+  min_to_deg <- 1 / 60.0
+  sec_to_deg <- 1 / 3600.0
+  direction <- parts[2]
+  degrees <- as.double(parts[3])
+  minutes <- as.double(parts[4])
+  seconds <- if_else(is.na(parts[5]), 0.0, as.double(parts[5]))
+  val <- degrees +
+          minutes * min_to_deg +
+          seconds * sec_to_deg
+  if (!is.na(direction)) {
+    if (direction == "W" | direction == "S") {
       val <- val * -1
     }
   }
