@@ -637,6 +637,13 @@ fast_tr <- function(v, translator) {
 } 
 
 
+# NOTE: Converts a json map loaded with jsonlite to a tr.
+json_to_tr <- function(json_map) {
+  n <- names(json_map)
+  unlist(setNames(n %>% map(function(x) { unname(unlist(json_map[x])) }), n))
+}
+
+
 load_similar_files <- function(
   paths,
   n_max = Inf,
