@@ -49,7 +49,7 @@ clean <- function(d, helpers) {
       vehicle_model = LOCKVEHICLEMODEL,
       vehicle_registration_state = LOCKVEHICLEPLATESTATE,
       # TODO(wkim): Is vehicle_year the model year or the year on the plates?
-      # Possiblly LOCKVEHICLEPLATEYEAR. In either case, the data is a bit messy.
+      # Possibly LOCKVEHICLEPLATEYEAR. In either case, the data is a bit messy.
       # https://app.asana.com/0/456927885748233/729888734192511
       vehicle_year = LOCKVEHICLEYEAR
     ) %>%
