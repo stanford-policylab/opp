@@ -68,7 +68,7 @@ def csv_to_csv(in_file,
         Note that the last "Junk" cell from line three was dropped.
     """
     if not process_csvs:
-        perr("Warning! Ignoring CSV {}".format(in_file))
+        perr("Ignoring CSV {}".format(in_file))
         return
 
     real_fn = os.path.join(os.getcwd(), os.path.basename(in_file))
