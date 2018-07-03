@@ -93,9 +93,9 @@ clean <- function(d, helpers) {
       search_conducted = any(Searched == "Y"),
       has_driver = any(INVOLVEMENT == "DRIVER")
     ) %>%
-    # NOTE: Data are grouped by stop ID; rows represent individuals. Try to
-    # take the first driver row for each stop. If there's not exactly one
-    # driver row, just take the first row in the group.
+    # NOTE: Data are grouped by stop ID; rows represent individuals. We need
+    # to reduce the group to a single row representing the stop. Choose a
+    # driver row for this if there is one; otherwise any row will do.
     filter(
       !has_driver | INVOLVEMENT == "DRIVER"
     ) %>%
