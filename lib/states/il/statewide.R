@@ -96,9 +96,6 @@ clean <- function(d, helpers) {
       search_vehicle = VehicleSearchConducted == 1
         | PoliceDogVehicleSearched == 1,
       search_conducted = search_person | search_vehicle,
-      # TODO(walterk): Resolve the priority of "k9" vs "consent" for
-      # "search_basis".
-      # https://app.asana.com/0/456927885748233/727766038302995
       search_basis = if_else(
         PoliceDogAlertIfSniffed == 1,
         "k9",
