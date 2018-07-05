@@ -1,8 +1,8 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-  warnings <- load_regex(raw_data_dir, "warn")
-  citations <- load_regex(raw_data_dir, "cit")
+  warnings <- load_regex(raw_data_dir, "warn", n_max = n_max)
+  citations <- load_regex(raw_data_dir, "cit", n_max = n_max)
   bind_rows(
       warnings$data %>% mutate(warning_issued = TRUE, citation_issued = FALSE),
       citations$data %>% mutate(warning_issued = FALSE, citation_issued = TRUE)
