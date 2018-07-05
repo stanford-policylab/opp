@@ -149,10 +149,10 @@ clean <- function(d, helpers) {
         subject_race
       )],
       subject_sex = tr_sex[subject_sex],
-      search_type = first_of(
+      search_basis = first_of(
         "plain view" = search_plain_view,
         "consent" = search_consent,
-        "non-discretionary" = (
+        "other" = (
           search_incident_to_arrest
           | search_warrant
           | search_inventory

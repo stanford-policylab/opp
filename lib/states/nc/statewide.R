@@ -186,8 +186,8 @@ clean <- function(d, helpers) {
       search_person = as.logical(DriverSearch) | as.logical(PassengerSearch),
       frisk_performed = search_type_description == "Protective Frisk",
       reason_for_frisk = ifelse(frisk_performed, reason_for_search, NA),
-      search_type = first_of(
-        "non-discretionary" = str_detect(
+      search_basis = first_of(
+        "other" = str_detect(
           search_type_description,
           "Search Incident to Arrest|Search Warrant"
         ),

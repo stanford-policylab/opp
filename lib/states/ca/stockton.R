@@ -40,14 +40,14 @@ clean <- function(d, helpers) {
     # 4-Public Service
   )
 
-  tr_search_type <- c(
+  tr_search_basis <- c(
     # 1-No Search Conducted
     "2-Consent" = "consent",
     "3-Probable Cause (Terry)" = "probable cause",
-    "4-Tow Inventory Search" = "non-discretionary",
-    "5-Incidental to Lawful Arrest" = "non-discretionary",
-    "6-Pursuant to Lawful Search Warrant" = "non-discretionary",
-    "7-Probation/Parole Search" = "non-discretionary"
+    "4-Tow Inventory Search" = "other",
+    "5-Incidental to Lawful Arrest" = "other",
+    "6-Pursuant to Lawful Search Warrant" = "other",
+    "7-Probation/Parole Search" = "other"
   )
 
   names(d$data) <- tolower(names(d$data))
@@ -68,7 +68,7 @@ clean <- function(d, helpers) {
       type = "vehicular",
       outcome = tr_outcome[result],
       search_conducted = !startsWith(search, "1-No Search"),
-      search_type = tr_search_type[search],
+      search_basis = tr_search_basis[search],
       subject_sex = tr_sex[gender],
       subject_race = tr_race[race],
       arrest_made = result == "1-In-Custody Arrest",

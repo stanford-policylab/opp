@@ -22,3 +22,4 @@ Open Policing Project -- City Data
 * benchmark to 2010 block data for race distributions?
 * use load_years in all opp_city
 * check for violation used in place of reason for stop
+* pull out granularity of "other/non-discretionary" search types

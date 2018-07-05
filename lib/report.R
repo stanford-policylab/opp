@@ -193,14 +193,14 @@ calculate_if_col("reason_for_stop", function() {
     ))
 })
 
-calculate_if_col("search_type", function() {
-  search_types_tbl <- filter(data, !is.na(search_type)) %>% 
-    group_by(search_type) %>%
+calculate_if_col("search_basis", function() {
+  search_bases_tbl <- filter(data, !is.na(search_basis)) %>% 
+    group_by(search_basis) %>%
     summarize(n = n()) %>%
     mutate(pct = n / sum(n))
-  search_types_plot <<- ggplot(search_types_tbl) +
+  search_bases_plot <<- ggplot(search_bases_tbl) +
     geom_bar(
-      aes(x = reorder(search_type, -pct), y = pct),
+      aes(x = reorder(search_basis, -pct), y = pct),
       stat = "identity"
     ) +
     xlab("search type (where search conducted)")

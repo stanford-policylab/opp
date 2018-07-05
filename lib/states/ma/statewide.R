@@ -27,8 +27,8 @@ clean <- function(d, helpers) {
     "A" = "other/unknown"
   )
 
-  tr_search_type <- c(
-    A = "non-discretionary",
+  tr_search_basis <- c(
+    A = "other",
     C = "consent",
     P = "probable cause"
   )
@@ -71,7 +71,7 @@ clean <- function(d, helpers) {
       ),
       search_conducted = SearchYN == "Yes" | !is.na(SearchDescr),
       frisk_performed = search_conducted & SearchDescr == "Terry Frisk",
-      search_type = fast_tr(SearchType, tr_search_type),
+      search_basis = fast_tr(SearchType, tr_search_basis),
       reason_for_stop = str_c_na(
         if_else(Speed == "1", "Speed", NA_character_),
         if_else(SeatBelt == "1", "SeatBelt", NA_character_),

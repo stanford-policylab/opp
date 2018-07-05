@@ -56,7 +56,7 @@ clean <- function(d, helpers) {
       subject_sex = tr_sex[Gender],
       search_conducted = `Enforcement Taken` %in%
         c("Vehicle Search", "Driver Search"),
-      search_type = ifelse(search_conducted, "probable cause", NA), 
+      search_basis = ifelse(search_conducted, "probable cause", NA), 
       arrest_made = `Enforcement Taken` == "Arrest",
       citation_issued = `Enforcement Taken` %in%
         c("Traffic Citation", "Misd. Citation or Summons"),

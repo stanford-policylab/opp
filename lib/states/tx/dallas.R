@@ -152,10 +152,10 @@ clean <- function(d, helpers) {
         citation = citation_issued,
         warning = warning_issued
       ),
-      search_type = first_of(
+      search_basis = first_of(
         "consent" = search_consent,
         "probable cause" = search_probable_cause,
-        "non-discretionary" = search_incident_to_arrest,
+        "other" = search_incident_to_arrest,
         "probable cause" = search_conducted # default
       ),
       # TODO(phoebe): what should we use as reason for stop?

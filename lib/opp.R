@@ -120,7 +120,7 @@ opp_clean <- function(d, state, city) {
   source(opp_processor_path(state, city), local = TRUE)
   helpers <- c(
     "add_lat_lng" = opp_add_lat_lng_func(state, city),
-    "add_search_type" = opp_add_search_type_func(state, city),
+    "add_search_basis" = opp_add_search_basis_func(state, city),
     "add_type" = opp_add_type_func(state, city),
     "add_contraband_types_func" = opp_add_contraband_types_func(state, city),
     "add_shapefiles_data" = opp_add_shapefiles_data_func(state, city),
@@ -148,7 +148,7 @@ opp_add_lat_lng_func <- function(state, city) {
 }
 
 
-opp_add_search_type_func <- function(state, city) {
+opp_add_search_basis_func <- function(state, city) {
   function(tbl, join_col) {
     join_on <- c("text")
     names(join_on) <- c(join_col)
@@ -156,18 +156,18 @@ opp_add_search_type_func <- function(state, city) {
       tbl,
       file.path(
         opp_calculated_features_path(state, city),
-        "search_types.csv"
+        "search_basis.csv"
       ),
       join_on,
       col_types = "cc",
-      rename_map = c("label" = "search_type"),
+      rename_map = c("label" = "search_basis"),
       translators = list(
-        "search_type" = c(
+        "search_basis" = c(
           k9 = "k9",
           pv = "plain view" ,
           cn = "consent",
           pc = "probable cause",
-          nd = "non-discretionary"
+          o = "other"
         )
       )
     )

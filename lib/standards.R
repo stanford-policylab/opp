@@ -22,12 +22,12 @@ valid_types <- c(
 
 
 # order they are likely to occur
-valid_search_types <- c(
+valid_search_bases <- c(
   "k9",
   "plain view",
   "consent",
   "probable cause",
-  "non-discretionary"  # NOTE: arrest/warrant, probation/parole, inventory
+  "other"  # NOTE: arrest/warrant, probation/parole, inventory
 )
 
 
@@ -168,7 +168,7 @@ schema <- c(
   search_conducted              = as.logical,
   search_person                 = as.logical,
   search_vehicle                = as.logical,
-  search_type                   = Curry(factor, levels = valid_search_types),
+  search_basis                  = Curry(factor, levels = valid_search_bases),
 
   # why
   reason_for_arrest             = as.character,
@@ -190,12 +190,12 @@ schema <- c(
 
 
 # NOTE: these are to enforce consistent treatment; i.e. if search_conducted
-# was marked FALSE, but search_type had a value, assume search_conducted
+# was marked FALSE, but search_basis had a value, assume search_conducted
 # takes precedence as it is more general
 predicated_columns <- list(
-  search_type = list(
+  search_basis = list(
     predicate = "search_conducted",
-    if_not = schema$search_type(NA)
+    if_not = schema$search_basis(NA)
   ),
   reason_for_search = list(
     predicate = "search_conducted",
@@ -219,7 +219,7 @@ predicated_columns <- list(
 # i.e. contraband_weapons null rate will only be the null rate
 # only where contraband_found is TRUE
 reporting_predicated_columns <- c(
-  search_type = "search_conducted",
+  search_basis = "search_conducted",
   reason_for_search = "search_conducted",
   reason_for_arrest = "arrest_made",
   contraband_found = "search_conducted",

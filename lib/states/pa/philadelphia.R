@@ -66,7 +66,7 @@ clean <- function(d, helpers) {
       # TODO(ravi):  is a vehicle_frisk a frisk?
       # https://app.asana.com/0/456927885748233/658391963833528
       frisk_performed = individual_frisked | vehicle_frisked,
-      search_type = first_of(
+      search_basis = first_of(
         "probable cause" = search_conducted | frisk_performed
       ),
       subject_sex = tr_sex[gender],

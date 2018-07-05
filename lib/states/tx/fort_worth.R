@@ -104,7 +104,7 @@ clean <- function(d, helpers) {
     helpers$add_contraband_type(
       "Contraband_Type"
     ) %>%
-    helpers$add_search_type(
+    helpers$add_search_basis(
       "reason_for_search"
     ) %>%
     standardize(d$metadata)

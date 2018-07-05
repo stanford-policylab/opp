@@ -12,10 +12,10 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
-  tr_search_type <- c(
+  tr_search_basis <- c(
     "SPC" = "probable cause",
     "SRS" = "consent",
-    "SW" = "non-discretionary",
+    "SW" = "other",
     # NOTE: Passenger searches conducted in Winooski don't specify a reason;
     # we assume they are based on probable cause.
     "_PSS" = "probable cause"
@@ -64,7 +64,7 @@ clean <- function(d, helpers) {
       ),
       search_conducted = `Stop Search` != "NS",
       contraband_found = `Stop Contraband` == "C",
-      search_type = tr_search_type[`Stop Search`],
+      search_basis = tr_search_basis[`Stop Search`],
       warning_issued = str_detect(`Stop Outcome`, "W|V"),
       citation_issued = str_detect(`Stop Outcome`, "T"),
       arrest_made = str_detect(`Stop Outcome`, "A|AW"),

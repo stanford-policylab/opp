@@ -60,7 +60,7 @@ clean <- function(d, helpers) {
       subject_race = tr_race[Race],
       subject_sex = tr_sex[Sex],
       search_conducted = tr_yn[Search],
-      search_type = first_of(
+      search_basis = first_of(
         "consent" = tr_yn[Consent],
         "probable cause" = search_conducted  # default
       ),

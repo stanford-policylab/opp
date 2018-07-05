@@ -92,7 +92,7 @@ clean <- function(d, helpers) {
       outcome = ifelse(arrest_made, "arrest", NA),
       subject_race = tr_race[Race],
       subject_sex = tr_sex[Sex],
-      search_type = first_of(
+      search_basis = first_of(
         "consent" = search_consent,
         "probable cause" = search_conducted 
       ),

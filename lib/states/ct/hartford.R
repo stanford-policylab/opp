@@ -16,15 +16,15 @@ clean <- function(d, helpers) {
     H = "hispanic"
   )
 
-  tr_search_type <- c(
+  tr_search_basis <- c(
     C = "consent",
     # NOTE: inventory
-    I = "non-discretionary",
+    I = "other",
     # NOTE: Other includes: Probable Cause, Incident to Arrest,
     # Reasonable Suspicion, Plain View Contraband, Drug Dog Alert, and
     # Exigent Circumstances; since most of these are "probable cause" related
     # reasons, we have made it probable cause even though it's possible to have
-    # a non-discretionary search here (like incident to arrest)
+    # a other search here (like incident to arrest)
     O = "probable cause"
   )
 
@@ -54,7 +54,7 @@ clean <- function(d, helpers) {
       subject_sex = tr_sex[SubjectSexCode],
       search_conducted = as.logical(search_vehicle)
         | SearchAuthorizationCode != "N",
-      search_type = tr_search_type[SearchAuthorizationCode],
+      search_basis = tr_search_basis[SearchAuthorizationCode],
       # NOTE: U = "Uniform Arrest Report"
       arrest_made = as.logical(CustodialArrestIndicator)
         | InterventionDispositionCode == "U",

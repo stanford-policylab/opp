@@ -312,7 +312,7 @@ clean <- function(d, helpers) {
         )
       ),
       # NOTE: curiously, every search was search constent in this dataset
-      search_type = first_of(
+      search_basis = first_of(
         "consent" = is_true(search_consent),
         "probable cause" = search_conducted  # default
       ),

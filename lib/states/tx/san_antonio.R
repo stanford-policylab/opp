@@ -38,10 +38,10 @@ clean <- function(d, helpers) {
     "9" = "other/unknown"
   )
 
-  tr_search_type <- c(
+  tr_search_basis <- c(
     "Consent" = "consent",
-    "Incident to Arrest" = "non-discretionary",
-    "Towing Inventory" = "non-discretionary",
+    "Incident to Arrest" = "other",
+    "Towing Inventory" = "other",
     "Probable Cause" = "probable cause",
     "Evidence" = "probable cause"
   )
@@ -73,8 +73,8 @@ clean <- function(d, helpers) {
       time = seconds_to_hms(`Violation Time`),
       subject_race = tr_race[Race],
       subject_sex = tr_sex[Gender],
-      search_conducted = `Search Reason` %in% names(tr_search_type),
-      search_type = tr_search_type[`Search Reason`],
+      search_conducted = `Search Reason` %in% names(tr_search_basis),
+      search_basis = tr_search_basis[`Search Reason`],
       contraband_found = tr_yn[`Contraband Or Evidence`],
       arrest_made = tr_yn[arrest_made],
       citation_issued = !is.na(`Citation #`),

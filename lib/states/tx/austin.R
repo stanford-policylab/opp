@@ -133,7 +133,7 @@ clean <- function(d, helpers) {
       ),
       # TODO(phoebe): we appear to lose about 10% by predicating on search
       # https://app.asana.com/0/456927885748233/548400265824560 
-      search_type = first_of(
+      search_basis = first_of(
         "plain view" = any_matches(
           "PLAIN VIEW",
           person_search_search_based_on,
@@ -144,7 +144,7 @@ clean <- function(d, helpers) {
           person_search_search_based_on,
           vehicle_search_search_based_on
         ),
-        "non-discretionary" = any_matches(
+        "other" = any_matches(
           "INCIDENTAL|INVENTORY",
           person_search_search_based_on,
           vehicle_search_search_based_on

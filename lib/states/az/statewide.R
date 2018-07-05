@@ -71,9 +71,9 @@ clean <- function(d, helpers) {
       search_person = str_detect(TypeOfSearch, "DR|PS|PE|BI")
       search_vehicle = tr_yn[SearchOfVehicle],
       search_conducted = tr_yn[SearchPerformed],
-      search_type = first_of(
+      search_basis = first_of(
         "consent" = tr_yn[ConsentSearchAccepted],
-        "non-discretionary" = tr_yn[DUISearchWarrant],
+        "other" = tr_yn[DUISearchWarrant],
         "probable cause" = search_conducted 
       ),
       contraband_drugs = !is.na(DrugSeizureType),
