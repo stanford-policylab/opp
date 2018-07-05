@@ -73,8 +73,6 @@ clean <- function(d, helpers) {
   # https://app.asana.com/0/456927885748233/730396938648773
   d$data %>%
     rename(
-      lat = `VIOLATION LAT DECIMAL`,
-      lng = `VIOLATION LONG DECIMAL`,
       vehicle_registration_state = `REGISTRATION STATE`,
       officer_id = `OFFICER BADGE/ID NUMBER`
     ) %>%
@@ -90,6 +88,9 @@ clean <- function(d, helpers) {
         `ADDRESS ZIP`,
         sep = ", "
       ),
+      lat = parse_double(`VIOLATION LAT DECIMAL`),
+      # NOTE: without negating longitude, all stops are in central China
+      lng = -parse_double(`VIOLATION LONG DECIMAL`),
       reason_for_stop = `Violation Description 1`,
       subject_race = tr_race[RACE],
       subject_sex = tr_sex[GENDER],
@@ -106,9 +107,10 @@ clean <- function(d, helpers) {
     helpers$add_type(
       "Violation Description 1"
     ) %>%
-    # TODO(danj): figure out shapefile mismatch
-    # all x coordinates are negative...
     helpers$add_shapefiles_data(
+    ) %>%
+    rename(
+      sector = SECTOR
     ) %>%
     standardize(d$metadata)
 }
