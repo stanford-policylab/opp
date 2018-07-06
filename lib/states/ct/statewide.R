@@ -23,53 +23,14 @@ clean <- function(d, helpers) {
     I = "other/unknown"
   )
 
-  tr_search_type <- c(
+  tr_search_basis <- c(
     C = "consent",
-    I = "non-discretionary", # inventory
-    N = NA_character_,
-    O = "probable cause"
+    O = "probable cause",
+    I = "other" # inventory
   )
 
-  parse_lat_or_lng <- function(x) {
-    parse_number(
-      str_c(
-        str_extract(x, "-?\\d\\d"),
-        str_replace_all(str_extract(x, "(?<=\\s).*"), "\\.|\\s", ""),
-        sep='.'
-      )
-    )
-  }
-
   multi_to_string <- function(x) {
-    paste(sort(unique(x)), collapse=",")
-  }
-
-  empty_string_to_na <- function(x) {
-    if_else(
-      x == "",
-      NA_character_,
-      x
-    )
-  }
-
-  multi_outcome_tr_fn <- function(x) {
-    if_else(
-      grepl("U", x),
-      "arrest",
-      if_else(
-        grepl("M", x),
-        "summons",
-        if_else(
-          grepl("I", x),
-          "citation",
-          if_else(
-            grepl("W|V", x),
-            "warning",
-            NA_character_
-          )
-        )
-      )
-    )
+    str_c(str_sort(unique(x)), collapse=",")
   }
 
   d$data %>%
@@ -80,6 +41,8 @@ clean <- function(d, helpers) {
     ) %>%
     mutate(
       date = date(parse_datetime(InterventionDateTime)),
+      # NOTE: The time 00:00 appears more than 10x over the next most frequent
+      # time (minute granularity). Opting to convert 00:00 to NA.
       time = if_else(
         InterventionTime != "00:00",
         parse_time(InterventionTime, "%H:%M"),
@@ -90,27 +53,45 @@ clean <- function(d, helpers) {
         InterventionLocationName,
         sep=", "
       ),
-      lat = parse_lat_or_lng(InterventionLocationLatitude),
-      lng = -1 * abs(parse_lat_or_lng(InterventionLocationLongitude)),
+      # TODO(walterk): Modify Joe's parse_coord to be able to parse coords like
+      # "41 22 35.2308" once his PR lands:
+      # https://github.com/stanford-policylab/opp/pull/12
+      lat = parse_coord(InterventionLocationLatitude),
+      lat = replace(lat, lat == 0, NA_real_),
+      lng = -1 * abs(parse_coord(InterventionLocationLongitude)),
+      lng = replace(lng, lng == 0, NA_real_),
       county_name = fast_tr(tolower(InterventionLocationName), tr_county),
       subject_race = tr_race[if_else(
         SubjectEthnicityCode == "H",
-        SubjectEthnicityCode,
+        "H",
         SubjectRaceCode
       )],
       subject_sex = tr_sex[SubjectSexCode],
       contraband_found = ContrabandIndicator == "True",
       search_vehicle = VehicleSearchedIndicator == "True",
       search_conducted = search_vehicle | SearchAuthorizationCode != "N",
-      search_type = tr_search_type[SearchAuthorizationCode]
+      search_basis = tr_search_basis[SearchAuthorizationCode]
     ) %>%
     # NOTE: Some rows belong to the same stop.  We dedup below with a group_by
     # and aggregate to potentially have multiple violations and multiple
     # reasons for stop.  For the outcome, we take the most severe outcome.
     group_by(
-      subject_age, officer_id, department_name, date, time, location, lat, lng,
-      county_name, subject_race, subject_sex, contraband_found, search_vehicle,
-      search_conducted, search_type, CustodialArrestIndicator
+      contraband_found,
+      county_name,
+      CustodialArrestIndicator,
+      date,
+      department_name,
+      lat,
+      lng,
+      location,
+      officer_id,
+      search_basis,
+      search_conducted,
+      search_vehicle,
+      subject_age,
+      subject_race,
+      subject_sex,
+      time
     ) %>%
     summarize(
       # NOTE: There is also StatutatoryCitationPostStop which is the violation
@@ -119,28 +100,19 @@ clean <- function(d, helpers) {
       reason_for_stop = multi_to_string(StatutoryReasonForStop),
       multi_outcome = multi_to_string(InterventionDispositionCode)
     ) %>%
-    ungroup() %>%
+    ungroup(
+    ) %>%
     mutate(
-      # NOTE: The paste call above can result in empty strings if all values in
-      # the group are NA.  We convert to NA here.
-      violation = empty_string_to_na(violation),
-      reason_for_stop = empty_string_to_na(reason_for_stop),
-      multi_outcome = empty_string_to_na(multi_outcome),
-      outcome = if_else(
-        CustodialArrestIndicator == "True",
-        "arrest",
-        multi_outcome_tr_fn(multi_outcome)
-      ),
-      arrest_made = outcome == "arrest",
-      citation_issued = if_else(
-        !is.na(multi_outcome),
-        grepl("I", multi_outcome),
-        NA
-      ),
-      warning_issued = if_else(
-        !is.na(multi_outcome),
-        grepl("W|V", multi_outcome),
-        NA
+      arrest_made = CustodialArrestIndicator == "True"
+        | str_detect(multi_outcome, "U"),
+      summons_issued = str_detect(multi_outcome, "M"),
+      citation_issued = str_detect(multi_outcome, "I"),
+      warning_issued = str_detect(multi_outcome, "W|V"),
+      outcome = first_of(
+        "arrest" = arrest_made,
+        "summons" = summons_issued,
+        "citation" = citation_issued,
+        "warning" = warning_issued
       ),
       type = if_else(
         # NOTE: Inferring type "vehicular" based on search_vehicle and whether
