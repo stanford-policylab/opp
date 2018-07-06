@@ -26,7 +26,8 @@ clean <- function(d, helpers) {
   tr_search_basis <- c(
     C = "consent",
     O = "probable cause",
-    I = "other" # inventory
+    # inventory
+    I = "other"
   )
 
   multi_to_string <- function(x) {
