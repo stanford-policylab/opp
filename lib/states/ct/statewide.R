@@ -2,11 +2,7 @@ source("common.R")
 
 
 load_raw <- function(raw_data_dir, n_max) {
-  d <- load_regex(
-    raw_data_dir,
-    "^connecticut",
-    n_max = n_max
-  )
+  d <- load_regex(raw_data_dir, "^connecticut", n_max = n_max)
   bundle_raw(d$data, d$loading_problems)
 }
 
@@ -29,10 +25,6 @@ clean <- function(d, helpers) {
     # inventory
     I = "other"
   )
-
-  multi_to_string <- function(x) {
-    str_c(str_sort(unique(x)), collapse=",")
-  }
 
   d$data %>%
     rename(
@@ -97,9 +89,9 @@ clean <- function(d, helpers) {
     summarize(
       # NOTE: There is also StatutatoryCitationPostStop which is the violation
       # the individual was cited for.
-      violation = multi_to_string(StatuteCodeIdentificationID),
-      reason_for_stop = multi_to_string(StatutoryReasonForStop),
-      multi_outcome = multi_to_string(InterventionDispositionCode)
+      violation = str_c_sort_uniq(StatuteCodeIdentificationID),
+      reason_for_stop = str_c_sort_uniq(StatutoryReasonForStop),
+      multi_outcome = str_c_sort_uniq(InterventionDispositionCode)
     ) %>%
     ungroup(
     ) %>%
@@ -119,7 +111,7 @@ clean <- function(d, helpers) {
         # NOTE: Inferring type "vehicular" based on search_vehicle and whether
         # the violation section is of the form 14-XXX.
         # See: https://www.cga.ct.gov/2015/pub/title_14.htm
-        search_vehicle | grepl("(^|,)14(-.*)?($|,)", violation),
+        search_vehicle | str_detect(violation, "(^|\\|)14(-.*)?($|\\|)"),
         "vehicular",
         NA_character_
       )

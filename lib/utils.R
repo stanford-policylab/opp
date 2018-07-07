@@ -507,6 +507,14 @@ str_combine_cols <- function(left, right,
 }
 
 
+# Sort unique values and collapse to a string.
+# Useful in dply summarize after a group_by when collapsing multiple values in a
+# group. NAs are omitted unless all values are NA in which case returns NA.
+str_c_sort_uniq <- function(x, collapse = "|") {
+  str_c(str_sort(unique(x)), collapse = collapse)
+}
+
+
 extract_and_add_decimal_lat_lng <- function(tbl, colname) {
   mtx <- do.call(rbind, str_extract_all(tbl[[colname]], "-?[0-9.]+"))
   colnames(mtx) <- c("lat", "lng")
