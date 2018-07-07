@@ -44,17 +44,20 @@ clean <- function(d, helpers) {
     mutate(
       date = date(parse_datetime(violation_date_time, "%m/%d/%y %H:%M")),
       time = parse_time(violation_date_time, "%m/%d/%y %H:%M"),
-      # TODO(walterk): Fix this; issues because str_c_na(NA, NA) returns "".
-      location = str_c_na(
+      location = if_else(
+        is.na(highway) & is.na(hwy_suffix),
+        str_c_na(street_cnty_rd_location, ref_point, desc_of_area, sep = ", "),
         str_c_na(
           street_cnty_rd_location,
           str_c_na(highway, hwy_suffix),
           ref_point,
-          sep = " "
-        ),
-        desc_of_area,
-        sep = ", "
+          desc_of_area,
+          sep = ", "
+        )
       ),
+      # NOTE: If all values feeding into location are NA, str_c_na returns "".
+      # We convert to NA here.
+      location = if_else(location == "", NA_character_, location),
       subject_race = tr_race[Race],
       subject_sex = tr_sex[sex],
       type = if_else(
