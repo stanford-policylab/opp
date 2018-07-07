@@ -33,9 +33,8 @@ clean <- function(d, helpers) {
       violation_date_time
     ) %>% 
     summarize(
-      # TODO(walterk): Refactor to utils.
-      violation = str_c(str_sort(unique(century_code_viol)), collapse = ";"),
-      reason_for_stop = str_c(str_sort(unique(description_50)), collapse = ";")
+      violation = str_c_sort_uniq(century_code_viol),
+      reason_for_stop = str_c_sort_uniq(description_50)
     ) %>%
     ungroup(
     ) %>%
@@ -58,17 +57,17 @@ clean <- function(d, helpers) {
       ),
       subject_race = tr_race[Race],
       subject_sex = tr_sex[sex],
-      # TODO(walterk): The old code seems to indicate that this is all state
-      # patrol stops. Figure out if this is really true, in which case
-      # department_name is "North Dakota State Highway Patrol".
       type = if_else(
         # NOTE: Inferring type "vehicular" based on century_code_viol and
         # whether the violation section starts with "39".
         # See: https://www.legis.nd.gov/cencode/t39.html
-        str_detect(violation, "(^|;)39"),
+        str_detect(violation, "(^|\\|)39"),
         "vehicular",
         NA_character_
       )
+      # TODO(walterk): The old code seems to indicate that this is all state
+      # patrol stops. Figure out if this is really true, in which case
+      # department_name is "North Dakota State Highway Patrol".
     ) %>%
     standardize(d$metadata)
 }
