@@ -27,23 +27,23 @@ clean <- function(d, helpers) {
       Warning = parse_number(Warning)
     ) %>%
     group_by(
-      PrimaryOfficerID,
-      DepartmentNum,
+      ArrestNum,
+      CountyCode,
       Department,
+      DepartmentNum,
+      NearStreet,
+      PrimaryOfficerID,
+      Race,
       TicketDate,
       UponStreet,
-      NearStreet,
-      CountyCode,
-      Race,
-      VehicleID,
-      ArrestNum
+      VehicleID
     ) %>% 
     summarise(
       # NOTE: We also have Felony, Misdemeanor, CivilInfraction and several
       # court related columns to help refine the outcome.
       max_warning = max(Warning),
-      violation = paste(ViolationCode, collapse = ";"),
-      reason_for_stop = paste(Description, collapse = ";")
+      violation = str_c_sort_uniq(ViolationCode),
+      reason_for_stop = str_c_sort_uniq(Description)
     ) %>%
     ungroup(
     ) %>%
@@ -84,14 +84,6 @@ clean <- function(d, helpers) {
         "arrest" = arrest_made,
         "citation" = citation_issued,
         "warning" = warning_issued
-      ),
-      # NOTE: The paste call above can result in empty strings if all values in
-      # the group are NA.  We convert to NA here.
-      violation = if_else(violation == "", NA_character_, violation),
-      reason_for_stop = if_else(
-        reason_for_stop == "",
-        NA_character_,
-        reason_for_stop
       )
     ) %>%
     standardize(d$metadata)
