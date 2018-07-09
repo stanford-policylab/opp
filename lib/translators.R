@@ -4,7 +4,9 @@ tr_sex = c(
   m = "male",
   f = "female",
   Male = "male",
-  Female = "female"
+  Female = "female",
+  MALE = "male",
+  FEMALE = "femle"
 )
 
 tr_race <- c(
