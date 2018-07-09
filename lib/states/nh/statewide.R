@@ -9,7 +9,8 @@ load_raw <- function(raw_data_dir, n_max) {
   # all of them.
   nh14_1 <- load_single_file(
     raw_data_dir,
-    "NewHampshire_2014_redacted_eTicket_file_NHSP_sheet1.csv"
+    "NewHampshire_2014_redacted_eTicket_file_NHSP_sheet1.csv",
+    n_max = n_max
   )
   nh14_1a <- nh14_1$data %>%
     add_column(
@@ -28,7 +29,8 @@ load_raw <- function(raw_data_dir, n_max) {
   nh14_2 <- load_single_file(
     raw_data_dir,
     "NewHampshire_2014_redacted_eTicket_file_NHSP_sheet2.csv",
-    col_names = FALSE
+    col_names = FALSE,
+    n_max = n_max
   )
   nh14_2a <- nh14_2$data %>%
     add_column(
@@ -44,7 +46,8 @@ load_raw <- function(raw_data_dir, n_max) {
   nh14_3 <- load_single_file(
     raw_data_dir,
     "NewHampshire_2014_redacted_eTicket_file_NHSP_sheet3.csv",
-    col_names = FALSE
+    col_names = FALSE,
+    n_max = n_max
   )
   nh14_3a <- nh14_3$data
   colnames(nh14_3a) <- colnames(nh14_1a)
@@ -57,17 +60,20 @@ load_raw <- function(raw_data_dir, n_max) {
   # we add and fill with NA.
   nh15_1 <- load_single_file(
     raw_data_dir,
-    "NewHampshire_2015_eticket_totals_by_trooper_sheet1.csv"
+    "NewHampshire_2015_eticket_totals_by_trooper_sheet1.csv",
+    n_max = n_max
   )
   nh15_2 <- load_single_file(
     raw_data_dir,
     "NewHampshire_2015_eticket_totals_by_trooper_sheet2.csv",
-    col_names = colnames(nh15_1$data)
+    col_names = colnames(nh15_1$data),
+    n_max = n_max
   )
   nh15_3 <- load_single_file(
     raw_data_dir,
     "NewHampshire_2015_eticket_totals_by_trooper_sheet3.csv",
-    col_names = colnames(nh15_1$data)
+    col_names = colnames(nh15_1$data),
+    n_max = n_max
   )
 
   nh15 <- rbind(
@@ -76,8 +82,8 @@ load_raw <- function(raw_data_dir, n_max) {
       nh15_3$data
     ) %>%
     add_column(
-      DEF_COMPANY=NA_character_,
-      .after="CITATION_SOURCE_TXT"
+      DEF_COMPANY = NA_character_,
+      .after = "CITATION_SOURCE_TXT"
     )
 
   nh <- rbind(nh14, nh15)
@@ -152,7 +158,7 @@ clean <- function(d, helpers) {
       ),
       lat = parse_coord(LATITUDE),
       lng = parse_coord(LONGITUDE),
-      subject_dob = mdy(DEF_BIRTH_DATE),
+      subject_dob = parse_date(DEF_BIRTH_DATE, "%m/%d/%Y"),
       subject_age = age_at_date(subject_dob, date),
       subject_race = fast_tr(RACE_CDE, tr_race),
       subject_sex = fast_tr(GENDER_CDE, tr_sex),
