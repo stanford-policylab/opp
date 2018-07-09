@@ -153,10 +153,19 @@ clean <- function(d, helpers) {
       reason_for_search = `Search Reason`
     ) %>%
     mutate(
-      date = parse_date(`Date of Stop`, "%Y/%m/%d"),
-      time = parse_time(`Time of Stop`, "%H:%M"),
-      subject_dob = parse_date(DOB, "%Y/%m/%d"),
-      subject_age = age_at_date(DOB, date),
+      # NOTE: Some dates include timestamps as well. These are redundant with
+      # the `Time of Stop` column, so drop them here.
+      date_raw = str_sub(`Date of Stop`, 0, 10),
+      date = parse_date(date_raw, "%Y/%m/%d"),
+      # NOTE: Some times include AM/PM. These are redundant with the hour,
+      # which is 24-hour, so cut the string to only the HH:MM.
+      time_raw = str_sub(`Time of Stop`, 0, 5),
+      time = parse_time(time_raw, "%H:%M"),
+      # NOTE: Some DOBs contain a junk time component (midnight); cut them off.
+      # Other DOBs are malformed (e.g., 3-digit year); they will become NA.
+      dob_raw = str_sub(DOB, 0, 10),
+      subject_dob = parse_date(dob_raw, "%Y/%m/%d"),
+      subject_age = age_at_date(subject_dob, date),
       subject_sex = tr_sex[Gender],
       # NOTE: Source data only include vehicle stops.
       type = "vehicular",
