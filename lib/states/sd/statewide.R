@@ -21,7 +21,7 @@ clean <- function(d, helpers) {
   # https://app.asana.com/0/456927885748233/733449078894622
   d$data %>%
     rename(
-      county_name = `County Freeform`,
+      county_name = County,
       location = Address,
       violation = `Statutes/Charges`,
       vehicle_color = `Color 1`,
