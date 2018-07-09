@@ -29,13 +29,13 @@ load_raw <- function(raw_data_dir, n_max) {
         `Arrest Made` = Arrest
       )
   )
- 
-  d07 <- load_single_file(
+
+  d07_1 <- load_single_file(
     raw_data_dir,
     '2007_master_traffic_stop_data_for_2008_report.csv',
     n_max = n_max
   )
-  d07_df <- d07$data %>%
+  d07 <- d07_1$data %>%
     rename(
       Agency = Jurisdiction,
       `Arrest Made` = Arrest,
@@ -50,7 +50,7 @@ load_raw <- function(raw_data_dir, n_max) {
       # NOTE: 2007 actually kept more data about registration; we drop it here
       # because all other years track only in-state or out-of-state.
       `State of Residence` = if_else(toupper(DReg) == "MD", "i", "o"),
-      `State of Registration` = if_else(toupper(VReg) == "MD", "i", "o"),
+      `State of Registration` = if_else(toupper(VReg) == "MD", "i", "o")
     ) %>%
     select(-StopG, -StopE, -Consent, -Citation, -SERO, -Warning, -DReg, -VReg)
   d09_11 <- load_regex(
@@ -63,7 +63,7 @@ load_raw <- function(raw_data_dir, n_max) {
     '2012_master_traffic_stop_data_for_2013_report.csv',
     n_max = n_max
   )
-  d_old <- bind_rows(
+  d09_11_12 <- bind_rows(
     d09_11$data %>%
       rename(
         `Stop Reason` = Stopreason,
@@ -72,45 +72,32 @@ load_raw <- function(raw_data_dir, n_max) {
       ),
     d12$data %>% select(-X11)
   )
-  d_new <- bind_rows(d_old, d13) %>%
+  d09_11_12_13 <- bind_rows(d09_11_12, d13) %>%
     mutate(
       # NOTE: Convert these to a character for row-binding; we'll turn the
       # them back into logical later in processing with the other years' data.
       contra_prop = if_else(str_detect(Disposition, "both|prop"), "T", "F"),
       contra_narc = if_else(str_detect(Disposition, "both|narc"), "T", "F")
     )
-  bind_rows(d_new, d07_df) %>%
-    bundle_raw(
-      c(
-        d13_1$loading_problems,
-        d13_23467$loading_problems,
-        d13_5$loading_problems,
-        d07$loading_problems,
-        d09_11$loading_problems,
-        d12$loading_problems
-      )
+
+  bundle_raw(
+    bind_rows(d09_11_12_13, d07),
+    c(
+      d13_1$loading_problems,
+      d13_23467$loading_problems,
+      d13_5$loading_problems,
+      d07_1$loading_problems,
+      d09_11$loading_problems,
+      d12$loading_problems
     )
+  )
 }
 
 
 clean <- function(d, helpers) {
 
-  tr_any_logical <- c(
-    "0" = FALSE,
-    "1" = TRUE,
-    "F" = FALSE,
-    "n" = FALSE,
-    "N" = FALSE,
-    "No" = FALSE,
-    "NO" = FALSE,
-    "T" = TRUE,
-    "y" = TRUE,
-    "Y" = TRUE,
-    "YE" = TRUE,
-    "Yes" = TRUE,
-    "YES" = TRUE,
-    "YES- PASSE" = TRUE
-  )
+  re_yes <- regex("Y|T|1", ignore_case = TRUE)
+  is_true <- function(col) str_detect(col, re_yes)
 
   tr_search <- c(
     "ARR" = "person",
@@ -176,7 +163,7 @@ clean <- function(d, helpers) {
       # NOTE: `Arrest Made` column isn't complete, so supplement with "arrest"
       # values from the Outcome column when missing.
       outcome_arrest = str_detect(Outcome, fixed("arr", ignore_case = TRUE)),
-      arrest_made_explicit = tr_any_logical[`Arrest Made`],
+      arrest_made_explicit = is_true(`Arrest Made`),
       arrest_made = if_else(is.na(`Arrest Made`), outcome_arrest, arrest_made_explicit),
       citation_issued = str_detect(Outcome, fixed("cit", ignore_case = TRUE)),
       warning_issued = str_detect(Outcome, fixed("warn", ignore_case = TRUE)),
@@ -185,15 +172,15 @@ clean <- function(d, helpers) {
         citation = citation_issued,
         warning = warning_issued
       ),
-      contraband_drugs = tr_any_logical[contra_narc],
-      contraband_weapons = tr_any_logical[contra_prop],
+      contraband_drugs = is_true(contra_narc),
+      contraband_weapons = is_true(contra_prop),
       contraband_found = contraband_drugs | contraband_weapons,
       # NOTE: the `Search Conducted` field is not totally reliable. Check
       # there if possible, but if it is NA check also whether the `Search`
       # field indicates that a search took place.
       search_conducted = if_else(
         !is.na(`Search Conducted`),
-        tr_any_logical[`Search Conducted`],
+        is_true(`Search Conducted`),
         Search %in% names(tr_search)
       ),
       searched_what = fast_tr(Search, tr_search),
