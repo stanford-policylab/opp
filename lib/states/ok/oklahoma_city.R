@@ -1,24 +1,23 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-  data <- tibble()
-	loading_problems <- list()
-
-  stops_fname = 'orr_20171017191427.csv'
-  stops <- read_csv(file.path(raw_data_dir, stops_fname), n_max = n_max)
-  loading_problems[[stops_fname]] <- problems(stops)
-
-  officer_fname = 'orr_-_okcpd_roster_2007-2017_sheet_1.csv'
-  officer <- read_csv(file.path(raw_data_dir, officer_fname))
-  loading_problems[[officer_fname]] <- problems(officer)
-
-  officer[["ID #"]] <- str_pad(officer[["ID #"]], 4, pad = "0")
-  data <- left_join(
-    stops,
-    officer,
+  stops <- load_single_file(
+    raw_data_dir,
+    'orr_20171017191427.csv',
+    n_max = n_max
+  )
+  officer <- load_single_file(
+    raw_data_dir,
+    'orr_-_okcpd_roster_2007-2017_sheet_1.csv',
+    n_max = n_max
+  )
+  officer$data[["ID #"]] <- str_pad(officer$data[["ID #"]], 4, pad = "0")
+  left_join(
+    stops$data,
+    officer$data,
     by = c("ofc_badge_no" = "ID #")
   ) %>%
-  bundle_raw(loading_problems)
+  bundle_raw(c(stops$loading_problems, officer$loading_problems))
 }
 
 
@@ -46,6 +45,8 @@ clean <- function(d, helpers) {
       subject_dob = DfndDOB,
       reason_for_stop = OffenseDesc,
       officer_id = ofc_badge_no,
+      speed = viol_actl_spd,
+      posted_speed = viol_post_spd,
       # NOTE: veh_color_2 is null 99.8% of the time
       vehicle_color = veh_color_1,
       vehicle_make = veh_make,
@@ -56,6 +57,13 @@ clean <- function(d, helpers) {
       vehicle_year = veh_year
     ) %>%
     helpers$add_lat_lng(
+    ) %>%
+    helpers$add_shapefiles_data(
+    ) %>%
+    rename(
+      division = DIVISION.x,
+      sector = SECTOR,
+      beat = BEAT
     ) %>%
     # TODO(ravi): check these classifications
     # https://app.asana.com/0/456927885748233/521735743717408

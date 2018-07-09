@@ -1,19 +1,8 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-  data <- tibble()
-  loading_problems <- list()
-  for (year in 2009:2016) {
-    fname <- str_c("37_", year, ".csv")
-    tbl <- read_csv(file.path(raw_data_dir, fname))
-		data <- bind_rows(data, tbl)
-		loading_problems[[fname]] <- problems(tbl)
-    if (nrow(data) > n_max) {
-      data <- data[1:n_max, ]
-      break
-    }
-  }
-  bundle_raw(data, loading_problems)
+  d <- load_years(raw_data_dir, n_max = n_max)
+  bundle_raw(d$data, d$loading_problems)
 }
 
 
@@ -76,7 +65,7 @@ clean <- function(d, helpers) {
       time = format(datetime, "%H:%M:%S"),
       subject_race = tr_race[race],
       subject_sex = tr_sex[sex],
-      vehicle_year = format_two_digit_year(year, cutoff = 2017)
+      vehicle_year = format_two_digit_year(year)
     ) %>%
     helpers$add_lat_lng(
     ) %>%

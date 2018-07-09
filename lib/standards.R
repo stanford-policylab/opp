@@ -177,6 +177,8 @@ schema <- c(
   reason_for_stop               = as.character,
 
   # other
+  speed                         = as.numeric,
+  posted_speed                  = as.numeric,
   use_of_force_description      = as.character,
   use_of_force_reason           = as.character,
   vehicle_color                 = as.character,

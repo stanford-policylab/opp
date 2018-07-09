@@ -1,11 +1,8 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-  fname <- "car_ped_stops.csv"
-  data <- read_csv(file.path(raw_data_dir, fname), n_max = n_max)
-  loading_problems <- list()
-  loading_problems[[fname]] <- problems(data)
-  bundle_raw(data, loading_problems)
+  d <- load_single_file(raw_data_dir, "car_ped_stops.csv", n_max = n_max)
+  bundle_raw(d$data, d$loading_problems)
 }
 
 
@@ -20,11 +17,6 @@ clean <- function(d, helpers) {
     "Black - Latino" = "hispanic",
     "Unknown" = "other/unknown",
     "American Indian" = "other/unknown"
-  )
-
-  tr_sex <- c(
-    "Male" = "male",
-    "Female" = "female"
   )
 
   tr_type <- c(

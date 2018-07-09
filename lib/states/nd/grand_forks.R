@@ -39,52 +39,6 @@ load_raw <- function(raw_data_dir, n_max) {
     ),
     skip = 1
   )
-  # data <- tibble()
-	# loading_problems <- list()
-  # for (year in 2007:2016) {
-  #   citations_fname <- str_c(year, " Citations.csv")
-  #   warnings_fname <- str_c(year, " Warnings.csv")
-  #   citations <- read_csv_with_types(
-  #     file.path(raw_data_dir, citations_fname),
-  #     c(
-  #       agency              = "c",
-  #       citation_number     = "c",
-  #       date                = "c",
-  #       time                = "c",
-  #       sex                 = "c",
-  #       race                = "c",
-  #       age                 = "i",
-  #       viol_code           = "c",
-  #       desc                = "c",
-  #       house               = "c",
-  #       street              = "c",
-  #       ht_ft               = "i",
-  #       ht_in               = "i",
-  #       weight              = "i"
-  #     )
-  #   )
-  #   warnings <- read_csv_with_types(
-  #     file.path(raw_data_dir, warnings_fname),
-  #     c(
-  #       contact             = "c",
-  #       date                = "c",
-  #       time                = "c",
-  #       house               = "c",
-  #       street              = "c",
-  #       sex                 = "c",
-  #       race                = "c",
-  #       desc                = "c"
-  #     )
-  #   )
-  #   data <- bind_rows(data, citations, warnings)
-		# loading_problems[[citations_fname]] <- problems(citations)
-		# loading_problems[[warnings_fname]] <- problems(warnings)
-  #   if (nrow(data) > n_max) {
-  #     data <- data[1:n_max, ]
-  #     break
-  #   }
-  # }
-  # bundle_raw(data, loading_problems)
   bundle_raw(
     bind_rows(cit$data, warn$data),
     c(cit$loading_problems, warn$loading_problems)
