@@ -17,14 +17,14 @@ load_raw <- function(raw_data_dir, n_max) {
 
   common_codes_translator <- function(col) {
     translator_from_tbl(
-      common_codes %>% filter(CodeType == col),
+      filter(common_codes, CodeType == col),
       "CommonCode",
       "Description"
     )
   }
   stop_codes_translator <- function(col) {
     translator_from_tbl(
-      stop_codes %>% filter(CodeType == col),
+      filter(stop_codes, CodeType == col),
       "CommonCodeNumber",
       "Description"
     )
@@ -43,7 +43,7 @@ load_raw <- function(raw_data_dir, n_max) {
   # NOTE: D is Driver and P is Passenger, see refcommoncode.csv;
   # drop Type as well, since it's now useless and Type in search.csv
   # corresponds to search type, which we want to keep
-  only_drivers <- person %>% filter(Type == "D") %>% select(-Type)
+  only_drivers <- filter(person, Type == "D") %>% select(-Type)
   collapsed_search_basis <- group_by(
       search_basis,
       StopID,
@@ -54,7 +54,7 @@ load_raw <- function(raw_data_dir, n_max) {
       Basis = tr_search_basis[Basis]
     ) %>%
     summarize(
-      Basis = str_c(Basis, collapse = ', ')
+      Basis = str_c(Basis, collapse = '|')
     )
   
   # NOTE: the only major caveat with the following data is that the search,
@@ -85,7 +85,7 @@ load_raw <- function(raw_data_dir, n_max) {
   # SearchID:StopID is 1:1 -->
   # group_by(search, SearchID, StopID) %>% count %>% nrow == nrow(search)
   #
-  # j <- group_by(left_join(select(search, -Type), person)
+  # j <- group_by(left_join(select(search, -Type), person))
   #
   # SearchID:PersonID is 1:1 -->
   # group_by(j, SearchID, PersonID) %>% count %>% nrow == nrow(search)
@@ -104,7 +104,7 @@ load_raw <- function(raw_data_dir, n_max) {
   #
   # There are not multiple people associated with each <StopID,SearchID> -->
   # group_by(search_basis, StopID, SearchID, PersonID) %>% count %>% nrow
-  # == group_by(search_basis, StopID, SearchID) %>% count %>% nrow
+  # group_by(search_basis, StopID, SearchID) %>% count %>% nrow
   #
   # There are, however, multiple SearchBasisIDs per <StopID,SearchID>, so
   # we collapsed those above
@@ -115,7 +115,7 @@ load_raw <- function(raw_data_dir, n_max) {
   # NOTE: same reasoning as above, except there is only one ContrabandID per
   # <StopID, SearchID> -->
   # group_by(contraband, StopID, SearchID) %>% count %>% nrow
-  # == group_by(contraband, StopID, SearchID, ContrabandID) %>% count %>% nrow
+  # group_by(contraband, StopID, SearchID, ContrabandID) %>% count %>% nrow
   left_join(
     select(contraband, -PersonID),
     by = c("StopID", "SearchID")
@@ -162,7 +162,7 @@ clean <- function(d, helpers) {
       date = as.Date(datetime),
       time = format(datetime, "%H:%M:%S"),
       # NOTE: the majority of times are midnight, which signify missing data
-      time = ifelse(time == "00:00:00", NA, time),
+      time = if_else(time == "00:00:00", NA_character_, time),
       # TODO(phoebe): can we get better location data?
       # https://app.asana.com/0/456927885748233/635930602677956
       location = str_c_na(
@@ -180,12 +180,16 @@ clean <- function(d, helpers) {
         "citation" = citation_issued,
         "warning" = warning_issued
       ),
-      subject_race = tr_race[ifelse(Ethnicity == "H", "H", Race)],
+      subject_race = tr_race[if_else(Ethnicity == "H", "H", Race)],
       subject_sex = tr_sex[Gender],
       search_conducted = !is.na(SearchID),
       search_person = as.logical(DriverSearch) | as.logical(PassengerSearch),
       frisk_performed = search_type_description == "Protective Frisk",
-      reason_for_frisk = ifelse(frisk_performed, reason_for_search, NA),
+      reason_for_frisk = if_else(
+        frisk_performed,
+        reason_for_search,
+        NA_character_
+      ),
       search_basis = first_of(
         "other" = str_detect(
           search_type_description,
@@ -200,7 +204,7 @@ clean <- function(d, helpers) {
       contraband_found = !is.na(ContrabandID),
       # TODO(phoebe): what are "gallons" and "pints" typically of?
       # https://app.asana.com/0/456927885748233/635930602677955
-      contraband_drugs = ifelse(
+      contraband_drugs = if_else(
         contraband_found,
         (gt_0(Ounces)
          | gt_0(Pounds)
@@ -210,10 +214,14 @@ clean <- function(d, helpers) {
         ),
         NA
       ),
-      contraband_weapons = ifelse(contraband_found, gt_0(Weapons), NA)
+      contraband_weapons = if_else(
+        contraband_found,
+        gt_0(Weapons),
+        NA
+      )
     ) %>%
     filter(
-      # NOTE: 2000-2001 data is incomplete, so removing
+      # NOTE: remove incomplete data from 2000-2001
       year(date) > 2001
     ) %>%
     standardize(d$metadata)

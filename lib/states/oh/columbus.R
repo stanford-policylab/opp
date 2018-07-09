@@ -1,11 +1,8 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-  loading_problems <- list()
-  fname <- "columbus_oh_data.csv"
-  data <- read_csv(file.path(raw_data_dir, fname), n_max = n_max)
-  loading_problems[[fname]] <- problems(data)
-  bundle_raw(data, loading_problems)
+  d <- load_single_file(raw_data_dir, "columbus_oh_data.csv")
+  bundle_raw(d$data, d$loading_problems)
 }
 
 
@@ -56,7 +53,11 @@ clean <- function(d, helpers) {
       subject_sex = tr_sex[Gender],
       search_conducted = `Enforcement Taken` %in%
         c("Vehicle Search", "Driver Search"),
-      search_basis = ifelse(search_conducted, "probable cause", NA), 
+      search_basis = if_else(
+        search_conducted,
+        "probable cause",
+        NA_character_
+      ), 
       arrest_made = `Enforcement Taken` == "Arrest",
       citation_issued = `Enforcement Taken` %in%
         c("Traffic Citation", "Misd. Citation or Summons"),

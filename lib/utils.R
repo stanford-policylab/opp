@@ -507,7 +507,7 @@ str_combine_cols <- function(left, right,
 }
 
 
-extract_and_add_lat_lng <- function(tbl, colname) {
+extract_and_add_decimal_lat_lng <- function(tbl, colname) {
   mtx <- do.call(rbind, str_extract_all(tbl[[colname]], "-?[0-9.]+"))
   colnames(mtx) <- c("lat", "lng")
   bind_cols(tbl, as_tibble(mtx))
@@ -648,14 +648,20 @@ load_similar_files <- function(
   paths,
   n_max = Inf,
   col_types = cols(.default = "c"),
-  col_names = TRUE
+  col_names = TRUE,
+  skip = 0
 ) {
   data <- tibble()
   loading_problems <- list()
   for (path in paths) {
     bn <- basename(path)
     print(str_c('loading ', bn))
-    tbl <- read_csv(path, col_types = col_types, col_names = col_names)
+    tbl <- read_csv(
+      path,
+      col_types = col_types,
+      col_names = col_names,
+      skip = skip
+    )
     data <- bind_rows(data, tbl)
     loading_problems[[bn]] <- problems(tbl)
     if (nrow(data) > n_max) {
@@ -670,9 +676,17 @@ load_similar_files <- function(
 load_years <- function(
   dir,
   n_max = Inf,
-  col_types = cols(.default = "c")
+  col_types = cols(.default = "c"),
+  col_names = TRUE,
+  skip = 0
 ) {
-  load_similar_files(files_with_recent_year_in_name(dir), n_max, col_types)
+  load_similar_files(
+    files_with_recent_year_in_name(dir),
+    n_max,
+    col_types,
+    col_names,
+    skip
+  )
 }
 
 
@@ -681,9 +695,16 @@ load_regex <- function(
   regex,
   n_max = Inf,
   col_types = cols(.default = "c"),
-  col_names = TRUE
+  col_names = TRUE,
+  skip = 0
 ) {
-  load_similar_files(list.files(dir, regex, full.names=T), n_max, col_types, col_names)
+  load_similar_files(
+    list.files(dir, regex, full.names=T),
+    n_max,
+    col_types,
+    col_names,
+    skip
+  )
 }
 
 
@@ -692,9 +713,17 @@ load_single_file <- function(
   fname,
   n_max = Inf,
   col_types = cols(.default = "c"),
-  col_names = TRUE
+  col_names = TRUE,
+  skip = 0
 ) {
-  load_regex(dir, str_c("^", fname, "$"), n_max, col_types, col_names)
+  load_regex(
+    dir,
+    str_c("^", fname, "$"),
+    n_max,
+    col_types,
+    col_names,
+    skip
+  )
 }
 
 
