@@ -195,12 +195,12 @@ clean <- function(d, helpers) {
       searched_what = fast_tr(Search, tr_search),
       search_person = str_detect(searched_what, "both|person"),
       search_vehicle = str_detect(searched_what, "both|property"),
-      search_type = first_of(
+      search_basis = first_of(
         "k9" = str_detect(reason_for_search, fixed("k\\-*9", ignore_case = TRUE)),
         "plain view" = str_detect(reason_for_search, "Plain View"),
         "consent" = str_detect(reason_for_search, fixed("con|cns", ignore_case = TRUE)),
         "probable cause" = str_detect(reason_for_search, fixed("prob", ignore_case = TRUE)),
-        "non-discretionary" = str_detect(reason_for_search, fixed("arr|invent", ignore_case = TRUE))
+        "other" = str_detect(reason_for_search, fixed("arr|invent", ignore_case = TRUE))
       )
     ) %>%
     standardize(d$metadata)
