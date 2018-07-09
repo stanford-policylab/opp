@@ -38,8 +38,6 @@ clean <- function(d, helpers) {
       arrest_made = individual_arrested,
       search_person = individual_searched,
       search_vehicle = vehicle_searched,
-      lat = lat,
-      lng = lng,
       # police service area
       service_area = psa
     ) %>%

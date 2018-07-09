@@ -132,6 +132,7 @@ schema <- c(
   police_grid_number            = as.character,
   precinct                      = as.character,
   region                        = as.character,
+  reporting_area                = as.character,
   sector                        = as.character,
   service_area                  = as.character,
   zone                          = as.character,

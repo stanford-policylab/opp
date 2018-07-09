@@ -25,7 +25,7 @@ create_title <- function(state, city) {
 
 
 make_ergonomic <- function(strs) {
-  tolower(str_replace_all(strs, " ", "_"))
+  tolower(str_replace_all(strs, "[[:punct:]]| ", "_"))
 }
 
 
