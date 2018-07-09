@@ -647,14 +647,15 @@ json_to_tr <- function(json_map) {
 load_similar_files <- function(
   paths,
   n_max = Inf,
-  col_types = cols(.default = "c")
+  col_types = cols(.default = "c"),
+  col_names = TRUE
 ) {
   data <- tibble()
   loading_problems <- list()
   for (path in paths) {
     bn <- basename(path)
     print(str_c('loading ', bn))
-    tbl <- read_csv(path, col_types = col_types)
+    tbl <- read_csv(path, col_types = col_types, col_names = col_names)
     data <- bind_rows(data, tbl)
     loading_problems[[bn]] <- problems(tbl)
     if (nrow(data) > n_max) {
@@ -679,9 +680,10 @@ load_regex <- function(
   dir,
   regex,
   n_max = Inf,
-  col_types = cols(.default = "c")
+  col_types = cols(.default = "c"),
+  col_names = TRUE
 ) {
-  load_similar_files(list.files(dir, regex, full.names=T), n_max, col_types)
+  load_similar_files(list.files(dir, regex, full.names=T), n_max, col_types, col_names)
 }
 
 
@@ -689,7 +691,44 @@ load_single_file <- function(
   dir,
   fname,
   n_max = Inf,
-  col_types = cols(.default = "c")
+  col_types = cols(.default = "c"),
+  col_names = TRUE
 ) {
-  load_regex(dir, str_c("^", fname, "$"), n_max, col_types)
+  load_regex(dir, str_c("^", fname, "$"), n_max, col_types, col_names)
 }
+
+
+# Parse a lat/lng coord string as a double.
+# Assumes degrees and minutes are given, seconds are optional.
+# Example:
+#   parse_coord("N43 28.8656'") == 43.48109
+#   parse_coord("S43 28' 51.936\"") == -43.48109
+parse_coord <- Vectorize(function(coord) {
+  parts <- str_match(
+    coord,
+    "([WNES])\\s*(\\d+)\\s+(\\d+(?:\\.\\d+)?)'(?:\\s+(\\d+(?:\\.\\d+)?)\")?"
+  )
+  min_to_deg <- 1 / 60.0
+  sec_to_deg <- 1 / 3600.0
+  direction <- parts[2]
+  degrees <- as.double(parts[3])
+  minutes <- as.double(parts[4])
+  seconds <- if_else(is.na(parts[5]), 0.0, as.double(parts[5]))
+  val <- degrees +
+          minutes * min_to_deg +
+          seconds * sec_to_deg
+  if (!is.na(direction)) {
+    if (direction == "W" | direction == "S") {
+      val <- val * -1
+    }
+  }
+  val
+})
+
+
+# Calculate age at a certain date, given date of birth.
+# NOTE: age returned as floating point and will differ slightly from birthday
+# age due to leap years.
+age_at_date <- Vectorize(function(birth_date, date) {
+  as.numeric(difftime(date, birth_date), units="days") / 365.242
+})
