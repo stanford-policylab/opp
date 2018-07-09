@@ -190,7 +190,8 @@ def xml_to_csv(in_file, **kwargs):
 
 
 def txt_to_csv(in_file, sep, **kwargs):
-    df = pd.read_table(in_file, sep=sep)
+    # NOTE: don't try to infer data types here; read everything as str.
+    df = pd.read_table(in_file, sep=sep, dtype=str)
     to_csv(df, in_file)
     return
 
