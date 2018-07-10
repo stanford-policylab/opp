@@ -510,8 +510,14 @@ str_combine_cols <- function(left, right,
 # Sort unique values and collapse to a string.
 # Useful in dply summarize after a group_by when collapsing multiple values in a
 # group. NAs are omitted unless all values are NA in which case returns NA.
+# Examples:
+#   str_c_sort_uniq(c("A", NA, "A", NA, "B")) == "A|B"
+#   str_c_sort_uniq(c("A", NA, "A", NA)) == "A"
+#   str_c_sort_uniq(c(NA, NA)) == NA
+#   str_c_sort_uniq(c()) == NA
 str_c_sort_uniq <- function(x, collapse = "|") {
-  str_c(str_sort(unique(x)), collapse = collapse)
+  result <- str_c(str_sort(unique(x), na_last = NA), collapse = collapse)
+  ifelse(length(result) > 0, result, NA_character_)
 }
 
 
