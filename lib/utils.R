@@ -507,6 +507,20 @@ str_combine_cols <- function(left, right,
 }
 
 
+# Sort unique values and collapse to a string.
+# Useful in dply summarize after a group_by when collapsing multiple values in a
+# group. NAs are omitted unless all values are NA in which case returns NA.
+# Examples:
+#   str_c_sort_uniq(c("A", NA, "A", NA, "B")) == "A|B"
+#   str_c_sort_uniq(c("A", NA, "A", NA)) == "A"
+#   str_c_sort_uniq(c(NA, NA)) == NA
+#   str_c_sort_uniq(c()) == NA
+str_c_sort_uniq <- function(x, collapse = "|") {
+  result <- str_c(str_sort(unique(x), na_last = NA), collapse = collapse)
+  ifelse(length(result) > 0, result, NA_character_)
+}
+
+
 extract_and_add_decimal_lat_lng <- function(tbl, colname) {
   mtx <- do.call(rbind, str_extract_all(tbl[[colname]], "-?[0-9.]+"))
   colnames(mtx) <- c("lat", "lng")
@@ -732,10 +746,12 @@ load_single_file <- function(
 # Example:
 #   parse_coord("N43 28.8656'") == 43.48109
 #   parse_coord("S43 28' 51.936\"") == -43.48109
+#   parse_coord("41 49 30") == 41.825
+#   parse_coord("-73 6 50") == -73.11389
 parse_coord <- Vectorize(function(coord) {
   parts <- str_match(
     coord,
-    "([WNES])\\s*(\\d+)\\s+(\\d+(?:\\.\\d+)?)'(?:\\s+(\\d+(?:\\.\\d+)?)\")?"
+    "([WNES-])?\\s*(\\d+)\\s+(\\d+(?:\\.\\d+)?)'?(?:\\s+(\\d+(?:\\.\\d+)?)\"?)?"
   )
   min_to_deg <- 1 / 60.0
   sec_to_deg <- 1 / 3600.0
@@ -747,7 +763,7 @@ parse_coord <- Vectorize(function(coord) {
           minutes * min_to_deg +
           seconds * sec_to_deg
   if (!is.na(direction)) {
-    if (direction == "W" | direction == "S") {
+    if (direction == "W" | direction == "S" | direction == "-") {
       val <- val * -1
     }
   }

@@ -17,7 +17,10 @@ load_raw <- function(raw_data_dir, n_max) {
   warnings_data$data$outcome = "warning"
 
   data <- bind_rows(citations_data$data, warnings_data$data)
-  loading_problems <- c(citations_data$loading_problems, warnings_data$loading_problems)
+  loading_problems <- c(
+    citations_data$loading_problems,
+    warnings_data$loading_problems
+  )
   bundle_raw(data, loading_problems)
 }
 
@@ -36,7 +39,7 @@ clean <- function(d, helpers) {
   d$data %>%
     rename(
       # NOTE: location does not include city or county.
-      # TODO(wkim): Determine whether it is worth it to geocode.
+      # TODO(walterk): Determine whether it is worth it to geocode.
       # https://app.asana.com/0/456927885748233/727769678078700
       location = OFFENSELOCATN,
       # NOTE: subject_age, officer_id, department_name are NA for all warnings.
@@ -48,7 +51,7 @@ clean <- function(d, helpers) {
       vehicle_make = LOCKVEHICLEMAKE,
       vehicle_model = LOCKVEHICLEMODEL,
       vehicle_registration_state = LOCKVEHICLEPLATESTATE,
-      # TODO(wkim): Is vehicle_year the model year or the year on the plates?
+      # TODO(walterk): Is vehicle_year the model year or the year on the plates?
       # Possibly LOCKVEHICLEPLATEYEAR. In either case, the data is a bit messy.
       # https://app.asana.com/0/456927885748233/729888734192511
       vehicle_year = LOCKVEHICLEYEAR
@@ -60,7 +63,7 @@ clean <- function(d, helpers) {
         parse_time(VIOLATIONTIME, "%I:%M:%S %p")
       ),
       # NOTE: county_name is NA for all warnings.
-      # TODO(wkim): Should we use COUNTY or LOCKCOUNTY?
+      # TODO(walterk): Should we use COUNTY or LOCKCOUNTY?
       # https://app.asana.com/0/456927885748233/729888734192512
       county_name = fast_tr(LOCKCOUNTY, tr_county),
       # NOTE: subject_race, subject_sex are NA for all warnings.
