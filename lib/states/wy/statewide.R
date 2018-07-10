@@ -51,7 +51,8 @@ clean <- function(d, helpers) {
   d$data %>%
     rename(
       officer_id = offcr_id,
-      violation = statute
+      violation = statute,
+      subject_age = age
     ) %>%
     mutate(
       date = parse_date(tc_date, "%Y/%m/%d"),
@@ -60,7 +61,6 @@ clean <- function(d, helpers) {
       location = str_c_na(street, streetnbr, city),
       county_name = city,
       precinct = emdivision,
-      subject_age = as.integer(age),
       subject_race = tr_race[race],
       subject_sex = tr_sex[sex],
       # NOTE: All stops in data are vehicle stops.
