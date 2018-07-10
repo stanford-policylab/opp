@@ -9,12 +9,12 @@ load_raw <- function(raw_data_dir, n_max) {
 
 clean <- function(d, helpers) {
   tr_race <- c(
-    Asian = "asian/pacific islander",
-    Hispanic = "hispanic",
-    White = "white",
-    Other = "other/unknown",
     "African American" = "black",
-    "Native American" = "other/unknown"
+    "Asian" = "asian/pacific islander",
+    "Hispanic" = "hispanic",
+    "Native American" = "other/unknown",
+    "Other" = "other/unknown",
+    "White" = "white"
   )
 
   # NOTE: Each row in the dataset corresponds to a citation. We dedup to have
@@ -42,7 +42,7 @@ clean <- function(d, helpers) {
       subject_age = Age
     ) %>%
     mutate(
-      date = date(parse_datetime(violation_date_time, "%m/%d/%y %H:%M")),
+      date = as.Date(parse_datetime(violation_date_time, "%m/%d/%y %H:%M")),
       time = parse_time(violation_date_time, "%m/%d/%y %H:%M"),
       location = if_else(
         is.na(highway) & is.na(hwy_suffix),
