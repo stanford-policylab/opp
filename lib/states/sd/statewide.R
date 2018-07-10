@@ -9,7 +9,7 @@ load_raw <- function(raw_data_dir, n_max) {
   ) %>%
   # NOTE: there are about 1k rows which contain asterisks and no info; drop them.
   filter(
-    County != "********"
+    str_detect(County, "*")
   ) %>%
   bundle_raw(c(warnings$loading_problems, citations$loading_problems))
 }
