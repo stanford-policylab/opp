@@ -230,7 +230,7 @@ clean <- function(d, helpers) {
         str_detect(vehicleContraband, "3"),
       contraband_weapons = str_detect(individualContraband, "1") |
         str_detect(vehicleContraband, "1"),
-      contraband_found = contraband_drugs | contraband_weapons,
+      contraband_found = contraband_drugs | contraband_weapons
     ) %>%
     standardize(d$metadata)
 }
