@@ -31,18 +31,16 @@ load_raw <- function(raw_data_dir, n_max) {
     sex
   ) %>%
   summarize(
-    statute = paste(statute, collapse = ';'),
-    charge = paste(charge, collapse = ';')
+    statute = str_c(statute, collapse = '|'),
+    charge = str_c(charge, collapse = '|')
   ) %>%
   ungroup(
   ) %>%
-  bundle_raw(
-    c(
-      wy2011$loading_problems,
-      wy2012_1$loading_problems,
-      wy2012_2$loading_problems
-    )
-  )
+  bundle_raw(c(
+    wy2011$loading_problems,
+    wy2012_1$loading_problems,
+    wy2012_2$loading_problems
+  ))
 }
 
 
