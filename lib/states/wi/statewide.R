@@ -15,53 +15,68 @@ load_raw <- function(raw_data_dir, n_max) {
     "jennifer_mobley_-_tracs_7.3-codes-vehiclemake_sheet_1.csv"
   )
   add_vehicle_make <- function(data, vehiclemake) {
-    data %>%
-      left_join(
-        vehiclemake$data,
-        by = c("make" = "CodeValue")
-      ) %>%
-      rename(vehicle_make = CodeText)
+    left_join(
+      data,
+      vehiclemake$data,
+      by = c("make" = "CodeValue")
+    ) %>%
+    rename(vehicle_make = CodeText)
   }
 
   # Warnings data
-  wi_warn_1 <- load_single_file(raw_data_dir, "tracs10_trafficstops_outcomewarnings.csv", n_max = n_max)
-  wi_warn_2 <- load_single_file(raw_data_dir, "tracs7.3_trafficstops_outcomewarnings.csv", n_max = n_max)
+  wi_warn_1 <- load_single_file(
+    raw_data_dir,
+    "tracs10_trafficstops_outcomewarnings.csv",
+    n_max = n_max
+  )
+  wi_warn_2 <- load_single_file(
+    raw_data_dir,
+    "tracs7.3_trafficstops_outcomewarnings.csv",
+    n_max = n_max
+  )
   wi_warn <- bind_rows(
-      wi_warn_1$data %>%
-        add_vehicle_make(
-          wi_vehiclemake_1
-        ) %>%
-        rename(StatuteDescription = WarningStatuteDescription),
-      wi_warn_2$data %>%
-        rename(
-          IndividualMultiKey = individualMultiKey,
-          IndividualGrp_lnk = UnitGrp_IndividualGrp_lnk,
-          summaryDateOccurred = summaryDateOccured,
-          VehicleCompanyName = vehicleNameCompany,
-          # NOTE: Every last cell in source ends with a lot of extraneous commas,
-          # including the header. Get rid of all of these.
-          StatuteDescription = `WarningStatuteDescription,,,,,,,,,,,,,,,,`
-        ) %>%
-        add_vehicle_make(
-          wi_vehiclemake_2
-        ) %>%
-        mutate(StatuteDescription = str_replace(StatuteDescription, ",+$", ""))
+      add_vehicle_make(
+        wi_warn_1$data,
+        wi_vehiclemake_1
+      ) %>%
+      rename(StatuteDescription = WarningStatuteDescription),
+      rename(
+        wi_warn_2$data,
+        IndividualMultiKey = individualMultiKey,
+        IndividualGrp_lnk = UnitGrp_IndividualGrp_lnk,
+        summaryDateOccurred = summaryDateOccured,
+        VehicleCompanyName = vehicleNameCompany,
+        # NOTE: Every last cell in source ends with a lot of extraneous
+        # commas, including the header. Get rid of all of these.
+        StatuteDescription = `WarningStatuteDescription,,,,,,,,,,,,,,,,`
+      ) %>%
+      mutate(
+        StatuteDescription = str_replace(StatuteDescription, ",+$", "")
+      ) %>%
+      add_vehicle_make(wi_vehiclemake_2)
     )
 
   # Citations data
-  wi_cit_1 <- load_single_file(raw_data_dir, "tracs10_trafficstops_outcomecitations.csv", n_max = n_max)
-  wi_cit_2 <- load_single_file(raw_data_dir, "tracs7.3_trafficstops_outcomewarnings.csv", n_max = n_max)
+  wi_cit_1 <- load_single_file(
+    raw_data_dir,
+    "tracs10_trafficstops_outcomecitations.csv",
+    n_max = n_max
+  )
+  wi_cit_2 <- load_single_file(
+    raw_data_dir,
+    "tracs7.3_trafficstops_outcomewarnings.csv",
+    n_max = n_max
+  )
   wi_cit <- bind_rows(
-      wi_cit_1$data %>%
-        add_vehicle_make(wi_vehiclemake_1),
-      wi_cit_2$data %>%
-        rename(
-          IndividualMultiKey = individualMultiKey,
-          IndividualGrp_lnk = UnitGrp_IndividualGrp_lnk,
-          summaryDateOccurred = summaryDateOccured,
-          VehicleCompanyName = vehicleNameCompany
-        ) %>%
-        add_vehicle_make(wi_vehiclemake_2)
+      add_vehicle_make(wi_cit_1$data, wi_vehiclemake_1),
+      rename(
+        wi_cit_2$data,
+        IndividualMultiKey = individualMultiKey,
+        IndividualGrp_lnk = UnitGrp_IndividualGrp_lnk,
+        summaryDateOccurred = summaryDateOccured,
+        VehicleCompanyName = vehicleNameCompany
+      ) %>%
+      add_vehicle_make(wi_vehiclemake_2)
     ) %>%
     rename(StatuteDescription = CitationStatuteDescription)
 
@@ -129,20 +144,18 @@ load_raw <- function(raw_data_dir, n_max) {
     by = c("bodyStyle" = "CodeValue")
   ) %>%
   rename(
-    vehicle_type = Alias,
+    vehicle_type = Alias
   ) %>%
-  bundle_raw(
-    c(
-      wi_warn_1$loading_problems,
-      wi_warn_2$loading_problems,
-      wi_cit_1$loading_problems,
-      wi_cit_2$loading_problems,
-      wi_county$loading_problems,
-      wi_vehiclemake_1$loading_problems,
-      wi_vehiclemake_2$loading_problems,
-      wi_vehiclebodystyle$loading_problems
-    )
-  )
+  bundle_raw(c(
+    wi_warn_1$loading_problems,
+    wi_warn_2$loading_problems,
+    wi_cit_1$loading_problems,
+    wi_cit_2$loading_problems,
+    wi_county$loading_problems,
+    wi_vehiclemake_1$loading_problems,
+    wi_vehiclemake_2$loading_problems,
+    wi_vehiclebodystyle$loading_problems
+  ))
 }
 
 
@@ -153,7 +166,6 @@ clean <- function(d, helpers) {
       department_id = agencyBFUNCAgencyCode,
       department_name = agencyNameDepartment,
       county_name = CountyName,
-      precinct = agencyJurisdiction,
       officer_first_name = agencyOfficerNameFirst,
       officer_last_name = agencyOfficerNameLast,
       vehicle_model = model,
@@ -166,17 +178,22 @@ clean <- function(d, helpers) {
       # NOTE: Date and time columns are both full `datetime` columns, but only
       # the relevant half of each is useful. That is, for the date column all
       # times are midnight and for the time column all dates are Jan 1, 1900.
-      # In addition, some time columns only use HH:MM instead of HH:MM:SS; but
-      # even if seconds are given, they are always :00. Cut these columns to
-      # extract a normalized, parsable string.
-      date_part = gsub("^(\\d{4}-\\d{2}-\\d{2}).*$", "\\1", summaryDateOccurred),
-      time_part = gsub("^(?:\\d{4}-\\d{2}-\\d{2}\\s+)?(\\d{2}:\\d{2}).*$", "\\1", summaryTimeOccurred),
-      date_raw = parse_date(date_part, "%Y-%m-%d"),
+      # In addition, some time values only use HH:MM instead of HH:MM:SS; but
+      # even if seconds are given, they are always :00.
+      date_raw = parse_date(str_sub(summaryDateOccurred, 1, 10), "%Y-%m-%d"),
       # NOTE: There are a few dates that can't possibly be correct given the
       # years the source files represent. Eliminate them.
       date = if_else(year(date_raw) < 2010, as.Date(NA), date_raw),
-      time = parse_time(time_part, "%H:%M"),
-      location = str_c_na(onHighwayDirection, onHighwayName, fromAtStreetName, county_name),
+      time = coalesce(
+        parse_time(summaryTimeOccurred, "%H:%M"),
+        parse_time(str_sub(summaryTimeOccurred, 12, 19), "%H:%M:%S")
+      ),
+      location = str_c_na(
+        onHighwayDirection,
+        onHighwayName,
+        fromAtStreetName,
+        county_name
+      ),
       lat = as.numeric(latitude),
       lng = as.numeric(longitude),
       # NOTE: Sources only include vehicle stops.
@@ -199,16 +216,21 @@ clean <- function(d, helpers) {
       # NOTE: Search codes come from data dictionary. There is no code for
       # "plain view."
       search_basis = first_of(
-        "consent" = str_detect(individualSearchBasis, "1") | str_detect(vehicleSearchBasis, "1"),
-        "probable cause" = str_detect(individualSearchBasis, "2") | str_detect(vehicleSearchBasis, "2"),
-        "other" = str_detect(individualSearchBasis, "[34569]") | str_detect(vehicleSearchBasis, "[34569]")
+        "consent" = str_detect(individualSearchBasis, "1") |
+          str_detect(vehicleSearchBasis, "1"),
+        "probable cause" = str_detect(individualSearchBasis, "2") |
+          str_detect(vehicleSearchBasis, "2"),
+        "other" = str_detect(individualSearchBasis, "[34569]") |
+          str_detect(vehicleSearchBasis, "[34569]")
       ),
-      contraband_found = !is.na(individualContraband) | !is.na(vehicleContraband),
       # NOTE: Contraband codes come from data dictionary. Code "5" means
       # "INTOXICANT(S)," which we don't include with drugs; we only consider
       # code 3: "ILLICIT DRUG(S)/PARAPHERNALIA."
-      contraband_drugs = str_detect(individualContraband, "3") | str_detect(vehicleContraband, "3"),
-      contraband_weapons = str_detect(individualContraband, "1") | str_detect(vehicleContraband, "1")
+      contraband_drugs = str_detect(individualContraband, "3") |
+        str_detect(vehicleContraband, "3"),
+      contraband_weapons = str_detect(individualContraband, "1") |
+        str_detect(vehicleContraband, "1"),
+      contraband_found = contraband_drugs | contraband_weapons,
     ) %>%
     standardize(d$metadata)
 }
