@@ -27,11 +27,11 @@ load_raw <- function(raw_data_dir, n_max) {
     dept = ORI_Description,
     dept_lvl = ORITYPEID,
     county = AgencyCounty
-  ) %>%
-  mutate(dept = str_replace_all(dept, "\\.", ""))
+  )
 
   # NOTE: Data in these sources are aggregated by quarter. The date field
-  # is the first day of the quarter.
+  # is the first day of the quarter. Most of the useful fields are joined
+  # in from data dictionaries.
   ne14 <- ne14_qtr_id$data %>%
     select(
       TimeID = QuarterID,
@@ -65,6 +65,8 @@ load_raw <- function(raw_data_dir, n_max) {
       Reason == "Searches"
     ) %>%
     mutate(
+      # NOTE: Time portion of the timestamp is always midnight, so drop it
+      # and parse only the date portion.
       date = parse_date(str_sub(TimeStart, 1, 8), "%m/%d/%y")
     ) %>%
     select(date, dept_lvl, dept, county, Race, Outcome, n)
@@ -76,19 +78,21 @@ load_raw <- function(raw_data_dir, n_max) {
     n_max = n_max
   )
 
+  # List of the starting months of each quarter in a year. (I.e., Q1 starts in
+  # January, Q2 in April, etc.)
+  tr_qtr_start_month <- c("01", "04", "07", "10")
+
   ne15 <- ne15_stops$data %>%
     rename(
       agency_id = Agency_Cd
     ) %>%
     # NOTE: Aggregate newer data by quarter to match old data.
     mutate(
-      stop_month = str_pad(
-        ((as.integer(Racial_Profile_Quarter) - 1) * 3) + 1, 2,
-        "left",
-        "0"
-      ),
+      # NOTE: Convert quarter number to year to match old data. E.g., for Q2
+      # return "04" for "April."
+      month = tr_qtr_start_month[Racial_Profile_Quarter],
       date = parse_date(
-        paste(Racial_Profile_Year, stop_month, "01", sep="-"),
+        str_c(Racial_Profile_Year, month, "01", sep = "-"),
         "%Y-%m-%d"
       )
     ) %>%
@@ -102,6 +106,7 @@ load_raw <- function(raw_data_dir, n_max) {
       # these cases is human-readable.
       dept = coalesce(dept, agency_id)
     ) %>%
+    # NOTE: Convert from wide format to long.
     select(
       date,
       dept,
@@ -125,9 +130,22 @@ load_raw <- function(raw_data_dir, n_max) {
       n,
       -date:-county
     ) %>%
+    # NOTE: The `type` column holds the column headers as given above, e.g.
+    # Search_Not_Conducted_Hispanic. This contains two pieces of information:
+    # whether a search was conducted and the race. Separate this string into
+    # two columns accordingly.
+    separate(
+      type,
+      c("Outcome", "Race"),
+      # NOTE: This regex splits at the index of the last underscore delimiter
+      # in the string by matching an underscore followed by any number of
+      # non-underscore characters. This is similar to rpartition in Python.
+      sep = "_(?=[^_]+$)",
+      extra = "merge"
+    ) %>%
+    # NOTE: Clean up underscores to make this consistent with the old data.
     mutate(
-      Outcome = str_replace(str_extract(type, ".*(?=_)"), "_", " "),
-      Race = substr(type, nchar(Outcome) + 2, nchar(type))
+      Outcome = str_replace(Outcome, "_", " ")
     ) %>%
     select(date, dept_lvl, dept, county, Race, Outcome, n)
 
