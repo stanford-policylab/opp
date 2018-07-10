@@ -1,23 +1,22 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-  data <- tibble()
-  loading_problems <- list()
-  r <- function(fname) {
-    tbl <- read_csv(file.path(raw_data_dir, fname))
-    loading_problems[[fname]] <<- problems(tbl)
-    tbl
-  }
-  subject <- r("orr_53698_2016_subject_stops.csv")
-  traffic <- r("orr_53698_2016_traffic_stops.csv")
-  subject["type"] = "pedestrian"
-  traffic["type"] = "vehicular"
-  data <- bind_rows(subject, traffic)
-  if (nrow(data) > n_max) {
-    data <- data[1:n_max, ]
-    break
-  }
-  bundle_raw(data, loading_problems)
+  subject <- load_single_file(
+    raw_data_dir,
+    "orr_53698_2016_subject_stops.csv",
+    n_max = n_max / 2
+  )
+  traffic <- load_single_file(
+    raw_data_dir,
+    "orr_53698_2016_traffic_stops.csv",
+    n_max = n_max / 2
+  )
+  subject$data["type"] = "pedestrian"
+  traffic$data["type"] = "vehicular"
+  bundle_raw(
+    bind_rows(subject$data, traffic$data),
+    c(subject$loading_problems, traffic$loading_problems)
+  )
 }
 
 
@@ -62,7 +61,7 @@ clean <- function(d, helpers) {
       # https://app.asana.com/0/456927885748233/653410849000225
       search_conducted = !is.na(`6th digit (Search Outcome)`),
       date = parse_date(InitiateDate),
-      time = seconds_to_hms(InitiateTime),
+      time = parse_time(InitiateTime),
       location = coalesce(Address1, Address2)
     ) %>%
     helpers$add_lat_lng(
