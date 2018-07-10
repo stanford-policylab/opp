@@ -33,22 +33,15 @@ clean <- function(d, helpers) {
       department_name = `Department Name`
     ) %>%
     mutate(
-      date = date(parse_datetime(InterventionDateTime)),
+      date = as.Date(parse_datetime(InterventionDateTime)),
       # NOTE: The time 00:00 appears more than 10x over the next most frequent
-      # time (minute granularity). Opting to convert 00:00 to NA.
-      time = if_else(
-        InterventionTime != "00:00",
-        parse_time(InterventionTime, "%H:%M"),
-        NA_real_
-      ),
+      # time (minute granularity).
+      time = parse_time(InterventionTime, "%H:%M"),
       location = str_c_na(
         InterventionLocationDescriptionText,
         InterventionLocationName,
         sep=", "
       ),
-      # TODO(walterk): Modify Joe's parse_coord to be able to parse coords like
-      # "41 22 35.2308" once his PR lands:
-      # https://github.com/stanford-policylab/opp/pull/12
       lat = parse_coord(InterventionLocationLatitude),
       lat = replace(lat, lat == 0, NA_real_),
       lng = -1 * abs(parse_coord(InterventionLocationLongitude)),

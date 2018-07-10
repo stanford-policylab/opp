@@ -740,10 +740,12 @@ load_single_file <- function(
 # Example:
 #   parse_coord("N43 28.8656'") == 43.48109
 #   parse_coord("S43 28' 51.936\"") == -43.48109
+#   parse_coord("41 49 30") == 41.825
+#   parse_coord("-73 6 50") == -73.11389
 parse_coord <- Vectorize(function(coord) {
   parts <- str_match(
     coord,
-    "([WNES])\\s*(\\d+)\\s+(\\d+(?:\\.\\d+)?)'(?:\\s+(\\d+(?:\\.\\d+)?)\")?"
+    "([WNES-])?\\s*(\\d+)\\s+(\\d+(?:\\.\\d+)?)'?(?:\\s+(\\d+(?:\\.\\d+)?)\"?)?"
   )
   min_to_deg <- 1 / 60.0
   sec_to_deg <- 1 / 3600.0
@@ -755,7 +757,7 @@ parse_coord <- Vectorize(function(coord) {
           minutes * min_to_deg +
           seconds * sec_to_deg
   if (!is.na(direction)) {
-    if (direction == "W" | direction == "S") {
+    if (direction == "W" | direction == "S" | direction == "-") {
       val <- val * -1
     }
   }
