@@ -1,6 +1,8 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
+  # NOTE: For 2012 we only have the last quarter or so of stops. For 2016 we
+  # only have the first quarter. The years in between are complete.
   warnings <- load_regex(raw_data_dir, "warn", n_max = n_max)
   citations <- load_regex(raw_data_dir, "cit", n_max = n_max)
   bind_rows(
@@ -9,7 +11,7 @@ load_raw <- function(raw_data_dir, n_max) {
   ) %>%
   # NOTE: there are about 1k rows which contain asterisks and no info; drop them.
   filter(
-    str_detect(County, "*")
+    !str_detect(`Issued Date/Time`, "\\*")
   ) %>%
   bundle_raw(c(warnings$loading_problems, citations$loading_problems))
 }
