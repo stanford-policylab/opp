@@ -61,6 +61,11 @@ load_raw <- function(raw_data_dir, n_max) {
       ),
       by = "ReportID"
     ) %>%
+    # NOTE: We derive the `Reason` column from the `TopicDescription` column.
+    # The `TopicDescription` is one of stop reason, outcome, or whether there
+    # was a search. Ideally we would be able to consider all of these factors,
+    # but since the data are aggregated we can't cross-tabulate them. Filter
+    # to consider only the search topics.
     filter(
       Reason == "Searches"
     ) %>%
@@ -88,9 +93,11 @@ load_raw <- function(raw_data_dir, n_max) {
     ) %>%
     # NOTE: Aggregate newer data by quarter to match old data.
     mutate(
-      # NOTE: Convert quarter number to year to match old data. E.g., for Q2
-      # return "04" for "April."
+      # NOTE: Convert quarter number to the month when that quartert starts,
+      # for consistency with old data. E.g., for Q2 return "04" for April.
       month = tr_qtr_start_month[Racial_Profile_Quarter],
+      # NOTE: Date is the first day of the given quarter, for consistency with
+      # old data.
       date = parse_date(
         str_c(Racial_Profile_Year, month, "01", sep = "-"),
         "%Y-%m-%d"
@@ -134,14 +141,9 @@ load_raw <- function(raw_data_dir, n_max) {
     # Search_Not_Conducted_Hispanic. This contains two pieces of information:
     # whether a search was conducted and the race. Separate this string into
     # two columns accordingly.
-    separate(
-      type,
-      c("Outcome", "Race"),
-      # NOTE: This regex splits at the index of the last underscore delimiter
-      # in the string by matching an underscore followed by any number of
-      # non-underscore characters. This is similar to rpartition in Python.
-      sep = "_(?=[^_]+$)",
-      extra = "merge"
+    right_separate_cols(
+      type = c("Outcome", "Race"),
+      sep = "_"
     ) %>%
     # NOTE: Clean up underscores to make this consistent with the old data.
     mutate(
@@ -149,11 +151,12 @@ load_raw <- function(raw_data_dir, n_max) {
     ) %>%
     select(date, dept_lvl, dept, county, Race, Outcome, n)
 
-  # Combine everything
-  bind_rows(
-    ne14,
-    ne15
-  ) %>%
+  # Combine years
+  ne_agg <- bind_rows(ne14, ne15)
+  # Disaggregate rows. For each row index, repeat that row `n` times. (The
+  # column `n` is the count aggregate for that row.)
+  N <- nrow(ne_agg)
+  ne_agg[rep(1:N, ne_agg$n),] %>%
   bundle_raw(c(
     ne14_dept$loading_problems,
     ne14_repo$loading_problems,
@@ -192,7 +195,9 @@ clean <- function(d, helpers) {
       ),
       location = county,
       subject_race = tr_race[Race],
-      search_conducted = Outcome == "Search Conducted"
+      search_conducted = Outcome == "Search Conducted",
+      # NOTE: All stops in these sources are vehicular.
+      type = "vehicular"
     ) %>%
     standardize(d$metadata)
 }
