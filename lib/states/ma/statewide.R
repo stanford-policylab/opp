@@ -74,7 +74,7 @@ clean <- function(d, helpers) {
         if_else(Speed == "1", "Speed", NA_character_),
         if_else(SeatBelt == "1", "SeatBelt", NA_character_),
         if_else(ChildRest == "1", "ChildRest", NA_character_),
-        sep = "|"
+        sep = ","
       ),
       reason_for_stop = if_else(
         reason_for_stop_raw == "",
