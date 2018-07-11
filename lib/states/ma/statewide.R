@@ -43,16 +43,13 @@ clean <- function(d, helpers) {
       # https://app.asana.com/0/456927885748233/714838053596540
       location = CITY_TOWN_NAME
     ) %>%
-    separate_cols(
-      DateIssue = c("date", "time")
-    ) %>%
     mutate(
-      date = parse_date(date, "%Y-%m-%d"),
-      time = parse_time(time, "%H:%M:%S"),
+      # NOTE: Time is always midnight UTC, so we drop it.
+      date = parse_date(str_sub(DateIssue, 1, 10), "%Y-%m-%d"),
       subject_age = year(date) - format_two_digit_year(DOBYr),
       subject_race = fast_tr(Race, tr_race),
       subject_sex = tolower(Sex),
-      # NOTE: dataset does not include pedestrian stops
+      # NOTE: dataset does not include pedestrian stops.
       type = "vehicular",
       arrest_made = str_detect("Arrest", ResultDescr),
       citation_issued = str_detect("Civil|Criminal", ResultDescr),
@@ -72,10 +69,17 @@ clean <- function(d, helpers) {
       search_conducted = SearchYN == "Yes" | !is.na(SearchDescr),
       frisk_performed = search_conducted & SearchDescr == "Terry Frisk",
       search_basis = fast_tr(SearchType, tr_search_basis),
-      reason_for_stop = str_c_na(
+      # NOTE: If a reason for stop is not given we record the value as NA.
+      reason_for_stop_raw = str_c_na(
         if_else(Speed == "1", "Speed", NA_character_),
         if_else(SeatBelt == "1", "SeatBelt", NA_character_),
-        if_else(ChildRest == "1", "ChildRest", NA_character_)
+        if_else(ChildRest == "1", "ChildRest", NA_character_),
+        sep = "|"
+      ),
+      reason_for_stop = if_else(
+        reason_for_stop_raw == "",
+        NA_character_,
+        reason_for_stop_raw
       )
     ) %>%
     filter(
