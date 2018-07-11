@@ -79,13 +79,9 @@ load_raw <- function(raw_data_dir, n_max) {
       value = "count",
       starts_with("number_of")
     ) %>%
-    separate(
-      event_type,
-      c("stat", "race"),
-      # NOTE: This pattern finds the last underscore in a string. With the
-      # "merge" option below this is effectively rpartition in Python.
-      sep = "_(?=[^_]+$)",
-      extra = "merge"
+    right_separate_cols(
+      event_type = c("stat", "race"),
+      sep = "_"
     ) %>%
     spread(
       stat,
