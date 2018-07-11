@@ -78,5 +78,12 @@ clean <- function(d, helpers) {
         if_else(ChildRest == "1", "ChildRest", NA_character_)
       )
     ) %>%
+    filter(
+      # NOTE: Drop incomplete years. There are only a handful of stops in the
+      # data before 2007, so those years are clearly wrong. It appears that the
+      # first few months (nearly half) of 2007 are also incomplete, but we have
+      # not attempted to remove the incomplete months.
+      year(date) >= 2007
+    ) %>%
     standardize(d$metadata)
 }
