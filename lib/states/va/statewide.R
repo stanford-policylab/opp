@@ -6,17 +6,14 @@ load_raw <- function(raw_data_dir, n_max) {
 
   # NOTE: Jurisdictions data file comes from a Word doc that we converted to
   # a CSV by hand. It's used for getting place names from jurisdiction codes.
-  d_juris <- load_single_file(
-    file.path(raw_data_dir, "../calculated_features"),
-    "jurisdictions.csv"
-  )
+  d_juris <- load_single_file(raw_data_dir, "jurisdictions.csv")
 
   # NOTE: Columns in raw data are codes. The documentation in the raw data
   # directory defines the codes, which these column names are derived from.
   colnames(d$data) <- c(
     'week',
     'jurisdiction_code',
-    'code_number',
+    'officer_id',
     'number_of_traffic_arrests_white',
     'number_of_aerial_enforcement_arrests_white',
     'number_of_search_arrests_white',
@@ -45,12 +42,14 @@ load_raw <- function(raw_data_dir, n_max) {
     'number_of_aerial_enforcement_arrests_unknown',
     'number_of_search_arrests_unknown',
     'number_of_search_stops_unknown',
-    'trooper_lastname',
-    'trooper_firstname',
+    'officer_last_name',
+    'officer_first_name',
     'trooper_race'
   )
 
-  # NOTE: Stops are aggregated by week.
+  # NOTE: The source data aggregates data by week. In the following pipeline we
+  # will reshape the source data to move some columns to rows, and then
+  # disaggregate the weekly sums so we have one row per stop.
   d_agg <- d$data %>%
     # NOTE: There are ~4k duplicate rows in the data. Some are completely
     # identical rows, but a few identical in every way except for the
@@ -58,9 +57,9 @@ load_raw <- function(raw_data_dir, n_max) {
     group_by(
       week,
       jurisdiction_code,
-      code_number,
-      trooper_lastname,
-      trooper_firstname,
+      officer_id,
+      officer_last_name,
+      officer_first_name,
       trooper_race
     ) %>%
     # NOTE: De-duplicate by taking the last row in a group.
@@ -98,9 +97,7 @@ load_raw <- function(raw_data_dir, n_max) {
       searches = as.integer(number_of_search_arrests)
         + as.integer(number_of_search_stops)
     ) %>%
-    left_join(
-      d_juris$data
-    )
+    left_join(d_juris$data)
 
   # NOTE: De-aggregate the data, so that one row represents one stop. Create
   # one row for each search conducted in a week, and another row for each stop
@@ -149,17 +146,15 @@ clean <- function(d, helpers) {
   # the stop (reason_for_stop/search/contraband fields)?
   # https://app.asana.com/0/456927885748233/740254831051062
   d$data %>%
-    rename(
-      officer_id = code_number
-    ) %>%
     mutate(
-      # NOTE: Date is the Saturday ending a given week of data.
+      # NOTE: Date is the Saturday ending a given week of data, per the
+      # documentation included in the raw data directory.
       date = parse_date(week, "%Y%m%d"),
       location = str_c_na(jurisdiction_name, jurisdiction_type, sep = " "),
       county_name = if_else(jurisdiction_type == "COUNTY", jurisdiction_name, NA_character_),
       officer_race = tr_race[trooper_race],
       subject_race = tr_race[race],
-      # NOTE: All data come from vehicle stops.
+      # NOTE: Source files are all traffic stops.
       type = "vehicular"
     ) %>%
     standardize(d$metadata)
