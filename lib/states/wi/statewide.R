@@ -35,26 +35,28 @@ load_raw <- function(raw_data_dir, n_max) {
     n_max = n_max
   )
   wi_warn <- bind_rows(
-      add_vehicle_make(
-        wi_warn_1$data,
-        wi_vehiclemake_1
-      ) %>%
-      rename(StatuteDescription = WarningStatuteDescription),
-      rename(
-        wi_warn_2$data,
-        IndividualMultiKey = individualMultiKey,
-        IndividualGrp_lnk = UnitGrp_IndividualGrp_lnk,
-        summaryDateOccurred = summaryDateOccured,
-        VehicleCompanyName = vehicleNameCompany,
-        # NOTE: Every last cell in source ends with a lot of extraneous
-        # commas, including the header. Get rid of all of these.
-        StatuteDescription = `WarningStatuteDescription,,,,,,,,,,,,,,,,`
-      ) %>%
-      mutate(
-        StatuteDescription = str_replace(StatuteDescription, ",+$", "")
-      ) %>%
-      add_vehicle_make(wi_vehiclemake_2)
-    )
+    # First warnings data
+    add_vehicle_make(
+      wi_warn_1$data,
+      wi_vehiclemake_1
+    ) %>%
+    rename(StatuteDescription = WarningStatuteDescription),
+    # Second warnings data
+    rename(
+      wi_warn_2$data,
+      IndividualMultiKey = individualMultiKey,
+      IndividualGrp_lnk = UnitGrp_IndividualGrp_lnk,
+      summaryDateOccurred = summaryDateOccured,
+      VehicleCompanyName = vehicleNameCompany,
+      # NOTE: Every last cell in source ends with a lot of extraneous
+      # commas, including the header. Get rid of all of these.
+      StatuteDescription = `WarningStatuteDescription,,,,,,,,,,,,,,,,`
+    ) %>%
+    mutate(
+      StatuteDescription = str_replace(StatuteDescription, ",+$", "")
+    ) %>%
+    add_vehicle_make(wi_vehiclemake_2)
+  )
 
   # Citations data
   wi_cit_1 <- load_single_file(
@@ -68,17 +70,20 @@ load_raw <- function(raw_data_dir, n_max) {
     n_max = n_max
   )
   wi_cit <- bind_rows(
-      add_vehicle_make(wi_cit_1$data, wi_vehiclemake_1),
-      rename(
-        wi_cit_2$data,
-        IndividualMultiKey = individualMultiKey,
-        IndividualGrp_lnk = UnitGrp_IndividualGrp_lnk,
-        summaryDateOccurred = summaryDateOccured,
-        VehicleCompanyName = vehicleNameCompany
-      ) %>%
-      add_vehicle_make(wi_vehiclemake_2)
+    # First citations data
+    add_vehicle_make(wi_cit_1$data, wi_vehiclemake_1),
+    # Second citations data
+    rename(
+      wi_cit_2$data,
+      # NOTE: Make names consistent with wi_cit_1 for binding rows.
+      IndividualMultiKey = individualMultiKey,
+      IndividualGrp_lnk = UnitGrp_IndividualGrp_lnk,
+      summaryDateOccurred = summaryDateOccured,
+      VehicleCompanyName = vehicleNameCompany
     ) %>%
-    rename(StatuteDescription = CitationStatuteDescription)
+    add_vehicle_make(wi_vehiclemake_2)
+  ) %>%
+  rename(StatuteDescription = CitationStatuteDescription)
 
   # County dictionary
   wi_county <- load_single_file(
@@ -92,7 +97,10 @@ load_raw <- function(raw_data_dir, n_max) {
   ) %>%
   # NOTE: Each row represents a single violation for a stop; an entire stop
   # may span multiple rows. Collapse to one row per stop, combining
-  # violations into a list.
+  # violations into a list. Note that we're grouping by all the columns
+  # except for those containing statute info, so that each group represents
+  # a single stop and the items within that group represent individual charges
+  # alleged in that stop.
   group_by(
     summaryDateOccurred,
     summaryTimeOccurred,
@@ -216,20 +224,20 @@ clean <- function(d, helpers) {
       # NOTE: Search codes come from data dictionary. There is no code for
       # "plain view."
       search_basis = first_of(
-        "consent" = str_detect(individualSearchBasis, "1") |
-          str_detect(vehicleSearchBasis, "1"),
-        "probable cause" = str_detect(individualSearchBasis, "2") |
-          str_detect(vehicleSearchBasis, "2"),
-        "other" = str_detect(individualSearchBasis, "[34569]") |
-          str_detect(vehicleSearchBasis, "[34569]")
+        "consent" = str_detect(individualSearchBasis, "1")
+          | str_detect(vehicleSearchBasis, "1"),
+        "probable cause" = str_detect(individualSearchBasis, "2")
+          | str_detect(vehicleSearchBasis, "2"),
+        "other" = str_detect(individualSearchBasis, "[34569]")
+          | str_detect(vehicleSearchBasis, "[34569]")
       ),
       # NOTE: Contraband codes come from data dictionary. Code "5" means
       # "INTOXICANT(S)," which we don't include with drugs; we only consider
       # code 3: "ILLICIT DRUG(S)/PARAPHERNALIA."
-      contraband_drugs = str_detect(individualContraband, "3") |
-        str_detect(vehicleContraband, "3"),
-      contraband_weapons = str_detect(individualContraband, "1") |
-        str_detect(vehicleContraband, "1"),
+      contraband_drugs = str_detect(individualContraband, "3")
+        | str_detect(vehicleContraband, "3"),
+      contraband_weapons = str_detect(individualContraband, "1")
+        | str_detect(vehicleContraband, "1"),
       contraband_found = contraband_drugs | contraband_weapons
     ) %>%
     standardize(d$metadata)
