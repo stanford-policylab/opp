@@ -1,8 +1,6 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-  data <- tibble()
-	loading_problems <- list()
   # TODO(phoebe): what are the B/R prefixes?
   # https://app.asana.com/0/456927885748233/574633988593752
   colnames_map <- list(
@@ -197,21 +195,24 @@ load_raw <- function(raw_data_dir, n_max) {
       "resident_status"
     )
   )
+
+  data <- tibble()
+	loading_problems <- list()
   for (year in 2012:2015) {
     # TODO(phoebe): how can we join these in? incident # is populated ~15%
     # https://app.asana.com/0/456927885748233/574633988593748
     # stops_fname <- str_c("all_traffic_stops_", year, "_sheet_1.csv")
     # stops <- read_csv(file.path(raw_data_dir, stops_fname))
 		# loading_problems[[stops_fname]] <- problems(stops)
-    profiles_fname <- str_c("racial_profiling_data_", year, "_sheet_1.csv")
-    profiles <- read_csv(
-      file.path(raw_data_dir, profiles_fname),
+    profiles_fname <- str_c("racial_profiling_data_", year, ".csv")
+    d <- load_single_file(
+      raw_data_dir,
+      profiles_fname,
       col_names = colnames_map[[as.character(year)]],
-      col_types = cols(.default = "c"),
       skip = 1
     )
-    data <- bind_rows(data, profiles)
-    loading_problems[[profiles_fname]] <- problems(profiles)
+    data <- bind_rows(data, d$data)
+    loading_problems <- c(loading_problems, d$loading_problems)
     if (nrow(data) > n_max) {
       data <- data[1:n_max, ]
       break

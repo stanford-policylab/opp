@@ -16,7 +16,7 @@ tr_race <- c(
   W = "white"
 )
 
-tr_yn = c(
+tr_yn <- c(
   Yes = TRUE,
   Y = TRUE,
   yes = TRUE,
@@ -25,4 +25,9 @@ tr_yn = c(
   N = FALSE,
   no = FALSE,
   n = FALSE
+)
+
+tr_int_str_to_bool <- c(
+  "1" = TRUE,
+  "0" = FALSE
 )

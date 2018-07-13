@@ -1,19 +1,8 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-  data <- tibble()
-  loading_problems <- list()
-  for (year in 2014:2018) {
-    fname <- str_c(year, ".csv")
-    tbl <- read_csv(file.path(raw_data_dir, fname))
-		data <- bind_rows(data, tbl)
-		loading_problems[[fname]] <- problems(tbl)
-    if (nrow(data) > n_max) {
-      data <- data[1:n_max, ]
-      break
-    }
-  }
-  bundle_raw(data, loading_problems)
+  d <- load_years(raw_data_dir, n_max = n_max)
+  bundle_raw(d$data, d$loading_problems)
 }
 
 
@@ -35,7 +24,9 @@ clean <- function(d, helpers) {
       vehicle_color = `V Color`,
       vehicle_make = `V Make`,
       vehicle_model = `V Model`,
-      reason_for_stop = `Violation Description`
+      violation = `Violation Description`,
+      speed = Speed,
+      posted_speed = `Posted Speed`
     ) %>%
     mutate(
       # TODO(phoebe): can we confirm these are all vehicle related incidents?
@@ -57,6 +48,13 @@ clean <- function(d, helpers) {
       )
     ) %>%
     helpers$add_lat_lng(
+    ) %>%
+    # TODO(danj)
+    helpers$add_shapefiles_data(
+    ) %>%
+    rename(
+      beat = Beats,
+      district = District.x,
     ) %>%
     standardize(d$metadata)
 }

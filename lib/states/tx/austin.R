@@ -1,47 +1,16 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-  loading_problems <- list()
-  fname <- "data.csv"
-  data <- read_csv_with_types(
-    file.path(raw_data_dir, fname),
-    n_max = n_max,
-    c(
-      street_check_case_number          = "c",
-      occurred_date                     = "c",
-      officer                           = "c",
-      reason_checked                    = "c",
-      street_check_type                 = "c",
-      sex                               = "c",
-      race                              = "c",
-      ethnicity                         = "c",
-      yob                               = "i",
-      person_search_race_known          = "c",
-      person_search_reason_for_stop     = "c",
-      person_search_search_based_on     = "c",
-      person_search_search_discovered   = "c",
-      person_searched                   = "c",
-      veh_type                          = "i",
-      veh_year                          = "i",
-      veh_make                          = "c",
-      veh_model                         = "c",
-      veh_style                         = "c",
-      soi                               = "c",
-      vehicle_search_race_known         = "c",
-      vehicle_search_reason_for_stop    = "c",
-      vehicle_search_search_based_on    = "c",
-      vehicle_search_search_discovered  = "c",
-      vehicle_searched                  = "c"
-    )
-  )
-  loading_problems[[fname]] <- problems(data)
 
+  loading_problems <- list()
   r <- function(fname) {
-    tbl <- read_csv(file.path(raw_data_dir, fname))
-    loading_problems[[fname]] <<- problems(tbl)
-    tbl
+    d <- load_single_file(raw_data_dir, fname, n_max = n_max)
+    loading_problems <<- c(loading_problems, d$loading_problems)
+    d$data
   }
 
+  data <- r("data.csv")
+  colnames(data) <- make_ergonomic(colnames(data))
   reason_checked_tr <- translator_from_tbl(
     r("reason_checked_code_lookup.csv"),
     "reason_checked_code",
@@ -70,9 +39,16 @@ load_raw <- function(raw_data_dir, n_max) {
 
   mutate(
     data,
-    reason_checked_description = reason_checked_tr[reason_checked],
+    reason_checked_description = translate_by_char(
+      # NOTE: reason checked sometimes contains spaces, which are not entries
+      str_replace_all(reason_checked_more_than_1_entry_allowed, " ", ""),
+      reason_checked_tr
+    ),
     race_description = race_tr[race],
-    street_check_description = street_check_tr[street_check_type],
+    street_check_description = translate_by_char(
+      street_check_type_more_than_1_entry_allowed,
+      street_check_tr,
+    ),
     vehicle_style_description = vehicle_style_tr[veh_style],
     vehicle_type_description = vehicle_type_tr[veh_type]
   ) %>%
@@ -81,7 +57,7 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
-  dt_fmt = "%Y/%m/%d"
+
   tr_race = c(
     A = "asian/pacific islander",
     B = "black",
@@ -114,14 +90,14 @@ clean <- function(d, helpers) {
       vehicle_registration_state = soi
     ) %>%
     mutate(
-      date = parse_date(date, dt_fmt),
-      subject_race = tr_race[ifelse(
-        !is.na(subject_ethnicity) & subject_ethnicity == "H",
+      date = parse_date(date, "%Y/%m/%d"),
+      subject_race = tr_race[if_else_na(
+        subject_ethnicity == "H",
         "H",
         subject_race
       )],
       subject_sex = tr_sex[subject_sex],
-      subject_age = as.integer(format(date, "%Y")) - as.integer(yob),
+      subject_age = year(date) - as.integer(yob),
       search_person = str_detect(search_person, "YES"),
       search_vehicle = str_detect(search_vehicle, "YES"),
       search_conducted = search_person | search_vehicle,
@@ -153,17 +129,13 @@ clean <- function(d, helpers) {
           "PROBABLE",
           person_search_search_based_on,
           vehicle_search_search_based_on
-        ) | search_conducted  # default
+        )
+        | search_conducted  # default
       ),
       frisk_performed = any_matches(
         "FRISK",
         person_search_search_based_on,
         vehicle_search_search_based_on
-      ),
-      contraband_found = any_matches(
-        "ALCOHOL|CASH|DRUGS|OTHER|WEAPONS",
-        person_search_search_discovered,
-        vehicle_search_search_discovered
       ),
       contraband_drugs = any_matches(
         "DRUGS",
@@ -174,7 +146,10 @@ clean <- function(d, helpers) {
         "WEAPONS",
         person_search_search_discovered,
         vehicle_search_search_discovered
-      )
+      ),
+      contraband_found = contraband_drugs | contraband_weapons
     ) %>%
+    # TODO(danj): add shapefiles after location given
+    # https://app.asana.com/0/456927885748233/743595706194913 
     standardize(d$metadata)
 }

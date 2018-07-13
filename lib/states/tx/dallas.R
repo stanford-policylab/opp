@@ -9,13 +9,9 @@ load_raw <- function(raw_data_dir, n_max) {
   # txdps_lookups_lkup_sids_vehicle_type.csv
   loading_problems <- list()
   r <- function(fname) {
-    tbl <- read_csv(
-      file.path(raw_data_dir, fname),
-      col_types = cols(.default = "c"),
-      n_max = n_max
-    )
-    loading_problems[[fname]] <<- problems(tbl)
-    tbl
+    d <- load_single_file(raw_data_dir, fname, n_max)
+    loading_problems <<- c(loading_problems, d$loading_problems)
+    d$data
   }
   add_lookup <- function(tbl, name, join_col = str_c("HA_", toupper(name))) {
     fname <- str_c("txdps_lookups_lkup_", name, ".csv")
@@ -73,6 +69,7 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
+
   tr_race <- c(
     A = "asian/pacific islander",
     B = "black",
@@ -105,29 +102,27 @@ clean <- function(d, helpers) {
       # TODO(phoebe): what are HA_REGION and HA_DISTRICT?
       # https://app.asana.com/0/456927885748233/553393937447381
       precinct = HA_PRECINCT,
+      district = HA_DISTRICT,
+      region = HA_REGION,
       search_conducted = HA_SEARCHED,
       search_consent = HA_SEARCH_CONCENT,
       search_probable_cause = HA_SEARCH_PC,
       search_incident_to_arrest = HA_INCIDTO_ARREST,
-      contraband_found = HA_CONTRABAN,
-      contraband_is_currency = HA_CONTRAB_CURRENCY,
       contraband_is_drugs = HA_CONTRAB_DRUGS,
-      contraband_is_other = HA_CONTRAB_OTHER,
       contraband_is_weapon = HA_CONTRAB_WEAPON,
       officer_id = HA_OFFICER_ID,
+      speed = HA_ALLEGED_SPEED,
+      posted_speed = HA_POSTED_SPEED,
       vehicle_year = HA_VEH_YEAR
     ) %>%
-    mutate_each(
-      funs(as.logical),
-      search_conducted,
-      search_consent,
-      search_probable_cause,
-      search_incident_to_arrest,
-      contraband_found,
-      contraband_is_currency,
-      contraband_is_drugs,
-      contraband_is_other,
-      contraband_is_weapon
+    apply_translator_to(
+      tr_int_str_to_bool,
+      "search_conducted",
+      "search_consent",
+      "search_probable_cause",
+      "search_incident_to_arrest",
+      "contraband_is_drugs",
+      "contraband_is_weapon"
     ) %>%
     separate_cols(
       HA_ARREST_DATE = c("date", "time")
@@ -163,7 +158,8 @@ clean <- function(d, helpers) {
       subject_race = tr_race[subject_race],
       subject_sex = tr_sex[subject_sex],
       contraband_drugs = contraband_is_drugs,
-      contraband_weapons = contraband_is_weapon
+      contraband_weapons = contraband_is_weapon,
+      contraband_found = contraband_drugs | contraband_weapons
     ) %>%
     standardize(d$metadata)
 }

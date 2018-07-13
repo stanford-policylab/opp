@@ -1,19 +1,8 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-  data <- tibble()
-  loading_problems <- list()
-  for (year in 2012:2018) {
-    fname <- str_c(year, "_citations.csv")
-    tbl <- read_csv(file.path(raw_data_dir, fname))
-		data <- bind_rows(data, tbl)
-		loading_problems[[fname]] <- problems(tbl)
-    if (nrow(data) > n_max) {
-      data <- data[1:n_max, ]
-      break
-    }
-  }
-  bundle_raw(data, loading_problems)
+  d <- load_years(raw_data_dir, n_max = n_max)
+  bundle_raw(d$data, d$loading_problems)
 }
 
 
@@ -46,11 +35,6 @@ clean <- function(d, helpers) {
     "Evidence" = "probable cause"
   )
 
-  tr_yn <- c(
-    "No" = FALSE,
-    "Yes" = TRUE
-  )
-
   d$data %>%
     rename(
       subject_age = `Age At Time Of Violation`,
@@ -61,7 +45,9 @@ clean <- function(d, helpers) {
       vehicle_model = `Vehicle Model`,
       vehicle_color = `Vehicle Color`,
       reason_for_stop = Offense,
-      arrest_made = `Custodial Arrest Made`
+      arrest_made = `Custodial Arrest Made`,
+      speed = `Actual Speed`,
+      posted_speed = `Posted Speed`
     ) %>%
     helpers$add_type(
     ) %>%
@@ -70,7 +56,7 @@ clean <- function(d, helpers) {
     ) %>%
     mutate(
       date = parse_date(`Violation Date`),
-      time = seconds_to_hms(`Violation Time`),
+      time = parse_time(`Violation Time`),
       subject_race = tr_race[Race],
       subject_sex = tr_sex[Gender],
       search_conducted = `Search Reason` %in% names(tr_search_basis),

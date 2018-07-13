@@ -1,36 +1,19 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-
-  data <- tibble()
-  loading_problems <- list()
-  for (yr in 2006:2016) {
-    fname <- str_c(yr, ".csv")
-    tbl <- read_csv(file.path(raw_data_dir, fname), n_max = n_max)
-    loading_problems[[fname]] <- problems(tbl)
-    data <- bind_rows(data, tbl)
-    if (nrow(data) > n_max) {
-      data <- data[1:n_max, ]
-      break
-    }
-  }
-
-  arrest_codes_fname <- "02022018_fortworth_charge_codes.csv"
-  arrest_codes <- read_csv_with_types(
-    file.path(raw_data_dir, arrest_codes_fname),
-    c(
-      arrest_code_description = "c",
-      arrest_code = "c"
-    )
+  d <- load_regex(raw_data_dir, "^\\d{4}.csv", n_max = n_max)
+  codes <- load_single_file(
+    raw_data_dir,
+    "02022018_fortworth_charge_codes.csv",
+    n_max = n_max
   )
-  loading_problems[[arrest_codes_fname]] <- problems(arrest_codes)
-  
+  colnames(codes$data) <- make_ergonomic(colnames(codes$data))
   left_join(
-            data,
-            arrest_codes,
-    by = c("OffenseCharged" = "arrest_code")
+    d$data,
+    codes$data,
+    by = c("OffenseCharged" = "arrest_offense_charge_code")
   ) %>%
-  bundle_raw(loading_problems)
+  bundle_raw(c(d$loading_problems, codes$loading_problems))
 }
 
 
@@ -67,19 +50,22 @@ clean <- function(d, helpers) {
       warning_issued = Verbal_Warning,  # no written_warning or other type
       subject_sex = Sex,
       reason_for_stop = Reason,
-      reason_for_arrest = ArrestBasedOn
+      reason_for_arrest = ArrestBasedOn,
+      violation = Violation_Offense
     ) %>%
-    mutate_each(
-      funs(as.logical),
-      contraband_found,
-      arrest_made,
-      citation_issued,
-      warning_issued
+    mutate_at(
+      vars(
+        contraband_found,
+        arrest_made,
+        citation_issued,
+        warning_issued
+      ),
+      funs(as.logical)
     ) %>%
     mutate(
       # NOTE: we don't have most of these, and it's dicey to reverse engineer
-      # from arrest_code_description
-      type = ifelse(
+      # from arrest_offense_charged_desc
+      type = if_else(
         str_detect(reason_for_stop, "Traffic Violation"),
         "vehicular",
         "pedestrian"

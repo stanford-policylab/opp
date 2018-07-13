@@ -2,15 +2,12 @@ source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
 	loading_problems <- list()
-  fname <- "data_from_muni_clerk_sheet_1.csv"
-  data <- read_csv(
-    file.path(raw_data_dir, fname),
-    # NOTE: inconsistent time format, so import as character
-    col_types = cols(Time = col_character()),
+  d <- load_single_file(
+    raw_data_dir,
+    "data_from_muni_clerk_sheet_1.csv",
     n_max = n_max
   )
-  loading_problems[[fname]] <- problems(data)
-  bundle_raw(data, loading_problems)
+  bundle_raw(d$data, d$loading_problems)
 }
 
 
@@ -36,7 +33,7 @@ clean <- function(d, helpers) {
       vehicle_color = `Veh Color`,
       vehicle_year = `Veh Year`,
       vehicle_registration_state = `Vehicle Vrn St`,
-      reason_for_stop = Offense
+      violation = Offense
     ) %>%
     helpers$add_lat_lng(
     ) %>%
@@ -48,6 +45,11 @@ clean <- function(d, helpers) {
       region = REGION
     ) %>%
     helpers$add_type(
+      "violation"
+    ) %>%
+    separate_cols(
+      Officer = c("officer_last_name", "officer_first_name"),
+      sep = ", "
     ) %>%
     filter(
       type != "other"

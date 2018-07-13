@@ -111,8 +111,8 @@ valid_states <- c(
 
 
 schema <- c(
-  # back-reference
-  raw_row_number                = as.numeric,
+  # make character in case raw rows are merged, i.e. could be 1|2|3
+  raw_row_number                = as.character,
 
   # when
   date                          = parse_date,

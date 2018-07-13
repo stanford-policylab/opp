@@ -25,7 +25,21 @@ create_title <- function(state, city) {
 
 
 make_ergonomic <- function(strs) {
-  tolower(str_replace_all(strs, "[[:punct:]]| ", "_"))
+  str_replace_all(
+    tolower(strs),
+    c(
+      # replace spaces with underscores
+      " " = "_",
+      # make '#' human readable
+      "#" = "number",
+      # replace punctuation with underscores
+      "[[:punct:]]" = "_",
+      # replace n contiguous underscores with one
+      "__+" = "_",
+      # remove leading and trailing underscores
+      "^_+|_+$" = ""
+    )
+  )
 }
 
 
@@ -553,7 +567,7 @@ apply_translator_to <- function(tbl, translator, ...) {
     translator[v]
   }
   cols <- as.vector(unlist(list(...)))
-  mutate_each_(tbl, funs(tr), cols)
+  mutate_at(tbl, cols, funs(tr))
 }
 
 
