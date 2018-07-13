@@ -32,6 +32,7 @@ def lookup(
         states = os.listdir(states_dir)
 
     for state in states:
+        state = state.lower()
         cities = [normalize(city) + '.R']
         if city == 'all':
             cities = os.listdir(os.path.join(states_dir, state))
