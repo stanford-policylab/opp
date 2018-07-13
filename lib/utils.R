@@ -335,13 +335,13 @@ apply_translators <- function(tbl, translators) {
 }
 
 
-bundle_raw <- function(data, loading_problems) {
+bundle_raw <- function(data, loading_problems, comments = list()) {
   data <- mutate(data, raw_row_number = seq_len(n()))
 	list(
     data = data,
     metadata = list(
       loading_problems = loading_problems,
-      comments = list()
+      comments = comments
     )
   )
 }
