@@ -41,18 +41,6 @@ sanitize_age <- function(val) {
 }
 
 
-sanitize_dob_func <- function(dates) {
-  function(v) {
-    enforce_bounds(
-      v,
-      dates - years(valid_age_end),
-      dates - years(valid_age_start),
-      as.Date(NA)
-    )
-  }
-}
-
-
 sanitize_vehicle_year_func <- function(dates) {
   function(v) {
     enforce_bounds(

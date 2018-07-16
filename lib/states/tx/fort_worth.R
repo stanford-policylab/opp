@@ -83,7 +83,10 @@ clean <- function(d, helpers) {
         tr_race[ifelse(Ethnicity == "Hispanic", "Hispanic", Race)],
       subject_sex = tr_sex[subject_sex],
       search_conducted = tr_search_conducted[Search_Conducted],
-      reason_for_search = str_c_na(Search_reason, Facts_Supporting_Search)
+      reason_for_search = str_c_na(
+        Search_reason,
+        Facts_Supporting_Search,
+        sep = "; "
     ) %>%
     helpers$add_lat_lng(
     ) %>%

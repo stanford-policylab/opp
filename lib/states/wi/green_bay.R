@@ -1,11 +1,8 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-  fname <- "green_bay.csv"
-  data <- read_csv(file.path(raw_data_dir, fname), n_max = n_max)
-  loading_problems <- list()
-  loading_problems[[fname]] <- problems(data)
-  bundle_raw(data, loading_problems)
+  d <- load_single_file(raw_data_dir, "green_bay.csv", n_max)
+  bundle_raw(d$data, d$loading_problems)
 }
 
 
@@ -15,10 +12,6 @@ clean <- function(d, helpers) {
     "HISPANIC" = "hispanic",
     "INDIAN" = "other/unknown",
     "WHITE" = "white"
-  )
-  tr_sex <- c(
-    "MALE" = "male",
-    "FEMALE" = "female"
   )
   # TODO(phoebe): can we get more than 43 records?
   # https://app.asana.com/0/456927885748233/595493946182546
@@ -42,7 +35,8 @@ clean <- function(d, helpers) {
       time = format(datetime, "%H:%M:%S"),
       subject_race = tr_race[Race],
       subject_sex = tr_sex[Sex],
-      subject_dob = parse_datetime(DOB, "%m/%d/%y %H:%M:%S")
+      subject_dob = parse_datetime(DOB, "%m/%d/%y %H:%M:%S"),
+      subject_age = age_at_date(subject_dob, date)
     ) %>%
     helpers$add_lat_lng(
     ) %>%

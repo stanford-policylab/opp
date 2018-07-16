@@ -1,11 +1,8 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-  fname <- "pdr100317tpdstops_sheet_1.csv"
-  data <- read_csv(file.path(raw_data_dir, fname), n_max = n_max)
-  loading_problems <- list()
-  loading_problems[[fname]] <- problems(data)
-  bundle_raw(data, loading_problems)
+  d <- load_single_file(raw_data_dir, "pdr100317tpdstops_sheet_1.csv", n_max)
+  bundle_raw(d$data, d$loading_problems)
 }
 
 
@@ -20,7 +17,7 @@ clean <- function(d, helpers) {
     ) %>%
     mutate(
       # NOTE: T = "Traffic Stop", SS = "Subject Stop"
-      type = ifelse(Type == "T", "vehicular", "pedestrian"),
+      type = if_else(Type == "T", "vehicular", "pedestrian"),
       date = parse_date(Date, "%Y/%m/%d"),
       time = parse_time(Time, "%H:%M:%S"),
       warning_issued = str_detect(Disposition, "Warning"),
@@ -35,6 +32,12 @@ clean <- function(d, helpers) {
       )
     ) %>%
     helpers$add_lat_lng(
+    ) %>%
+    helpers$add_shapefiles_data(
+    ) %>%
+    rename(
+      sector = SECTOR,
+      subsector = SUBSECTOR
     ) %>%
     standardize(d$metadata)
 }

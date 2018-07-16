@@ -1,45 +1,15 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-  data <- tibble()
-	loading_problems <- list()
-  for (year in 2006:2015) {
-    fname <- str_c("trafs_evs_", year, ".csv")
-    tbl <- read_csv_with_types(
-      file.path(raw_data_dir, fname),
-      c(
-        rin                       = "c",
-        datetime                  = "c",
-        address                   = "c",
-        type                      = "c",
-        pri                       = "i",
-        mir_and_description       = "c",
-        disposition_description   = "c",
-        veh                       = "c",
-        possible_race_and_sex     = "c",
-        subject_dob               = "c",
-        officer_no_name_1         = "c",
-        officer_no_name_2         = "c",
-        empty                     = "c"
-      )
-    )
-		data <- bind_rows(data, tbl)
-		loading_problems[[fname]] <- problems(tbl)
-    if (nrow(data) > n_max) {
-      data <- data[1:n_max, ]
-      break
-    }
-  }
-  types_fname <- "types.csv"
-  types <- read_csv(file.path(raw_data_dir, types_fname))
-  loading_problems[[types_fname]] <- problems(types)
-
-  tr_type <- translator_from_tbl(types, "type_code", "translation")
+  d <- load_years(raw_data_dir, n_max)
+  colnames(d$data) <- make_ergonomic(colnames(d$data))
+  types <- load_single_file(raw_data_dir, "types.csv")
+  tr_type <- translator_from_tbl(types$data, "type_code", "translation")
   mutate(
-    data,
+    d$data,
     type_description = tr_type[type]
   ) %>%
-  bundle_raw(loading_problems)
+  bundle_raw(c(d$loading_problems, types$loading_problems))
 }
 
 
@@ -60,31 +30,43 @@ clean <- function(d, helpers) {
     "WELFARE"
   ), collapse = "|")
 
+  # TODO(phoebe): what is "pri"? precinct?
+  # https://app.asana.com/0/456927885748233/745309166221473
   d$data %>%
     # NOTE: when rin is null, almost every column is null, so filter out
     filter(
       !is.na(rin)
     ) %>%
-    rename(
-      location = address
-    ) %>%
     helpers$add_lat_lng(
+      "address"
+    ) %>%
+    helpers$add_shapefiles_data(
+    ) %>%
+    rename(
+      location = address,
+      violation = mir_description,
+      precinct = first_prec
     ) %>%
     separate_cols(
-      possible_race_and_sex = c("subject_race", "subject_sex"),
+      poss_race_sex = c("subject_race", "subject_sex"),
       sep = 1
     ) %>%
     separate_cols(
-      datetime = c("date", "time"),
-      officer_no_name_1 = c("officer_id", "officer_name")
+      date_time = c("date", "time"),
+      officer_no_1 = c("officer_id", "officer_name"),
+      sep = " "
+    ) %>%
+    separate_cols(
+      officer_name = c("officer_last_name", "officer_first_name"),
+      sep = ", "
     ) %>%
     mutate(
-      type = ifelse(
-        str_detect(mir_and_description, "PEDESTRIAN")
-        | (str_detect(mir_and_description, "PURSUIT")
+      type = if_else(
+        str_detect(violation, "PEDESTRIAN")
+        | (str_detect(violation, "PURSUIT")
            & !is.na(type_description)
            & str_detect(type_description, ped_pattern))
-        | (str_detect(mir_and_description, "MISCELLANEOUS")
+        | (str_detect(violation, "MISCELLANEOUS")
            & !is.na(type_description)
            & str_detect(type_description, ped_pattern)),
         "pedestrian",
@@ -93,21 +75,25 @@ clean <- function(d, helpers) {
       date = parse_date(date, "%Y/%m/%d"),
       subject_race = tr_race[subject_race],
       subject_sex = tr_sex[subject_sex],
+      subject_dob = parse_date(subj_dob, "%Y%m%d"),
+      subject_age = age_at_date(subject_dob, date),
       arrest_made = str_sub(disposition_description, 1, 1) == "A",
       # NOTE: includes criminal and non-criminal citations
       citation_issued = str_detect(disposition_description, "CITATION"),
+      warning_issued = str_detect(disposition_description, "WARN"),
       outcome = first_of(
         arrest = arrest_made,
-        citation = citation_issued
+        citation = citation_issued,
+        warning = warning_issued
       ),
-      reason_for_stop = coalesce(type_description, mir_and_description),
-      subject_dob = ymd(subject_dob),
-      vehicle_color = str_extract(veh, str_c(vehicle$colors, collapse = "|")),
-      vehicle_make = str_extract(veh, str_c(vehicle$makes, collapse = "|")),
-      vehicle_model = str_extract(veh, str_c(vehicle$models, collapse = "|")),
-      vehicle_year = str_extract(veh, "\\d{4}"),
+      reason_for_stop = coalesce(type_description, violation),
+      v = coalesce(veh, vehcile),
+      vehicle_color = str_extract(v, str_c(vehicle$colors, collapse = "|")),
+      vehicle_make = str_extract(v, str_c(vehicle$makes, collapse = "|")),
+      vehicle_model = str_extract(v, str_c(vehicle$models, collapse = "|")),
+      vehicle_year = str_extract(v, "\\d{4}"),
       vehicle_registration_state =
-        str_extract(veh, str_c(valid_states, collapse = "|"))
+        str_extract(v, str_c(valid_states, collapse = "|"))
     ) %>%
     standardize(d$metadata)
 }

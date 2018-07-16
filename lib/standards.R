@@ -134,6 +134,7 @@ schema <- c(
   region                        = as.character,
   reporting_area                = as.character,
   sector                        = as.character,
+  subsector                     = as.character,
   service_area                  = as.character,
   zone                          = as.character,
 

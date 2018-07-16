@@ -2,22 +2,20 @@ source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
   # NOTE: "IBM" is the officers department ID
-  loading_problems <- list()
-  r <- function(fname) {
-    tbl <- read_csv(
-      file.path(raw_data_dir, fname),
-      col_types = cols(.default = "c")
-    )
-    loading_problems[[fname]] <<- problems(tbl)
-    tbl
-  }
-  citations <- r("mpd_traffic_stop_request_citations.csv")
-  warnings <- r("mpd_traffic_stop_request_warnings.csv")
-  data <- bind_rows(citations, warnings)
-  if (nrow(data) > n_max) {
-    data <- data[1:n_max,]
-  }
-  bundle_raw(data, loading_problems)
+  cit <- load_single_file(
+    raw_data_dir,
+    "mpd_traffic_stop_request_citations.csv",
+    n_max
+  )
+  warn <- load_single_file(
+    raw_data_dir,
+    "mpd_traffic_stop_request_warnings.csv",
+    n_max
+  )
+  bundle_raw(
+    bind_rows(cit$data, warn$data),
+    c(cit$cloading_problems, warn$loading_problems)
+  )
 }
 
 
@@ -29,23 +27,25 @@ clean <- function(d, helpers) {
     "I" = "other/unknown",
     "W" = "white"
   )
-
   # TODO(phoebe): can we get reason_for_stop/search/contraband data?
   # https://app.asana.com/0/456927885748233/595493946182539
   d$data %>%
     rename(
-      # TODO(ravi): is this misleading?
-      # https://app.asana.com/0/456927885748233/595493946182540
-      reason_for_stop = `Statute Description`,
+      violation = `Statute Description`,
       vehicle_make = Make,
       vehicle_model = Model,
       vehicle_year = Year,
       vehicle_color = Color,
-      vehicle_registration_state = State
+      vehicle_registration_state = State,
+      posted_speed = Limit
+    ) %>%
+    separate_cols(
+      OfficerName = c("officer_last_name", "officer_first_name")
     ) %>%
     mutate(
       # NOTE: Statute Descriptions all appear to be vehicle related
       type = "vehicular",
+      speed = as.integer(posted_speed) + as.integer(OverLimit),
       date = parse_date(Date, "%Y/%m/%d"),
       time = parse_time(Time, "%H:%M:%S"),
       location = coalesce(onStreet, onStreetName),

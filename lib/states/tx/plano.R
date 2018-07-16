@@ -198,17 +198,18 @@ load_raw <- function(raw_data_dir, n_max) {
 
   data <- tibble()
 	loading_problems <- list()
-  for (year in 2012:2015) {
+  all_files <- files_with_recent_year_in_name(raw_data_dir)
+  racial_profiling_files <- all_files[str_detect(all_files, "racial")]
+  for (fname in racial_profiling_files) {
     # TODO(phoebe): how can we join these in? incident # is populated ~15%
     # https://app.asana.com/0/456927885748233/574633988593748
     # stops_fname <- str_c("all_traffic_stops_", year, "_sheet_1.csv")
     # stops <- read_csv(file.path(raw_data_dir, stops_fname))
 		# loading_problems[[stops_fname]] <- problems(stops)
-    profiles_fname <- str_c("racial_profiling_data_", year, ".csv")
     d <- load_single_file(
       raw_data_dir,
-      profiles_fname,
-      col_names = colnames_map[[as.character(year)]],
+      basename(fname),
+      col_names = colnames_map[[str_extract(fname, recent_years_regex())]],
       skip = 1
     )
     data <- bind_rows(data, d$data)
@@ -242,29 +243,38 @@ clean <- function(d, helpers) {
 
   d$data %>%
     rename(
-      notes = notes,
       vehicle_make = make,
       vehicle_model = model,
       vehicle_color = color,
       beat = occur_beat,
-      sector = sector
+      sector = sector,
+      posted_speed = speed_limit
+    ) %>%
+    # NOTE: officer names are in two formats:
+    # (1) <last_name>, <first_initial>
+    # (2) <first_initial>. <last_name>
+    separate_cols(
+      officer = c("officer_first_name_1", "officer_last_name_raw"),
+      sep = ", "
+    ) %>%
+    separate_cols(
+      officer_last_name_raw = c("officer_first_name_2", "officer_last_name"),
+      sep = ". "
     ) %>%
     mutate(
-      type = ifelse(is_true(mv_stop), "vehicular", "pedestrian"),
+      # officer_first_name = coalesce(officer_first_name_1, officer_first_name_2),
+      officer_id = coalesce(badge, badge_2),
+      type = if_else(is_true(mv_stop), "vehicular", "pedestrian"),
+      datetime = parse_datetime(date, "%Y/%m/%d %H:%M:%S"),
       date = coalesce(
         parse_date(date, "%Y/%m/%d"),
         parse_date(date, "%m/%d/%Y"),
-        as.Date(parse_datetime(date, "%Y/%m/%d %H:%M:%S"))
+        as.Date(datetime)
       ),
       time = coalesce(
         parse_time(str_replace(time, "24:00", "00:00"), "%H:%M"),
         parse_time(time, "%H:%M:%S"),
-        parse_time(
-          format(
-            parse_datetime(time, "%Y/%m/%d %H:%M:%S"),
-            "%H:%M:%S"
-          )
-        ),
+        parse_time(format(datetime, "%H:%M:%S")),
         parse_time_int(time)
       ),
       # TODO(danj): get geolocation data
@@ -275,60 +285,70 @@ clean <- function(d, helpers) {
         offense_location,
         arrest_location
       ),
-      warning_issued = is_true(warning),
-      citation_issued = coalesce(
-        !is.na(citation_number),
-        is_true(citation)
-      ),
-      arrest_made = is_true(
-        coalesce(
-          arrest,
-          arrested
-        )
-      ),
+      # TODO(danj): fix str_c_na
+      # results = str_c_na(
+      #   officer_result,
+      #   result,
+      #   result_1,
+      #   result_2,
+      #   result_3,
+      #   result_4,
+      #   result_5,
+      #   result_6,
+      #   result_7,
+      #   result_8,
+      #   collapse = "|"
+      # ),
+      warning_issued = is_true(warning) | str_detect(result, "WARN"),
+      citation_issued = !is.na(citation_number)
+        | is_true(citation)
+        | str_detect(result, "CIT"),
+      arrest_made = is_true(coalesce(arrest, arrested))
+        | str_detect(result, "ARR"),
       outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued,
         warning = warning_issued
       ),
-      subject_race = tr_race[ifelse(
-        !is.na(ethnicity) & (ethnicity == "HIS" | ethnicity == "His"),
-        "HIS",
-        race
-      )],
+      eth = tolower(coalesce(ethnicity, rp_report_ethnicity)),
+      subject_race = tr_race[if_else_na(eth == "his", "HIS", race)],
       subject_sex = tr_sex[sex],
       subject_age = age,
-      search_conducted = is_true(
-        coalesce(
-          search_conducted,
-          search_performed,
-          searched
-        )
-      ),
-      search_consent = is_true(
-        coalesce(
-          search_consent,
-          search_consent_2,
-          consent
-        )
-      ),
+      search_conducted = is_true(coalesce(
+        search_conducted,
+        search_performed,
+        searched
+      )),
+      search_consent = is_true(coalesce(
+        search_consent,
+        search_consent_2,
+        consent
+      )),
       # NOTE: curiously, every search was search constent in this dataset
       search_basis = first_of(
         "consent" = is_true(search_consent),
         "probable cause" = search_conducted  # default
       ),
-      contraband_found = is_true(
-        coalesce(
-          contraband,
-          contraband_found
-        )
-      ),
-      # NOTE: offense seems to be the closest thing to reason for stop
+      contraband_found = str_detect(contraband, 'DRUG|MARI|WEAPON')
+        | str_detect(contraband_found, 'DRUG|MARI'),
+      # NOTE: offense seems to be the closest thing to the violation
       # violation_description is 73.81% null
       # primary_violation is 99.35% null
       # type is 98.16% null
       # offense is 49.69% null
-      reason_for_stop = coalesce(offense, offense_1)
+      # NOTE: coalesce rather than join since they seem to be redundant
+      violation = coalesce(
+        violation_description,
+        offense,
+        offense_1,
+        offense_2,
+        offense_3,
+        offense_4,
+        offense_5,
+        offense_6,
+        offense_7,
+        offense_8
+      )
     ) %>%
     helpers$add_lat_lng(
     ) %>%

@@ -77,7 +77,8 @@ clean <- function(d, helpers) {
         violation_1_description,
         violation_2_description,
         violation_3_description,
-        violation_4_description
+        violation_4_description,
+        sep = "; "
       ),
       # TODO(phoebe): can we get outcomes (warnings, arrests)?
       # https://app.asana.com/0/456927885748233/596075286170967
