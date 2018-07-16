@@ -18,10 +18,10 @@ load_raw <- function(raw_data_dir, n_max) {
     'number_of_aerial_enforcement_arrests_white',
     'number_of_search_arrests_white',
     'number_of_search_stops_white',
-    'number_of_traffic_arrests_africa/american',
-    'number_of_aerial_enforcement_arrests_africa/american',
-    'number_of_search_arrests_africa/american',
-    'number_of_search_stops_africa/american',
+    'number_of_traffic_arrests_african_american',
+    'number_of_aerial_enforcement_arrests_african_american',
+    'number_of_search_arrests_african_american',
+    'number_of_search_stops_african_american',
     'number_of_traffic_arrests_hispanic',
     'number_of_aerial_enforcement_arrests_hispanic',
     'number_of_search_arrests_hispanic',
@@ -134,12 +134,17 @@ clean <- function(d, helpers) {
     "U" = "other/unknown",
     # Subject race column keys
     "white" = "white",
-    "africa/american" = "black",
+    "african_american" = "black",
     "hispanic" = "hispanic",
     "asian" = "asian/pacific islander",
     "indian" = "other/unknown",
     "other" = "other/unknown",
     "unknown" = "other/unknown"
+  )
+
+  d$metadata["comments"]["aggregation"] = paste0(
+    "Source data are pre-aggregated by week. The date and time plots are ",
+    "not very informative."
   )
 
   # TODO(phoebe): can we get unaggregated data, along with more details about
