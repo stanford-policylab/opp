@@ -95,7 +95,7 @@ load_raw <- function(raw_data_dir, n_max) {
     mutate(
       # NOTE: Convert quarter number to the month when that quartert starts,
       # for consistency with old data. E.g., for Q2 return "04" for April.
-      month = tr_qtr_start_month[Racial_Profile_Quarter],
+      month = tr_qtr_start_month[as.integer(Racial_Profile_Quarter)],
       # NOTE: Date is the first day of the given quarter, for consistency with
       # old data.
       date = parse_date(
