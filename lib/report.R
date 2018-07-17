@@ -118,10 +118,15 @@ d_ym <- mutate(
   count
 
 by_year_by_month_plot <- ggplot(d_ym) +
-  geom_bar(aes(x = year_month, y = n), stat = "identity") +
+  geom_bar(
+    aes(x = factor(year_month, levels = seq(1:12)), y = n),
+    stat = "identity"
+  ) +
   facet_grid(yr ~ .) +
   xlab("month of year") +
-  ylab("count")
+  ylab("count") +
+  scale_fill_discrete(drop=FALSE) +
+  scale_x_discrete(drop=FALSE)
 
 d_yd <- mutate(
 		data,
@@ -135,10 +140,14 @@ d_yd <- mutate(
   count
 
 by_year_by_day_plot <- ggplot(d_yd) +
-  geom_bar(aes(x = year_day, y = n), stat = "identity") +
+  geom_bar(
+    aes(x = year_day, y = n),
+    stat = "identity"
+  ) +
   facet_grid(yr ~ .) +
   xlab("day of year") +
-  ylab("count")
+  ylab("count") +
+  xlim(0, 366)
 
 d_yw <- mutate(
 		data,
