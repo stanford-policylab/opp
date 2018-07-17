@@ -59,7 +59,7 @@ plot_prop_by_race <- function(col, pred_col = TRUE) {
     subject_race
   ) %>%
   summarize(
-    rate = mean(UQE(colq)[UQE(pred_colq)], na.rm = TRUE)
+    rate = mean(`!!`(colq)[`!!`(pred_colq)], na.rm = TRUE)
   )
 
   colname <- deparse(substitute(col))
@@ -85,6 +85,8 @@ population <- opp_population(state, city)
 total_rows <- nrow(data)
 
 date_range <- range(data$date, na.rm = TRUE)
+start_date <- date_range[1]
+end_date <- date_range[2]
 
 by_type <- group_by(data, type) %>% count
 
@@ -103,10 +105,11 @@ by_year_plot <- ggplot(by_year) +
   ylab("count")
 
 by_year_by_month_plot <- ggplot(data) +
-  geom_bar(aes(as.yearmon(date))) +
-  scale_x_yearmon() +
-  xlab("month-year") +
-  ylab("count")
+  geom_bar(aes(as.Date(as.yearmon(date)))) +
+  xlab("year-month") +
+  ylab("count") + 
+  scale_x_date(breaks = date_breaks("months"), labels = date_format("%Y-%m")) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 d_yd <- mutate(
 		data,
@@ -141,6 +144,7 @@ by_year_by_day_of_week_plot <- ggplot(d_yw) +
   facet_grid(yr ~ .) +
   xlab("day of week") +
   ylab("count")
+
 
 calculate_if_col("time", function() {
   d_yh <- mutate(
@@ -269,7 +273,7 @@ calculate_if_cols(
 
 # NOTE: convert to char because of weird print representation of some numbers
 loading_problems <- metadata$loading_problems %>%
-  lapply(function(x) mutate_each(x, funs('as.character'))) %>%
+  lapply(function(x) mutate_all(x, funs('as.character'))) %>%
   bind_rows()
 
 if (nrow(loading_problems) > 0) {

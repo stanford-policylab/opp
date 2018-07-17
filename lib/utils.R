@@ -493,13 +493,17 @@ fill_null <- function(v, fill = NA) {
 }
 
 
-str_c_na <- function(..., sep = "", collapse = NULL) {
-  # same as str_c, but ignores rather than propagates NAs when joining
-  args <- lapply(list(...), str_replace_na)
-  args[["sep"]] = sep
-  args[["collapse"]] = collapse
-  joined <- do.call(str_c, args)
-  pattern <- str_c(str_c(sep, "NA"), str_c("NA", sep), "NA", sep = "|")
+str_c_na <- function(..., sep = ", ") {
+  # str_c_na(c("a", "b", "c"), c("1", "2", "3"), sep = "|")
+  # "a|1" "b|2" "c|3"
+  joined <- unite(tibble(...), sep = sep)[[1]]
+  sep_literal <- str_c("\\Q", sep, "\\E")
+  pattern <- str_c(
+    str_c(sep_literal, "NA"),
+    str_c("NA", sep_literal),
+    "NA",
+    sep = "|"
+  )
   str_replace_all(joined, pattern, "")
 }
 

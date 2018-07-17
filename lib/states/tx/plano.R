@@ -242,6 +242,10 @@ clean <- function(d, helpers) {
   is_true <- function(col) { !str_detect(col, regex_no) }
 
   d$data %>%
+    filter(
+      # NOTE: there is only one aberrant date from 2016
+      date < as.Date("2016-01-01")
+    ) %>%
     rename(
       vehicle_make = make,
       vehicle_model = model,
@@ -286,25 +290,25 @@ clean <- function(d, helpers) {
         arrest_location
       ),
       # TODO(danj): fix str_c_na
-      # results = str_c_na(
-      #   officer_result,
-      #   result,
-      #   result_1,
-      #   result_2,
-      #   result_3,
-      #   result_4,
-      #   result_5,
-      #   result_6,
-      #   result_7,
-      #   result_8,
-      #   collapse = "|"
-      # ),
-      warning_issued = is_true(warning) | str_detect(result, "WARN"),
+      results = str_c_na(
+        officer_result,
+        result,
+        result_1,
+        result_2,
+        result_3,
+        result_4,
+        result_5,
+        result_6,
+        result_7,
+        result_8,
+        sep = "|"
+      ),
+      warning_issued = is_true(warning) | str_detect(results, "WARN"),
       citation_issued = !is.na(citation_number)
         | is_true(citation)
-        | str_detect(result, "CIT"),
+        | str_detect(results, "CIT"),
       arrest_made = is_true(coalesce(arrest, arrested))
-        | str_detect(result, "ARR"),
+        | str_detect(results, "ARR"),
       outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued,
