@@ -39,7 +39,7 @@ null_rates_table
 by_year_plot
 ```
 
-```{r by_year_by_month_plot}
+```{r by_year_by_month_plot, fig.height = 10}
 by_year_by_month_plot
 ```
 

@@ -1,5 +1,6 @@
 library(ggplot2)
 library(rlang)
+library(scales)
 library(zoo)
 
 source("opp.R")
@@ -104,12 +105,23 @@ by_year_plot <- ggplot(by_year) +
   xlab("year") +
   ylab("count")
 
-by_year_by_month_plot <- ggplot(data) +
-  geom_bar(aes(as.Date(as.yearmon(date)))) +
-  xlab("year-month") +
-  ylab("count") + 
-  scale_x_date(breaks = date_breaks("months"), labels = date_format("%Y-%m")) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+d_ym <- mutate(
+		data,
+		yr = year(date),
+		year_month = month(date)
+	) %>%
+  group_by(
+		yr,
+		year_month
+	) %>%
+  count
+
+by_year_by_month_plot <- ggplot(d_ym) +
+  geom_bar(aes(x = year_month, y = n), stat = "identity") +
+  facet_grid(yr ~ .) +
+  xlab("month of year") +
+  ylab("count")
 
 d_yd <- mutate(
 		data,
