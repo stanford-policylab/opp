@@ -124,6 +124,7 @@ opp_clean <- function(d, state, city) {
     "add_type" = opp_add_type_func(state, city),
     "add_contraband_types_func" = opp_add_contraband_types_func(state, city),
     "add_shapefiles_data" = opp_add_shapefiles_data_func(state, city),
+    "fips_to_county_name" = opp_fips_to_county_name_func(state),
     "load_json" = opp_load_json_func(state, city)
   )
   clean(d, helpers)
@@ -144,7 +145,7 @@ opp_add_lat_lng_func <- function(state, city) {
       col_types = "cdd"
     )
   }
-  
+
 }
 
 
@@ -318,6 +319,29 @@ opp_plot <- function(state, city) {
     opp_load(state, city),
     file.path(output_dir, pdf_filename(state, city))
   )
+}
+
+
+opp_fips_to_county_name_func <- function(state) {
+  fips <- read_csv(
+    here::here("data", "fips_county.csv"),
+    col_types = cols_only(STATE = "c", COUNTYFP = "c", COUNTYNAME = "c")
+  ) %>%
+  filter(
+    STATE == toupper(state)
+  ) %>%
+  select(county_name = COUNTYNAME, county_code = COUNTYFP)
+  function(tbl, county_code_col = "county_code") {
+    tbl %>%
+      mutate(
+        # NOTE: Normalize county codes to use left 0-padding for join.
+        county_code = str_pad(tbl[[county_code_col]], 3, "left", "0")
+      ) %>%
+      left_join(
+        fips,
+        by = c("county_code" = "county_code")
+      )
+  }
 }
 
 
