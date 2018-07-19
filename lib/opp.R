@@ -323,6 +323,8 @@ opp_plot <- function(state, city) {
 
 
 opp_fips_to_county_name_func <- function(state) {
+  # NOTE: uses 2010 FIPS codes for counties:
+  # https://www.census.gov/geo/reference/codes/cou.html
   fips <- read_csv(
     here::here("data", "fips_county.csv"),
     col_types = cols_only(STATE = "c", COUNTYFP = "c", COUNTYNAME = "c")
