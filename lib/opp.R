@@ -363,7 +363,7 @@ opp_population <- function(state, city) {
     )
   ))
   fips <- read_csv(
-    here::here("data", "fips.csv"),
+    here::here("data", "fips_state.csv"),
     col_types = cols_only(
       STATE = "c",
       STUSAB = "c",

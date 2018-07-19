@@ -156,8 +156,8 @@ schema <- c(
 
   # what
   type                          = Curry(factor, levels = valid_types),
-  # NOTE: violation here is used for charge and violation
   disposition                   = as.character,
+  # NOTE: violation here is used for charge, offense, and/or violation
   violation                     = as.character,
   arrest_made                   = as.logical,
   citation_issued               = as.logical,
