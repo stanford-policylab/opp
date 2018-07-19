@@ -25,7 +25,7 @@ load_raw <- function(raw_data_dir, n_max) {
   ) %>%
   # NOTE: We drop values that are logically inconsistent. In particular, if
   # 1) the number of searches exceeds the number of stops, or 2) the number
-  # of contraband discoveries exceeds the number of searches we will ignore
+  # of contraband discoveries exceeds the number of searches, we will ignore
   # this row.
   filter(
     TotalStops >= TotalStops_Searches,
@@ -68,12 +68,12 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
-  d$metadata['comments'] <- list()
-  d$metadata['comments']['aggregation'] <- paste0(
-    "Source data are aggregated by year. Data for one year is given on the "
-    "first day of that year. Source data contain more variables than race, "
-    "search, and contraband_found, but since these other variables are not "
-    "cross-tabulated we can't de-aggregate and include them in the cleaned "
+  d$metadata['comments'] = list()
+  d$metadata['comments']['aggregation'] = str_c(
+    "Source data are aggregated by year. Data for one year is given on the ",
+    "first day of that year. Source data contain more variables than race, ",
+    "search, and contraband_found, but since these other variables are not ",
+    "cross-tabulated we can't de-aggregate and include them in the cleaned ",
     "data."
   )
 
