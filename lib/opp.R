@@ -124,8 +124,11 @@ opp_clean <- function(d, state, city) {
     "add_type" = opp_add_type_func(state, city),
     "add_contraband_types_func" = opp_add_contraband_types_func(state, city),
     "add_shapefiles_data" = opp_add_shapefiles_data_func(state, city),
+    "add_county_from_highway_milepost" = 
+      opp_add_county_from_highway_milepost_func(state, city),
     "fips_to_county_name" = opp_fips_to_county_name_func(state),
-    "load_json" = opp_load_json_func(state, city)
+    "load_json" = opp_load_json_func(state, city),
+    "load_csv" = opp_load_csv_func(state, city)
   )
   clean(d, helpers)
 }
@@ -137,10 +140,7 @@ opp_add_lat_lng_func <- function(state, city) {
     names(join_on) <- c(join_col)
     add_data(
       tbl,
-      file.path(
-        opp_calculated_features_path(state, city),
-        "geocoded_locations.csv"
-      ),
+      opp_load_csv_func(state, city)("geocoded_locations.csv"),
       join_on,
       col_types = "cdd"
     )
@@ -155,10 +155,7 @@ opp_add_search_basis_func <- function(state, city) {
     names(join_on) <- c(join_col)
     add_data(
       tbl,
-      file.path(
-        opp_calculated_features_path(state, city),
-        "search_basis.csv"
-      ),
+      opp_load_csv_func(state, city)("search_basis.csv"),
       join_on,
       col_types = "cc",
       rename_map = c("label" = "search_basis"),
@@ -188,10 +185,7 @@ opp_add_type_func <- function(state, city) {
     names(join_on) <- c(join_col)
     add_data(
       tbl,
-      file.path(
-        opp_calculated_features_path(state, city),
-        "types.csv"
-      ),
+      opp_load_csv_func(state, city)("types.csv"),
       join_on,
       col_types = "cc",
       rename_map = c("label" = "type"),
@@ -207,16 +201,61 @@ opp_add_type_func <- function(state, city) {
 }
 
 
+opp_add_county_from_highway_milepost_func <- function(state, city) {
+  function(
+    tbl,
+    highway_col = "highway",
+    milepost_col = "milepost",
+    mapping_csv = "highway_milepost_county.csv",
+    mapping_highway_col = "highway",
+    mapping_min_milepost_col = "min_milepost",
+    mapping_max_milepost_col = "max_milepost",
+    mapping_county_col = "county"
+  ) {
+    # NOTE: assumes mapping_csv has closed, open limits for milemarkers,
+    # [a, b), i.e. [0, 80) => milemarkers 0-79
+    mp <- opp_load_csv_func(state, city)(mapping_csv)
+    # these have to be numeric, otherwise the filter below doesn't work
+    tbl[[milepost_col]] <- as.numeric(tbl[[milepost_col]])
+    mp[[mapping_min_milepost_col]] <- as.numeric(mp[[mapping_min_milepost_col]])
+    mp[[mapping_max_milepost_col]] <- as.numeric(mp[[mapping_max_milepost_col]])
+
+    # join on the highway, then filter using min_mp < mp < max_mp
+    join_on <- c(mapping_highway_col)
+    names(join_on) <- c(highway_col)
+    mp <- distinct(
+      tbl[c(highway_col, milepost_col)]
+    ) %>%
+    left_join(
+      mp,
+      by = join_on
+    ) %>%
+    filter_(str_c(
+      milepost_col, " >= ", mapping_min_milepost_col,
+      " & ",
+      milepost_col, " < ", mapping_max_milepost_col
+    )) %>%
+    select_(
+      highway_col,
+      milepost_col,
+      mapping_county_col
+    ) %>%
+    distinct(
+    ) %>%
+    na.omit()
+
+    left_join(tbl, mp)
+  }
+}
+
+
 opp_add_contraband_types_func <- function(state, city) {
   function(tbl, join_col) {
     join_on <- c("text")
     names(join_on) <- c(join_col)
     add_data(
       tbl,
-      file.path(
-        opp_calculated_features_path(state, city),
-        "contraband_types.csv"
-      ),
+      opp_load_csv_func(state, city)("contraband_types.csv"),
       join_on,
       col_types = "iic",
       rename_map = c(
@@ -263,6 +302,24 @@ opp_load_json_func <- function(state, city) {
       opp_calculated_features_path(state, city),
       json_filename
     ))
+  }
+}
+
+
+opp_load_csv_func <- function(state, city) {
+  function(
+    csv_filename,
+    n_max = Inf,
+    col_types = cols(.default = "c"),
+    col_names = TRUE,
+    skip = 0
+  ) {
+    read_csv(
+      file.path(opp_calculated_features_path(state, city), csv_filename),
+      col_types = col_types,
+      col_names = col_names,
+      skip = skip
+    )
   }
 }
 

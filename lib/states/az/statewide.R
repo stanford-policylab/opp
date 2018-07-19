@@ -25,6 +25,35 @@ clean <- function(d, helpers) {
     "NI" = "no insurance"
   )
 
+  tr_pre_stop_indicator <- c(
+    VT = "Vehicle Type, Condition or Modification",
+    BL = "Driver Body Language",
+    PB = "Passenger Behavior",
+    DB = "Driving Behavior",
+    OT = "Other",
+    NO = "None"
+  )
+
+  # NOTE: this map was reverse engineered from the highways; i.e. the county
+  # was determined by the highways that pass through it
+  tr_county <- c(
+    "01" = "Apache County",
+    "02" = "Cochise County",
+    "03" = "Coconino County",
+    "04" = "Gila County",
+    "05" = "Graham County",
+    "06" = "Greenlee County",
+    "07" = "Maricopa County",
+    "08" = "Mohave County",
+    "09" = "Navajo County",
+    "10" = "Pima County",
+    "11" = "Pinal County",
+    "12" = "Santa Cruz County",
+    "13" = "Yavapai County",
+    "14" = "Yuma County",
+    "15" = "La Paz County"
+  )
+
   tr_race <- c(
     W = "white",
     H = "hispanic",
@@ -38,17 +67,18 @@ clean <- function(d, helpers) {
   # TODO(phoebe): what are kots_* and dots_* files vs the yearly data?
   #
   # TODO(phoebe): can we get a data dictionary for ReasonForStop?
-  # TODO(danj): map highways to county
   #
   d$data %>%
     rename(
       date = DateOfStop,
       time = TimeOfStop,
       officer_id = BadgeNumber,
-      location = OtherLocation,
-      county = County,
       vehicle_year = VehicleYear,
       vehicle_type = VehicleStyle
+    ) %>%
+    helpers$add_county_from_highway_milepost(
+      "Highway",
+      "Milepost"
     ) %>%
     mutate(
       # NOTE: there doesn't seem to be any other way to suss out whether this
@@ -59,17 +89,27 @@ clean <- function(d, helpers) {
         "pedestrian",
         "vehicular"
       ),
+      # NOTE: use County column if possible, otherwise, use the values
+      # generated from add_county_from_highway_milepost
+      county = coalesce(
+        fast_tr(County, tr_county),
+        county
+      ),
+      location = coalesce(
+        OtherLocation,
+        str_c_na(Highway, Milepost, sep = " ")
+      ),
       subject_race = tr_race[Ethnicity],
       subject_sex = tr_sex[Gender],
       reason_for_stop = translate_by_char_group(
         PreStopIndicators,
         tr_pre_stop_indicator,
-        sep = ","
+        ","
       ),
       violation = translate_by_char_group(
         ViolationsObserved,
         tr_violations,
-        sep = ","
+        ","
       ),
       # NOTE: DR = Driver, PS = Passenger, PE = Pedestrian, BI = Bicyclist
       search_person = str_detect(TypeOfSearch, "DR|PS|PE|BI")
