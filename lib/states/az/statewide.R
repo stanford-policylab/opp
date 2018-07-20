@@ -65,9 +65,9 @@ clean <- function(d, helpers) {
   )
 
   # TODO(phoebe): what are kots_* and dots_* files vs the yearly data?
-  #
+  # https://app.asana.com/0/456927885748233/727769678078699
   # TODO(phoebe): can we get a data dictionary for ReasonForStop?
-  #
+  # https://app.asana.com/0/456927885748233/750432191394464
   d$data %>%
     rename(
       date = DateOfStop,
