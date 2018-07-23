@@ -8,21 +8,24 @@ load_raw <- function(raw_data_dir, n_max) {
 
 clean <- function(d, helpers) {
 
+  # TODO(phoebe): lacking translations for violations: EQ FD FY LU OT TS
+  # https://app.asana.com/0/456927885748233/754158606630626
   tr_violations <- c(
+    # NOTE: these are taken from correspondence with the PD
+    "DU" = "DUI",
     "ER" = "expired registration",
-    "NL" = "no license",
-    "SP" = "speed",
-    "UL" = "unsafe lane change",
+    "EV" = "equipment violation",
     "FC" = "following too close",
-    "IT" = "improper turning",
     "FS" = "failure to signal",
     "FT" = "failure to stop",
+    "IT" = "improper turning",
     "LR" = "lamps required",
-    "EV" = "equipment violation",
+    "NI" = "no insurance",
+    "NL" = "no license",
     "OM" = "other moving violation",
     "ON" = "other non-moving violation",
-    "DU" = "DUI",
-    "NI" = "no insurance"
+    "SP" = "speed",
+    "UL" = "unsafe lane change"
   )
 
   tr_pre_stop_indicator <- c(
@@ -84,7 +87,7 @@ clean <- function(d, helpers) {
       # NOTE: there doesn't seem to be any other way to suss out whether this
       # was a pedestrian stop; presumably this is quite low, since these are
       # state patrol stops; PE = Pedestrian, BI = Bicyclist
-      type = if_else(
+      type = if_else_na(
         str_detect(TypeOfSearch, "PE|BI"),
         "pedestrian",
         "vehicular"
