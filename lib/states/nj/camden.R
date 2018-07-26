@@ -48,7 +48,7 @@ clean <- function(d, helpers) {
         "pedestrian",
         "vehicular"
       ),
-      datetime = parse_datetime(`Incident Datetime`),
+      datetime = parse_datetime(`Incident Datetime`, "%Y/%m/%d %H:%M:%S"),
       date = as.Date(datetime),
       time = format(datetime, "%H:%M:%S"),
       subject_sex = tr_sex[SubjectGender],
