@@ -19,7 +19,9 @@ tr_race <- c(
   asian = "asian/pacific islander",
   black = "black",
   white = "white",
-  hispanic = "hispanic"
+  hispanic = "hispanic",
+  other = "other/unknown",
+  unknown = "other/unknown"
 )
 
 tr_yn <- c(
