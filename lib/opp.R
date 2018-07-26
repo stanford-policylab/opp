@@ -1,8 +1,9 @@
+library(here)
+library(jsonlite)
 library(knitr)
+library(purrr)
 library(rmarkdown)
 library(stringr)
-library(jsonlite)
-library(here)
 
 source("utils.R")
 source("standards.R")
@@ -24,6 +25,27 @@ opp_data_paths <- function() {
 }
 
 
+opp_do_everything <- function() {
+  paths <- opp_processor_paths()
+  tbl <- tibble(
+    state = simple_map(paths, opp_extract_state_from_path),
+    # NOTE: city could be 'statewide' too 
+    city = simple_map(paths, opp_extract_city_from_path)
+  )
+  pmap(tbl, opp_process)
+  pmap(tbl, opp_report)
+  opp_coverage()
+}
+
+
+opp_processor_paths <- function() {
+  here::here(
+    "lib/states",
+    list.files(here::here("lib/states"), ".*\\.R$", recursive = TRUE)
+  )
+}
+
+
 opp_extract_state_from_path <- function(path) {
   tokens <- tokenize_path(path)
   toupper(tokens[which(tokens == "states") + 1])
@@ -32,7 +54,11 @@ opp_extract_state_from_path <- function(path) {
 
 opp_extract_city_from_path <- function(path) {
   tokens <- tokenize_path(path)
-  format_proper_noun(tokens[which(tokens == "states") + 2])
+  format_proper_noun(str_replace(
+    tokens[which(tokens == "states") + 2], 
+    ".R",
+    ""
+  ))
 }
 
 
