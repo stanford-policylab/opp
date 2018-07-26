@@ -138,6 +138,7 @@ opp_add_lat_lng_func <- function(state, city) {
   function(tbl, join_col = "location") {
     join_on <- c("loc")
     names(join_on) <- c(join_col)
+    print(opp_load_csv_func(state, city)("geocoded_locations.csv"))
     add_data(
       tbl,
       opp_load_csv_func(state, city)("geocoded_locations.csv"),

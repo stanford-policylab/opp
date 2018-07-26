@@ -136,6 +136,7 @@ schema <- c(
   sector                        = as.character,
   subsector                     = as.character,
   service_area                  = as.character,
+  unit                          = as.character,
   zone                          = as.character,
 
   # who
@@ -151,6 +152,7 @@ schema <- c(
   officer_first_name            = as.character,
   officer_last_name             = as.character,
   officer_years_of_service      = as.numeric,
+  officer_assignment            = as.character,
   department_id                 = as.character,
   department_name               = as.character,
 

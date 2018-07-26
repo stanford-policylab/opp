@@ -94,6 +94,7 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
+  print('cleaning')
 
   tr_race <- c(
     W = "white",
@@ -103,16 +104,43 @@ clean <- function(d, helpers) {
     O = "other/unknown"
   )
 
-  # TODO(phoebe): can we get reason_for_stop/search/contraband fields?
-  #
   d$data %>%
+    select(
+      -reason_for_stop
+    ) %>%
     rename(
-      subject_age = age
+      subject_age = age,
+      reason_for_stop = reason_for_stop_description
     ) %>%
     mutate(
+      # NOTE: all the reasons for the stop are vehicle related
+      type = "vehicular",
+      date = coalesce(
+        parse_date(date),
+        parse_date(date, "%d-%b-%y")
+      ),
       time = parse_time_int(time),
       subject_race = tr_race[race],
-      subject_sex = tr_sex[sex]
+      subject_sex = tr_sex[sex],
+      search_vehicle = !str_detect(search_vehicle_description, "No Search"),
+      search_conducted = search_vehicle,
+      search_basis = first_of(
+        consent = str_detect(search_vehicle_description, "with Consent"),
+        # NOTE: other than consent, there are only inventory, incident
+        # to arrest, and parole searches
+        other = TRUE
+      ),
+      # NOTE: unfortunately, we don't get any greater resolution than
+      # "Positive Result" for the searches
+      contraband_found = str_detect(search_vehicle_description, "Positive"),
+      arrest_made = str_detect(result_of_contact_description, "Arrest"),
+      citation_issued = str_detect(result_of_contact_description, "Citation"),
+      warning_issued = str_detect(result_of_contact_description, "Warning"),
+      outcome = first_of(
+        arrest = arrest_made,
+        citation = citation_issued,
+        warning = warning_issued
+      )
     ) %>%
     helpers$add_lat_lng(
     ) %>%

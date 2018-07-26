@@ -310,7 +310,7 @@ right_separate_cols <- function(tbl, ..., sep = " ") {
 
 add_data <- function(
   tbl,
-  csv_path,
+  data,
   join_on,
   col_types = cols(.default = "c"),
   rename_map = c(),
@@ -318,7 +318,7 @@ add_data <- function(
 ) {
   left_join(
     tbl,
-    read_csv(csv_path, col_types = col_types),
+    data,
     by = join_on
   ) %>%
   rename_cols(
