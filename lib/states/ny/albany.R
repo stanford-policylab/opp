@@ -8,14 +8,7 @@ load_raw <- function(raw_data_dir, n_max) {
 
 clean <- function(d, helpers) {
 
-  tr_race <- c(
-    W = "white",
-    B = "black",
-    U = "other/unknown",
-    H = "hispanic",
-    A = "asian/pacific islander",
-    O = "other/unknown",
-    I = "other/unknown",
+  tr_race <- c(tr_race,
     M = "other/unknown",
     "H:" = "hispanic",
     R = "other/unknown"

@@ -42,7 +42,7 @@ clean <- function(d, helpers) {
       search_conducted = !str_detect(reason_for_search, "NS"),
       search_basis = first_of(
         "other" = str_detect(reason_for_search, "with warrant"),
-        "probable cause" = TRUE # default
+        "probable cause" = search_conducted
       ),
       contraband_found = str_detect(contraband_evidence, "C = Contraband"),
       warning_issued = str_detect(outcome_of_stop, "W = Warning"),
