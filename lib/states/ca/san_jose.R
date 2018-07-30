@@ -144,6 +144,7 @@ clean <- function(d, helpers) {
   # not a separate or searchable field in their database
   d$data %>%
     rename(
+      time = `REPORT TIME (HMS)`,
       call_desc = `TYCOD DESCRIPTION`
     ) %>%
     filter(
@@ -162,13 +163,12 @@ clean <- function(d, helpers) {
       )
     ) %>%
     mutate(
-      type = ifelse(
+      type = if_else(
         str_detect(call_desc, vehicle_keywords),
         "vehicular",
         "pedestrian"
       ),
       date = parse_date(`REPORT DATE`, "%Y%m%d"),
-      time = seconds_to_hms(`REPORT TIME (HMS)`),
       # NOTE: COMMONPLACE seems to be a name for places with addresses,
       # i.e. OVERFELT GARDENS, SAFEWAY, WALMART, etc...
       location = coalesce(

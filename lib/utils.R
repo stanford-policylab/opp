@@ -1,5 +1,6 @@
 library(getopt)
 library(lubridate)
+library(parallel)
 library(tidyverse)
 library(stringi)
 library(stringr)
@@ -801,3 +802,25 @@ parse_coord <- Vectorize(function(coord) {
 age_at_date <- Vectorize(function(birth_date, date) {
   as.numeric(difftime(date, birth_date), units="days") / 365.242
 })
+
+
+# source: https://goo.gl/8sdnw5
+par_pmap <- function(
+  .l,
+  .f,
+  ...,
+  mc.cores = max(parallel::detectCores() / 2, 1L)
+) {
+  do.call(
+    parallel::mcmapply, 
+    c(
+      .l,
+      list(
+        FUN = .f,
+        MoreArgs = list(...),
+        SIMPLIFY = FALSE,
+        mc.cores = mc.cores
+      )
+    )
+  )
+}
