@@ -47,15 +47,10 @@ clean <- function(d, helpers) {
     "1" = "arrest", # In Custody Arrest
     "2" = "summons", # CHP 215
     "3" = "citation", # CHP 281
-    "4" = "warning", # Verbal Warning
-    "5" = NA_character_, # Traffic Collision
-    "6" = NA_character_, # Motorist / Public Service
-    "7" = NA_character_, # CVSA Sticker
-    "8" = NA_character_ # Turnover / Agency Assist
+    "4" = "warning" # Verbal Warning
   )
 
   tr_search_basis <- c(
-    "0" = NA_character_, # No Search
     "1" = "probable cause", # Probable Cause (positive)
     "2" = "probable cause", # Probable Cause (negative)
     "3" = "consent", # Consent (positive), 202D Required
@@ -68,7 +63,6 @@ clean <- function(d, helpers) {
   )
 
   tr_reason_for_search <- c(
-    "0" = NA_character_, # No Search
     "1" = "Probable Cause (positive)",
     "2" = "Probable Cause (negative)",
     "3" = "Consent (positive), 202D Required",
@@ -82,7 +76,8 @@ clean <- function(d, helpers) {
 
   d$data %>%
     mutate(
-      # NOTE: The stop time is not provided.  The shift time is provided but is
+      # NOTE: The stop time is not provided; all times appearing in the Date
+      # column are 00:00:00. The shift time is provided in the raw data but is
       # not granular enough.
       date = as.Date(coalesce(
         parse_datetime(Date, "%m/%d/%Y"),
