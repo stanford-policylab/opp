@@ -79,10 +79,10 @@ clean <- function(d, helpers) {
       # NOTE: The stop time is not provided; all times appearing in the Date
       # column are 00:00:00. The shift time is provided in the raw data but is
       # not granular enough.
-      date = as.Date(coalesce(
-        parse_datetime(Date, "%m/%d/%Y"),
-        parse_datetime(Date, "%m/%d/%Y %H:%M:%S")
-      )),
+      date = coalesce(
+        parse_date(Date, "%m/%d/%Y"),
+        parse_date(Date, "%m/%d/%Y %H:%M:%S")
+      ),
       county_name = fast_tr(LocationCode, tr_county),
       district = fast_tr(LocationCode, tr_district),
       # NOTE: subject_age is provided, but only as an enum representing age
