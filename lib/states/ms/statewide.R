@@ -4,15 +4,15 @@ source("common.R")
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_single_file(raw_data_dir, "citpentx_sheet1.csv", n_max = n_max)
   agencies <- load_single_file(raw_data_dir, "agencies.csv")
-  d$data %>%
-    mutate(
-      agency = str_pad(agency, 4, pad = '0')
-    ) %>%
-    left_join(
-      agencies$data,
-      by = c("agency" = "Agency code")
-    ) %>%
-    bundle_raw(c(d$loading_problems, agencies$loading_problems))
+  mutate(
+    d$data,
+    agency = str_pad(agency, 4, pad = '0')
+  ) %>%
+  left_join(
+    agencies$data,
+    by = c("agency" = "Agency code")
+  ) %>%
+  bundle_raw(c(d$loading_problems, agencies$loading_problems))
 }
 
 
@@ -36,7 +36,7 @@ clean <- function(d, helpers) {
     mutate(
       date = as.Date(parse_datetime(tikdate, "%Y/%m/%d")),
       # NOTE: Instructions for decoding "agency" column in "agency decode.docx".
-      county_code = ifelse(
+      county_code = if_else(
         substr(department_id, 1, 2) %in% c("00", "90"),
         substr(department_id, 3, 4),
         substr(department_id, 1, 2)
@@ -47,14 +47,13 @@ clean <- function(d, helpers) {
       subject_race = fast_tr(race, tr_race),
       subject_sex = fast_tr(sex, tr_sex),
       # NOTE: Instructions for decoding "agency" column in "agency decode.docx".
-      department_name = ifelse(
+      department_name = if_else(
         substr(department_id, 1, 2) == "90",
         "Mississippi Highway Patrol",
         `Agency Name`
       ),
-      # TODO(walterk): Verify that the dataset corresponds to only vehicular
-      # stops.
-      # https://app.asana.com/0/456927885748233/746524580819452
+      # NOTE: Only vehicular stops were requested for the data received in Aug
+      # 2016.
       type = "vehicular"
     ) %>%
     standardize(d$metadata)
