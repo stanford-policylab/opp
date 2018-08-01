@@ -801,8 +801,7 @@ parse_coord <- Vectorize(function(coord) {
 # age due to leap years.
 age_at_date <- function(birth_date, date) {
   as.numeric(difftime(date, birth_date), units="days") / 365.242
-<<<<<<< dda3df37eb3d38692ab3533b60d53ef375053e36
-})
+}
 
 
 # source: https://goo.gl/8sdnw5
@@ -824,6 +823,4 @@ par_pmap <- function(
       )
     )
   )
-=======
->>>>>>> MS - Statewide
 }
