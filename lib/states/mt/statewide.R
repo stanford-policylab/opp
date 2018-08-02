@@ -46,12 +46,8 @@ clean <- function(d, helpers) {
       vehicle_year = VehicleYear
     ) %>%
     mutate(
-      local_datetime = parse_character(parse_datetime(
-        StopTime,
-        locale = locale(tz = "America/Denver")
-      )),
-      date = as.Date(parse_datetime(local_datetime)),
-      time = parse_time(local_datetime, format="%Y-%m-%d %H:%M:%S"),
+      date = parse_date(StopTime, format = "%Y-%m-%dT%H:%M:%S%Z"),
+      time = parse_time(StopTime, format = "%Y-%m-%dT%H:%M:%S%Z"),
       location = str_c_na(Location, City, sep=", "),
       subject_race = if_else(
         Ethnicity == "H",
