@@ -8,20 +8,12 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
-  loc <- locale(tz="America/Denver")
-
   tr_race <- c(
     A = "asian/pacific islander",
     B = "black",
     I = "other/unknown",
     U = "other/unknown",
     W = "white"
-  )
-
-  search_not_conducted <- c(
-    "NO SEARCH REQUESTED",
-    "NO SEARCH / CONSENT DENIED",
-    NA_character_
   )
 
   # TODO(walterk): Verify that these search bases are mapped correctly.
@@ -54,7 +46,10 @@ clean <- function(d, helpers) {
       vehicle_year = VehicleYear
     ) %>%
     mutate(
-      local_datetime = parse_character(parse_datetime(StopTime, locale=loc)),
+      local_datetime = parse_character(parse_datetime(
+        StopTime,
+        locale = locale(tz = "America/Denver")
+      )),
       date = as.Date(parse_datetime(local_datetime)),
       time = parse_time(local_datetime, format="%Y-%m-%d %H:%M:%S"),
       location = str_c_na(Location, City, sep=", "),
@@ -64,16 +59,21 @@ clean <- function(d, helpers) {
         fast_tr(Race, tr_race)
       ),
       subject_sex = fast_tr(Sex, tr_sex),
+      # NOTE: The public records request for the data received in Feb 2017 were
+      # vehicular stops by the Montana Highway Patrol.
       department_name = "Montana Highway Patrol",
-      # TODO(walterk): Verify whether all stops are vehicular.
-      # https://app.asana.com/0/456927885748233/748076854773119
       type = "vehicular",
-      violation = str_c_na(Violation1, Violation2, Violation3, sep=";"),
+      violation = str_c_na(
+        Violation1,
+        Violation2,
+        Violation3,
+        sep = ";"
+      ),
       multi_outcome = str_c_na(
         EnforcementAction1,
         EnforcementAction2,
         EnforcementAction3,
-        sep=";"
+        sep = ";"
       ),
       arrest_made = str_detect(multi_outcome, "ARREST"),
       citation_issued = str_detect(multi_outcome, "CITATION"),
@@ -83,12 +83,11 @@ clean <- function(d, helpers) {
         "citation" = citation_issued,
         "warning" = warning_issued
       ),
-      search_conducted = !(SearchType %in% search_not_conducted),
-      search_basis = if_else(
-        search_conducted,
-        fast_tr(SearchType, tr_search_basis),
-        NA_character_
-      )
+      search_conducted = !(SearchType %in% c(
+        "NO SEARCH REQUESTED",
+        "NO SEARCH / CONSENT DENIED"
+      )),
+      search_basis = fast_tr(SearchType, tr_search_basis)
     ) %>%
     standardize(d$metadata)
 }
