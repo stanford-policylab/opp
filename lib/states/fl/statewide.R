@@ -71,16 +71,7 @@ clean <- function(d, helpers) {
     ) %>%
     ungroup() %>%
     mutate(
-      ReportDateTime = coalesce(
-        parse_datetime(
-          ReportDateTime,
-          format = "%Y/%m/%d %H:%M:%S"
-        ),
-        parse_datetime(
-          ReportDateTime,
-          format = "%Y/%m/%d"
-        )
-      )
+      ReportDateTime = str_replace_all(ReportDateTime, "/", "-")
     )
 
   # NOTE: We do a similar deduplication as above for old_data.
@@ -118,13 +109,7 @@ clean <- function(d, helpers) {
       )),
       Comments = combine_multiple(Comments)
     ) %>%
-    ungroup() %>%
-    mutate(
-      ReportDateTime = parse_datetime(
-        ReportDateTime,
-        format = "%Y-%m-%d %H:%M:%S"
-      )
-    )
+    ungroup()
 
   # NOTE: We join the data because some stops are in both old_data and new_data.
   joined_data <- full_join(
@@ -146,7 +131,6 @@ clean <- function(d, helpers) {
       location = City,
       county_name = County,
       subject_age = Age,
-      
       officer_id = OfficerIDNo,
       officer_age = Off_Age_At_Stop,
       officer_last_name = OfficerName,
@@ -157,8 +141,14 @@ clean <- function(d, helpers) {
       vehicle_registration_state = VehicleTagNoState
     ) %>%
     mutate(
-      date = as.Date(ReportDateTime),
-      time = strftime(ReportDateTime, format="%H:%M:%S"),
+      date = coalesce(
+        parse_date(ReportDateTime, "%Y-%m-%d %H:%M:%S"),
+        parse_date(ReportDateTime, "%Y-%m-%d")
+      ),
+      time = coalesce(
+        parse_time(ReportDateTime, "%Y-%m-%d %H:%M:%S"),
+        parse_time(ReportDateTime, "%Y-%m-%d")
+      ),
       subject_race = if_else(
         str_detect(Ethnicity, "H"),
         "hispanic",
@@ -208,15 +198,17 @@ clean <- function(d, helpers) {
           "SEARCH INCIDENT TO ARREST|STOP AND FRISK|SEARCH WARRANT|INVENTORY"
         )
       ),
-      search_conducted = if_else(is.na(search_basis), NA, TRUE),
       search_conducted = if_else(
-        is.na(search_conducted)
-          & str_detect(
+        !is.na(search_basis),
+        TRUE,
+        if_else(
+          str_detect(
             SearchType,
             "NO SEARCH REQUESTED|NO SEARCH / CONSENT DENIED"
           ),
-        FALSE,
-        NA
+          FALSE,
+          NA
+        )
       ),
       frisk_performed = str_detect(SearchType, "STOP AND FRISK")
       # NOTE: Regarding contraband_found, there is data on items seized, but it
