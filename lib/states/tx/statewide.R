@@ -18,8 +18,8 @@ load_raw <- function(raw_data_dir, n_max) {
       county_fips = FIPS_County_Code
     )
 
-  warnings <- load_regex(raw_data_dir, "warning.*\\.csv$", n_max = n_max)
-  warnings$data <- warnings$data %>%
+  warnings_2006_2017 <- load_regex(raw_data_dir, "warning.*\\.csv$", n_max = n_max)
+  warnings <- warnings_2006_2017$data %>%
     left_join(
       violation_codes$data %>% select(LK_Code, LK_description),
       by = c("AW_VIOLATION_CODE" = "LK_Code")
@@ -32,8 +32,24 @@ load_raw <- function(raw_data_dir, n_max) {
     ) %>%
     ungroup()
 
-  citations <- load_regex(raw_data_dir, "citation.*\\.csv$", n_max = n_max)
-  citations$data <- citations$data %>%
+  citations_2006_2016 <- load_regex(
+    raw_data_dir,
+    "(200[6-9]|201[0-6])citation.*\\.csv$",
+    n_max = n_max
+  )
+  citations_2017 <- load_regex(
+    raw_data_dir,
+    "2017.*citation.*\\.csv$",
+    n_max = n_max
+  )
+  citations_2017$data <- citations_2017$data %>%
+    rename_all(
+      toupper
+    )
+  citations <- bind_rows(
+    citations_2006_2016$data,
+    citations_2017$data
+  ) %>%
     left_join(
       violation_codes$data %>% select(LK_Code, LK_description),
       by = c("AD_VIOLATION_CODE" = "LK_Code")
@@ -46,14 +62,12 @@ load_raw <- function(raw_data_dir, n_max) {
     ) %>% 
     ungroup()
 
-  # NOTE: Stops for 2006-2008.
-  stops_old <- load_regex(
+  stops_2006_2008 <- load_regex(
     raw_data_dir,
     "200[678].*stops.*\\.csv$",
     n_max = n_max
   )
-  stops_old$data$schema_type = "old"
-  stops_old$data <- stops_old$data %>%
+  stops_2006_2008$data <- stops_2006_2008$data %>%
     mutate(
       HA_SEARCHED_boolean = HA_SEARCHED == -1,
       HA_SEARCH_PC_boolean = HA_SEARCH_PC == -1,
@@ -64,15 +78,24 @@ load_raw <- function(raw_data_dir, n_max) {
       HA_CONTRAB_DRUGS_boolean = HA_CONTRAB_DRUGS == -1,
       HA_CONTRAB_WEAPON_boolean = HA_CONTRAB_WEAPON == -1
     )
-
-  # NOTE: Stops for 2009-2017.
-  stops_new <- load_regex(
+  stops_2009_2016 <- load_regex(
     raw_data_dir,
-    "(2009|201[0-7]).*stops.*\\.csv$",
+    "(2009|201[0-6]).*stops.*\\.csv$",
     n_max = n_max
   )
-  stops_new$data$schema_type = "new"
-  stops_new$data <- stops_new$data %>%
+  stops_2017 <- load_regex(
+    raw_data_dir,
+    "2017.*stops.*\\.csv$",
+    n_max = n_max
+  )
+  stops_2017$data <- stops_2017$data %>%
+    rename_all(
+      toupper
+    )
+  stops_2009_2017 <- bind_rows(
+    stops_2009_2016$data,
+    stops_2017$data
+  ) %>%
     mutate(
       HA_SEARCHED_boolean = HA_SEARCHED == 1,
       HA_SEARCH_PC_boolean = HA_SEARCH_PC == 1,
@@ -85,13 +108,16 @@ load_raw <- function(raw_data_dir, n_max) {
       HA_VEH_SEARCH_boolean = HA_VEH_SEARCH == 1
     )
 
-  data <- bind_rows(stops_old$data, stops_new$data) %>%
+  data <- bind_rows(
+    stops_2006_2008$data,
+    stops_2009_2017
+  ) %>%
     left_join(
-      warnings$data,
+      warnings,
       by = c("HA_ARREST_KEY" = "AW_ARREST_KEY")
     ) %>%
     left_join(
-      citations$data,
+      citations,
       by = c("HA_ARREST_KEY" = "AD_ARREST_KEY")
     ) %>%
     left_join(
@@ -102,10 +128,12 @@ load_raw <- function(raw_data_dir, n_max) {
   loading_problems <- c(
     violation_codes$loading_problems,
     county_codes$loading_problems,
-    warnings$loading_problems,
-    citations$loading_problems,
-    stops_old$loading_problems,
-    stops_new$loading_problems
+    warnings_2006_2017$loading_problems,
+    citations_2006_2016$loading_problems,
+    citations_2017$loading_problems,
+    stops_2006_2008$loading_problems,
+    stops_2009_2016$loading_problems,
+    stops_2017$loading_problems
   )
   bundle_raw(data, loading_problems)
 }
