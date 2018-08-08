@@ -15,7 +15,7 @@ main <- function() {
   if (not_null(args$coverage))
     opp_coverage()
   if (not_null(args$everything))
-    opp_do_everything()
+    opp_everything()
   print("Finished!")
   q(status = 0)
 }

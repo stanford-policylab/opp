@@ -25,15 +25,17 @@ opp_data_paths <- function() {
 }
 
 
-opp_do_everything <- function() {
+opp_everything <- function() {
   paths <- opp_processor_paths()
   tbl <- tibble(
     state = simple_map(paths, opp_extract_state_from_path),
     # NOTE: city could be 'statewide' too 
     city = simple_map(paths, opp_extract_city_from_path)
   )
-  par_pmap(tbl, opp_process)
-  par_pmap(tbl, opp_report)
+  # par_pmap(tbl, opp_process)
+  # par_pmap(tbl, opp_report)
+  pmap(tbl, opp_process)
+  pmap(tbl, opp_report)
   opp_coverage()
 }
 

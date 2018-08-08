@@ -28,7 +28,7 @@ clean <- function(d, helpers) {
     mutate(
       actions = tolower(ActionsTaken),
       type = if_else(
-        str_detect(StopDescription, "TRAFFIC|VEHICLE"),
+        str_detect(reason_for_stop, "TRAFFIC|VEHICLE"),
         "vehicular",
         "pedestrian"
       ),
@@ -76,7 +76,7 @@ clean <- function(d, helpers) {
       # NOTE: few samples for years prior to 2010
       year(date) > 2009
     ) %>%
-    # helpers$add_lat_lng(
-    # ) %>%
+    helpers$add_lat_lng(
+    ) %>%
     standardize(d$metadata)
 }

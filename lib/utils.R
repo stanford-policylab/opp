@@ -542,7 +542,7 @@ str_combine_cols <- function(left, right,
 #   str_c_sort_uniq(c()) == NA
 str_c_sort_uniq <- function(x, collapse = "|") {
   result <- str_c(str_sort(unique(x), na_last = NA), collapse = collapse)
-  if_else(length(result) > 0, result, NA_character_)
+  ifelse(length(result) > 0, result, NA_character_)
 }
 
 
