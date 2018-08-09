@@ -98,7 +98,7 @@ clean <- function(d, helpers) {
     ) %>%
     slice(
       1
-    )
+    ) %>%
     ungroup(
     ) %>%
     mutate(
