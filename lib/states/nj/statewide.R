@@ -58,8 +58,8 @@ clean <- function(d, helpers) {
   # TODO(phoebe): can we get reason_for_stop/search/contraband fields?
   # https://app.asana.com/0/456927885748233/722133259228547
   d$data %>%
-    group_by(
-      `Case Number`
+    separate_cols(
+      DATE_TIME = c("date", "time")
     ) %>%
     rename(
       officer_id = BADGE,
@@ -69,9 +69,6 @@ clean <- function(d, helpers) {
       vehicle_model = VEH_MODEL,
       vehicle_registration_state = VEH_STATE
     ) %>%
-    separate_cols(
-      DATE_TIME = c("date", "time")
-    ) %>%
     mutate(
       date = parse_date(date, "%m/%d/%Y"),
       time = parse_time(time, "%I:%M:%S%p"),
@@ -80,15 +77,15 @@ clean <- function(d, helpers) {
       location = str_c_na(LOCATION, TOWNSHIP, sep = ", "),
       subject_race = tr_race[RACE],
       subject_sex = tr_sex[GENDER],
-      type = "vehicular",
+      type = "vehicular"
+    ) %>%
+    group_by(
+      `Case Number`
+    ) %>%
+    mutate(
       arrest_made = any(Arrested == "Y"),
       citation_issued = any(ACTION == "SUMMONS"),
       warning_issued = any(ACTION == "WARNING"),
-      outcome = first_of(
-        arrest = arrest_made,
-        citation = citation_issued,
-        warning = warning_issued
-      ),
       frisk_performed = any(Frisk == "Y"),
       search_conducted = any(Searched == "Y"),
       has_driver = any(INVOLVEMENT == "DRIVER")
@@ -101,6 +98,15 @@ clean <- function(d, helpers) {
     ) %>%
     slice(
       1
+    )
+    ungroup(
+    ) %>%
+    mutate(
+      outcome = first_of(
+        arrest = arrest_made,
+        citation = citation_issued,
+        warning = warning_issued
+      )
     ) %>%
     standardize(d$metadata)
 }
