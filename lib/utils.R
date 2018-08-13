@@ -766,6 +766,25 @@ load_single_file <- function(
 }
 
 
+load_all_csvs <- function(
+  dir,
+  fname,
+  n_max = Inf,
+  col_types = cols(.default = "c"),
+  col_names = TRUE,
+  skip = 0
+) {
+  load_regex(
+    dir,
+    "\\.csv$",
+    n_max,
+    col_types,
+    col_names,
+    skip
+  )
+}
+
+
 # Parse a lat/lng coord string as a double.
 # Assumes degrees and minutes are given, seconds are optional.
 # Example:
@@ -799,9 +818,9 @@ parse_coord <- Vectorize(function(coord) {
 # Calculate age at a certain date, given date of birth.
 # NOTE: age returned as floating point and will differ slightly from birthday
 # age due to leap years.
-age_at_date <- Vectorize(function(birth_date, date) {
+age_at_date <- function(birth_date, date) {
   as.numeric(difftime(date, birth_date), units="days") / 365.242
-})
+}
 
 
 # source: https://goo.gl/8sdnw5
