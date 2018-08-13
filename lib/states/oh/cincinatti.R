@@ -58,8 +58,8 @@ clean <- function(d, helpers) {
         "vehicular",
         "pedestrian"
       ),
-      lat = coalesce(latitude_x, lat),
-      lng = coalesce(longitude_x, lng),
+      lat = coalesce(as.numeric(latitude_x), lat),
+      lng = coalesce(as.numeric(longitude_x), lng),
       subject_sex = tr_sex[sex],
       subject_race = tr_race[race],
       arrest_made = str_detect(actiontakencid, "ARREST"),
@@ -71,8 +71,7 @@ clean <- function(d, helpers) {
         warning = warning_issued
       ),
       vehicle_registration_state =
-        tr_state_to_abbreviation[tolower(license_plate_state)],
-      tmp_location = location
+        tr_state_to_abbreviation[tolower(license_plate_state)]
     ) %>%
     filter(
       !is.na(date),
