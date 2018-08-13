@@ -2,7 +2,7 @@ source("common.R")
 
 
 load_raw <- function(raw_data_dir, n_max) {
-  d <- load_regex(raw_data_dir, "\\.csv$", n_max = n_max)
+  d <- load_all_csvs(raw_data_dir, n_max = n_max)
   bundle_raw(d$data, d$loading_problems)
 }
 

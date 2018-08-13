@@ -766,6 +766,25 @@ load_single_file <- function(
 }
 
 
+load_all_csvs <- function(
+  dir,
+  fname,
+  n_max = Inf,
+  col_types = cols(.default = "c"),
+  col_names = TRUE,
+  skip = 0
+) {
+  load_regex(
+    dir,
+    "\\.csv$",
+    n_max,
+    col_types,
+    col_names,
+    skip
+  )
+}
+
+
 # Parse a lat/lng coord string as a double.
 # Assumes degrees and minutes are given, seconds are optional.
 # Example:
