@@ -2,7 +2,14 @@ source("common.R")
 
 
 load_raw <- function(raw_data_dir, n_max) {
-  d <- load_regex(raw_data_dir, "\\.csv$", n_max = n_max)
+  d <- load_all_csvs(raw_data_dir, n_max = n_max)
+  # NOTE: Even though StopTime has the Z timezone indicating UTC, the timestamps
+  # are actually in local time America/Denver. So we strip the Z because it is
+  # technically incorrect.
+  d$data <- d$data %>%
+    mutate(
+      StopTime = str_replace(StopTime, 'Z$', '')
+    )
   bundle_raw(d$data, d$loading_problems)
 }
 
@@ -46,8 +53,8 @@ clean <- function(d, helpers) {
       vehicle_year = VehicleYear
     ) %>%
     mutate(
-      date = parse_date(StopTime, format = "%Y-%m-%dT%H:%M:%S%Z"),
-      time = parse_time(StopTime, format = "%Y-%m-%dT%H:%M:%S%Z"),
+      date = parse_date(StopTime, format = "%Y-%m-%dT%H:%M:%S"),
+      time = parse_time(StopTime, format = "%Y-%m-%dT%H:%M:%S"),
       location = str_c_na(Location, City, sep=", "),
       subject_race = if_else(
         Ethnicity == "H",
@@ -63,13 +70,13 @@ clean <- function(d, helpers) {
         Violation1,
         Violation2,
         Violation3,
-        sep = ";"
+        sep = "|"
       ),
       multi_outcome = str_c_na(
         EnforcementAction1,
         EnforcementAction2,
         EnforcementAction3,
-        sep = ";"
+        sep = "|"
       ),
       arrest_made = str_detect(multi_outcome, "ARREST"),
       citation_issued = str_detect(multi_outcome, "CITATION"),
