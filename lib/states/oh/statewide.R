@@ -2,7 +2,7 @@ source("common.R")
 
 
 load_raw <- function(raw_data_dir, n_max) {
-  d <- load_regex(raw_data_dir, "\\.csv$", n_max = n_max)
+  d <- load_all_csvs(raw_data_dir, n_max = n_max)
   bundle_raw(d$data, d$loading_problems)
 }
 
@@ -51,8 +51,9 @@ clean <- function(d, helpers) {
       officer_id = UNIT
     ) %>%
     mutate(
-      date = parse_date(DATE_STAMP, format = "%m/%d/%Y %H:%M:%S"),
-      time = parse_time(DATE_STAMP, format = "%m/%d/%Y %H:%M:%S"),
+      datetime = parse_datetime(DATE_STAMP, format = "%m/%d/%Y %H:%M:%S"),
+      date = as.Date(datetime),
+      time = format(datetime, "%H:%M:%S"),
       county_name = fast_tr(COUNTY_CODE, tr_county),
       sex_and_race_codes = str_extract(DISP_STRING, "[1-6][FM]"),
       subject_race = fast_tr(substr(sex_and_race_codes, 1, 1), tr_race),
@@ -61,17 +62,15 @@ clean <- function(d, helpers) {
       # the Ohio State Highway Patrol.
       department_name = "Ohio State Highway Patrol",
       type = "vehicular",
+      # NOTE: The following are the only disposition codes that clearly indicate
+      # arrest or warning. Can't find disposition codes that clearly indicate a
+      # citation.
       arrest_made = str_detect(DISP_STRING, "75ARR|75OVI|75WAR|76WAR"),
       warning_issued = str_detect(DISP_STRING, "WARN"),
       outcome = first_of(
         "arrest" = arrest_made,
         "warning" = warning_issued
       ),
-      # TODO(walterk): If contraband_drugs is TRUE, this corresponds to 
-      # "Possession of controlled substances". search_conducted might be TRUE or
-      # FALSE in this case which seems to be inconsistent. The meaning here
-      # needs to be resolved.
-      # https://app.asana.com/0/456927885748233/767331124176505
       contraband_drugs = str_detect(ORC_STRING, "2925"),
       contraband_found = if_else(contraband_drugs, TRUE, NA),
       search_conducted = str_detect(DISP_STRING, "24"),
