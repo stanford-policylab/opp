@@ -2,7 +2,7 @@ source("common.R")
 
 
 load_raw <- function(raw_data_dir, n_max) {
-  d <- load_regex(raw_data_dir, "\\.csv$", n_max = n_max)
+  d <- load_all_csvs(raw_data_dir, n_max = n_max)
   bundle_raw(d$data, d$loading_problems)
 }
 
@@ -47,19 +47,16 @@ clean <- function(d, helpers) {
       violation = str_c_na(SectionNum, OffenseCode, sep = " "),
       arrest_made = FelonyArrest == "1" | Jailed == "1",
       citation_issued = `Contact Type` == "Citation",
-      warning_issued = `Contact Type` != "Citation",
+      # NOTE: The other main value of "Contact Type" is "Public Contact". It is
+      # unclear whether a warning is issued in the case of "Public Contact".
       outcome = first_of(
         "arrest" = arrest_made,
-        "citation" = citation_issued,
-        "warning" = warning_issued
+        "citation" = citation_issued
       ),
       contraband_drugs = ContrabandDrugs == "1"
         | ContrabandDrugParaphenalia == "1",
       contraband_weapons = ContrabandWeapons == "1",
-      contraband_found = Contraband == "1"
-        | !is.na(ContrabandDesc)
-        | contraband_drugs
-        | contraband_weapons,
+      contraband_found = contraband_drugs | contraband_weapons,
       search_person = SubjectSearched == "1" | PassengerSearched == "1",
       search_vehicle = VehicleSearched == "1",
       search_conducted = Searched == "1" | search_person | search_vehicle
