@@ -57,15 +57,7 @@ clean <- function(d, helpers) {
     mutate(
       date = parse_date(StopDate, "%Y%m%d"),
       time = parse_time(StopTime, "%H%M"),
-      subject_age = age_at_date(
-        parse_date(
-          # NOTE: We only have the birth year, so we estimate the age assuming
-          # a birthday in the middle of the year.
-          str_c(YearOfBirth, "07-02", sep = "-"),
-          "%Y-%m-%d"
-        ),
-        date
-      ),
+      subject_yob = YearOfBirth,
       subject_race = fast_tr(OperatorRace, tr_race),
       subject_sex = fast_tr(OperatorSex, tr_sex),
       # NOTE: Data received in Apr 2016 were specifically from a request for
