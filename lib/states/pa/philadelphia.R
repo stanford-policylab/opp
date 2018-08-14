@@ -41,6 +41,15 @@ clean <- function(d, helpers) {
       # police service area
       service_area = psa
     ) %>%
+    apply_translator_to(
+      tr_int_str_to_bool,
+      "individual_contraband",
+      "vehicle_contraband",
+      "search_person",
+      "search_vehicle",
+      "individual_frisked",
+      "vehicle_frisked"
+    ) %>%
     mutate(
       datetime = parse_datetime(datetimeoccur),
       date = as.Date(datetime),
