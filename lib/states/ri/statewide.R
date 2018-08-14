@@ -36,13 +36,13 @@ clean <- function(d, helpers) {
   )
 
   tr_reason_for_search <- c(
-    A = "Incident to Arrest",
-    C = "Plain View",
-    I = "Inventory/Tow",
-    O = "Odor of Drugs/Alcohol",
-    P = "Probable Cause",
-    R = "Reasonable Suspicion",
-    T = "Terry Frisk"
+    "A" = "Incident to Arrest",
+    "C" = "Plain View",
+    "I" = "Inventory/Tow",
+    "O" = "Odor of Drugs/Alcohol",
+    "P" = "Probable Cause",
+    "R" = "Reasonable Suspicion",
+    "T" = "Terry Frisk"
   )
 
   d$data %>%
@@ -68,6 +68,8 @@ clean <- function(d, helpers) {
       ),
       subject_race = fast_tr(OperatorRace, tr_race),
       subject_sex = fast_tr(OperatorSex, tr_sex),
+      # NOTE: Data received in Apr 2016 were specifically from a request for
+      # vehicular stops.
       type = "vehicular",
       arrest_made = ResultOfStop == "D" | ResultOfStop == "P",
       citation_issued = ResultOfStop == "M",
@@ -79,28 +81,26 @@ clean <- function(d, helpers) {
       ),
       contraband_drugs = SearchResultOne == "A" | SearchResultOne == "D",
       contraband_weapons = SearchResultOne == "W",
-      contraband_found = SearchResultOne == "M"
-        | SearchResultOne == "O"
-        | contraband_drugs
-        | contraband_weapons,
+      contraband_found = contraband_drugs | contraband_weapons,
       frisk_performed = Frisked == "Y",
       search_conducted = Searched == "Y" | frisk_performed,
       multi_search_reasons = str_c_na(
         SearchReasonOne,
         SearchReasonTwo,
         SearchReasonThree,
-        sep = ";"
+        sep = "|"
       ),
       search_basis = first_of(
         "plain view" = str_detect(multi_search_reasons, "C"),
         "probable cause" = str_detect(multi_search_reasons, "O|P"),
-        "other" = str_detect(multi_search_reasons, "A|I|R|T")
+        "other" = str_detect(multi_search_reasons, "A|I|R|T"),
+        "probable cause" = search_conducted
       ),
       reason_for_search = str_c_na(
         fast_tr(SearchReasonOne, tr_reason_for_search),
         fast_tr(SearchReasonTwo, tr_reason_for_search),
         fast_tr(SearchReasonThree, tr_reason_for_search),
-        sep = ";"
+        sep = "|"
       ),
       reason_for_search = if_else(
         reason_for_search == "",
