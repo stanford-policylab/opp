@@ -47,8 +47,10 @@ clean <- function(d, helpers) {
       violation = str_c_na(SectionNum, OffenseCode, sep = " "),
       arrest_made = FelonyArrest == "1" | Jailed == "1",
       citation_issued = `Contact Type` == "Citation",
-      # NOTE: The other main value of "Contact Type" is "Public Contact". It is
-      # unclear whether a warning is issued in the case of "Public Contact".
+      # TODO(phoebe): The other main value of "Contact Type" is "Public
+      # Contact". It is unclear whether a warning is issued in the case of
+      # "Public Contact". This needs to be clarified.
+      # https://app.asana.com/0/456927885748233/778596457530887
       outcome = first_of(
         "arrest" = arrest_made,
         "citation" = citation_issued
