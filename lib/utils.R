@@ -768,7 +768,6 @@ load_single_file <- function(
 
 load_all_csvs <- function(
   dir,
-  fname,
   n_max = Inf,
   col_types = cols(.default = "c"),
   col_names = TRUE,

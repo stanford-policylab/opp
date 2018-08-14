@@ -142,6 +142,7 @@ schema <- c(
   # who
   subject_age                   = as.numeric,
   subject_dob                   = as.Date,
+  subject_yob                   = as.integer,
   subject_race                  = Curry(factor, levels = valid_races),
   subject_sex                   = Curry(factor, levels = valid_sexes),
   officer_id                    = as.character,
