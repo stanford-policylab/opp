@@ -76,7 +76,8 @@ clean <- function(d, helpers) {
       search_conducted = str_detect(DISP_STRING, "24"),
       search_basis = first_of(
         "k9" = str_detect(DISP_STRING, "24C?K"),
-        "consent" = str_detect(DISP_STRING, "24R")
+        "consent" = str_detect(DISP_STRING, "24R"),
+        "probable cause" = search_conducted
       )
     ) %>%
     left_join(
