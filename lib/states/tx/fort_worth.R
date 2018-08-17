@@ -87,6 +87,7 @@ clean <- function(d, helpers) {
         Search_reason,
         Facts_Supporting_Search,
         sep = "; "
+      )
     ) %>%
     helpers$add_lat_lng(
     ) %>%
