@@ -242,10 +242,6 @@ clean <- function(d, helpers) {
   is_true <- function(col) { !str_detect(col, regex_no) }
 
   d$data %>%
-    filter(
-      # NOTE: there is only one aberrant date from 2016
-      date < as.Date("2016-01-01")
-    ) %>%
     rename(
       vehicle_make = make,
       vehicle_model = model,
@@ -355,6 +351,10 @@ clean <- function(d, helpers) {
       )
     ) %>%
     helpers$add_lat_lng(
+    ) %>%
+    filter(
+      # NOTE: there is only one aberrant date from 2016
+      date != as.Date("2016-12-26")
     ) %>%
     standardize(d$metadata)
 }
