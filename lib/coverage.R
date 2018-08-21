@@ -58,17 +58,17 @@ get_or_create_cache <- function(cache_file) {
 
 
 city_coverage <- function(state, city) {
-  data <- opp_load_required_data(state, city)
-  date_range = range(data$date, na.rm = TRUE)
+  tbl <- opp_load_coverage_data(state, city)
+  date_range = range(tbl$date, na.rm = TRUE)
   c(
     list(
       state = state,
       city = city,
-      nrows = nrow(data),
+      nrows = nrow(tbl),
       population = opp_population(state, city),
       start_date = date_range[1],
       end_date = date_range[2]
     ),
-    lapply(lapply(data, coverage_rate), pretty_percent)
+    lapply(lapply(tbl, coverage_rate), pretty_percent)
   )
 }

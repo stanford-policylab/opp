@@ -191,6 +191,34 @@ coverage_rate <- function(v) {
 }
 
 
+select_or_add_as_na <- function(tbl, desired_cols) {
+  actual_cols <- colnames(tbl)
+  overlap_cols <- intersect(desired_cols, actual_cols)
+  missing_cols <- setdiff(desired_cols, actual_cols)
+  tbl <- select_(tbl, .dots = overlap_cols)
+  for (missing_col in missing_cols) {
+    tbl[missing_col] <- NA
+  }
+  tbl
+}
+
+
+select_least_na <- function(tbl, cols, rename = NA) {
+  # NOTE: if the column doesn't exist, it's assumed to be all NA
+  tbl <- select_or_add_as_na(
+    tbl,
+    cols
+  ) %>%
+  select_if(
+    funs(which.min(sum(is.na(.))))
+  )
+  if (!is.na(rename)) {
+    colnames(tbl) <- c(rename)
+  }
+  tbl
+}
+
+
 apply_schema_and_collect_null_rates <- function(schema, data) {
   null_rates <- list()
   for (name in names(schema)) {

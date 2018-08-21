@@ -136,7 +136,6 @@ schema <- c(
   sector                        = as.character,
   subsector                     = as.character,
   service_area                  = as.character,
-  unit                          = as.character,
   zone                          = as.character,
 
   # who
@@ -156,6 +155,7 @@ schema <- c(
   officer_assignment            = as.character,
   department_id                 = as.character,
   department_name               = as.character,
+  unit                          = as.character,
 
   # what
   type                          = Curry(factor, levels = valid_types),

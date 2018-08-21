@@ -32,8 +32,7 @@ opp_everything <- function() {
     # NOTE: city could be 'statewide' too 
     city = simple_map(paths, opp_extract_city_from_path)
   )
-  # par_pmap(tbl, opp_process)
-  pmap(tbl, opp_process)
+  par_pmap(tbl, opp_process)
   par_pmap(tbl, opp_report)
   opp_coverage()
 }
@@ -73,13 +72,96 @@ opp_load_data <- function(state, city) {
 }
 
 
-opp_load_required_data <- function(state, city) {
-  opp_load_data(state, city) %>% select_(.dots = opp_required_fields())
-}
+opp_load_coverage_data <- function(state, city) {
+  tbl <- opp_load_data(state, city)
 
+  coverage <- select_or_add_as_na(
+    tbl,
+    c(
+      "date",
+      "time",
+      "lat",
+      "lng",
+      "subject_race",
+      "subject_sex",
+      "type",
+      "warning_issued",
+      "citation_issued",
+      "arrest_made",
+      "contraband_found",
+      "frisk_performed",
+      "search_conducted",
+      "speed"
+    )
+  ) %>%
+  rename(
+    veh_or_ped = type
+  ) %>%
+  mutate(
+    geolocation = !is.na(lat) & !is.na(lng)
+  ) %>%
+  select(
+    -lat,
+    -lng
+  )
 
-opp_required_fields <- function() {
-  names(required_schema)
+  vehicle_desc <- select_least_na(
+    tbl,
+    c(
+      "vehicle_color",
+      "vehicle_make",
+      "vehicle_model",
+      "vehicle_type"
+    ),
+    rename = "vehicle_desc"
+  )
+
+  subject_age <- select_least_na(
+    tbl,
+    c(
+      "subject_age",
+      "subject_dob",
+      "subject_yob"
+    ),
+    rename = "subject_age"
+  )
+
+  violation_desc <- select_least_na(
+    tbl,
+    c(
+      "disposition",
+      "violation"
+    ),
+    rename = "violation_desc"
+  )
+
+  geodivision <- select_least_na(
+    tbl,
+    c(
+      "beat",
+      "district",
+      "subdistrict",
+      "division",
+      "subdivision",
+      "police_grid_number",
+      "precinct",
+      "region",
+      "reporting_area",
+      "sector",
+      "subsector",
+      "service_area",
+      "zone"
+    ),
+    rename = "police_geodivision"
+  )
+
+  bind_cols(
+    coverage,
+    vehicle_desc,
+    subject_age,
+    violation_desc,
+    geodivision
+  )
 }
 
 
