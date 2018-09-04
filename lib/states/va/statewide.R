@@ -2,7 +2,11 @@ source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
 
-  d <- load_single_file(raw_data_dir, "data.csv", n_max = n_max)
+  d <- load_single_file(
+    raw_data_dir,
+    "data.csv",
+    n_max = n_max
+  )
 
   # NOTE: Jurisdictions data file comes from a Word doc that we converted to
   # a CSV by hand. It's used for getting place names from jurisdiction codes.
@@ -142,7 +146,7 @@ clean <- function(d, helpers) {
     "unknown" = "other/unknown"
   )
 
-  d$metadata["comments"]["aggregation"] = paste0(
+  d$metadata["comments"]["aggregation"] <- str_c(
     "Source data are pre-aggregated by week. The date and time plots are ",
     "not very informative."
   )
@@ -155,8 +159,16 @@ clean <- function(d, helpers) {
       # NOTE: Date is the Saturday ending a given week of data, per the
       # documentation included in the raw data directory.
       date = parse_date(week, "%Y%m%d"),
-      location = str_c_na(jurisdiction_name, jurisdiction_type, sep = " "),
-      county_name = if_else(jurisdiction_type == "COUNTY", jurisdiction_name, NA_character_),
+      location = str_c_na(
+        jurisdiction_name,
+        jurisdiction_type,
+        sep = " "
+      ),
+      county_name = if_else(
+        jurisdiction_type == "COUNTY",
+        jurisdiction_name,
+        NA_character_
+      ),
       officer_race = tr_race[trooper_race],
       subject_race = tr_race[race],
       # NOTE: Source files are all traffic stops.

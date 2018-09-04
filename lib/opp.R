@@ -32,9 +32,10 @@ opp_everything <- function() {
     # NOTE: city could be 'statewide' too 
     city = simple_map(paths, opp_extract_city_from_path)
   )
-  par_pmap(tbl, opp_process)
-  par_pmap(tbl, opp_report)
-  opp_coverage()
+  # par_pmap(tbl, opp_process)
+  # par_pmap(tbl, opp_report)
+  # opp_coverage()
+  pmap(tbl, opp_report)
 }
 
 
