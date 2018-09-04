@@ -22,7 +22,7 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
-  # NOTE: The data do not seem to mark hispanics.
+  # NOTE: The data do not mark hispanics.
   tr_race <- c(
     W = "white",
     B = "black",
@@ -43,7 +43,6 @@ clean <- function(d, helpers) {
       date = parse_date(Date, "%Y/%m/%d"),
       # NOTE: Source data are all state police traffic stops.
       type = "vehicular",
-      location = NA,
       subject_race = tr_race[Race],
       warning_issued = Result == "WARNING",
       citation_issued = Result == "CITATION",
