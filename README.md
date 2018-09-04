@@ -16,6 +16,9 @@ Open Policing Project -- City Data
 * rgeos
   
 ## TODO
+* VA - Statewide is broken
+* test --everything after VA fixed and other 6 pushed, then revert to parallel 
+* eligibility reports: stats, outcome, threshold, rar, veil of darkness
 * write script to get block group containment by police geographic division
 * write script to assign block group populations to police divisions
 * daylight savings check in sanity report
