@@ -2,9 +2,8 @@ source("common.R")
 
 
 load_raw <- function(raw_data_dir, n_max) {
-  d <- load_regex(
+  d <- load_all_csvs(
     raw_data_dir,
-    "\\.csv$",
     n_max = n_max,
     col_names = c(
       "employee_last",
@@ -112,18 +111,8 @@ clean <- function(d, helpers) {
       highway_type != "W"
     ) %>%
     mutate(
-      road_number = if_else(
-        nchar(road_number) == 1,
-        str_pad(road_number, 2, pad = "0"),
-        road_number
-      ),
-      road_number = if_else(
-        nchar(road_number) == 2,
-        str_pad(road_number, 3, pad = "0"),
-        road_number
-      ),
-      # TODO(walterk): Ask janovergoor for the reason for these adjustments.
-      # https://app.asana.com/0/456927885748233/768509769911483
+      # NOTE: Normalize road numbers to properly join with wa_location.
+      road_number = str_pad(road_number, 3, pad = "0"),
       road_number = replace(road_number, road_number == "97A", "097AR"),
       road_number = replace(road_number, road_number == "28B", "028"),
       road_number = replace(road_number, road_number == "20S", "020SPANACRT"),
@@ -196,7 +185,6 @@ clean <- function(d, helpers) {
       citation_issued = str_detect(enforcements, "1"),
       warning_issued = str_detect(enforcements, "2|3"),
       outcome = first_of(
-        "arrest" = arrest_made,
         "citation" = citation_issued,
         "warning" = warning_issued
       ),
