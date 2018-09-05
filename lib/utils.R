@@ -5,6 +5,7 @@ library(tidyverse)
 library(stringi)
 library(stringr)
 library(here)
+library(rlang)
 
 
 p <- function(obj) { print(obj, n = Inf) }
@@ -869,4 +870,57 @@ par_pmap <- function(
       )
     )
   )
+}
+
+
+# Disaggregate `df` by creating `n` repetitions of the input rows.
+# Pass `n` as the variable indicating how many times a row should be
+# repeated, and pass any variables that should appear in the output table.
+#
+# Example:
+#
+#  df <- tribble(
+#    ~n, ~X , ~Y , ~Z   ,
+#     2, "a", "q", "foo",
+#     3, "b", "r", "bar",
+#     0, "c", "s", "baz"
+#  )
+#
+#  disaggregate(df, n, my_x=X, my_y=Y)
+#
+#   my_x | my_y
+#  -------------
+#   a    | q
+#   a    | q
+#   b    | r
+#   b    | r
+#   b    | r
+#
+#  Note that X and Y are repeated according to `n`, renamed according to
+#  the invocation of the function, and the column Z has been dropped.
+#
+#  Note also that `n` can be an expression.
+disaggregate <- function(df, n, ...) {
+  # Compute the count vector based on `n`, which may be an expression.
+  n <- enquo(n)
+  n_clean <- eval_tidy(
+    quo(
+      # Ensure there are no NA values in this vector. Drop rows that would
+      # have an NA count.
+      coalesce(as.integer(!!n), 0L)
+    ),
+    data=df
+  )
+
+  # Compute repetitions for columns passed as dots.
+  # TODO(jnu): assume "all rows" if no dots are passed.
+  rest <- quos(...)
+  cols <- c()
+  for (colname in names(rest)) {
+    col <- rest[[colname]]
+    cols[[colname]] <- rep(eval_tidy(col, data=df), n_clean)
+  }
+
+  # Construct table using repeated columns.
+  do.call(tibble, cols)
 }
