@@ -53,8 +53,10 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
-  # NOTE: wa_location.csv was generated using:
+  # TODO: Migrate in the code to generate wa_location.csv from the old
+  # openpolicing codebase:
   # https://github.com/5harad/openpolicing/blob/master/src/processing/scripts/WA_map_locations.R
+  # https://app.asana.com/0/456927885748233/808677867930132
   wa_location <- helpers$load_csv("wa_location.csv")
 
   tr_violation <- json_to_tr(helpers$load_json("WA_violations.json"))
@@ -113,9 +115,13 @@ clean <- function(d, helpers) {
     mutate(
       # NOTE: Normalize road numbers to properly join with wa_location.
       road_number = str_pad(road_number, 3, pad = "0"),
-      road_number = replace(road_number, road_number == "97A", "097AR"),
-      road_number = replace(road_number, road_number == "28B", "028"),
-      road_number = replace(road_number, road_number == "20S", "020SPANACRT"),
+      road_number = str_replace_all(
+        road_number,
+        # NOTE: This normailization is to match the normalization done to
+        # generate wa_location in the old openpolicing project; matches the WA
+        # mile marker database road numbers.
+        c("^97A$" = "097AR", "^28B$" = "028", "^20S$" = "020SPANACRT")
+      ),
       milepost_id = str_c(
         highway_type,
         road_number,
