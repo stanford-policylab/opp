@@ -924,3 +924,9 @@ disaggregate <- function(df, n, ...) {
   # Construct table using repeated columns.
   do.call(tibble, cols)
 }
+
+
+# Returns the unique value in a list if one exists, otherwise NA.
+unique_value <- function(x) {
+  if_else(length(unique(na.omit(x))) == 1, first(x), NA_character_)
+}

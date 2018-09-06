@@ -7,10 +7,7 @@ load_raw <- function(raw_data_dir, n_max) {
 
   new_loaded <- load_regex(raw_data_dir, "^SRIS", n_max = n_max)
   new_loaded$data$schema_type = "SRIS"
-  new_loaded$data <- new_loaded$data %>%
-    rename(
-      Ethnicity = ethnicity
-    )
+  new_loaded$data <- rename(new_loaded$data, Ethnicity = ethnicity)
 
   data <- bind_rows(old_loaded$data, new_loaded$data)
   loading_problems <- c(
@@ -22,11 +19,6 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
-  # Returns the unique value in a list if one exists, otherwise NA.
-  unique_value <- function(x) {
-    if_else(length(unique(na.omit(x))) == 1, first(x), NA_character_)
-  }
-
   # Sorts, uniques, and collapses a list removing certain NA related values.
   combine_multiple <- function(x) {
     str_c_sort_uniq(
@@ -38,14 +30,10 @@ clean <- function(d, helpers) {
   # NOTE: Replacing "NULL" with NA everywhere.
   d$data[d$data == "NULL"] <- NA
 
-  old_data <- d$data %>%
-    filter(
-      schema_type == "TSDR"
-    )
+  old_data <- filter(d$data, schema_type == "TSDR")
 
-  # NOTE: Remove completely duplicate rows/
-  duplicate_idxs <- duplicated(old_data)
-  old_data <- old_data[!duplicate_idxs, ]
+  # NOTE: Remove completely duplicate rows.
+  old_data <- distinct(old_data)
 
   # NOTE: There are also duplicate rows due to multiple violations per stop.
   # Some pertain to different passengers, and hence we sometimes cannot uniquely
@@ -69,7 +57,8 @@ clean <- function(d, helpers) {
       OfficerName = unique_value(OfficerName),
       Comments = combine_multiple(Comments)
     ) %>%
-    ungroup() %>%
+    ungroup(
+    ) %>%
     mutate(
       ReportDateTime = str_replace_all(ReportDateTime, "/", "-")
     )
@@ -84,15 +73,15 @@ clean <- function(d, helpers) {
       ReportDateTime,
       County,
       OfficerIDNo
-    ) %>% 
+    ) %>%
     summarize(
       City = unique_value(City),
       Race = unique_value(Race),
       Ethnicity = unique_value(Ethnicity),
       Off_Age_At_Stop = unique_value(Off_Age_At_Stop),
       Off_YrsExp_At_Stop = unique_value(Off_YrsExp_At_Stop),
-      Off_Sex = unique_value(Off_Sex), 
-      Off_Race = unique_value(Off_Race), 
+      Off_Sex = unique_value(Off_Sex),
+      Off_Race = unique_value(Off_Race),
       OfficerOrgUnit = unique_value(OfficerOrgUnit),
       ReasonForStop = combine_multiple(ReasonForStop),
       EnforcementAction = combine_multiple(c(
@@ -122,7 +111,7 @@ clean <- function(d, helpers) {
       "OfficerIDNo",
       "Race",
       "Ethnicity"
-    ), 
+    ),
     suffix = c("_old", "_new")
   )
 
@@ -156,17 +145,13 @@ clean <- function(d, helpers) {
       ),
       subject_sex = fast_tr(Sex, tr_sex),
       unit = if_else(
-        is.na(OfficerOrgUnit_old),
-        OfficerOrgUnit_new,
-        OfficerOrgUnit_old
-      ),
-      unit = if_else(
-        !is.na(OfficerOrgUnit_old) & !is.na(OfficerOrgUnit_new),
-        NA_character_,
-        unit
+        is.na(OfficerOrgUnit_new),
+        OfficerOrgUnit_old,
+        OfficerOrgUnit_new
       ),
       officer_race = fast_tr(Off_Race, tr_race),
       officer_sex = fast_tr(Off_Sex, tr_sex),
+      # NOTE: Only vehicular traffic stops were requested in the data request.
       type = "vehicular",
       arrest_made = str_detect(
         tolower(EnforcementAction),
