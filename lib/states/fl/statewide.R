@@ -180,7 +180,7 @@ clean <- function(d, helpers) {
         "probable cause" = str_detect(SearchType, "PROBABLE CAUSE"),
         "other" = str_detect(
           SearchType,
-          "SEARCH INCIDENT TO ARREST|STOP AND FRISK|SEARCH WARRANT|INVENTORY"
+          "SEARCH INCIDENT TO ARREST|SEARCH WARRANT|INVENTORY"
         )
       ),
       search_conducted = if_else(
