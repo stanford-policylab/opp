@@ -94,11 +94,6 @@ clean <- function(d, helpers) {
     "I2" = "other", # Impound Search
     "K1" = "k9",
     "K2" = "k9",
-    # TODO(walterk): Figure out if "Protective Frisk" should be mapped to
-    # "other" for search_basis.
-    # https://app.asana.com/0/456927885748233/768509769911484
-    "P1" = "other", # Protective Frisk
-    "P2" = "other", # Protective Frisk
     "W1" = "other",
     "W2" = "other"
   )
@@ -198,6 +193,9 @@ clean <- function(d, helpers) {
       frisk_performed = if_else(
         is.na(search_type_orig),
         NA,
+        # NOTE: "P1" and "P2" correspond to "Pat Down Search", which we are
+        # considering to be a protective frisk that does not lead to a further
+        # search.
         search_type_orig %in% c("P1", "P2")
       ),
       search_conducted = if_else(
