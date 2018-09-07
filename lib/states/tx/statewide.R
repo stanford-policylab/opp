@@ -34,12 +34,12 @@ load_raw <- function(raw_data_dir, n_max) {
 
   citations_2006_to_2016 <- load_regex(
     raw_data_dir,
-    "(200[6-9]|201[0-6])citation",
+    "(200[6-9]|201[0-6]).*citation",
     n_max = n_max
   )
   citations_2017 <- load_regex(
     raw_data_dir,
-    "2017.*citation.*\\.csv$",
+    "2017.*citation",
     n_max = n_max
   )
   citations_2017$data <- rename_all(citations_2017$data, toupper)
@@ -61,7 +61,7 @@ load_raw <- function(raw_data_dir, n_max) {
 
   stops_2006_to_2008 <- load_regex(
     raw_data_dir,
-    "200[678].*stops.*\\.csv$",
+    "200[678].*stops",
     n_max = n_max
   )
   stops_2006_to_2008$data <- mutate(
@@ -77,12 +77,12 @@ load_raw <- function(raw_data_dir, n_max) {
   )
   stops_2009_to_2016 <- load_regex(
     raw_data_dir,
-    "(2009|201[0-6]).*stops.*\\.csv$",
+    "(2009|201[0-6]).*stops",
     n_max = n_max
   )
   stops_2017 <- load_regex(
     raw_data_dir,
-    "2017.*stops.*\\.csv$",
+    "2017.*stops",
     n_max = n_max
   )
   stops_2017$data <- rename_all(stops_2017$data, toupper)
@@ -185,6 +185,7 @@ clean <- function(d, helpers) {
     region = HA_REGION,
     officer_id = HA_OFFICER_ID,
     officer_last_name = HA_N_TROOPER,
+    search_conducted = HA_SEARCHED_boolean,
     search_vehicle = HA_VEH_SEARCH_boolean,
     contraband_drugs = HA_CONTRAB_DRUGS_boolean,
     contraband_weapons = HA_CONTRAB_WEAPON_boolean,
@@ -229,11 +230,6 @@ clean <- function(d, helpers) {
       "probable cause" = HA_SEARCH_PC_boolean,
       "other" = HA_INCIDTO_ARREST_boolean | HA_VEHICLE_INVENT_boolean
     ),
-    search_conducted = if_else(
-      !is.na(search_basis),
-      TRUE,
-      HA_SEARCHED_boolean
-    ),
     contraband_found = contraband_drugs | contraband_weapons
   ) %>%
   left_join(
@@ -241,6 +237,8 @@ clean <- function(d, helpers) {
     by = "normalized_last_name"
   ) %>%
   mutate(
+    # NOTE: If the race is white or NA, and the last name is more than 75%
+    # likely to be hispanic, we set race as hispanic.
     subject_race = if_else(
       (subject_race_recorded == "White" | is.na(subject_race_recorded))
       & !is.na(pH)
