@@ -717,7 +717,8 @@ load_similar_files <- function(
   n_max = Inf,
   col_types = cols(.default = "c"),
   col_names = TRUE,
-  skip = 0
+  skip = 0,
+  na = c("", "NA")
 ) {
   data <- tibble()
   loading_problems <- list()
@@ -728,7 +729,8 @@ load_similar_files <- function(
       path,
       col_types = col_types,
       col_names = col_names,
-      skip = skip
+      skip = skip,
+      na = na
     )
     data <- bind_rows(data, tbl)
     loading_problems[[bn]] <- problems(tbl)
@@ -746,14 +748,16 @@ load_years <- function(
   n_max = Inf,
   col_types = cols(.default = "c"),
   col_names = TRUE,
-  skip = 0
+  skip = 0,
+  na = c("", "NA")
 ) {
   load_similar_files(
     files_with_recent_year_in_name(dir),
     n_max,
     col_types,
     col_names,
-    skip
+    skip,
+    na
   )
 }
 
@@ -764,14 +768,16 @@ load_regex <- function(
   n_max = Inf,
   col_types = cols(.default = "c"),
   col_names = TRUE,
-  skip = 0
+  skip = 0,
+  na = c("", "NA")
 ) {
   load_similar_files(
     list.files(dir, regex, full.names=T),
     n_max,
     col_types,
     col_names,
-    skip
+    skip,
+    na
   )
 }
 
@@ -782,7 +788,8 @@ load_single_file <- function(
   n_max = Inf,
   col_types = cols(.default = "c"),
   col_names = TRUE,
-  skip = 0
+  skip = 0,
+  na = c("", "NA")
 ) {
   load_regex(
     dir,
@@ -790,7 +797,8 @@ load_single_file <- function(
     n_max,
     col_types,
     col_names,
-    skip
+    skip,
+    na
   )
 }
 
@@ -800,7 +808,8 @@ load_all_csvs <- function(
   n_max = Inf,
   col_types = cols(.default = "c"),
   col_names = TRUE,
-  skip = 0
+  skip = 0,
+  na = c("", "NA")
 ) {
   load_regex(
     dir,
@@ -808,7 +817,8 @@ load_all_csvs <- function(
     n_max,
     col_types,
     col_names,
-    skip
+    skip,
+    na
   )
 }
 
