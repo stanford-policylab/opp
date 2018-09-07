@@ -65,12 +65,6 @@ clean <- function(d, helpers) {
     "Consent" = "consent"
   )
 
-  # Collapse a vector of identical strings into a scalar of that unique value.
-  # If the vector contains multiple distinct values, return NA.
-  str_val_if_unique <- function(col) {
-    if_else(length(unique(col)) == 1, first(col), NA_character_)
-  }
-
   # NOTE: A row in the data is a citation. There may be multiple citations in
   # a stop. Group by the situational details of the stop and summarize to
   # create a single row for a stop. For search_conducted and contraband_found
@@ -104,12 +98,12 @@ clean <- function(d, helpers) {
       # NOTE: For the remainder of the columns we take the unique value in the
       # group of rows, or return NA if there are multiple distinct values.
       # We use NA because we don't know what the right value should be.
-      Arrest = str_val_if_unique(Arrest),
-      Citation = str_val_if_unique(Citation),
-      Search = str_val_if_unique(Search),
-      SearchContraband = str_val_if_unique(SearchContraband),
-      WrittenWarning = str_val_if_unique(WrittenWarning),
-      OralWarning = str_val_if_unique(OralWarning)
+      Arrest = unique_value(Arrest),
+      Citation = unique_value(Citation),
+      Search = unique_value(Search),
+      SearchContraband = unique_value(SearchContraband),
+      WrittenWarning = unique_value(WrittenWarning),
+      OralWarning = unique_value(OralWarning)
     ) %>%
     ungroup(
     ) %>%
