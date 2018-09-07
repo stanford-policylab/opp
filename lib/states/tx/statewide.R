@@ -171,7 +171,7 @@ clean <- function(d, helpers) {
     pcthispanic
   ) %>%
   filter(
-    str_length(normalized_last_name) > 0
+    str_length(name) > 0
   ) %>%
   mutate(
     normalized_last_name = tolower(name),
