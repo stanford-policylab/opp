@@ -11,7 +11,7 @@ load_raw <- function(raw_data_dir, n_max) {
     file.path(raw_data_dir, "TXDPS_Lookups"),
     "txdps_lookups_lkup_county.csv"
   )
-  county_codes$data <-select(
+  county_codes$data <- select(
     county_codes$data,
     HA_COUNTY = LK_Code,
     county_name = LK_Description,
