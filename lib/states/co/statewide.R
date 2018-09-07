@@ -5,14 +5,15 @@ load_raw <- function(raw_data_dir, n_max) {
     raw_data_dir,
     "data.csv",
     na = c("", "NA","NULL", "N/A"),
-    col_types = cols(.default = "c", Search = "d"),
+    col_types = cols(.default = "c"),
     n_max = n_max
   )
 
   troops <- load_single_file(raw_data_dir, "csp_troops.csv")
   counties <- load_single_file(raw_data_dir, "counties.csv")
 
-  # NOTE: Some column names are duplicated
+  # NOTE: Some column names are missing; add them here. Other column names are
+  # duplicated, so we use a numeric suffix.
   colnames(d$data)[1  ] <- "id_1"
   colnames(d$data)[78 ] <- "id_2"
   colnames(d$data)[79 ] <- "traffic_stop_id_1"
@@ -29,67 +30,7 @@ load_raw <- function(raw_data_dir, n_max) {
   colnames(d$data)[143] <- "officer_first_name"
   colnames(d$data)[146] <- "officer_gender"
 
-  # NOTE: A row in the data is a citation. There may be multiple citations in
-  # a stop. Group by the situational details of the stop and summarize to
-  # create a single row for a stop. For search_conducted and contraband_found
-  # fields, >99.9% all stops in group have same value.
   d$data %>%
-    group_by(
-      officer_id,
-      officer_first_name,
-      officer_last_name,
-      driver_first_name,
-      driver_last_name,
-      IncidentDate,
-      IncidentTime,
-      DOB,
-      LocationCounty,
-      LocationMilePost
-    ) %>%
-    summarize(
-      StatuteDesc = str_c(StatuteDesc, collapse = "|"),
-      SearchBase = first(SearchBase),
-      TroopID = first(TroopID),
-      driver_gender = first(driver_gender),
-      Ethnicity = first(Ethnicity),
-      officer_gender = first(officer_gender),
-      Make = first(Make),
-      Model = first(Model),
-      Year = first(Year),
-      PlateState = first(PlateState),
-      Arrest = if_else(
-        length(unique(Arrest)) == 1,
-        first(Arrest),
-        NA_character_
-      ),
-      Citation = if_else(
-        length(unique(Citation)) == 1,
-        first(Citation),
-        NA_character_
-      ),
-      Search = if_else(
-        length(unique(Search)) == 1,
-        first(Search),
-        NA_character_
-      ),
-      SearchContraband = if_else(
-        length(unique(SearchContraband)) == 1,
-        first(SearchContraband),
-        NA_character_
-      ),
-      WrittenWarning = if_else(
-        length(unique(WrittenWarning)) == 1,
-        first(WrittenWarning),
-        NA_character_
-      ),
-      OralWarning = if_else(
-        length(unique(OralWarning)) == 1,
-        first(OralWarning),
-        NA_character_
-      )
-    ) %>%
-    ungroup(
-    ) %>%
     left_join(
       troops$data,
       by = c("TroopID" = "Troop")
@@ -118,37 +59,71 @@ clean <- function(d, helpers) {
     Z = "unknown/other"
   )
 
-  tr_sex <- c(
-    Male = "male",
-    Female = "female"
-  )
-
   tr_search_basis = c(
     "Incident to Arrest" = "other",
     "Probable Cause" = "probable cause",
     "Consent" = "consent"
   )
 
+  # Collapse a vector of identical strings into a scalar of that unique value.
+  # If the vector contains multiple distinct values, return NA.
+  str_val_if_unique <- function(col) {
+    if_else(length(unique(col)) == 1, first(col), NA_character_)
+  }
+
+  # NOTE: A row in the data is a citation. There may be multiple citations in
+  # a stop. Group by the situational details of the stop and summarize to
+  # create a single row for a stop. For search_conducted and contraband_found
+  # fields, >99.9% all stops in group have same value.
   d$data %>%
-    rename(
-      department_name = `Office Location`,
-      department_id = TroopID,
-      vehicle_make = Make,
-      vehicle_model = Model,
-      vehicle_year = Year,
-      violation = StatuteDesc
+    group_by(
+      officer_id,
+      officer_first_name,
+      officer_last_name,
+      driver_first_name,
+      driver_last_name,
+      IncidentDate,
+      IncidentTime,
+      DOB,
+      LocationCounty,
+      LocationRoad,
+      LocationMilePost
+    ) %>%
+    summarize(
+      violation = str_c(StatuteDesc, collapse = "|"),
+      SearchBase = first(SearchBase),
+      department_id = first(TroopID),
+      driver_gender = first(driver_gender),
+      Ethnicity = first(Ethnicity),
+      officer_gender = first(officer_gender),
+      vehicle_make = first(Make),
+      vehicle_model = first(Model),
+      vehicle_year = first(Year),
+      PlateState = first(PlateState),
+      department_name = first(`Office Location`),
+      # NOTE: For the remainder of the columns we take the unique value in the
+      # group of rows, or return NA if there are multiple distinct values.
+      # We use NA because we don't know what the right value should be.
+      Arrest = str_val_if_unique(Arrest),
+      Citation = str_val_if_unique(Citation),
+      Search = str_val_if_unique(Search),
+      SearchContraband = str_val_if_unique(SearchContraband),
+      WrittenWarning = str_val_if_unique(WrittenWarning),
+      OralWarning = str_val_if_unique(OralWarning)
+    ) %>%
+    ungroup(
     ) %>%
     mutate(
       # NOTE: Source data all describe state police traffic stops.
-      stop_type = "vehicular",
+      type = "vehicular",
       location = str_c_na(LocationMilePost, LocationRoad, LocationCounty, sep = ", "),
       date = parse_date(IncidentDate, "%Y-%m-%d"),
       # NOTE: Timestamp contains fractional seconds, though the fractional part
       # is always 0. The seconds are also commonly 0, suggesting they are not
       # recorded consistently.
       time = parse_time(str_sub(1, 8, IncidentTime), "%H:%M:%S"),
-      dob = parse_date(DOB, "%Y-%m-%d"),
-      subject_age = age_at_date(dob, date),
+      subject_dob = parse_date(DOB, "%Y-%m-%d"),
+      subject_age = age_at_date(subject_dob, date),
       subject_race = tr_race[Ethnicity],
       subject_sex = tr_sex[driver_gender],
       officer_sex = tr_sex[officer_gender],
@@ -166,8 +141,7 @@ clean <- function(d, helpers) {
       ),
       # NOTE: missing specific contraband type column.
       contraband_found = SearchContraband == "1",
-      search_conducted = (!is.na(d$SearchBase))
-        | ((d$Search == "1") & (!is.na(d$Search))),
+      search_conducted = !is.na(SearchBase) | coalesce(Search == "1", FALSE),
       search_type = tr_search_basis[SearchBase]
     ) %>%
     standardize(d$metadata)
