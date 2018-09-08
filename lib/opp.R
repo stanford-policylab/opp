@@ -25,6 +25,28 @@ opp_data_paths <- function() {
 }
 
 
+opp_load_all_data <- function() {
+  paths <- opp_data_paths()
+  tbl <- tibble(
+    state = simple_map(paths, opp_extract_state_from_path),
+    # NOTE: city could be 'statewide' too 
+    city = simple_map(paths, opp_extract_city_from_path)
+  )
+  bind_rows(
+    par_pmap(
+      tbl,
+      function(state, city) {
+        mutate(
+          opp_load_data(state, city),
+          state = state,
+          city = city
+        )
+      }
+    )
+  )
+}
+
+
 opp_everything <- function() {
   paths <- opp_processor_paths()
   tbl <- tibble(
