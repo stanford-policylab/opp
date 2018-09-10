@@ -1,31 +1,21 @@
 source('opp.R')
 
 
-calculate_stats <- function(state, city) {
+calculate_rates <- function(state, city) {
+  tbl <- opp_load_data(state, city)
+  dem_tbl <- opp_demographics(state, city)
   list(
-    stop = stop_rate(state, city),
-    frisk = frisk_rate(state, city),
-    search = search_rate(state, city)
+    stop_rate = rate(tbl, dem_tbl),
+    frisk_rate = rate(tbl, dem_tbl, fltr("frisk_performed")),
+    search_rate = rate(tbl, dem_tbl, fltr("search_conducted"))
   )
-}
-
-stop_rate <- function(state, city) {
-  rate(state, city)
-}
-
-frisk_rate <- function(state, city) {
-  rate(state, city, fltr("frisk_performed"))
-}
-
-search_rate <- function(state, city) {
-  rate(state, city, fltr("search_conducted"))
 }
 
 
 fltr <- function(colname) {
-  function(d) {
+  function(tbl) {
     if (colname %in% colnames(d)) {
-      filter_(d, colname)
+      filter_(tbl, colname)
     } else {
       NA
     }
@@ -34,16 +24,17 @@ fltr <- function(colname) {
 
 
 rate <- function(
-  state,
-  city,
+  tbl,
+  # contains populations by race
+  demographics_tbl,
   data_pre_func = function(x) { x },
   demographics_pre_func = function(x) { x }
 ) {
-  d <- data_pre_func(opp_load_data(state, city))
-  if (!is.na(d) && nrow(d) != 0) {
-    dem <- demographics_pre_func(opp_demographics(state, city))
+  tbl <- data_pre_func(tbl)
+  if (!is.na(tbl) && nrow(tbl) != 0) {
+    demographics_tbl <- demographics_pre_func(demographics_tbl)
     mutate(
-      d,
+      tbl,
       year = year(date)
     ) %>%
     rename(
@@ -57,7 +48,7 @@ rate <- function(
       count = n()
     ) %>%
     full_join(
-      dem
+      demographics_tbl
     ) %>%
     mutate(
       rate = count / total
@@ -71,7 +62,8 @@ rate <- function(
       year,
       race,
       rate
-    )
+    ) %>%
+    na.omit()
   } else {
     NA
   }

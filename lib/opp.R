@@ -55,7 +55,7 @@ opp_eligiblity <- function() {
   ) %>%
   summarize(
     n = n(),
-    universe = n_distinct(outcome) >= 3,  # arrest, citation, warning
+    universe = n_distinct(outcome) == 3,  # arrest, citation, warning
     arrest_pct = sum(outcome == "arrest") / n,
     citation_pct = sum(outcome == "citation") / n,
     warning_pct = sum(outcome == "warning") / n,
