@@ -50,12 +50,21 @@ load_raw <- function(raw_data_dir, n_max) {
       # NOTE: 2007 actually kept more data about registration; we drop it here
       # because all other years track only in-state or out-of-state.
       `State of Residence` = if_else(toupper(DReg) == "MD", "i", "o"),
-      `State of Registration` = if_else(toupper(VReg) == "MD", "i", "o")
+      `State of Registration` = if_else(toupper(VReg) == "MD", "i", "o"),
+      # NOTE: 2007 data do not have dates; mark stops at first of year.
+      `Date of Stop` = "2007/01/01"
     ) %>%
     select(-StopG, -StopE, -Consent, -Citation, -SERO, -Warning, -DReg, -VReg)
-  d09_11 <- load_regex(
+
+  # 2009-12 data are similar except for some slight variations in column names.
+  d09 <- load_single_file(
     raw_data_dir,
-    '20(09|11)_master_traffic_stop_data_for_20.*_report.csv',
+    '2009_master_traffic_stop_data_for_2010_report.csv',
+    n_max = n_max
+  )
+  d11 <- load_single_file(
+    raw_data_dir,
+    '2011_master_traffic_stop_data_for_2012_report.csv',
     n_max = n_max
   )
   d12 <- load_single_file(
@@ -63,34 +72,40 @@ load_raw <- function(raw_data_dir, n_max) {
     '2012_master_traffic_stop_data_for_2013_report.csv',
     n_max = n_max
   )
-  d09_11_12 <- bind_rows(
-    d09_11$data %>%
-      rename(
-        `Stop Reason` = Stopreason,
-        `Arrest Reason` = Arrestreason,
-        `Search Reason` = Searchreason
-      ),
-    d12$data %>% select(-X11)
-  )
-  d09_11_12_13 <- bind_rows(d09_11_12, d13) %>%
-    mutate(
-      # NOTE: Convert these to a character for row-binding; we'll turn the
-      # them back into logical later in processing with the other years' data.
-      contra_prop = if_else(str_detect(Disposition, "both|prop"), "T", "F"),
-      contra_narc = if_else(str_detect(Disposition, "both|narc"), "T", "F")
-    )
 
-  bundle_raw(
-    bind_rows(d09_11_12_13, d07),
-    c(
-      d13_1$loading_problems,
-      d13_23467$loading_problems,
-      d13_5$loading_problems,
-      d07_1$loading_problems,
-      d09_11$loading_problems,
-      d12$loading_problems
-    )
-  )
+  bind_rows(
+    # NOTE: 2009-11 data do not have dates; mark stops at first of year.
+    d09$data %>% mutate(`Date of Stop` = "2009/01/01"),
+    d11$data %>% mutate(`Date of Stop` = "2011/01/01")
+  ) %>%
+  rename(
+    `Stop Reason` = Stopreason,
+    `Arrest Reason` = Arrestreason,
+    `Search Reason` = Searchreason
+  ) %>%
+  bind_rows(
+    # NOTE: 2012 data do not have dates; mark stops at first of year.
+    d12$data %>% mutate(`Date of Stop` = "2012/01/01") %>% select(-X11),
+    d13
+  ) %>%
+  mutate(
+    # NOTE: Convert these to a character for row-binding; we'll turn the
+    # them back into logical later in processing with the other years' data.
+    contra_prop = if_else(str_detect(Disposition, "both|prop"), "T", "F"),
+    contra_narc = if_else(str_detect(Disposition, "both|narc"), "T", "F")
+  ) %>%
+  bind_rows(
+    d07
+  ) %>%
+  bundle_raw(c(
+    d13_1$loading_problems,
+    d13_23467$loading_problems,
+    d13_5$loading_problems,
+    d07_1$loading_problems,
+    d09$loading_problems,
+    d11$loading_problems,
+    d12$loading_problems
+  ))
 }
 
 
