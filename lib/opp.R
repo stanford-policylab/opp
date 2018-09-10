@@ -47,6 +47,24 @@ opp_load_all_data <- function() {
 }
 
 
+opp_eligiblity <- function() {
+  group_by(
+    opp_load_all_data(),
+    state,
+    city
+  ) %>%
+  summarize(
+    universe = n_distinct(outcome) >= 3,  # arrest, citation, warning
+    frisk = sum(!is.na(frisk_performed)) / n(),
+    search = sum(!is.na(search_conducted)) / n(),
+    contraband = sum(!is.na(contraband_found)) / n(),
+    search_and_contraband =
+      sum(!is.na(search_conducted) & !is.na(contraband_found)) / n(),
+    speed = sum(!is.na(speed)) / n()
+  )
+}
+
+
 opp_everything <- function() {
   paths <- opp_processor_paths()
   tbl <- tibble(
