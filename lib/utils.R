@@ -885,7 +885,8 @@ par_pmap <- function(
 
 # Disaggregate `df` by creating `n` repetitions of the input rows.
 # Pass `n` as the variable indicating how many times a row should be
-# repeated, and pass any variables that should appear in the output table.
+# repeated, and pass any variables that should appear in the output table. When
+# no columns are given explicitly, all columns will be included in the output.
 #
 # Example:
 #
@@ -922,13 +923,25 @@ disaggregate <- function(df, n, ...) {
     data=df
   )
 
-  # Compute repetitions for columns passed as dots.
-  # TODO(jnu): assume "all rows" if no dots are passed.
-  rest <- quos(...)
+  # Gather all the column vectors we want to include in the output. When no
+  # columns are specified (i.e., no dots are passed), include all columns.
+  vecs <- c()
+  if (missing(...)) {
+    for (name in names(df)) {
+      vecs[[name]] <- df[[name]]
+    }
+  } else {
+    dots <- quos(...)
+    for (name in names(dots)) {
+      vecs[[name]] <- eval_tidy(dots[[name]], data=df)
+    }
+  }
+
+  # Compute repetitions for columns.
   cols <- c()
-  for (colname in names(rest)) {
-    col <- rest[[colname]]
-    cols[[colname]] <- rep(eval_tidy(col, data=df), n_clean)
+  for (colname in names(vecs)) {
+    vec <- vecs[[colname]]
+    cols[[colname]] <- rep(vec, n_clean)
   }
 
   # Construct table using repeated columns.
