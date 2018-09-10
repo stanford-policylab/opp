@@ -22,10 +22,10 @@ load_raw <- function(raw_data_dir, n_max) {
     'number_of_aerial_enforcement_arrests_white',
     'number_of_search_arrests_white',
     'number_of_search_stops_white',
-    'number_of_traffic_arrests_african_american',
-    'number_of_aerial_enforcement_arrests_african_american',
-    'number_of_search_arrests_african_american',
-    'number_of_search_stops_african_american',
+    'number_of_traffic_arrests_black',
+    'number_of_aerial_enforcement_arrests_black',
+    'number_of_search_arrests_black',
+    'number_of_search_stops_black',
     'number_of_traffic_arrests_hispanic',
     'number_of_aerial_enforcement_arrests_hispanic',
     'number_of_search_arrests_hispanic',
@@ -94,31 +94,27 @@ load_raw <- function(raw_data_dir, n_max) {
     # total number of stops in a week. Note also that the granular events
     # in the data are mutually exclusive, i.e. number_of_search_arrests can be
     # non-zero while number_of_search_stops is zero.
+    # NOTE: Treat NA as 0 for search counts; they'll be dropped in the
+    # disaggregate step if they are 0.
     mutate(
-      stops = as.integer(number_of_traffic_arrests)
-        + as.integer(number_of_search_arrests)
-        + as.integer(number_of_search_stops),
-      searches = as.integer(number_of_search_arrests)
-        + as.integer(number_of_search_stops)
+      stops = coalesce(as.integer(number_of_traffic_arrests), 0L)
+        + coalesce(as.integer(number_of_search_arrests), 0L)
+        + coalesce(as.integer(number_of_search_stops), 0L),
+      searches = coalesce(as.integer(number_of_search_arrests), 0L)
+        + coalesce(as.integer(number_of_search_stops), 0L)
     ) %>%
     left_join(d_juris$data)
 
   # NOTE: De-aggregate the data, so that one row represents one stop. Create
   # one row for each search conducted in a week, and another row for each stop
   # conducted without a search.
-  n = nrow(d_agg)
-  rbind(
-    # For each row index, repeat that row the number of times given by the
-    # stop/search fields. Use `coalesce` to guard against NA values, which
-    # `rep` does not handle. Is there a more readable way to do this?
-    mutate(
-      d_agg[rep(1:n, coalesce(d_agg$searches, 0L)),],
-      search_conducted = TRUE
-    ),
-    mutate(
-      d_agg[rep(1:n, coalesce(d_agg$stops - d_agg$searches, 0L)),],
-      search_conducted = FALSE
-    )
+  bind_rows(
+    disaggregate(d_agg, searches) %>% mutate(search_conducted = TRUE),
+    disaggregate(d_agg, stops - searches) %>% mutate(search_conducted = FALSE)
+  ) %>%
+  select(
+    -searches,
+    -stops
   ) %>%
   bundle_raw(c(d$loading_problems, d_juris$loading_problems))
 }
@@ -138,7 +134,7 @@ clean <- function(d, helpers) {
     "U" = "other/unknown",
     # Subject race column keys
     "white" = "white",
-    "african_american" = "black",
+    "black" = "black",
     "hispanic" = "hispanic",
     "asian" = "asian/pacific islander",
     "indian" = "other/unknown",
