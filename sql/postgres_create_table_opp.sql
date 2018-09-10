@@ -17,7 +17,7 @@ create type stop_type as enum (
 );
 
 create type outcome as enum (
-  'warnings',
+  'warning',
   'citation',
   'summons',
   'arrest'
