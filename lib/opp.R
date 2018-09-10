@@ -54,13 +54,17 @@ opp_eligiblity <- function() {
     city
   ) %>%
   summarize(
+    n = n(),
     universe = n_distinct(outcome) >= 3,  # arrest, citation, warning
-    frisk = sum(!is.na(frisk_performed)) / n(),
-    search = sum(!is.na(search_conducted)) / n(),
-    contraband = sum(!is.na(contraband_found)) / n(),
+    arrest_pct = sum(outcome == "arrest") / n,
+    citation_pct = sum(outcome == "citation") / n,
+    warning_pct = sum(outcome == "warning") / n,
+    frisk = sum(!is.na(frisk_performed)) / n,
+    search = sum(!is.na(search_conducted)) / n,
+    contraband = sum(!is.na(contraband_found)) / n,
     search_and_contraband =
-      sum(!is.na(search_conducted) & !is.na(contraband_found)) / n(),
-    speed = sum(!is.na(speed)) / n()
+      sum(!is.na(search_conducted) & !is.na(contraband_found)) / n,
+    speed = sum(!is.na(speed)) / n
   )
 }
 

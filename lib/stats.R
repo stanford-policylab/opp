@@ -1,5 +1,6 @@
 source('opp.R')
 
+
 calculate_stats <- function(state, city) {
   list(
     stop = stop_rate(state, city),
@@ -30,6 +31,7 @@ fltr <- function(colname) {
     }
   }
 }
+
 
 rate <- function(
   state,
