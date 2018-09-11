@@ -157,6 +157,33 @@ clean <- function(d, helpers) {
     "Vehicle" = "property"
    )
 
+  tr_race <- c(
+    "w" = "white",
+    "b" = "black",
+    "a" = "asian/pacific islander",
+    "h" = "hispanic",
+    "o" = "other/unknown",
+    "u" = "other/unknown",
+    "asian" = "asian/pacific islander",
+    "black" = "black",
+    "hispanic" = "hispanic",
+    "native american" = "other/unknown",
+    "other" = "other/unknown",
+    "unknown" = "other/unknown",
+    "white" = "white",
+    "am. indian" = "other/unknown",
+    "american indian/alaskan" = "other/unknown",
+    "asian pacific" = "asian/pacific islander",
+    "asian/pac. is." = "asian/pacific islander",
+    "black/african american" = "black",
+    "blk" = "black",
+    "hispa" = "hispanic",
+    "hispanic/latino" = "hispanic",
+    "indian" = "other/unknown",
+    "indian/alaskin" = "other/unknown",
+    "other/unknown" = "other/unknown"
+  )
+
   d$data %>%
     rename(
       location = Location,
@@ -181,7 +208,8 @@ clean <- function(d, helpers) {
       dob_raw = str_sub(DOB, 0, 10),
       subject_dob = parse_date(dob_raw, "%Y/%m/%d"),
       subject_age = age_at_date(subject_dob, date),
-      subject_sex = tr_sex[Gender],
+      subject_sex = fast_tr(Gender, tr_sex),
+      subject_race = fast_tr(Race, tr_race),
       # NOTE: Source data only include vehicle stops.
       type = "vehicular",
       # NOTE: `Arrest Made` column isn't complete, so supplement with "arrest"
