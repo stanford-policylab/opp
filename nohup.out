@@ -1,0 +1,28 @@
+[1] "loading 2013_master_traffic_stop_data_for_2014_report_sheet_1.csv"
+[1] "loading 2013_master_traffic_stop_data_for_2014_report_sheet_2.csv"
+[1] "loading 2013_master_traffic_stop_data_for_2014_report_sheet_3.csv"
+[1] "loading 2013_master_traffic_stop_data_for_2014_report_sheet_4.csv"
+[1] "loading 2013_master_traffic_stop_data_for_2014_report_sheet_6.csv"
+[1] "loading 2013_master_traffic_stop_data_for_2014_report_sheet_7.csv"
+[1] "loading 2013_master_traffic_stop_data_for_2014_report_sheet_5.csv"
+[1] "loading 2007_master_traffic_stop_data_for_2008_report.csv"
+[1] "loading 2009_master_traffic_stop_data_for_2010_report.csv"
+[1] "loading 2011_master_traffic_stop_data_for_2012_report.csv"
+[1] "loading 2012_master_traffic_stop_data_for_2013_report.csv"
+Warning: 66 parsing failures.
+row # A tibble: 5 x 4 col       row   col expected        actual expected     <int> <int> <chr>           <chr>  actual 1 2358297    NA time like %H:%M :      row 2 2358671    NA time like %H:%M :      col 3 2548652    NA time like %H:%M :      expected 4 2548655    NA time like %H:%M :      actual 5 2548656    NA time like %H:%M :     
+... ................. ... ...................................... ........ ...................................... ...... ...................................... ... ...................................... ... ...................................... ........ ...................................... ...... ......................................
+See problems(...) for more details.
+
+Warning: 93 parsing failures.
+row # A tibble: 5 x 4 col       row   col expected           actual    expected     <int> <int> <chr>              <chr>     actual 1 4080584    NA date like %Y/%m/%d 195/06/15 row 2 4082458    NA date like %Y/%m/%d 191/07/12 col 3 4083816    NA date like %Y/%m/%d 193/10/05 expected 4 4086632    NA date like %Y/%m/%d 996/04/12 actual 5 4088438    NA date like %Y/%m/%d 197/09/16
+... ................. ... ............................................ ........ ............................................ ...... ............................................ ... ............................................ ... ............................................ ........ ............................................ ...... ............................................
+See problems(...) for more details.
+
+[1] "enforcing standard types..."
+[1] "correcting predicated columns..."
+[1] "sanitizing..."
+[1] "Finished!"
+Warning messages:
+1: Missing column names filled in: 'X8' [8] 
+2: Missing column names filled in: 'X11' [11] 
