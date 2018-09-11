@@ -56,9 +56,9 @@ opp_eligiblity <- function() {
   summarize(
     n = n(),
     universe = n_distinct(outcome) == 3,  # arrest, citation, warning
-    arrest_pct = sum(outcome == "arrest") / n,
-    citation_pct = sum(outcome == "citation") / n,
-    warning_pct = sum(outcome == "warning") / n,
+    arrest_pct = sum(outcome == "arrest", na.rm = T) / n,
+    citation_pct = sum(outcome == "citation", na.rm = T) / n,
+    warning_pct = sum(outcome == "warning", na.rm = T) / n,
     frisk = sum(!is.na(frisk_performed)) / n,
     search = sum(!is.na(search_conducted)) / n,
     contraband = sum(!is.na(contraband_found)) / n,

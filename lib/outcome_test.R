@@ -2,41 +2,62 @@ source('opp.R')
 
 
 outcome_test <- function(
-  state,
-  city,
-  race_col = "subject_race",
-  search_col = "search_conducted",
-  contraband_col = "contraband_found",
-  control_for = c()
+  tbl,
+  ...,
+  demographic_col = subject_race,
+  action_col = search_conducted,
+  outcome_col = contraband_found
 ) {
-  d <- opp_load_data(state, city)
+
+  demographic_colq <- enquo(demographic_col)
+  action_colq <- enquo(action_col)
+  outcome_colq <- enquo(outcome_col)
+
+  n <- nrow(tbl)
+  tbl <- select(
+    tbl,
+    !!demographic_colq,
+    !!action_colq,
+    !!outcome_colq,
+    ...
+  ) %>%
+  drop_na()
+
+  null_rate <- (n - nrow(tbl)) / n
   metadata <- list()
-
-  outcome_by <- c(race_col, control_for)
-  required_cols <- c(outcome_by, search_col, contraband_col)
-  missing_cols <- setdiff(required_cols, colnames(d))
-  if (length(missing_cols) > 0) {
-    warning(str_c("missing columns: ", str_c(missing_cols, collapse = ", ")))
-    return(NA)
-  }
-
-  n <- nrow(d)
-  d <- select_(d, .dots=required_cols) %>% drop_na()
-  null_rate <- (n - nrow(d)) / n
   metadata['null_rate'] <- null_rate
   if (null_rate > 0) {
-    warning("at least one column null rate: ", pretty_percent(null_rate))
+    warning(
+      pretty_percent(null_rate),
+      " of the data was null and removed"
+    )
   }
 
+  demographic_colname <- quo_name(demographic_colq)
+  action_colname <- quo_name(action_colq)
+  outcome_colname <- quo_name(outcome_colq)
+  # NOTE: any other columns passed in are assumed to be additional variables
+  # to control for variation; i.e. precinct, crime_rate, etc..
+  control_colnames <- setdiff(
+    colnames(tbl),
+    c(demographic_colname, action_colname, outcome_colname)
+  )
+  print(colnames(tbl))
+  print(control_colnames)
+
   results <- filter(
-    d,
-    search_conducted
+    tbl,
+    !!action_colq
   ) %>%
   group_by_(
-    .dots = outcome_by
+    .dots = c(demographic_colname, control_colnames)
   ) %>%
   summarize(
-    contraband_found_rate = sum(contraband_found) / n()
+    outcome__ = sum(!!outcome_colq) / n()
+  ) %>%
+  rename_with_str(
+    "outcome__",
+    str_c(outcome_colname, " where ", action_colname)
   )
 
   list(
