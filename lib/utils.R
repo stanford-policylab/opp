@@ -283,7 +283,7 @@ transpose_tbl <- function(tbl) {
 
 
 pretty_percent <- function(v) {
-  paste0(formatC(100 * v, format = "f", digits = 2), "%")
+  str_c(formatC(100 * v, format = "f", digits = 2), "%")
 }
 
 
@@ -664,11 +664,6 @@ seconds_to_hms <- function(v) {
   m = v %/% 60
   s = v %% 60
   sprintf("%02d:%02d:%02d", h, m, s)
-}
-
-
-rename_with_str <- function(tbl, from, to) {
-  rename_(tbl, .dots=setNames(names(tbl), gsub(from, to, names(tbl))))
 }
 
 

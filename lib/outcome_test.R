@@ -1,4 +1,4 @@
-source('opp.R')
+library(tidyverse)
 
 
 #' Outcome Test
@@ -17,7 +17,7 @@ source('opp.R')
 #'
 #' @examples
 #' outcome_test(tbl, precinct)
-#' outcome_test(tbl, precinct, subject_race, search_conducted, contraband_found)
+#' outcome_test(tbl, precinct, subject_race, frisk_performed)
 #' outcome_test(
 #'   tbl,
 #'   demographic_col = subject_race,
@@ -51,7 +51,7 @@ outcome_test <- function(
   metadata['null_rate'] <- null_rate
   if (null_rate > 0) {
     warning(
-      pretty_percent(null_rate),
+      str_c(formatC(100 * null_rate, format = "f", digits = 2), "%"),
       " of the data was null and removed"
     )
   }
@@ -65,8 +65,6 @@ outcome_test <- function(
     colnames(tbl),
     c(demographic_colname, action_colname, outcome_colname)
   )
-  print(colnames(tbl))
-  print(control_colnames)
 
   results <- filter(
     tbl,
@@ -76,11 +74,8 @@ outcome_test <- function(
     .dots = c(demographic_colname, control_colnames)
   ) %>%
   summarize(
-    outcome__ = sum(!!outcome_colq) / n()
-  ) %>%
-  rename_with_str(
-    "outcome__",
-    str_c(outcome_colname, " where ", action_colname)
+    !!str_c(outcome_colname, " where ", action_colname)
+      := sum(!!outcome_colq) / n()
   )
 
   list(

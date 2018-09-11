@@ -19,9 +19,12 @@ load_raw <- function(raw_data_dir, n_max) {
     names(join_on) <- c(join_col)
     left_join(
       tbl,
-      r(fname) %>%
-        select(LK_Code, LK_Description) %>%
-        rename_with_str("LK_Description", name),
+      select(
+        r(fname),
+        LK_Code,
+        LK_Description
+      ) %>%
+      rename(!!name := LK_Description),
       by = join_on
     )
   }
@@ -39,13 +42,11 @@ load_raw <- function(raw_data_dir, n_max) {
     by = c("HA_ARREST_KEY" = "AW_ARREST_KEY")
   ) %>%
   left_join(
-    violation_codes %>%
-      rename_with_str("LK_description", "citation_violation"),
+    rename(violation_codes, !!"citation_violation" := LK_description),
     by = c("AD_VIOLATION_CODE" = "LK_Code") 
   ) %>%
   left_join(
-    violation_codes %>%
-      rename_with_str("LK_description", "warning_violation"),
+    rename(violation_codes, !!"warning_violation" := LK_description),
     by = c("AW_VIOLATION_CODE" = "LK_Code") 
   ) %>%
   mutate(
