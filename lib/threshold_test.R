@@ -83,7 +83,7 @@ threshold_test <- function(
 
 
 stan_threshold_test <- function(
-  tbl,
+  args,
   n_iter = 5000,
   n_cores = parallel::detectCores() / 2
 ) {
