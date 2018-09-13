@@ -11,13 +11,14 @@ data {
   int<lower=0> outcomes[n_samples];
 }
 
+
 parameters {
 
   // standard deviation for threshold
   real<lower=0> sigma_threshold;
 
   vector[n_demographic_divisions] threshold_demographic_division;
-  // TODO(danj): wat is this?
+  // TODO(danj): wat is i?
   vector[n_samples] threshold_i_raw;
 
   vector[n_suspect_races] phi_demographic_division;
@@ -30,6 +31,7 @@ parameters {
   // TODO(danj): wat is this?
   real mu_delta;
 }
+
 
 transformed parameters {
   vector[n_geographic_divisions] phi_geographic_division;
@@ -72,7 +74,27 @@ transformed parameters {
   }
 }
 
+
 model {
   // draw threshold parameters
   sigma_threshold ~ normal(0, 1);
+
+  // draw demographic parameters
+  // each is centered at its own mu, and we allow for demographic heterogeneity
+  mu_phi ~ normal(0, 1);
+  mu_delta ~ normal(0, 1);
+  
+  phi_demographic_division ~ normal(mu_phi, 0.1);
+  delta_demographic_division ~ normal(mu_delta, 0.1);
+  threshold_demographic_division ~ normal(0, 1);
+
+  // draw geographic division parameters (for un-pinned divisions)
+  phi_geographic_division_raw ~ normal(0, 0.1);
+  delta_geographic_division_raw ~ normal(0, 0.1);
+
+  // thresholds
+  threshold_i_raw ~ normal(0, 1);
+
+  actions ~ binomial(samples, action_rate);
+  outcomes ~ binomial(actions, outcome_rate);
 }
