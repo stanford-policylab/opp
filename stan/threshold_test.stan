@@ -3,8 +3,8 @@
   int<lower=1> N_SUSPECT_RACES;
   int<lower=1> N_GEOGRAPHIC_UNITS;
 
-  int<lower=1,upper=N_SUSPECT_RACES> race[N_SUSPECT_RACES];
-  int<lower=1,upper=N_GEOGRAPHIC_UNITS> geographic_unit[N_GEOGRAPHIC_UNITS];
+  int<lower=1,upper=N_SUSPECT_RACES> race[N_OBSERVATIONS];
+  int<lower=1,upper=N_GEOGRAPHIC_UNITS> geographic_unit[N_OBSERVATIONS];
 
   int<lower=1> stops[N_OBSERVATIONS];
   int<lower=0> searches[N_OBSERVATIONS];
