@@ -52,10 +52,10 @@ threshold_test <- function(
   n <- nrow(tbl)
   tbl <- select(
     tbl,
+    !!geographic_colq,
     !!demographic_colq,
     !!action_colq,
     !!outcome_colq,
-    ...
   ) %>%
   drop_na()
 
@@ -69,14 +69,26 @@ threshold_test <- function(
     )
   }
 
-  demographic_colname <- quo_name(demographic_colq)
-  action_colname <- quo_name(action_colq)
-  outcome_colname <- quo_name(outcome_colq)
-  # NOTE: any other columns passed in are assumed to be additional variables
-  # to control for variation; i.e. precinct, crime_rate, etc..
-  control_colnames <- setdiff(
-    colnames(tbl),
-    c(demographic_colname, action_colname, outcome_colname)
+  summary <- group_by(
+    tbl,
+    !!geographic_colq,
+    !!demographic_colq
+  ) %>%
+  mutate(
+    as.factor(!!geographic_colq),
+    as.factor(!!demographic_colq)
+  ) %>%
+  summarize(
+    n = n(),
+    n_action = sum(!!action_colq),
+    n_outcome = sum(!!outcome_colq)
+  )
+
+  args <- list(
+    n_samples = nrow(summary),
+    n_geographic_divisions = n_distinct(pull(summary, !!geographic_colq)),
+    n_demographic_divisions = n_distinct(pull(summary, !!demographic_colq)),
+    geographic_division = pull(!!)
   )
 
   stan_threshold_test(tbl, n_iter, n_cores)
