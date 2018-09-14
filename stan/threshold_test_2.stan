@@ -3,8 +3,8 @@ data {
   int<lower=1> n_demographic_divisions;
   int<lower=1> n_geographic_divisions;
 
-  int<lower=1, upper=n_demographic_divisions> demographic_division[n_samples];
-  int<lower=1, upper=n_geographic_divisions> geographic_division[n_samples];
+  int<lower=1, upper=n_demographic_divisions> demographic_division[n_groups];
+  int<lower=1, upper=n_geographic_divisions> geographic_division[n_groups];
 
   int<lower=1> group[n_groups];
   int<lower=0> action[n_groups];
