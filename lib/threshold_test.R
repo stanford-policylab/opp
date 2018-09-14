@@ -26,17 +26,17 @@ library(tidyverse)
 #' @return list with \code{results} and \code{metadata} keys
 #'
 #' @examples
-#' threshold_test(tbl, precinct)
-#' threshold_test(tbl, precinct, subject_race, frisk_performed)
+#' threshold_test(tbl)
 #' threshold_test(
 #'   tbl,
+#'   geographic_col = precinct,
 #'   demographic_col = subject_race,
 #'   action_col = search_conducted,
 #'   outcome_col = contraband_found
 #' )
 threshold_test <- function(
   tbl,
-  geographic_col,
+  geographic_col = precinct,
   demographic_col = subject_race,
   action_col = search_conducted,
   outcome_col = contraband_found,
@@ -84,19 +84,23 @@ threshold_test <- function(
     n_outcome = sum(!!outcome_colq)
   )
 
-  args <- list(
-    n_samples = nrow(summary),
+  stan_data <- list(
+    n_groups = nrow(summary),
     n_geographic_divisions = n_distinct(pull(summary, !!geographic_colq)),
     n_demographic_divisions = n_distinct(pull(summary, !!demographic_colq)),
-    geographic_division = pull(!!)
+    geographic_division = pull(summary, !!geographic_colq),
+    demographic_division = pull(summary, !!demographic_colq),
+    group = pull(summary, !!n)
+    action = pull(summary, !!n_action)
+    outcome = pull(summary, !!n_outcome)
   )
 
-  stan_threshold_test(tbl, n_iter, n_cores)
+  stan_threshold_test(stan_data, n_iter, n_cores)
 }
 
 
 stan_threshold_test <- function(
-  tbl,
+  data,
   n_iter = 5000,
   n_cores = parallel::detectCores() / 2
 ) {
@@ -113,13 +117,13 @@ stan_threshold_test <- function(
 
   rstan::sampling(
     stan_model(here::here("stan", "threshold_test.stan")),
-    tbl,
+    data,
     chains = n_markov_chains,
     control = list(
       adapt_delta = 1 - min_acceptable_divergence_rate,
       adapt_engaged = allow_adaptive_step_size,
       max_treedepth = nuts_max_tree_depth
-    )
+    ),
     cores = n_cores,
     init = initialization_method,
     iter = n_iter,

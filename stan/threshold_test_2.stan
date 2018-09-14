@@ -1,25 +1,24 @@
 data {
-  int<lower=1> n_samples;
+  int<lower=1> n_groups;
   int<lower=1> n_demographic_divisions;
   int<lower=1> n_geographic_divisions;
 
   int<lower=1, upper=R> demographic_division[n_demographic_divisions];
   int<lower=1, upper=D> geographic_division[n_geographic_divisions];
 
-  int<lower=1> samples[n_samples];
-  int<lower=0> actions[n_samples];
-  int<lower=0> outcomes[n_samples];
+  int<lower=1> group[n_groups];
+  int<lower=0> action[n_groups];
+  int<lower=0> outcome[n_groups];
 }
 
 
 parameters {
-
   // standard deviation for threshold
   real<lower=0> sigma_threshold;
 
   vector[n_demographic_divisions] threshold_demographic_division;
   // TODO(danj): wat is i?
-  vector[n_samples] threshold_i_raw;
+  vector[n_groups] threshold_i_raw;
 
   vector[n_suspect_races] phi_demographic_division;
   vector[n_geographic_divisions - 1] phi_geographic_division;
@@ -36,12 +35,12 @@ parameters {
 transformed parameters {
   vector[n_geographic_divisions] phi_geographic_division;
   vector[n_geographic_divisions] delta_geographic_division;
-  vector[n_samples] phi;
-  vector[n_samples] delta;
+  vector[n_groups] phi;
+  vector[n_groups] delta;
   // TODO(danj): wat is this?
-  vector[n_samples] threshold_i;
-  vector<lower=0, upper=1>[n_samples] action_rate;
-  vector<lower=0, upper=1>[n_samples] outcome_rate;
+  vector[n_groups] threshold_i;
+  vector<lower=0, upper=1>[n_groups] action_rate;
+  vector<lower=0, upper=1>[n_groups] outcome_rate;
   real successful_action_rate;
   real unsuccessful_action_rate;
 
@@ -55,7 +54,7 @@ transformed parameters {
   threshold_i = threshold_demographic_division[demographic_division]
     + threshold_i_raw + sigma_threshold;
 
-  for (i in 1:n_samples) {
+  for (i in 1:n_groups) {
     // phi is the proportion of demographic_division x who evidence behavior
     // indicated by the outcome, i.e. whites carrying a weapon
     phi[i] = inv_logit(phi_demographic_division[demographic_division[i]]
@@ -95,6 +94,6 @@ model {
   // thresholds
   threshold_i_raw ~ normal(0, 1);
 
-  actions ~ binomial(samples, action_rate);
-  outcomes ~ binomial(actions, outcome_rate);
+  action ~ binomial(group, action_rate);
+  outcome ~ binomial(action, outcome_rate);
 }
