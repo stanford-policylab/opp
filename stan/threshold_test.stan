@@ -3,8 +3,8 @@
   int<lower=1> N_SUSPECT_RACES;
   int<lower=1> N_GEOGRAPHIC_UNITS;
 
-  int<lower=1,upper=R> race[N_SUSPECT_RACES];
-  int<lower=1,upper=D> geographic_unit[N_GEOGRAPHIC_UNITS];
+  int<lower=1,upper=N_SUSPECT_RACES> race[N_SUSPECT_RACES];
+  int<lower=1,upper=N_GEOGRAPHIC_UNITS> geographic_unit[N_GEOGRAPHIC_UNITS];
 
   int<lower=1> stops[N_OBSERVATIONS];
   int<lower=0> searches[N_OBSERVATIONS];
@@ -40,10 +40,10 @@ transformed parameters {
   real successful_search_rate;
   real unsuccessful_search_rate;
 
-  phi_d[1] = 0;
-  phi_d[2:N_GEOGRAPHIC_UNITS] = phi_geo_raw;
-  delta_d[1] = 0;
-  delta_d[2:N_GEOGRAPHIC_UNITS] = delta_geo_raw;
+  phi_geo[1] = 0;
+  phi_geo[2:N_GEOGRAPHIC_UNITS] = phi_geo_raw;
+  delta_geo[1] = 0;
+  delta_geo[2:N_GEOGRAPHIC_UNITS] = delta_geo_raw;
 
   t_i = t_race[race] + t_i_raw * sigma_t;
 
