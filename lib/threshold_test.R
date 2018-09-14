@@ -36,7 +36,7 @@ library(tidyverse)
 #' )
 threshold_test <- function(
   tbl,
-  ...
+  geographic_col,
   demographic_col = subject_race,
   action_col = search_conducted,
   outcome_col = contraband_found,
@@ -44,6 +44,7 @@ threshold_test <- function(
   n_cores = parallel::detectCores() / 2,
 ) {
 
+  geographic_colq <- enquo(geographic_col)
   demographic_colq <- enquo(demographic_col)
   action_colq <- enquo(action_col)
   outcome_colq <- enquo(outcome_col)
@@ -89,8 +90,7 @@ stan_threshold_test <- function(
 ) {
 
   # NOTE: defaults; may expose more of these in the future
-  adapt_engaged <- T
-  # TODO(danj): give this a more readable name
+  allow_adaptive_step_size <- T
   initialization_method <- "random"
   min_acceptable_divergence_rate <- 0.05
   n_iter_per_progress_update <- 50
@@ -105,7 +105,7 @@ stan_threshold_test <- function(
     chains = n_markov_chains,
     control = list(
       adapt_delta = 1 - min_acceptable_divergence_rate,
-      adapt_engaged = adapt_engaged,
+      adapt_engaged = allow_adaptive_step_size,
       max_treedepth = nuts_max_tree_depth
     )
     cores = n_cores,
