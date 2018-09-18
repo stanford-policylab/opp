@@ -119,8 +119,8 @@ threshold_test <- function(
     action_count = pull(summary, n_action),
     outcome_count = pull(summary, n_outcome)
   )
-  stan_data
-  # stan_threshold_test(stan_data, n_iter, n_cores)
+  
+  stan_threshold_test(stan_data, n_iter, n_cores)
 }
 
 stan_threshold_test <- function(
