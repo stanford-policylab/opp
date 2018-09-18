@@ -29,7 +29,7 @@ library(tidyverse)
 #' threshold_test(tbl)
 #' threshold_test(
 #'   tbl,
-#'   geographic_col = precinct,
+#'   precinct,
 #'   demographic_col = subject_race,
 #'   action_col = search_conducted,
 #'   outcome_col = contraband_found
@@ -63,7 +63,8 @@ threshold_test <- function(
   n_no_nas <- nrow(tbl)
   tbl <- filter(
     tbl,
-    # drop rows with true outcome but false action
+    # remove inconsistent data where an outcome was recorded but there
+    # was no action taken
     !(!!outcome_colq & !(!!action_colq))
   )
   
@@ -71,19 +72,19 @@ threshold_test <- function(
   
   null_rate <- (n - n_no_nas) / n
   metadata['null_rate'] <- null_rate
-  if (null_rate > 0) {
-    warning(
-      str_c(formatC(100 * null_rate, format = "f", digits = 2), "%"),
-      " of the data was null and removed"
+  if (null_rate > 0) { 
+    issue_rate_warning(
+      null_rate,
+      "was null and removed"
     )
   }
   
   outcome_without_action_rate <- (n_no_nas - nrow(tbl)) / n
   metadata['outcome_without_action_rate'] <- outcome_without_action_rate
   if (outcome_without_action_rate > 0) {
-    warning(
-      str_c(formatC(100 * outcome_without_action_rate, format = "f", digits = 2), "%"),
-      " of the data removed due to true outcome but false action"
+    issue_rate_warning(
+      outcome_without_action_rate,
+      "was removed due to inconsistency: outcome was recorded but no action was taken"
     )
   }
   
@@ -97,27 +98,30 @@ threshold_test <- function(
     n_action = sum(!!action_colq),
     n_outcome = sum(!!outcome_colq)
   ) %>% 
-  ungroup() %>% 
-  unite(controls, !!!control_colqs) %>% 
+  ungroup(
+  ) %>% 
+  unite(
+    controls,
+    !!!control_colqs
+  ) %>% 
   mutate_at(
     .vars = c(demographic_colname, "controls"),
-    .funs = as.factor
+    .funs = ~as.integer(as.factor(.x))
   )
 
   stan_data <- list(
     n_groups = nrow(summary),
     n_control_divisions = n_distinct(pull(summary, controls)),
     n_demographic_divisions = n_distinct(pull(summary, !!demographic_colq)),
-    control_division = as.integer(pull(summary, controls)),
-    demographic_division = as.integer(pull(summary, !!demographic_colq)),
+    control_division = pull(summary, controls),
+    demographic_division = pull(summary, !!demographic_colq),
     group_count = pull(summary, n),
     action_count = pull(summary, n_action),
     outcome_count = pull(summary, n_outcome)
   )
-
-  stan_threshold_test(stan_data, n_iter, n_cores)
+  stan_data
+  # stan_threshold_test(stan_data, n_iter, n_cores)
 }
-
 
 stan_threshold_test <- function(
   data,
@@ -149,5 +153,17 @@ stan_threshold_test <- function(
     iter = n_iter,
     refresh = n_iter_per_progress_update,
     warmup = n_iter_warmup
+  )
+}
+
+# Creates a warning indicating that some percent of the data had some property
+issue_rate_warning <- function(rate, message) {
+  warning(
+    str_c(
+      formatC(100 * rate, format = "f", digits = 2), 
+      "% of the data ",
+      message
+    ),
+    call. = FALSE
   )
 }
