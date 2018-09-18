@@ -36,7 +36,7 @@ library(tidyverse)
 #' )
 threshold_test <- function(
   tbl,
-  geographic_col = precinct,
+  ...,
   demographic_col = subject_race,
   action_col = search_conducted,
   outcome_col = contraband_found,
@@ -44,9 +44,8 @@ threshold_test <- function(
   n_cores = min(5, parallel::detectCores() / 2)
 ) {
   
-  geographic_colq <- enquo(geographic_col)
+  control_colqs <- enquos(...)
   demographic_colq <- enquo(demographic_col)
-  geographic_colname <- quo_name(geographic_colq)
   demographic_colname <- quo_name(demographic_colq)
   action_colq <- enquo(action_col)
   outcome_colq <- enquo(outcome_col)
@@ -54,12 +53,13 @@ threshold_test <- function(
   n <- nrow(tbl)
   tbl <- select(
     tbl,
-    !!geographic_colq,
     !!demographic_colq,
     !!action_colq,
-    !!outcome_colq
+    !!outcome_colq,
+    !!!control_colqs
   ) %>%
-    drop_na() 
+  drop_na() 
+  
   n_no_nas <- nrow(tbl)
   tbl <- filter(
     tbl,
@@ -89,31 +89,32 @@ threshold_test <- function(
   
   summary <- group_by(
     tbl,
-    !!geographic_colq,
-    !!demographic_colq
+    !!demographic_colq,
+    !!!control_colqs
   ) %>%
-    summarize(
-      n = n(),
-      n_action = sum(!!action_colq),
-      n_outcome = sum(!!outcome_colq)
-    ) %>% 
-    ungroup() %>% 
-    mutate(
-      !!geographic_colname := as.factor(!!geographic_colq),
-      !!demographic_colname := as.factor(!!demographic_colq)
-    ) 
-  
+  summarize(
+    n = n(),
+    n_action = sum(!!action_colq),
+    n_outcome = sum(!!outcome_colq)
+  ) %>% 
+  ungroup() %>% 
+  unite(controls, !!!control_colqs) %>% 
+  mutate_at(
+    .vars = c(demographic_colname, "controls"),
+    .funs = as.factor
+  )
+
   stan_data <- list(
     n_groups = nrow(summary),
-    n_geographic_divisions = n_distinct(pull(summary, !!geographic_colq)),
+    n_control_divisions = n_distinct(pull(summary, controls)),
     n_demographic_divisions = n_distinct(pull(summary, !!demographic_colq)),
-    geographic_division = as.integer(pull(summary, !!geographic_colq)),
+    control_division = as.integer(pull(summary, controls)),
     demographic_division = as.integer(pull(summary, !!demographic_colq)),
     group_count = pull(summary, n),
     action_count = pull(summary, n_action),
     outcome_count = pull(summary, n_outcome)
   )
-  
+
   stan_threshold_test(stan_data, n_iter, n_cores)
 }
 
