@@ -26,40 +26,50 @@ library(tidyverse)
 #' @return list with \code{results} and \code{metadata} keys
 #'
 #' @examples
-#' threshold_test(tbl, precinct)
-#' threshold_test(tbl, precinct, subject_race, frisk_performed)
+#' threshold_test(tbl)
 #' threshold_test(
 #'   tbl,
+#'   geographic_col = precinct,
 #'   demographic_col = subject_race,
 #'   action_col = search_conducted,
 #'   outcome_col = contraband_found
 #' )
-threshold_test <- function(
+threshold_test_data <- function(
   tbl,
-  ...
+  geographic_col = precinct,
   demographic_col = subject_race,
   action_col = search_conducted,
   outcome_col = contraband_found,
   n_iter = 5000,
-  n_cores = parallel::detectCores() / 2,
+  n_cores = min(5, parallel::detectCores() / 2)
 ) {
-
+  
+  geographic_colq <- enquo(geographic_col)
   demographic_colq <- enquo(demographic_col)
+  geographic_colname <- quo_name(geographic_colq)
+  demographic_colname <- quo_name(demographic_colq)
   action_colq <- enquo(action_col)
   outcome_colq <- enquo(outcome_col)
-
+  
   n <- nrow(tbl)
   tbl <- select(
     tbl,
+    !!geographic_colq,
     !!demographic_colq,
     !!action_colq,
-    !!outcome_colq,
-    ...
+    !!outcome_colq
   ) %>%
-  drop_na()
-
-  null_rate <- (n - nrow(tbl)) / n
+    drop_na() 
+  n_no_nas <- nrow(tbl)
+  tbl <- filter(
+    tbl,
+    # drop rows with true outcome but false action
+    !(!!outcome_colq & !(!!action_colq))
+  )
+  
   metadata <- list()
+  
+  null_rate <- (n - n_no_nas) / n
   metadata['null_rate'] <- null_rate
   if (null_rate > 0) {
     warning(
@@ -67,47 +77,72 @@ threshold_test <- function(
       " of the data was null and removed"
     )
   }
-
-  demographic_colname <- quo_name(demographic_colq)
-  action_colname <- quo_name(action_colq)
-  outcome_colname <- quo_name(outcome_colq)
-  # NOTE: any other columns passed in are assumed to be additional variables
-  # to control for variation; i.e. precinct, crime_rate, etc..
-  control_colnames <- setdiff(
-    colnames(tbl),
-    c(demographic_colname, action_colname, outcome_colname)
+  
+  outcome_without_action_rate <- (n_no_nas - nrow(tbl)) / n
+  metadata['outcome_without_action_rate'] <- outcome_without_action_rate
+  if (outcome_without_action_rate > 0) {
+    warning(
+      str_c(formatC(100 * outcome_without_action_rate, format = "f", digits = 2), "%"),
+      " of the data removed due to true outcome but false action"
+    )
+  }
+  
+  summary <- group_by(
+    tbl,
+    !!geographic_colq,
+    !!demographic_colq
+  ) %>%
+    summarize(
+      n = n(),
+      n_action = sum(!!action_colq),
+      n_outcome = sum(!!outcome_colq)
+    ) %>% 
+    ungroup() %>% 
+    mutate(
+      !!geographic_colname := as.factor(!!geographic_colq),
+      !!demographic_colname := as.factor(!!demographic_colq)
+    ) 
+  
+  stan_data <- list(
+    n_groups = nrow(summary),
+    n_geographic_divisions = n_distinct(pull(summary, !!geographic_colq)),
+    n_demographic_divisions = n_distinct(pull(summary, !!demographic_colq)),
+    geographic_division = as.integer(pull(summary, !!geographic_colq)),
+    demographic_division = as.integer(pull(summary, !!demographic_colq)),
+    group_count = pull(summary, n),
+    action_count = pull(summary, n_action),
+    outcome_count = pull(summary, n_outcome)
   )
-
-  stan_threshold_test(tbl, n_iter, n_cores)
+  
+  stan_threshold_test(stan_data, n_iter, n_cores)
 }
 
 
 stan_threshold_test <- function(
-  args,
+  data,
   n_iter = 5000,
-  n_cores = parallel::detectCores() / 2
+  n_cores = min(5, parallel::detectCores() / 2)
 ) {
-
+  
   # NOTE: defaults; may expose more of these in the future
-  adapt_engaged <- T
-  # TODO(danj): give this a more readable name
+  allow_adaptive_step_size <- T
   initialization_method <- "random"
   min_acceptable_divergence_rate <- 0.05
   n_iter_per_progress_update <- 50
   n_iter_warmup <- min(2500, round(n_iter / 2))
-  n_markov_chains = 5,
+  n_markov_chains <- 5
   nuts_max_tree_depth <- 12
-  path_to_stan_model <- here::here("stan", "threshold_test.stan")
-
+  path_to_stan_model <- here::here("stan", "threshold_test_2.stan")
+  
   rstan::sampling(
-    stan_model(here::here("stan", "threshold_test.stan")),
-    tbl,
+    stan_model(path_to_stan_model),
+    data,
     chains = n_markov_chains,
     control = list(
       adapt_delta = 1 - min_acceptable_divergence_rate,
-      adapt_engaged = adapt_engaged,
+      adapt_engaged = allow_adaptive_step_size,
       max_treedepth = nuts_max_tree_depth
-    )
+    ),
     cores = n_cores,
     init = initialization_method,
     iter = n_iter,
