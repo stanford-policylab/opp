@@ -43,7 +43,7 @@ threshold_test <- function(
   n_iter = 5000,
   n_cores = min(5, parallel::detectCores() / 2)
 ) {
-  
+
   geographic_colq <- enquo(geographic_col)
   demographic_colq <- enquo(demographic_col)
   geographic_colname <- quo_name(geographic_colq)
@@ -86,22 +86,22 @@ threshold_test <- function(
       " of the data removed due to true outcome but false action"
     )
   }
-  
+
   summary <- group_by(
     tbl,
     !!geographic_colq,
     !!demographic_colq
   ) %>%
-    summarize(
-      n = n(),
-      n_action = sum(!!action_colq),
-      n_outcome = sum(!!outcome_colq)
-    ) %>% 
-    ungroup() %>% 
-    mutate(
-      !!geographic_colname := as.factor(!!geographic_colq),
-      !!demographic_colname := as.factor(!!demographic_colq)
-    ) 
+  summarize(
+    n = n(),
+    n_action = sum(!!action_colq),
+    n_outcome = sum(!!outcome_colq)
+  ) %>% 
+  ungroup() %>% 
+  mutate(
+    !!geographic_colname := as.factor(!!geographic_colq),
+    !!demographic_colname := as.factor(!!demographic_colq)
+  ) 
   
   stan_data <- list(
     n_groups = nrow(summary),
@@ -113,7 +113,7 @@ threshold_test <- function(
     action_count = pull(summary, n_action),
     outcome_count = pull(summary, n_outcome)
   )
-  
+
   stan_threshold_test(stan_data, n_iter, n_cores)
 }
 
