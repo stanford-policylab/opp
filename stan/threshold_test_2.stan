@@ -6,19 +6,20 @@ data {
   int<lower=1, upper=n_demographic_divisions> demographic_division[n_groups];
   int<lower=1, upper=n_geographic_divisions> geographic_division[n_groups];
 
-  int<lower=1> group[n_groups];
-  int<lower=0> action[n_groups];
-  int<lower=0> outcome[n_groups];
+  int<lower=1> group_count[n_groups];
+  int<lower=0> action_count[n_groups];
+  int<lower=0> outcome_count[n_groups];
 }
-
 
 parameters {
   // standard deviation for threshold
   real<lower=0> sigma_threshold;
-
+  
+  // action thresholds
   vector[n_demographic_divisions] threshold_demographic_division;
   vector[n_groups] threshold_raw;
 
+  // parameters for signal distribution
   vector[n_demographic_divisions] phi_demographic_division;
   vector[n_geographic_divisions - 1] phi_geographic_division_raw;
   real mu_phi;
@@ -27,7 +28,6 @@ parameters {
   vector[n_geographic_divisions - 1] lambda_geographic_division_raw;
   real mu_lambda;
 }
-
 
 transformed parameters {
   vector[n_geographic_divisions] phi_geographic_division;
@@ -46,7 +46,7 @@ transformed parameters {
   lambda_geographic_division[2:n_geographic_divisions] = lambda_geographic_division_raw;
 
   threshold = threshold_demographic_division[demographic_division]
-    + threshold_raw + sigma_threshold;
+    + threshold_raw * sigma_threshold;
 
   for (i in 1:n_groups) {
     // phi is the proportion of demographic_division x who evidence behavior
@@ -88,6 +88,6 @@ model {
   // thresholds
   threshold_raw ~ normal(0, 1);
 
-  action ~ binomial(group, action_rate);
-  outcome ~ binomial(action, outcome_rate);
+  action_count ~ binomial(group_count, action_rate);
+  outcome_count ~ binomial(action_count, outcome_rate);
 }
