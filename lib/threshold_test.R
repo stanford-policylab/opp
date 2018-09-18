@@ -34,7 +34,7 @@ library(tidyverse)
 #'   action_col = search_conducted,
 #'   outcome_col = contraband_found
 #' )
-threshold_test_data <- function(
+threshold_test <- function(
   tbl,
   geographic_col = precinct,
   demographic_col = subject_race,
