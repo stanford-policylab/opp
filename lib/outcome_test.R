@@ -42,7 +42,7 @@ outcome_test <- function(
   n <- nrow(tbl)
   tbl <- select(
     tbl,
-    !!! control_colqs,
+    !!!control_colqs,
     !!demographic_colq,
     !!action_colq,
     !!outcome_colq
