@@ -7,6 +7,7 @@ Open Policing Project -- City Data
 * proj-nad
 * proj-epsg
 * proj-devel
+* v8-314-devel
 
 ## Required R Packages
 * *tidyverse
@@ -14,6 +15,7 @@ Open Policing Project -- City Data
 * jsonlite
 * rgdal
 * rgeos
+* maptools
   
 ## TODO
 * VA - Statewide is broken
