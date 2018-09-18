@@ -31,18 +31,21 @@ outcome_test <- function(
   action_col = search_conducted,
   outcome_col = contraband_found
 ) {
-
+  
+  control_colqs <- enquos(...)
   demographic_colq <- enquo(demographic_col)
   action_colq <- enquo(action_col)
+  action_colname <- quo_name(action_colq)
   outcome_colq <- enquo(outcome_col)
+  outcome_colname <- quo_name(outcome_colq)
 
   n <- nrow(tbl)
   tbl <- select(
     tbl,
+    !!! control_colqs,
     !!demographic_colq,
     !!action_colq,
-    !!outcome_colq,
-    ...
+    !!outcome_colq
   ) %>%
   drop_na()
 
@@ -56,22 +59,13 @@ outcome_test <- function(
     )
   }
 
-  demographic_colname <- quo_name(demographic_colq)
-  action_colname <- quo_name(action_colq)
-  outcome_colname <- quo_name(outcome_colq)
-  # NOTE: any other columns passed in are assumed to be additional variables
-  # to control for variation; i.e. precinct, crime_rate, etc..
-  control_colnames <- setdiff(
-    colnames(tbl),
-    c(demographic_colname, action_colname, outcome_colname)
-  )
-
   results <- filter(
     tbl,
     !!action_colq
   ) %>%
-  group_by_(
-    .dots = c(demographic_colname, control_colnames)
+  group_by(
+    !!demographic_colq,
+    !!!control_colqs
   ) %>%
   summarize(
     !!str_c(outcome_colname, " where ", action_colname)
