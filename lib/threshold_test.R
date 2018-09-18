@@ -43,7 +43,7 @@ threshold_test <- function(
   n_iter = 5000,
   n_cores = min(5, parallel::detectCores() / 2)
 ) {
-  
+
   control_colqs <- enquos(...)
   demographic_colq <- enquo(demographic_col)
   demographic_colname <- quo_name(demographic_colq)
@@ -87,7 +87,7 @@ threshold_test <- function(
       "was removed due to inconsistency: outcome was recorded but no action was taken"
     )
   }
-  
+
   summary <- group_by(
     tbl,
     !!demographic_colq,
