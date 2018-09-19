@@ -19,7 +19,7 @@ library(tidyverse)
 #'   demographic_col = subject_race, 
 #'   dominant_demographic = "white", 
 #'   rate_col = `contraband_found where search_conducted`,
-#'   size_col = 
+#'   size_col = n_search_conducted
 #'  )
 plot_rates <- function(
   tbl,
@@ -38,42 +38,57 @@ plot_rates <- function(
   demographic_colq <- enquo(demographic_col)
   rate_colq <- enquo(rate_col)
   size_colq <- enquo(size_col)
+  control_colnames <- colnames(select(tbl, !!!control_colqs)) 
+  size_colname <- quo_name(size_colq)
   minority_demographics <- setdiff(
     pull(tbl, !!demographic_colq),
     dominant_demographic
   )
   
-  demographic_colname <- quo_name(demographic_colq)
-  rate_colname <- quo_name(rate_colq)
-  size_colname <- quo_name(size_colq)
-  control_colnames <- setdiff(
-    colnames(select(tbl, !!!control_colqs, !!demographic_colq, !!rate_colq, !!size_colq)),
-    c(demographic_colname, rate_colname, size_colname)
-  )
-  
-  data <-
+  rates_of_dominant_and_minority <- 
     tbl %>%
     select(-!!size_colq) %>%
-    spread(!!demographic_colq, !!rate_colq, fill = 0) %>%
+    spread(
+      key = !!demographic_colq, 
+      value = !!rate_colq, 
+      fill = 0
+    ) %>%
     rename(dominant_rate = dominant_demographic) %>%
-    gather(minority_demographics_col, minority_rate, minority_demographics) %>%
-    # join with orig data to get minority counts
-    left_join(
-      tbl %>%
-        select(-!!rate_colq) %>% 
-        spread(!!demographic_colq, !!size_colq, fill = 0) %>%
-        rename(dominant_size = dominant_demographic) %>% 
-        gather(minority_demographics_col, minority_size, minority_demographics) %>% 
-        group_by(!!!control_colqs, minority_demographics_col) %>% 
-        mutate(!!size_colname := dominant_size + minority_size) %>% 
-        ungroup() %>% 
-        select(!!size_colq, !!!control_colqs, minority_demographics_col),
-      by = c(control_colnames, "minority_demographics_col")
-    ) %>% 
-    mutate(minority_demographics_col = str_to_title(minority_demographics_col))
+    gather(
+      key = minority_demographics_col, 
+      value = minority_rate, 
+      minority_demographics
+    )
   
-  rates <- pull(tbl, !!rate_colq)
-  lim <- c(min(rates) - epsilon_rate, max(rates) + epsilon_rate)
+  size_of_dominant_plus_minority <-
+    tbl %>%
+    select(-!!rate_colq) %>% 
+    spread(
+      key = !!demographic_colq, 
+      value = !!size_colq, 
+      fill = 0
+    ) %>%
+    rename(dominant_size = dominant_demographic) %>% 
+    gather(
+      key = minority_demographics_col, 
+      value = minority_size, 
+      minority_demographics
+    ) %>% 
+    group_by(!!!control_colqs, minority_demographics_col) %>% 
+    mutate(!!size_colname := dominant_size + minority_size) %>% 
+    ungroup() %>% 
+    select(!!size_colq, !!!control_colqs, minority_demographics_col)
+  
+  data <- left_join(
+    rates_of_dominant_and_minority,
+    size_of_dominant_plus_minority,
+    by = c(control_colnames, "minority_demographics_col")
+  )
+  
+  axis_lims <- c(
+    min(pull(tbl, !!rate_colq)) - epsilon_rate, 
+    max(pull(tbl, !!rate_colq)) + epsilon_rate
+  )
   
   data %>% 
     ggplot(aes_string("dominant_rate", "minority_rate")) +
@@ -82,14 +97,16 @@ plot_rates <- function(
     facet_grid(cols = vars(minority_demographics_col)) +
     theme_bw() +
     theme(panel.spacing = unit(1.0, "lines")) +
-    scale_x_continuous(labels = scales::percent, limits = lim) +
-    scale_y_continuous(labels = scales::percent, limits = lim) +
+    scale_x_continuous(labels = scales::percent, limits = axis_lims) +
+    scale_y_continuous(labels = scales::percent, limits = axis_lims) +
     scale_size_area(labels = scales::comma) +
     coord_fixed() +
     labs(
-      x = str_c("White ", axis_title),
+      x = str_c(str_to_title(dominant_demographic), " ", axis_title),
       y = str_c("Minority ", axis_title),
       size = size_title,
       title = title
     )
 }
+
+
