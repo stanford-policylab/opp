@@ -69,8 +69,10 @@ outcome_test <- function(
   ) %>%
   summarize(
     !!str_c(outcome_colname, " where ", action_colname)
-      := sum(!!outcome_colq) / n()
-  )
+      := sum(!!outcome_colq) / n(),
+    !!str_c("n_", action_colname) := n()
+  ) %>% 
+  ungroup()
 
   list(
     results = results,
