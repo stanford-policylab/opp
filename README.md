@@ -7,7 +7,7 @@ Open Policing Project -- City Data
 * proj-nad
 * proj-epsg
 * proj-devel
-* v8-314-devel
+* v8-devel (libv8-3.14-dev ubuntu)
 
 ## Required R Packages
 * *tidyverse
@@ -29,3 +29,4 @@ Open Policing Project -- City Data
 * check for violation used in place of reason for stop
 * pull out granularity of "other/non-discretionary" search types
 * add notes to report pdf
+* cite IPUMS/NHGIS as data sources and get permission for redistribution
