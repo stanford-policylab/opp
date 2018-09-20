@@ -89,8 +89,8 @@ plot_rates <- function(
     min(pull(tbl, !!rate_colq)) - epsilon_rate, 
     max(pull(tbl, !!rate_colq)) + epsilon_rate
   )
-  
-  data %>% 
+
+  data %>%
     ggplot(aes_string("dominant_rate", "minority_rate")) +
     geom_point(aes_string(size = size_colname), shape = 1, alpha = 0.75) +
     geom_abline(linetype = "dashed") +
