@@ -51,7 +51,8 @@ opp_eligiblity <- function() {
   group_by(
     opp_load_all_data(),
     state,
-    city
+    city,
+    year = year(date)
   ) %>%
   summarize(
     n = n(),
