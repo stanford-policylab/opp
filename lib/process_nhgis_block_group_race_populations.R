@@ -45,6 +45,10 @@ dd <-
       "Asian|Pacific Islander|Some other|Two or more|American Indian",
       ignore.case=F,
     )
+  ) %>%
+  mutate_if(
+    is.numeric,
+    as.integer
   )
 
 write_csv(
