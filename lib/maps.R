@@ -3,18 +3,32 @@ library(ggmap)
 
 source('opp.R')
 
-stop_map <- function(state, city) {
+stop_map <- function(state, city, api_key = NA) {
   # TODO(danj): get lab key
-  api_key <- trimws(read_file(here::here("lib", "personal_gmaps_api.key")))
-  register_google(api_key)
+  if (is.na(api_key)) {
+    api_key <- trimws(read_file(here::here("lib", "personal_gmaps_api.key")))
+  }
   tbl <- opp_load_data(state, city) 
-  # TODO(danj): parsing errors for block group data?
   blk_pop <- opp_load_block_group_populations(state)
-  summarize(
+  # NOTE: get 1st and 99th percentiles, the others are likely outliers
+  corners <- summarize(
     tbl,
-    min_lat = min(lat, na.rm = T),
-    max_lat = max(lat, na.rm = T),
-    min_lng = min(lng, na.rm = T),
-    max_lng = max(lng, na.rm = T)
+    bottom = quantile(lat, 0.01, na.rm = T),
+    left = quantile(lng, 0.01, na.rm = T),
+    top = quantile(lat, 0.99, na.rm = T),
+    right = quantile(lng, 0.99, na.rm = T)
   )
+  bounding_box <- as.numeric(corners)
+  names(bounding_box) <- names(corners)
+  title <- create_title(state, city)
+  map <- ggmap(get_map(
+    location = bounding_box,
+    maptype = "roadmap",
+    api_key = api_key
+  )) +
+  xlab("longitude") +
+  ylab("latitude") +
+  ggtitle(title)
+  ggsave(here::here("plots", str_c(title, ".png")))
 }
+
