@@ -3,8 +3,7 @@ library(parallel)
 library(rstan)
 library(tidyverse)
 
-source("~/opp/lib/disparity_plot.R")
-# source(here::here("lib", "disparity_plot.R"))
+source(here::here("lib", "disparity_plot.R"))
 
 #' Threshold Test
 #'
@@ -46,7 +45,7 @@ threshold_test <- function(
   n_iter = 5000,
   n_cores = min(5, parallel::detectCores() / 2)
 ) {
-
+  
   control_colqs <- enquos(...)
   demographic_colq <- enquo(demographic_col)
   demographic_colname <- quo_name(demographic_colq)
@@ -90,7 +89,7 @@ threshold_test <- function(
       "was removed due to inconsistency: outcome was recorded but no action was taken"
     )
   }
-
+  
   data_summary <- 
     tbl %>% 
     group_by(!!demographic_colq, !!!control_colqs) %>%
@@ -110,7 +109,7 @@ threshold_test <- function(
       .vars = c(demographic_colname, "controls"),
       .funs = ~as.integer(as.factor(.x))
     )
-
+  
   stan_data <- list(
     n_groups = nrow(data_summary),
     n_control_divisions = n_distinct(pull(data_summary, controls)),
@@ -132,7 +131,7 @@ threshold_test <- function(
       majority_demographic,
       posteriors
     )
-    
+  
   thresholds_by_group <- 
     data_summary %>%
     mutate(
@@ -165,7 +164,7 @@ threshold_test <- function(
       axis_title = "threshold",
       size_title = "Num searches\nconducted"
     )
-    
+  
   list(
     data = data_summary,
     fit = fit,
@@ -272,7 +271,7 @@ format_summary_stats <- function(
     avg_threshold = pretty_percent(rowMeans(avg_thresh)),
     threshold_ci = format_confidence_interval(avg_thresh),
     threshold_diff = append(
-      pretty_percent(rowMeans(avg_diffs), digits = 2), 
+      pretty_percent(rowMeans(avg_diffs)), 
       "", 
       after = majority_idx - 1
     ),
@@ -290,8 +289,7 @@ format_confidence_interval <- function(
   # dimension for which we're calculating CIs (defaults to rows; 2 = columns)
   keep_dim = 1,
   lower = 0.025, 
-  upper = 0.975,
-  digits = 2
+  upper = 0.975
 ) {
   apply(
     matrixStats::rowQuantiles(M, probs = c(lower, upper)), 
@@ -299,14 +297,14 @@ format_confidence_interval <- function(
     function(x) { 
       str_c(
         '(', 
-        str_flatten(pretty_percent(x, digits = digits), collapse = ', '), 
+        str_flatten(pretty_percent(x), collapse = ', '), 
         ')'
       ) 
     }
   )
 }
 
-pretty_percent <- function(rate, digits = 1) {
+pretty_percent <- function(rate, digits = 2) {
   str_c(formatC(100 * rate, format = "f", digits = digits), "%")
 }
 
@@ -324,8 +322,7 @@ stan_threshold_test <- function(
   n_iter_warmup <- min(2500, round(n_iter / 2))
   n_markov_chains <- 5
   nuts_max_tree_depth <- 12
-  # path_to_stan_model <- here::here("stan", "threshold_test_2.stan")
-  path_to_stan_model <- "~/opp/stan/threshold_test_2.stan"
+  path_to_stan_model <- here::here("stan", "threshold_test_2.stan")
   
   rstan::sampling(
     stan_model(path_to_stan_model),
