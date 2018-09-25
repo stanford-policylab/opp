@@ -5,8 +5,8 @@ library(purrr)
 library(rmarkdown)
 library(stringr)
 
-source("utils.R")
-source("standards.R")
+source(here::here("lib", "utils.R"))
+source(here::here("lib", "standards.R"))
 
 
 clear <- function() {
@@ -56,6 +56,21 @@ opp_eligiblity <- function() {
   ) %>%
   summarize(
     n = n(),
+    sub_geography = max(
+      sum(!is.na(neighborhood)) / n,
+      sum(!is.na(beat)) / n,
+      sum(!is.na(district)) / n,
+      sum(!is.na(subdistrict)) / n,
+      sum(!is.na(police_grid_number)) / n,
+      sum(!is.na(precinct)) / n,
+      sum(!is.na(region)) / n,
+      sum(!is.na(reporting_area)) / n,
+      sum(!is.na(sector)) / n,
+      sum(!is.na(subsector)) / n,
+      sum(!is.na(service_area)) / n,
+      sum(!is.na(zone)) / n
+    ),
+    lat_lng = sum(!is.na(lat) & !is.na(lng)) / n,
     universe = n_distinct(outcome) == 3,  # arrest, citation, warning
     arrest_pct = sum(outcome == "arrest", na.rm = T) / n,
     citation_pct = sum(outcome == "citation", na.rm = T) / n,
