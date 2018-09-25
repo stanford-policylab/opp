@@ -495,12 +495,12 @@ opp_load_block_group_shapefiles <- function(state) {
 }
 
 
-opp_load_block_group_populations <- function(state) {
+opp_load_block_group_data <- function(state) {
   full_state_name = state.name[toupper(state) == state.abb]
   filter(
     read_csv(here::here(
       "data",
-      "population_by_block_group_by_race_2012_to_2016.csv"
+      "population_by_block_group_by_race_2012_to_2016_with_lat_lng.csv"
     )),
     state == full_state_name
   )
