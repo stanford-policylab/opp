@@ -8,6 +8,7 @@ Open Policing Project -- City Data
 * proj-epsg
 * proj-devel
 * v8-devel (libv8-3.14-dev ubuntu)
+* libjpeg-turbo-devel
 
 ## Required R Packages
 * *tidyverse

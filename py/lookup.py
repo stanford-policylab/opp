@@ -57,15 +57,15 @@ def normalize(name):
 
 
 def find(regex, path, n_lines_before, n_lines_after):
-    regexc = re.compile(regex)
+    regexc = re.compile(regex, re.IGNORECASE)
     with open(path) as f:
         code = f.read()
-    if regexc.match('notes?', re.IGNORECASE):
+    if regexc.match('notes?'):
         return find_all_notes(code, n_lines_before, n_lines_after)
     # TODO(danj): add possible assignee here
-    elif regexc.match('todos?', re.IGNORECASE):
+    elif regexc.match('todos?'):
         return find_all_todos(code, n_lines_before, n_lines_after)
-    elif regexc.match('files?', re.IGNORECASE):
+    elif regexc.match('files?'):
         return [code]
     else:
         # NOTE: if the user provided a single token, match containing line
