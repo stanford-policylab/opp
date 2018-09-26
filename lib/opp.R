@@ -49,9 +49,8 @@ opp_load_all_data <- function() {
 }
 
 
-opp_eligiblity <- function() {
+opp_eligiblity <- function(tbl) {
   group_by(
-    opp_load_all_data(),
     state,
     city,
     year = year(date)
