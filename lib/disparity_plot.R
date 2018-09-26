@@ -3,7 +3,7 @@ library(tidyverse)
 #' Plot rates: plot rates across demographic groups to identify disparities
 #'
 #' @param tbl a tibble containing the following data
-#' @param ... additional attributes controled for when rates were computed
+#' @param ... additional attributes controlled for when rates were computed
 #' @param demographic_col contains a population division of interest, i.e. race,
 #'        age group, sex, etc...
 #' @param majority_demographic identifies the demographic to compare all others to

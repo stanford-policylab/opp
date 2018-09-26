@@ -1,3 +1,4 @@
+library(fs)
 library(here)
 library(jsonlite)
 library(knitr)
@@ -101,10 +102,9 @@ opp_everything <- function() {
     # NOTE: city could be 'statewide' too 
     city = simple_map(paths, opp_extract_city_from_path)
   )
-  # par_pmap(tbl, opp_process)
-  # par_pmap(tbl, opp_report)
-  # opp_coverage()
-  pmap(tbl, opp_report)
+  par_pmap(tbl, opp_process)
+  par_pmap(tbl, opp_report)
+  opp_coverage()
 }
 
 
@@ -549,7 +549,7 @@ opp_process <- function(state, city, n_max = Inf) {
 opp_report <- function(state, city) {
   print("building report...")
   output_dir = here::here("reports")
-  dir.create(output_dir, showWarnings = FALSE)
+  dir_create(output_dir)
   render(
     "report.Rmd",
     "pdf_document",
@@ -570,7 +570,7 @@ pdf_filename <- function(state, city) {
 opp_plot <- function(state, city) {
   source(here::here("lib", "plot.R"), local = TRUE)
   output_dir = here::here("plots")
-  dir.create(output_dir, showWarnings = FALSE)
+  dir_create(output_dir)
   plot_cols(
     opp_load(state, city),
     file.path(output_dir, pdf_filename(state, city))
@@ -662,7 +662,7 @@ opp_demographics <- function(state, city) {
 opp_coverage <- function() {
   print("assessing coverage...")
   output_dir = here::here("coverage")
-  dir.create(output_dir, showWarnings = FALSE)
+  dir_create(output_dir)
   render(
     "coverage.Rmd",
     "pdf_document",
