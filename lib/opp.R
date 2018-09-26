@@ -133,9 +133,14 @@ opp_simplify_eligibility <- function(eligibility_tbl) {
     n,
     universe,
     sub_geography,
+    search_contraband,
     lat_lng,
-    frisk_performed,
-    search_contraband
+    frisk_performed
+  ) %>%
+  arrange(
+    -universe,
+    -sub_geography,
+    -search_contraband
   )
 }
 
