@@ -50,46 +50,92 @@ opp_load_all_data <- function() {
 
 
 opp_eligiblity <- function(tbl) {
+
+  nr <- function(v) { sum(!is.na(v)) / length(v) }
+  nnr <- function(a, b) { sum(!is.na(a) & !is.na(b)) / length(a) }
+  eqr <- function(v, val) { sum(v == val, na.rm = T) / length(v) }
+
   group_by(
+    tbl,
     state,
     city,
     year = year(date)
   ) %>%
   summarize(
+    # coverage
     n = n(),
+    universe = n_distinct(outcome) == 3,  # arrest, citation, warning
+    arrest_rate = eqr(outcome, "arrest"),
+    citation_rate = eqr(outcome, "citation"),
+    warning_rate = eqr(outcome, "warning"),
+    # disparity
+    frisk_performed = nr(frisk_performed),
+    search_conducted = nr(search_conducted),
+    contraband_found = nr(contraband_found),
+    search_contraband = nnr(search_conducted, contraband_found),
+    # bunching
+    speed = nr(speed),
+    # locations
+    location = nr(location),
+    lat_lng = nnr(lat, lng),
+    county_name = nr(county_name),
+    neighborhood = nr(neighborhood),
+    beat = nr(beat),
+    district = nr(district),
+    subdistrict = nr(subdistrict),
+    division = nr(division),
+    subdivision = nr(subdivision),
+    police_grid_number =nr(police_grid_number),
+    precinct = nr(precinct),
+    region = nr(region),
+    reporting_area = nr(reporting_area),
+    sector = nr(sector),
+    subsector = nr(subsector),
+    service_area = nr(service_area),
+    zone = nr(zone),
+    department_id = nr(department_id),
+    department_name = nr(department_name)
+  )
+}
+
+
+opp_simplify_eligibility <- function(eligibility_tbl) {
+  mutate(
+    eligibility_tbl,
     sub_geography = if_else(
-      city == "Statewide",
+      city == "Statewide" ,
       max(
-        sum(!is.na(department_id)) / n, 
-        sum(!is.na(department_name)) / n,
-        sum(!is.na(county_name)) / n
+        county_name,
+        department_id,
+        department_name
       ),
       max(
-        sum(!is.na(neighborhood)) / n,
-        sum(!is.na(beat)) / n,
-        sum(!is.na(district)) / n,
-        sum(!is.na(subdistrict)) / n,
-        sum(!is.na(police_grid_number)) / n,
-        sum(!is.na(precinct)) / n,
-        sum(!is.na(region)) / n,
-        sum(!is.na(reporting_area)) / n,
-        sum(!is.na(sector)) / n,
-        sum(!is.na(subsector)) / n,
-        sum(!is.na(service_area)) / n,
-        sum(!is.na(zone)) / n
+        neighborhood,
+        beat,
+        district,
+        subdistrict,
+        division,
+        subdivision,
+        police_grid_number,
+        precinct,
+        region,
+        reporting_area,
+        sector,
+        subsector,
+        service_area,
+        zone
       )
-    ),
-    lat_lng = sum(!is.na(lat) & !is.na(lng)) / n,
-    universe = n_distinct(outcome) == 3,  # arrest, citation, warning
-    arrest_pct = sum(outcome == "arrest", na.rm = T) / n,
-    citation_pct = sum(outcome == "citation", na.rm = T) / n,
-    warning_pct = sum(outcome == "warning", na.rm = T) / n,
-    frisk = sum(!is.na(frisk_performed)) / n,
-    search = sum(!is.na(search_conducted)) / n,
-    contraband = sum(!is.na(contraband_found)) / n,
-    search_and_contraband =
-      sum(!is.na(search_conducted) & !is.na(contraband_found)) / n,
-    speed = sum(!is.na(speed)) / n
+    )
+  ) %>%
+  select(
+    state,
+    city,
+    n,
+    universe,
+    sub_geography,
+    lat_lng,
+    frisk_performed,
+    search_contraband
   )
 }
 
