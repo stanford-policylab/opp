@@ -243,8 +243,7 @@ opp_clean_data_path <- function(state, city) {
 }
 
 opp_results_dir <- function(state, city) {
-  dir_create(str_c(opp_data_dir(state, city), "/results"))
-  str_c(opp_data_dir(state, city), "/results")
+  dir_create(path(opp_data_dir(state, city), "results"))
 }
 
 opp_data_dir <- function(state, city) {
