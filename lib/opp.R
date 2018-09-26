@@ -4,6 +4,7 @@ library(knitr)
 library(purrr)
 library(rmarkdown)
 library(stringr)
+library(fs)
 
 source(here::here("lib", "utils.R"))
 source(here::here("lib", "standards.R"))
@@ -241,6 +242,9 @@ opp_clean_data_path <- function(state, city) {
   file.path(data_dir, "clean", str_c(normalize_city(city), ".rds"))
 }
 
+opp_results_dir <- function(state, city) {
+  dir_create(path(opp_data_dir(state, city), "results"))
+}
 
 opp_data_dir <- function(state, city) {
   here::here(
@@ -250,7 +254,6 @@ opp_data_dir <- function(state, city) {
     normalize_city(city)
   )
 }
-
 
 normalize_state <- function(state) {
   str_to_lower(state)
