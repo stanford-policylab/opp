@@ -56,24 +56,27 @@ opp_eligiblity <- function() {
   ) %>%
   summarize(
     n = n(),
-    state_sub_geography = max(
-      sum(!is.na(department_id)) / n, 
-      sum(!is.na(department_name)) / n,
-      sum(!is.na(county_name)) / n
-    ),
-    city_sub_geography = max(
-      sum(!is.na(neighborhood)) / n,
-      sum(!is.na(beat)) / n,
-      sum(!is.na(district)) / n,
-      sum(!is.na(subdistrict)) / n,
-      sum(!is.na(police_grid_number)) / n,
-      sum(!is.na(precinct)) / n,
-      sum(!is.na(region)) / n,
-      sum(!is.na(reporting_area)) / n,
-      sum(!is.na(sector)) / n,
-      sum(!is.na(subsector)) / n,
-      sum(!is.na(service_area)) / n,
-      sum(!is.na(zone)) / n
+    sub_geography = if_else(
+      city == "Statewide",
+      max(
+        sum(!is.na(department_id)) / n, 
+        sum(!is.na(department_name)) / n,
+        sum(!is.na(county_name)) / n
+      ),
+      max(
+        sum(!is.na(neighborhood)) / n,
+        sum(!is.na(beat)) / n,
+        sum(!is.na(district)) / n,
+        sum(!is.na(subdistrict)) / n,
+        sum(!is.na(police_grid_number)) / n,
+        sum(!is.na(precinct)) / n,
+        sum(!is.na(region)) / n,
+        sum(!is.na(reporting_area)) / n,
+        sum(!is.na(sector)) / n,
+        sum(!is.na(subsector)) / n,
+        sum(!is.na(service_area)) / n,
+        sum(!is.na(zone)) / n
+      )
     ),
     lat_lng = sum(!is.na(lat) & !is.na(lng)) / n,
     universe = n_distinct(outcome) == 3,  # arrest, citation, warning
