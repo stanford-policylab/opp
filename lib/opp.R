@@ -56,6 +56,11 @@ opp_eligiblity <- function() {
   ) %>%
   summarize(
     n = n(),
+    sub_department = max(
+      sum(!is.na(department_id)) / n, 
+      sum(!is.na(department_name)) / n,
+      sum(!is.na(county_name)) / n
+    ),
     sub_geography = max(
       sum(!is.na(neighborhood)) / n,
       sum(!is.na(beat)) / n,
