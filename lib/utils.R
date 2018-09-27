@@ -948,3 +948,5 @@ disaggregate <- function(df, n, ...) {
 unique_value <- function(x) {
   if_else(n_distinct(x, na.rm = T) == 1, first(x), NA_character_)
 }
+
+quos_names <- function(quos_var) { sapply(quos_var, quo_name) }

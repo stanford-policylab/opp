@@ -110,6 +110,31 @@ valid_states <- c(
 )
 
 
+city_sub_geographies <- quos(
+  neighborhood,
+  beat,
+  district,
+  subdistrict,
+  division,
+  subdivision,
+  police_grid_number,
+  precinct,
+  region,
+  reporting_area,
+  sector,
+  subsector,
+  service_area,
+  zone
+)
+
+
+state_sub_geographies <- quos(
+  county_name,
+  department_id,
+  department_name
+)
+
+
 schema <- c(
   # make character in case raw rows are merged, i.e. could be 1|2|3
   raw_row_number                = as.character,

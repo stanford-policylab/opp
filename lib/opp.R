@@ -69,6 +69,7 @@ opp_eligiblity <- function(tbl) {
     citation_rate = eqr(outcome, "citation"),
     warning_rate = eqr(outcome, "warning"),
     # disparity
+    subject_race = nr(subject_race),
     frisk_performed = nr(frisk_performed),
     search_conducted = nr(search_conducted),
     contraband_found = nr(contraband_found),
@@ -104,27 +105,8 @@ opp_simplify_eligibility <- function(eligibility_tbl) {
     eligibility_tbl,
     sub_geography = if_else(
       city == "Statewide" ,
-      max(
-        county_name,
-        department_id,
-        department_name
-      ),
-      max(
-        neighborhood,
-        beat,
-        district,
-        subdistrict,
-        division,
-        subdivision,
-        police_grid_number,
-        precinct,
-        region,
-        reporting_area,
-        sector,
-        subsector,
-        service_area,
-        zone
-      )
+      max(!!!state_sub_geographies),
+      max(!!!city_sub_geographies)
     )
   ) %>%
   select(
@@ -187,21 +169,46 @@ opp_eligible_subset <- function(
 
 
 opp_tbl_from_eligible_subset <- function(eligible_subset_tbl) {
+
   prepare_city <- function(state, city) {
-    mutate(
-      opp_load_data(state, city),
-      state = state,
-      city = city
+
+    tbl <- opp_load_data(state, city) %>%
+      mutate(
+        state = state,
+        city = city
+      )
+
+    if (city == "Statewide") {
+      state_regex <- str_c(quos_names(state_sub_geographies), collapse = "|")
+      sub_geographies <- select(tbl, matches(state_regex))
+    } else {
+      city_regex <- str_c(quos_names(city_sub_geographies), collapse = "|")
+      sub_geographies <- select(tbl, matches(city_regex))
+    }
+    sub_geography <- sub_geographies %>%
+      select_if(
+        # NOTE: select column with min null rate
+        funs(which.min(sum(is.na(.))))
+      ) %>%
+      rename_(
+        sub_geography = names(.)[1]
+      )
+
+    bind_cols(
+      tbl,
+      sub_geography
     ) %>%
-    # TODO(danj): collapse locations into sub-geography
     select(
+      state,
+      city,
       sub_geography,
       subject_race,
       search_conducted,
       contraband_found
     )
   }
-  bind_rows(par_pmap(select(eligible_subset_tbl, state, city)))
+
+  bind_rows(par_pmap(select(eligible_subset_tbl, state, city), prepare_city))
 }
 
 
