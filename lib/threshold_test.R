@@ -2,6 +2,7 @@ library(here)
 library(parallel)
 library(rstan)
 library(tidyverse)
+library(stringr)
 
 source(here::here("lib", "disparity_plot.R"))
 

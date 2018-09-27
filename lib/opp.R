@@ -107,11 +107,13 @@ opp_eligiblity <- function(tbl) {
 }
 
 
+# TODO: run for each city, see if sufficiently homogeneous
 opp_simplify_eligibility <- function(eligibility_tbl) {
   mutate(
     eligibility_tbl,
     sub_geography = ifelse(
       city == "Statewide" ,
+      # TODO: use precinct equivalent
       pmax(!!!state_sub_geographies, na.rm = T),
       pmax(!!!city_sub_geographies, na.rm = T)
     )
@@ -144,10 +146,13 @@ opp_simplify_eligibility <- function(eligibility_tbl) {
 opp_eligible_subset <- function(
   simple_eligibility_tbl,
   exclude_cities=c("Statewide"),
+  # TODO: plot distributions by city, select reasonable lower bound
+  # TODO: look at risk by subgeo by race -- distribution
   min_n_per_year=10000,
   require_universe=F,
   race_threshold=0.95,
   sub_geography_threshold=0.95,
+  # TODO: go through all 15 and manually
   contraband_found_threshold=0.00,
   search_contraband_threshold=0.95
 ) {
