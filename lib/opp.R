@@ -52,11 +52,17 @@ opp_load_all_data <- function() {
 opp_eligiblity <- function(tbl) {
 
   nr <- function(v) { sum(!is.na(v)) / length(v) }
-  nnr <- function(a, b) { sum(!is.na(a) & !is.na(b)) / length(a) }
   eqr <- function(v, val) { sum(v == val, na.rm = T) / length(v) }
 
-  group_by(
+  mutate(
     tbl,
+    lat_lng = !is.na(lat) & !is.na(lng),
+    # neither null or if search_conducted = F, contraband_found 
+    # can be F, T, or NA 
+    search_contraband = (!is.na(search_conducted) & !is.na(contraband_found))
+      | if_else_na(search_conducted == F, T, F)
+  ) %>%
+  group_by(
     state,
     city,
     year = year(date)
@@ -73,12 +79,12 @@ opp_eligiblity <- function(tbl) {
     frisk_performed = nr(frisk_performed),
     search_conducted = nr(search_conducted),
     contraband_found = nr(contraband_found),
-    search_contraband = nnr(search_conducted, contraband_found),
+    search_contraband = sum(search_contraband) / n,
     # bunching
     speed = nr(speed),
     # locations
     location = nr(location),
-    lat_lng = nnr(lat, lng),
+    lat_lng = sum(lat_lng) / n,
     county_name = nr(county_name),
     neighborhood = nr(neighborhood),
     beat = nr(beat),
@@ -96,17 +102,18 @@ opp_eligiblity <- function(tbl) {
     zone = nr(zone),
     department_id = nr(department_id),
     department_name = nr(department_name)
-  )
+  ) %>%
+  ungroup()
 }
 
 
 opp_simplify_eligibility <- function(eligibility_tbl) {
   mutate(
     eligibility_tbl,
-    sub_geography = if_else(
+    sub_geography = ifelse(
       city == "Statewide" ,
-      max(!!!state_sub_geographies),
-      max(!!!city_sub_geographies)
+      pmax(!!!state_sub_geographies, na.rm = T),
+      pmax(!!!city_sub_geographies, na.rm = T)
     )
   ) %>%
   select(
@@ -115,7 +122,9 @@ opp_simplify_eligibility <- function(eligibility_tbl) {
     year,
     n,
     universe,
+    subject_race,
     sub_geography,
+    contraband_found,
     search_contraband,
     lat_lng,
     frisk_performed
@@ -123,6 +132,7 @@ opp_simplify_eligibility <- function(eligibility_tbl) {
   arrange(
     -universe,
     -sub_geography,
+    -contraband_found,
     -search_contraband,
     state,
     city,
@@ -136,7 +146,9 @@ opp_eligible_subset <- function(
   exclude_cities=c("Statewide"),
   min_n_per_year=10000,
   require_universe=F,
+  race_threshold=0.95,
   sub_geography_threshold=0.95,
+  contraband_found_threshold=0.00,
   search_contraband_threshold=0.95
 ) {
   simple_eligibility_tbl %>%
@@ -144,35 +156,26 @@ opp_eligible_subset <- function(
       !(city %in% exclude_cities),
       n >= min_n_per_year,
       if (require_universe) universe == T else T,
+      subject_race > race_threshold,
       sub_geography >= sub_geography_threshold,
+      # NOTE: search_contraband = !na(search) & !na(contraband) | search=F
+      # in the majority of cases, search = F, so the combined column reports
+      # a high percentage; here we want to make sure contraband is also at
+      # least sometimes recorded
+      contraband_found > contraband_found_threshold,
       search_contraband >= search_contraband_threshold
-    ) %>%
-    group_by(
-      state,
-      city
-    ) %>%
-    summarize(
-      start = min(year, na.rm=T),
-      end = max(year, na.rm=T)
-    ) %>%
-    select(
-      state,
-      city,
-      start,
-      end
-    ) %>%
-    arrange(
-      start,
-      end
     )
 }
 
 
 opp_tbl_from_eligible_subset <- function(eligible_subset_tbl) {
 
-  prepare_city <- function(state, city) {
+  prepare_city <- function(state, city, years) {
 
     tbl <- opp_load_data(state, city) %>%
+      filter(
+        year(date) %in% years[[1, 1]]
+      ) %>%
       mutate(
         state = state,
         city = city
@@ -207,8 +210,18 @@ opp_tbl_from_eligible_subset <- function(eligible_subset_tbl) {
       contraband_found
     )
   }
+  
+  pmap_tbl <- eligible_subset_tbl %>%
+    group_by(
+      state,
+      city
+    ) %>%
+    summarize(
+      years = list(year)
+    ) %>%
+    ungroup()
 
-  bind_rows(par_pmap(select(eligible_subset_tbl, state, city), prepare_city))
+  par_pmap(pmap_tbl, prepare_city)
 }
 
 

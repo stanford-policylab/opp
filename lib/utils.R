@@ -13,7 +13,7 @@ tna <- function(v) { sum(is.na(v)) }
 
 
 if_else_na <- function(pred, pred_true, pred_false_or_na) {
-  ifelse(!is.na(pred) && pred, pred_true, pred_false_or_na)
+  if_else(!is.na(pred) & pred, pred_true, pred_false_or_na)
 }
 
 
