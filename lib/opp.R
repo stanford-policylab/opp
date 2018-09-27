@@ -174,7 +174,7 @@ opp_tbl_from_eligible_subset <- function(eligible_subset_tbl) {
 
     tbl <- opp_load_data(state, city) %>%
       filter(
-        year(date) %in% years[[1, 1]]
+        year(date) %in% years[[1]]
       ) %>%
       mutate(
         state = state,
@@ -208,6 +208,14 @@ opp_tbl_from_eligible_subset <- function(eligible_subset_tbl) {
       subject_race,
       search_conducted,
       contraband_found
+    ) %>%
+    # NOTE: search_conducted = F, contrband_found NA => F
+    mutate(
+      contraband_found = if_else_na(
+        search_conducted == F & is.na(contraband_found),
+        F,
+        contraband_found
+      )
     )
   }
   
@@ -221,7 +229,7 @@ opp_tbl_from_eligible_subset <- function(eligible_subset_tbl) {
     ) %>%
     ungroup()
 
-  par_pmap(pmap_tbl, prepare_city)
+  bind_rows(par_pmap(pmap_tbl, prepare_city))
 }
 
 
