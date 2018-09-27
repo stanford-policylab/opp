@@ -130,6 +130,7 @@ opp_simplify_eligibility <- function(eligibility_tbl) {
   select(
     state,
     city,
+    year,
     n,
     universe,
     sub_geography,
@@ -140,8 +141,67 @@ opp_simplify_eligibility <- function(eligibility_tbl) {
   arrange(
     -universe,
     -sub_geography,
-    -search_contraband
+    -search_contraband,
+    state,
+    city,
+    -year
   )
+}
+
+
+opp_eligible_subset <- function(
+  simple_eligibility_tbl,
+  exclude_cities=c("Statewide"),
+  min_n_per_year=10000,
+  require_universe=F,
+  sub_geography_threshold=0.95,
+  search_contraband_threshold=0.95
+) {
+  simple_eligibility_tbl %>%
+    filter(
+      !(city %in% exclude_cities),
+      n >= min_n_per_year,
+      if (require_universe) universe == T else T,
+      sub_geography >= sub_geography_threshold,
+      search_contraband >= search_contraband_threshold
+    ) %>%
+    group_by(
+      state,
+      city
+    ) %>%
+    summarize(
+      start = min(year, na.rm=T),
+      end = max(year, na.rm=T)
+    ) %>%
+    select(
+      state,
+      city,
+      start,
+      end
+    ) %>%
+    arrange(
+      start,
+      end
+    )
+}
+
+
+opp_tbl_from_eligible_subset <- function(eligible_subset_tbl) {
+  prepare_city <- function(state, city) {
+    mutate(
+      opp_load_data(state, city),
+      state = state,
+      city = city
+    ) %>%
+    # TODO(danj): collapse locations into sub-geography
+    select(
+      sub_geography,
+      subject_race,
+      search_conducted,
+      contraband_found
+    )
+  }
+  bind_rows(par_pmap(select(eligible_subset_tbl, state, city)))
 }
 
 
