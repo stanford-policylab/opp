@@ -94,7 +94,7 @@ clean <- function(d, helpers) {
       ),
       # NOTE: use County column if possible, otherwise, use the values
       # generated from add_county_from_highway_milepost
-      county = coalesce(
+      county_name = coalesce(
         fast_tr(County, tr_county),
         county
       ),
