@@ -292,6 +292,8 @@ calculate_if_cols(
   }
 )
 
+
+
 # NOTE: convert to char because of weird print representation of some numbers
 loading_problems <- metadata$loading_problems %>%
   lapply(function(x) mutate_all(x, funs('as.character'))) %>%

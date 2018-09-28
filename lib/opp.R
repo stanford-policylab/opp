@@ -6,6 +6,7 @@ library(purrr)
 library(rmarkdown)
 library(stringr)
 library(fs)
+library(zoo)
 
 source(here::here("lib", "utils.R"))
 source(here::here("lib", "standards.R"))
@@ -107,13 +108,11 @@ opp_eligiblity <- function(tbl) {
 }
 
 
-# TODO: run for each city, see if sufficiently homogeneous
 opp_simplify_eligibility <- function(eligibility_tbl) {
   mutate(
     eligibility_tbl,
     sub_geography = ifelse(
       city == "Statewide" ,
-      # TODO: use precinct equivalent
       pmax(!!!state_sub_geographies, na.rm = T),
       pmax(!!!city_sub_geographies, na.rm = T)
     )
@@ -146,30 +145,61 @@ opp_simplify_eligibility <- function(eligibility_tbl) {
 opp_eligible_subset <- function(
   simple_eligibility_tbl,
   exclude_cities=c("Statewide"),
-  # TODO: plot distributions by city, select reasonable lower bound
-  # TODO: look at risk by subgeo by race -- distribution
-  min_n_per_year=10000,
+  n_threshold=100,
   require_universe=F,
-  race_threshold=0.95,
-  sub_geography_threshold=0.95,
+  race_threshold=0.75,
+  sub_geography_threshold=0.75,
   # TODO: go through all 15 and manually
   contraband_found_threshold=0.00,
-  search_contraband_threshold=0.95
+  search_contraband_threshold=0.75
 ) {
   simple_eligibility_tbl %>%
     filter(
       !(city %in% exclude_cities),
-      n >= min_n_per_year,
+      n > n_threshold,
       if (require_universe) universe == T else T,
       subject_race > race_threshold,
-      sub_geography >= sub_geography_threshold,
+      sub_geography > sub_geography_threshold,
       # NOTE: search_contraband = !na(search) & !na(contraband) | search=F
       # in the majority of cases, search = F, so the combined column reports
       # a high percentage; here we want to make sure contraband is also at
       # least sometimes recorded
       contraband_found > contraband_found_threshold,
-      search_contraband >= search_contraband_threshold
+      search_contraband > search_contraband_threshold
     )
+}
+
+
+opp_plot_distribution <- function(state, city, sub_geography) {
+  tbl <- opp_load_data(state, city) %>%
+    filter(search_conducted, !is.na(contraband_found)) %>%
+    mutate(year_month = as.yearmon(date))
+  print(str_c(nrow(tbl), " data points"))
+  # NOTE: facet_grid doesn't like year_month ~ !!subgq or vars or anything
+  fmla <- as.formula(str_c("year_month", "~", sub_geography))
+  p <- ggplot(tbl) +
+    geom_bar(aes(subject_race, fill = subject_race)) +
+    facet_grid(fmla, switch = "y") +
+    theme(
+      axis.text.x = element_blank(),
+      axis.ticks.x = element_blank()
+    ) + 
+    scale_y_continuous(position="right") +
+    ylab("year_month") +
+    xlab(sub_geography)
+  output_dir <- dir_create(here::here("plots"))
+  fname <- str_c("distribution_", pdf_filename(state, city))
+  width <- select(tbl, !!sub_geography) %>% distinct %>% count
+  height <- tbl %>%
+    mutate(year_month = as.yearmon(date)) %>% distinct(year_month) %>% count
+  ggsave(
+    path(output_dir, fname),
+    p,
+    width = width$n[1] * 2,
+    height = height$n[1] * 2,
+    units = "in",
+    limitsize = F
+  )
 }
 
 
@@ -213,14 +243,6 @@ opp_tbl_from_eligible_subset <- function(eligible_subset_tbl) {
       subject_race,
       search_conducted,
       contraband_found
-    ) %>%
-    # NOTE: search_conducted = F, contrband_found NA => F
-    mutate(
-      contraband_found = if_else_na(
-        search_conducted == F & is.na(contraband_found),
-        F,
-        contraband_found
-      )
     )
   }
   

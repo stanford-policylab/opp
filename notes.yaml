@@ -1,0 +1,21 @@
+filters:
+  - cities
+  - 100 stops / year
+  - race recorded 75% of the time
+  - sub geography recorded 75% of the time
+  - search (and contraband when search=T) defined 75% of the time
+output:
+  - San Diego, CA
+  - San Francisco, CA
+  - Hartford, CT
+  - New Orleans, LA
+  - Philadelphia, PA
+  - Nashville, TN
+  - Dallas, TX
+  - El Paso, TX
+  - San Antonio, TX
+
+San Francisco, CA:
+  - 53.7k total searches
+  - district is only sub-geography
+  - filter search_conducted & not_na_conraband_found
