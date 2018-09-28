@@ -6,6 +6,7 @@ library(purrr)
 library(rmarkdown)
 library(stringr)
 library(fs)
+library(zoo)
 
 source(here::here("lib", "utils.R"))
 source(here::here("lib", "standards.R"))
@@ -52,11 +53,17 @@ opp_load_all_data <- function() {
 opp_eligiblity <- function(tbl) {
 
   nr <- function(v) { sum(!is.na(v)) / length(v) }
-  nnr <- function(a, b) { sum(!is.na(a) & !is.na(b)) / length(a) }
   eqr <- function(v, val) { sum(v == val, na.rm = T) / length(v) }
 
-  group_by(
+  mutate(
     tbl,
+    lat_lng = !is.na(lat) & !is.na(lng),
+    # neither null or if search_conducted = F, contraband_found 
+    # can be F, T, or NA 
+    search_contraband = (!is.na(search_conducted) & !is.na(contraband_found))
+      | if_else_na(search_conducted == F, T, F)
+  ) %>%
+  group_by(
     state,
     city,
     year = year(date)
@@ -69,15 +76,16 @@ opp_eligiblity <- function(tbl) {
     citation_rate = eqr(outcome, "citation"),
     warning_rate = eqr(outcome, "warning"),
     # disparity
+    subject_race = nr(subject_race),
     frisk_performed = nr(frisk_performed),
     search_conducted = nr(search_conducted),
     contraband_found = nr(contraband_found),
-    search_contraband = nnr(search_conducted, contraband_found),
+    search_contraband = sum(search_contraband) / n,
     # bunching
     speed = nr(speed),
     # locations
     location = nr(location),
-    lat_lng = nnr(lat, lng),
+    lat_lng = sum(lat_lng) / n,
     county_name = nr(county_name),
     neighborhood = nr(neighborhood),
     beat = nr(beat),
@@ -95,36 +103,18 @@ opp_eligiblity <- function(tbl) {
     zone = nr(zone),
     department_id = nr(department_id),
     department_name = nr(department_name)
-  )
+  ) %>%
+  ungroup()
 }
 
 
 opp_simplify_eligibility <- function(eligibility_tbl) {
   mutate(
     eligibility_tbl,
-    sub_geography = if_else(
+    sub_geography = ifelse(
       city == "Statewide" ,
-      max(
-        county_name,
-        department_id,
-        department_name
-      ),
-      max(
-        neighborhood,
-        beat,
-        district,
-        subdistrict,
-        division,
-        subdivision,
-        police_grid_number,
-        precinct,
-        region,
-        reporting_area,
-        sector,
-        subsector,
-        service_area,
-        zone
-      )
+      pmax(!!!state_sub_geographies, na.rm = T),
+      pmax(!!!city_sub_geographies, na.rm = T)
     )
   ) %>%
   select(
@@ -133,7 +123,9 @@ opp_simplify_eligibility <- function(eligibility_tbl) {
     year,
     n,
     universe,
+    subject_race,
     sub_geography,
+    contraband_found,
     search_contraband,
     lat_lng,
     frisk_performed
@@ -141,6 +133,7 @@ opp_simplify_eligibility <- function(eligibility_tbl) {
   arrange(
     -universe,
     -sub_geography,
+    -contraband_found,
     -search_contraband,
     state,
     city,
@@ -152,56 +145,118 @@ opp_simplify_eligibility <- function(eligibility_tbl) {
 opp_eligible_subset <- function(
   simple_eligibility_tbl,
   exclude_cities=c("Statewide"),
-  min_n_per_year=10000,
+  n_threshold=100,
   require_universe=F,
-  sub_geography_threshold=0.95,
-  search_contraband_threshold=0.95
+  race_threshold=0.75,
+  sub_geography_threshold=0.75,
+  # TODO: go through all 15 and manually
+  contraband_found_threshold=0.00,
+  search_contraband_threshold=0.75
 ) {
   simple_eligibility_tbl %>%
     filter(
       !(city %in% exclude_cities),
-      n >= min_n_per_year,
+      n > n_threshold,
       if (require_universe) universe == T else T,
-      sub_geography >= sub_geography_threshold,
-      search_contraband >= search_contraband_threshold
-    ) %>%
-    group_by(
-      state,
-      city
-    ) %>%
-    summarize(
-      start = min(year, na.rm=T),
-      end = max(year, na.rm=T)
-    ) %>%
-    select(
-      state,
-      city,
-      start,
-      end
-    ) %>%
-    arrange(
-      start,
-      end
+      subject_race > race_threshold,
+      sub_geography > sub_geography_threshold,
+      # NOTE: search_contraband = !na(search) & !na(contraband) | search=F
+      # in the majority of cases, search = F, so the combined column reports
+      # a high percentage; here we want to make sure contraband is also at
+      # least sometimes recorded
+      contraband_found > contraband_found_threshold,
+      search_contraband > search_contraband_threshold
     )
 }
 
 
+opp_plot_distribution <- function(state, city, sub_geography) {
+  tbl <- opp_load_data(state, city) %>%
+    filter(search_conducted, !is.na(contraband_found)) %>%
+    mutate(year_month = as.yearmon(date))
+  print(str_c(nrow(tbl), " data points"))
+  # NOTE: facet_grid doesn't like year_month ~ !!subgq or vars or anything
+  fmla <- as.formula(str_c("year_month", "~", sub_geography))
+  p <- ggplot(tbl) +
+    geom_bar(aes(subject_race, fill = subject_race)) +
+    facet_grid(fmla, switch = "y") +
+    theme(
+      axis.text.x = element_blank(),
+      axis.ticks.x = element_blank()
+    ) + 
+    scale_y_continuous(position="right") +
+    ylab("year_month") +
+    xlab(sub_geography)
+  output_dir <- dir_create(here::here("plots"))
+  fname <- str_c("distribution_", pdf_filename(state, city))
+  width <- select(tbl, !!sub_geography) %>% distinct %>% count
+  height <- tbl %>%
+    mutate(year_month = as.yearmon(date)) %>% distinct(year_month) %>% count
+  ggsave(
+    path(output_dir, fname),
+    p,
+    width = width$n[1] * 2,
+    height = height$n[1] * 2,
+    units = "in",
+    limitsize = F
+  )
+}
+
+
 opp_tbl_from_eligible_subset <- function(eligible_subset_tbl) {
-  prepare_city <- function(state, city) {
-    mutate(
-      opp_load_data(state, city),
-      state = state,
-      city = city
+
+  prepare_city <- function(state, city, years) {
+
+    tbl <- opp_load_data(state, city) %>%
+      filter(
+        year(date) %in% years[[1]]
+      ) %>%
+      mutate(
+        state = state,
+        city = city
+      )
+
+    if (city == "Statewide") {
+      state_regex <- str_c(quos_names(state_sub_geographies), collapse = "|")
+      sub_geographies <- select(tbl, matches(state_regex))
+    } else {
+      city_regex <- str_c(quos_names(city_sub_geographies), collapse = "|")
+      sub_geographies <- select(tbl, matches(city_regex))
+    }
+    sub_geography <- sub_geographies %>%
+      select_if(
+        # NOTE: select column with min null rate
+        funs(which.min(sum(is.na(.))))
+      ) %>%
+      rename_(
+        sub_geography = names(.)[1]
+      )
+
+    bind_cols(
+      tbl,
+      sub_geography
     ) %>%
-    # TODO(danj): collapse locations into sub-geography
     select(
+      state,
+      city,
       sub_geography,
       subject_race,
       search_conducted,
       contraband_found
     )
   }
-  bind_rows(par_pmap(select(eligible_subset_tbl, state, city)))
+  
+  pmap_tbl <- eligible_subset_tbl %>%
+    group_by(
+      state,
+      city
+    ) %>%
+    summarize(
+      years = list(year)
+    ) %>%
+    ungroup()
+
+  bind_rows(par_pmap(pmap_tbl, prepare_city))
 }
 
 

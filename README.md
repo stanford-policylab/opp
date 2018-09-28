@@ -19,6 +19,11 @@ Open Policing Project -- City Data
 * maptools
   
 ## TODO
+* see if cities are sufficiently homogeneous in their tests to aggregate @city 
+* select comparable sub-geographies by city 
+* review distribution of counts of race by subgeography by year (by month?) by city
+* run ot/tt for each final selected subset
+* plot ot/tt for each city
 * VA - Statewide is broken
 * test --everything after VA fixed and other 6 pushed, then revert to parallel 
 * eligibility reports: stats, outcome, threshold, rar, veil of darkness

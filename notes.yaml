@@ -1,0 +1,32 @@
+filters:
+  - cities
+  - 100 stops / year
+  - race recorded 75% of the time
+  - sub geography recorded 75% of the time
+  - search (and contraband when search=T) defined 75% of the time
+output:
+  - San Diego, CA
+  - San Francisco, CA
+  - Hartford, CT
+  - New Orleans, LA
+  - Philadelphia, PA
+  - Nashville, TN
+  - Dallas, TX
+  - El Paso, TX
+  - San Antonio, TX
+
+
+San Diego, CA:
+  - service_area only sub-geography
+  - filter search_conducted & not_na_conraband_found: 7.7k
+  - remove service_area 530, 630, 840 and unknown (insufficient data) 
+
+San Francisco, CA:
+  - district is only sub-geography
+  - filter search_conducted & not_na_conraband_found: 53.7k
+  - remove districts K, S, T (mostly missing)
+  - remove 2014 (NA for district, not all months)
+  - 2016 we only have half the year
+
+Hartford, CT:
+  - 

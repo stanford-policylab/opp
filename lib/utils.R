@@ -13,7 +13,7 @@ tna <- function(v) { sum(is.na(v)) }
 
 
 if_else_na <- function(pred, pred_true, pred_false_or_na) {
-  ifelse(!is.na(pred) && pred, pred_true, pred_false_or_na)
+  if_else(!is.na(pred) & pred, pred_true, pred_false_or_na)
 }
 
 
@@ -948,3 +948,5 @@ disaggregate <- function(df, n, ...) {
 unique_value <- function(x) {
   if_else(n_distinct(x, na.rm = T) == 1, first(x), NA_character_)
 }
+
+quos_names <- function(quos_var) { sapply(quos_var, quo_name) }
