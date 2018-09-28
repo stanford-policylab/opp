@@ -80,6 +80,9 @@ clean <- function(d, helpers) {
       IncidentTime,
       DOB,
       LocationCounty,
+      # NOTE: county_name comes from counties.csv, a dictionary provided by the
+      # department that converts LocationCounty 1-64 to county name
+      county_name,
       LocationRoad,
       LocationMilePost
     ) %>%
