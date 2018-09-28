@@ -15,7 +15,18 @@ output:
   - El Paso, TX
   - San Antonio, TX
 
+
+San Diego, CA:
+  - service_area only sub-geography
+  - filter search_conducted & not_na_conraband_found: 7.7k
+  - remove service_area 530, 630, 840 and unknown (insufficient data) 
+
 San Francisco, CA:
-  - 53.7k total searches
   - district is only sub-geography
-  - filter search_conducted & not_na_conraband_found
+  - filter search_conducted & not_na_conraband_found: 53.7k
+  - remove districts K, S, T (mostly missing)
+  - remove 2014 (NA for district, not all months)
+  - 2016 we only have half the year
+
+Hartford, CT:
+  - 
