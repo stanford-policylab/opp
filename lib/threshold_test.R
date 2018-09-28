@@ -284,6 +284,11 @@ format_summary_stats <- function(
   )
 }
 
+pretty_percent <- function(v) {
+  str_c(formatC(100 * v, format = "f", digits = 2), "%")
+}
+
+
 format_confidence_interval <- function(
   # matrix over which confidence intervals are taken
   M,
@@ -295,18 +300,12 @@ format_confidence_interval <- function(
   apply(
     matrixStats::rowQuantiles(M, probs = c(lower, upper)), 
     keep_dim,
-    function(x) { 
-      str_c(
-        '(', 
-        str_flatten(pretty_percent(x), collapse = ', '), 
-        ')'
-      ) 
+    function(v) { 
+      v <- pretty_percent(v)
+      vs <- str_c(v, collapse = ', ')
+      str_c('(', vs, ')')
     }
   )
-}
-
-pretty_percent <- function(rate, digits = 2) {
-  str_c(formatC(100 * rate, format = "f", digits = digits), "%")
 }
 
 stan_threshold_test <- function(
