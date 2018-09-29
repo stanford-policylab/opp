@@ -27,6 +27,8 @@ Open Policing Project -- City Data
 * run ot/tt for each final selected subset
 * plot ot/tt for each city
 * lutz - get TZ --> get sunset time --> get darkness --> make controls
+* tz_lookup_coords(37.77, -122.43)
+* getSunlightTimes(as.Date("2018-09-28"), 37.77, -122.43, tz="America/Los_Angeles", keep="sunset")$sunset 
 * VA - Statewide is broken
 * test --everything after VA fixed and other 6 pushed, then revert to parallel 
 * eligibility reports: stats, outcome, threshold, rar, veil of darkness
