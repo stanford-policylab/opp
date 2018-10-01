@@ -7,7 +7,7 @@ Open Policing Project -- City Data
 * proj-nad
 * proj-epsg
 * proj-devel
-* v8-devel (libv8-3.14-dev ubuntu)
+* v8-314-devel (libv8-3.14-dev ubuntu)
 * libjpeg-turbo-devel
 
 ## Required R Packages
@@ -17,6 +17,8 @@ Open Policing Project -- City Data
 * rgdal
 * rgeos
 * maptools
+* suncalc
+* lutz
   
 ## TODO
 * see if cities are sufficiently homogeneous in their tests to aggregate @city 
@@ -24,6 +26,9 @@ Open Policing Project -- City Data
 * review distribution of counts of race by subgeography by year (by month?) by city
 * run ot/tt for each final selected subset
 * plot ot/tt for each city
+* lutz - get TZ --> get sunset time --> get darkness --> make controls
+* tz_lookup_coords(37.77, -122.43)
+* getSunlightTimes(as.Date("2018-09-28"), 37.77, -122.43, tz="America/Los_Angeles", keep="sunset")$sunset 
 * VA - Statewide is broken
 * test --everything after VA fixed and other 6 pushed, then revert to parallel 
 * eligibility reports: stats, outcome, threshold, rar, veil of darkness
