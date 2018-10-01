@@ -81,7 +81,7 @@ plot_rates <- function(
 
   data %>%
     ggplot(aes_string("majority_rate", "minority_rate")) +
-    geom_point(aes_string(size = size_colname), shape = 1, alpha = 0.75) +
+    geom_point(aes_string(size = size_colname), shape = 1, alpha = 0.5) +
     geom_abline(linetype = "dashed") +
     facet_grid(cols = vars(minority_demographic)) +
     theme_bw() +
