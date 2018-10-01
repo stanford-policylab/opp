@@ -53,14 +53,14 @@ plot_rates <- function(
   majority_and_minority_rates <-
     tbl %>%
     select(-!!size_colq) %>%
-    spread(!!demographic_colq, !!rate_colq, fill = 0) %>%
+    spread(!!demographic_colq, !!rate_colq) %>%
     rename(majority_rate = majority_demographic) %>%
     gather(minority_demographic, minority_rate, minority_demographics_colnames)
   
   majority_plus_minority_sizes <-
     tbl %>%
     select(-!!rate_colq) %>% 
-    spread(!!demographic_colq, !!size_colq, fill = 0) %>%
+    spread(!!demographic_colq, !!size_colq) %>%
     rename(majority_size = majority_demographic) %>% 
     gather(minority_demographic, minority_size, minority_demographics_colnames) %>% 
     group_by(!!!control_colqs, minority_demographic) %>% 
