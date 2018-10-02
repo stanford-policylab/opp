@@ -50,18 +50,36 @@ opp_load_all_data <- function() {
 }
 
 
-opp_eligiblity <- function(tbl) {
+opp_eligibility <- function(tbl) {
 
-  nr <- function(v) { sum(!is.na(v)) / length(v) }
-  eqr <- function(v, val) { sum(v == val, na.rm = T) / length(v) }
-
-  mutate(
+  filter(
     tbl,
-    lat_lng = !is.na(lat) & !is.na(lng),
-    # neither null or if search_conducted = F, contraband_found 
-    # can be F, T, or NA 
-    search_contraband = (!is.na(search_conducted) & !is.na(contraband_found))
-      | if_else_na(search_conducted == F, T, F)
+    search_conducted,
+    !is.na(date)
+  ) %>%
+  mutate(
+    action_outcome = !is.na(subject_race) & !is.na(contraband_found),
+    ao = action_outcome,
+    neighborhood = ao & !is.na(neighborhood),
+    beat = ao & !is.na(beat),
+    district = ao & !is.na(district),
+    subdistrict = ao & !is.na(subdistrict),
+    division = ao & !is.na(division),
+    subdivision = ao & !is.na(subdivision),
+    police_grid_number = ao & !is.na(police_grid_number),
+    precinct = ao & !is.na(precinct),
+    region = ao & !is.na(region),
+    reporting_area = ao & !is.na(reporting_area),
+    sector = ao & !is.na(sector),
+    subsector = ao & !is.na(subsector),
+    service_area = ao & !is.na(service_area),
+    zone = ao & !is.na(zone),
+    county_name = ao & !is.na(county_name),
+    department_id = ao & !is.na(department_id),
+    department_name = ao & !is.na(department_name)
+  ) %>%
+  select(
+    -ao
   ) %>%
   group_by(
     state,
@@ -69,50 +87,35 @@ opp_eligiblity <- function(tbl) {
     year = year(date)
   ) %>%
   summarize(
-    # coverage
-    n = n(),
-    universe = n_distinct(outcome) == 3,  # arrest, citation, warning
-    arrest_rate = eqr(outcome, "arrest"),
-    citation_rate = eqr(outcome, "citation"),
-    warning_rate = eqr(outcome, "warning"),
-    # disparity
-    subject_race = nr(subject_race),
-    frisk_performed = nr(frisk_performed),
-    search_conducted = nr(search_conducted),
-    contraband_found = nr(contraband_found),
-    search_contraband = sum(search_contraband) / n,
-    # bunching
-    speed = nr(speed),
-    # locations
-    location = nr(location),
-    lat_lng = sum(lat_lng) / n,
-    county_name = nr(county_name),
-    neighborhood = nr(neighborhood),
-    beat = nr(beat),
-    district = nr(district),
-    subdistrict = nr(subdistrict),
-    division = nr(division),
-    subdivision = nr(subdivision),
-    police_grid_number =nr(police_grid_number),
-    precinct = nr(precinct),
-    region = nr(region),
-    reporting_area = nr(reporting_area),
-    sector = nr(sector),
-    subsector = nr(subsector),
-    service_area = nr(service_area),
-    zone = nr(zone),
-    department_id = nr(department_id),
-    department_name = nr(department_name)
+    n_searches = n(),
+    neighborhood = mean(neighborhood),
+    beat = mean(beat),
+    district = mean(district),
+    subdistrict = mean(subdistrict),
+    division = mean(division),
+    subdivision = mean(subdivision),
+    police_grid_number = mean(police_grid_number),
+    precinct = mean(precinct),
+    region = mean(region),
+    reporting_area = mean(reporting_area),
+    sector = mean(sector),
+    subsector = mean(subsector),
+    service_area = mean(service_area),
+    zone = mean(zone),
+    county_name = mean(county_name),
+    department_id = mean(department_id),
+    department_name = mean(department_name)
   ) %>%
-  ungroup()
+  ungroup(
+  )
 }
 
 
-opp_simplify_eligibility <- function(eligibility_tbl) {
+opp_simplify_eligibility <- function(tbl) {
   mutate(
-    eligibility_tbl,
-    sub_geography = ifelse(
-      city == "Statewide" ,
+    tbl,
+    race_contra_subg_where_search = if_else(
+      city == "Statewide",
       pmax(!!!state_sub_geographies, na.rm = T),
       pmax(!!!city_sub_geographies, na.rm = T)
     )
@@ -121,62 +124,46 @@ opp_simplify_eligibility <- function(eligibility_tbl) {
     state,
     city,
     year,
-    n,
-    universe,
-    subject_race,
-    sub_geography,
-    contraband_found,
-    search_contraband,
-    lat_lng,
-    frisk_performed
+    n_searches,
+    race_contra_subg_where_search
+  ) %>%
+  mutate(
+    n_eligible = floor(n_searches * race_contra_subg_where_search)
   ) %>%
   arrange(
-    -universe,
-    -sub_geography,
-    -contraband_found,
-    -search_contraband,
     state,
     city,
-    -year
+    year
   )
 }
 
 
-opp_eligible_subset <- function(
-  simple_eligibility_tbl,
-  exclude_cities=c("Statewide"),
-  n_threshold=100,
-  require_universe=F,
-  race_threshold=0.75,
-  sub_geography_threshold=0.75,
-  # TODO: go through all 15 and manually
-  contraband_found_threshold=0.00,
-  search_contraband_threshold=0.75
-) {
-  simple_eligibility_tbl %>%
-    filter(
-      !(city %in% exclude_cities),
-      n > n_threshold,
-      if (require_universe) universe == T else T,
-      subject_race > race_threshold,
-      sub_geography > sub_geography_threshold,
-      # NOTE: search_contraband = !na(search) & !na(contraband) | search=F
-      # in the majority of cases, search = F, so the combined column reports
-      # a high percentage; here we want to make sure contraband is also at
-      # least sometimes recorded
-      contraband_found > contraband_found_threshold,
-      search_contraband > search_contraband_threshold
-    )
+opp_load_for_disparity <- function(state, city) {
+  filter(
+    opp_load_data(state, city),
+    search_conducted,
+    !is.na(contraband_found)
+  )
 }
 
 
-opp_plot_distribution <- function(state, city, sub_geography) {
+opp_plot_distribution <- function(
+  state,
+  city,
+  sub_geography = district
+) {
+  subgq <- enquo(sub_geography)
+  subgq_name <- quo_name(subgq)
   tbl <- opp_load_data(state, city) %>%
-    filter(search_conducted, !is.na(contraband_found)) %>%
+    filter(
+      search_conducted,
+      !is.na(contraband_found),
+      !is.na(!!subgq)
+    ) %>%
     mutate(year_month = as.yearmon(date))
   print(str_c(nrow(tbl), " data points"))
   # NOTE: facet_grid doesn't like year_month ~ !!subgq or vars or anything
-  fmla <- as.formula(str_c("year_month", "~", sub_geography))
+  fmla <- as.formula(str_c("year_month", "~", subgq_name))
   p <- ggplot(tbl) +
     geom_bar(aes(subject_race, fill = subject_race)) +
     facet_grid(fmla, switch = "y") +
@@ -186,10 +173,11 @@ opp_plot_distribution <- function(state, city, sub_geography) {
     ) + 
     scale_y_continuous(position="right") +
     ylab("year_month") +
-    xlab(sub_geography)
+    xlab(subgq_name) +
+    scale_fill_brewer(palette="Set1")
   output_dir <- dir_create(here::here("plots"))
   fname <- str_c("distribution_", pdf_filename(state, city))
-  width <- select(tbl, !!sub_geography) %>% distinct %>% count
+  width <- select(tbl, !!subgq) %>% distinct %>% count
   height <- tbl %>%
     mutate(year_month = as.yearmon(date)) %>% distinct(year_month) %>% count
   ggsave(
