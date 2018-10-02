@@ -1,5 +1,6 @@
 library(tidyverse)
 library(suncalc)
+library(lutz)
 
 
 #' Veil of Darkness Test
@@ -37,4 +38,17 @@ veil_of_darkness_test <- function(
   time_colq <- enquo(date_colq)
   latitude_colq = enquo(latitude_colq)
   longitude_colq = enquo(longitude_colq)
+}
+
+
+veil_of_darkness_daylight_savings_test <- function(
+  tbl,
+  demographic_col = subject_race,
+  date_col = date,
+  time_col = time,
+  latitude_col = lat,
+  longitude_col = lng,
+  window_size_in_days = 7
+) {
+  # TODO: filter to window around
 }
