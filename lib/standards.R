@@ -196,6 +196,8 @@ schema <- c(
   contraband_found              = as.logical,
   contraband_drugs              = as.logical,
   contraband_weapons            = as.logical,
+  contraband_alcohol            = as.logical,
+  contraband_other              = as.logical,
   frisk_performed               = as.logical,
   search_conducted              = as.logical,
   search_person                 = as.logical,

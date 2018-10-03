@@ -600,7 +600,9 @@ opp_add_contraband_types_func <- function(state, city) {
       col_types = "iic",
       rename_map = c(
         "d" = "contraband_drugs",
-        "w" = "contraband_weapons"
+        "w" = "contraband_weapons",
+        "a" = "contraband_alcohol",
+        "o" = "contraband_other"
       )
     )
   }
