@@ -123,6 +123,7 @@ city_sub_geographies <- quos(
   reporting_area,
   sector,
   subsector,
+  substation,
   service_area,
   zone
 )
@@ -160,6 +161,7 @@ schema <- c(
   reporting_area                = as.character,
   sector                        = as.character,
   subsector                     = as.character,
+  substation                    = as.character,
   service_area                  = as.character,
   zone                          = as.character,
 

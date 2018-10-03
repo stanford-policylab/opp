@@ -75,9 +75,9 @@ clean <- function(d, helpers) {
     helpers$add_shapefiles_data(
     ) %>%
     rename(
-      district = DISTRICT
-      # TODO(phoebe): what are SECTION and SUBCODE?
-      # https://app.asana.com/0/456930159055660/665206850829187 
+      district = DISTRICT,
+      # NOTE: SUBCODE is just the first letter of SUBSTN
+      substation = SUBSTN.x
     ) %>%
     standardize(d$metadata)
 }

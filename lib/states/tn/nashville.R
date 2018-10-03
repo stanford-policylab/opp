@@ -110,6 +110,7 @@ clean <- function(d, helpers) {
       contraband_drugs = drugs_seized,
       contraband_weapons = weapons_seized,
       contraband_found = contraband_drugs | contraband_weapons,
+      precinct = substr(zone, 1, 1),
       notes = officers_comments
     ) %>%
     standardize(d$metadata)
