@@ -63,7 +63,7 @@ clean <- function(d, helpers) {
       frisk_performed = str_detect(actions, "pat down: yes|pat-down"),
       contraband_drugs = str_detect(actions, "evidence types: drugs"),
       contraband_weapons = str_detect(actions, "evidence types: weapon"),
-      contraband_found = contraband_drugs | contraband_weapons,
+      contraband_found = str_detect(actions, "evidence seized: yes"),
       subject_race = tr_race[tolower(SubjectRace)],
       subject_sex = tr_sex[SubjectGender],
       # NOTE: addresses are given sanitized, so we attempt to geocode them by

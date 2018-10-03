@@ -21,6 +21,7 @@ Open Policing Project -- City Data
 * lutz
   
 ## TODO
+* change all contraband_found to include all types of contraband
 * see if cities are sufficiently homogeneous in their tests to aggregate @city 
 * select comparable sub-geographies by city 
 * review distribution of counts of race by subgeography by year (by month?) by city

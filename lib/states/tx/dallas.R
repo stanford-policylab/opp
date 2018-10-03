@@ -109,8 +109,9 @@ clean <- function(d, helpers) {
       search_consent = HA_SEARCH_CONCENT,
       search_probable_cause = HA_SEARCH_PC,
       search_incident_to_arrest = HA_INCIDTO_ARREST,
-      contraband_is_drugs = HA_CONTRAB_DRUGS,
-      contraband_is_weapon = HA_CONTRAB_WEAPON,
+      contraband_drugs = HA_CONTRAB_DRUGS,
+      contraband_weapons = HA_CONTRAB_WEAPON,
+      contraband_found = HA_CONTRABAN,
       officer_id = HA_OFFICER_ID,
       speed = HA_ALLEGED_SPEED,
       posted_speed = HA_POSTED_SPEED,
@@ -118,12 +119,13 @@ clean <- function(d, helpers) {
     ) %>%
     apply_translator_to(
       tr_int_str_to_bool,
+      "contraband_drugs",
+      "contraband_found",
+      "contraband_weapons",
       "search_conducted",
       "search_consent",
-      "search_probable_cause",
       "search_incident_to_arrest",
-      "contraband_is_drugs",
-      "contraband_is_weapon"
+      "search_probable_cause"
     ) %>%
     separate_cols(
       HA_ARREST_DATE = c("date", "time")
@@ -157,10 +159,7 @@ clean <- function(d, helpers) {
       # TODO(phoebe): what should we use as reason for stop?
       # https://app.asana.com/0/456927885748233/475749789858290 
       subject_race = tr_race[subject_race],
-      subject_sex = tr_sex[subject_sex],
-      contraband_drugs = contraband_is_drugs,
-      contraband_weapons = contraband_is_weapon,
-      contraband_found = contraband_drugs | contraband_weapons
+      subject_sex = tr_sex[subject_sex]
     ) %>%
     standardize(d$metadata)
 }

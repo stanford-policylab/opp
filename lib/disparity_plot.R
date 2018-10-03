@@ -33,7 +33,7 @@ plot_rates <- function(
   majority_demographic = "white", 
   rate_col = `contraband_found where search_conducted`,
   size_col = n_search_conducted,
-  title = "Contraband recovery rates by precinct",
+  title = "Contraband recovery rates by sub-geography",
   axis_title = "hit rate",
   size_title = "Num searches\nconducted",
   epsilon_rate = 0.05
