@@ -21,7 +21,11 @@ clean <- function(d, helpers) {
     "Other" = "other/unknown",
     "Unknown" = "other/unknown"
   )
-
+  tr_sex = c(
+    "F" = "female",
+    "M" = "male"
+  )
+  
   d$data %>%
     rename(
       county_name = County,
@@ -31,6 +35,9 @@ clean <- function(d, helpers) {
       officer_last_name = `Officer Name`,
       department_id = PoliceDivision,
       reason_for_stop = ContactReason
+    ) %>%
+    helpers$add_contraband_type(
+      "ContrabandDesc"
     ) %>%
     mutate(
       date = parse_date(DateIssued, "%m/%d/%Y"),
@@ -55,10 +62,11 @@ clean <- function(d, helpers) {
         "arrest" = arrest_made,
         "citation" = citation_issued
       ),
-      contraband_drugs = ContrabandDrugs == "1"
+      contraband_drugs = contraband_drugs == "1" | ContrabandDrugs == "1"
         | ContrabandDrugParaphenalia == "1",
-      contraband_weapons = ContrabandWeapons == "1",
-      contraband_found = contraband_drugs | contraband_weapons,
+      contraband_weapons = contraband_weapons == "1" | ContrabandWeapons == "1",
+      contraband_found = contraband_drugs | contraband_weapons 
+        | Contraband == "1",
       search_person = SubjectSearched == "1" | PassengerSearched == "1",
       search_vehicle = VehicleSearched == "1",
       search_conducted = Searched == "1" | search_person | search_vehicle
