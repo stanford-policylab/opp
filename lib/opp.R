@@ -459,7 +459,7 @@ opp_clean <- function(d, state, city) {
     "add_lat_lng" = opp_add_lat_lng_func(state, city),
     "add_search_basis" = opp_add_search_basis_func(state, city),
     "add_type" = opp_add_type_func(state, city),
-    "add_contraband_types_func" = opp_add_contraband_types_func(state, city),
+    "add_contraband_type" = opp_add_contraband_types_func(state, city),
     "add_shapefiles_data" = opp_add_shapefiles_data_func(state, city),
     "add_county_from_highway_milepost" = 
       opp_add_county_from_highway_milepost_func(state, city),
