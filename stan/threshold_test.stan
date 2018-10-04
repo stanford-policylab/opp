@@ -1,87 +1,93 @@
-	data {
-  int<lower=1> N_OBSERVATIONS;
-  int<lower=1> N_SUSPECT_RACES;
-  int<lower=1> N_GEOGRAPHIC_UNITS;
+data {
+  int<lower=1> n_groups;
+  int<lower=1> n_demographic_divisions;
+  int<lower=1> n_control_divisions;
 
-  int<lower=1,upper=N_SUSPECT_RACES> race[N_OBSERVATIONS];
-  int<lower=1,upper=N_GEOGRAPHIC_UNITS> geographic_unit[N_OBSERVATIONS];
+  int<lower=1, upper=n_demographic_divisions> demographic_division[n_groups];
+  int<lower=1, upper=n_control_divisions> control_division[n_groups];
 
-  int<lower=1> stops[N_OBSERVATIONS];
-  int<lower=0> searches[N_OBSERVATIONS];
-  int<lower=0> hits[N_OBSERVATIONS];
+  int<lower=1> group_count[n_groups];
+  int<lower=0> action_count[n_groups];
+  int<lower=0> outcome_count[n_groups];
 }
 
 parameters {
-  // hyperparameters
-  real<lower=0> sigma_t; // std dev for the normal the thresholds are drawn from
-
-  // search thresholds
-  vector[N_SUSPECT_RACES] t_race;
-  vector[N_OBSERVATIONS] t_i_raw;
+  // standard deviation for threshold
+  real<lower=0> sigma_threshold;
+  
+  // action thresholds
+  vector[n_demographic_divisions] threshold_demographic_division;
+  vector[n_groups] threshold_raw;
 
   // parameters for signal distribution
-  vector[N_SUSPECT_RACES] phi_race;
-  vector[N_GEOGRAPHIC_UNITS-1] phi_geo_raw;
+  vector[n_demographic_divisions] phi_demographic_division;
+  vector[n_control_divisions - 1] phi_control_division_raw;
   real mu_phi;
 
-  vector[N_SUSPECT_RACES] delta_race;
-  vector[N_GEOGRAPHIC_UNITS-1] delta_geo_raw;
-  real mu_delta;
+  vector[n_demographic_divisions] lambda_demographic_division;
+  vector[n_control_divisions - 1] lambda_control_division_raw;
+  real mu_lambda;
 }
 
 transformed parameters {
-  vector[N_GEOGRAPHIC_UNITS] phi_geo;
-  vector[N_GEOGRAPHIC_UNITS] delta_geo;
-  vector[N_OBSERVATIONS] phi;
-  vector[N_OBSERVATIONS] delta;
-  vector[N_OBSERVATIONS] t_i;
-  vector<lower=0, upper=1>[N_OBSERVATIONS] search_rate;
-  vector<lower=0, upper=1>[N_OBSERVATIONS] hit_rate;
-  real successful_search_rate;
-  real unsuccessful_search_rate;
+  vector[n_control_divisions] phi_control_division;
+  vector[n_control_divisions] lambda_control_division;
+  vector[n_groups] phi;
+  vector[n_groups] lambda;
+  vector[n_groups] threshold;
+  vector<lower=0, upper=1>[n_groups] action_rate;
+  vector<lower=0, upper=1>[n_groups] outcome_rate;
+  real successful_action_rate;
+  real unsuccessful_action_rate;
 
-  phi_geo[1] = 0;
-  phi_geo[2:N_GEOGRAPHIC_UNITS] = phi_geo_raw;
-  delta_geo[1] = 0;
-  delta_geo[2:N_GEOGRAPHIC_UNITS] = delta_geo_raw;
+  phi_control_division[1] = 0;
+  phi_control_division[2:n_control_divisions] = phi_control_division_raw;
+  lambda_control_division[1] = 0;
+  lambda_control_division[2:n_control_divisions] = lambda_control_division_raw;
 
-  t_i = t_race[race] + t_i_raw * sigma_t;
+  threshold = threshold_demographic_division[demographic_division]
+    + threshold_raw * sigma_threshold;
 
-  for (i in 1:N_OBSERVATIONS) {
+  for (i in 1:n_groups) {
+    // phi is the proportion of demographic_division x who evidence behavior
+    // indicated by the outcome, i.e. whites carrying a weapon
+    phi[i] = inv_logit(phi_demographic_division[demographic_division[i]]
+      + phi_control_division[control_division[i]]);
 
-    // phi is the fraction of people of race r, d who are guilty (carrying weapon)
-    phi[i] = inv_logit(phi_race[race[i]] + phi_geo[geographic_unit[i]]);
+    // mu is the center of the `outcome` distribution
+    lambda[i] = exp(lambda_demographic_division[demographic_division[i]]
+      + lambda_control_division[control_division[i]]);
 
-    // mu is the center of the guilty distribution.
-    delta[i] = exp(delta_race[race[i]] + delta_geo[geographic_unit[i]]);
-
-    successful_search_rate = phi[i] * (1 - normal_cdf(t_i[i], delta[i], 1));
-    unsuccessful_search_rate = (1 - phi[i]) * (1 - normal_cdf(t_i[i], 0, 1));
-    search_rate[i] = (successful_search_rate + unsuccessful_search_rate);
-    hit_rate[i] = successful_search_rate / search_rate[i];
+    successful_action_rate =
+      phi[i] * (1 - normal_cdf(threshold[i], lambda[i], 1));
+    unsuccessful_action_rate =
+      (1 - phi[i]) * (1 - normal_cdf(threshold[i], 0, 1));
+    action_rate[i] = successful_action_rate + unsuccessful_action_rate;
+    outcome_rate[i] = successful_action_rate / action_rate[i];
   }
 }
 
+
 model {
-  // Draw threshold hyperparameters
-  sigma_t ~ normal(0, 1);
+  // draw threshold parameters
+  sigma_threshold ~ normal(0, 1);
 
-  // Draw race parameters.
-  // Each is centered at a mu, and we allow for inter-race heterogeneity.
+  // draw demographic parameters
+  // each is centered at its own mu, and we allow for demographic heterogeneity
   mu_phi ~ normal(0, 1);
-  mu_delta ~ normal(0, 1);
+  mu_lambda ~ normal(0, 1);
+  
+  phi_demographic_division ~ normal(mu_phi, 0.1);
+  lambda_demographic_division ~ normal(mu_lambda, 0.1);
+  threshold_demographic_division ~ normal(0, 1);
 
-  phi_race ~ normal(mu_phi, .1);
-  delta_race ~ normal(mu_delta, .1);
-  t_race ~ normal(0, 1);
+  // draw control division parameters (for un-pinned divisions)
+  phi_control_division_raw ~ normal(0, 0.1);
+  lambda_control_division_raw ~ normal(0, 0.1);
 
-  // Draw geography parameters (for un-pinned geographic units)
-  phi_geo_raw ~ normal(0, .1);
-  delta_geo_raw ~ normal(0, .1);
+  // thresholds
+  threshold_raw ~ normal(0, 1);
 
-  // Thresholds
-  t_i_raw ~ normal(0, 1);
-
-  searches ~ binomial(stops, search_rate);
-  hits ~ binomial(searches, hit_rate);
+  action_count ~ binomial(group_count, action_rate);
+  outcome_count ~ binomial(action_count, outcome_rate);
 }

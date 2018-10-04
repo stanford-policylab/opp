@@ -4,18 +4,18 @@ source("threshold_test.R")
 source("disparity_plot.R")
 
 
-main <- function() {
+disparity <- function() {
   d <- load_data()
 
-  ots <- individual_outcome_tests(d)
-  tts <- individual_threshold_tests(d)
-  plt_each(ots, "outcome")
-  plt_each(tts, "threshold")
+  ots <- outcome_tests(d)
+  tts <- threshold_tests(d)
+  plt_all(ots, "outcome")
+  plt_all(tts, "threshold")
 
   ot <- outcome_test(d, sub_geography)
   tt <- threshold_test(d, sub_geography)
-  plt(ot, "outcome")
-  plt(tt, "threshold")
+  plt(ot$results, "outcome")
+  plt(tt$results$thresholds_by_group, "threshold")
 }
 
 
@@ -105,29 +105,36 @@ load_data <- function() {
 }
 
 
-individual_outcome_tests <- function(d) {
+outcome_tests <- function(d) {
   d %>%
     group_by(state, city) %>%
-    summarize(results = outcome_test(., sub_geography))
+    do(outcome_test(., sub_geography)$results)
 }
 
 
-individual_threshold_tests <- function(d) {
+threshold_tests <- function(d) {
   d %>%
     group_by(state, city) %>%
-    summarize(results = threshold_test(., sub_geography))
+    do(threshold_test(., sub_geography)$results$thresholds_by_group)
 }
 
 
-plt_each <- function(ds, prefix) {
-  f <- (state, city, d) {plt(d, str_c(prefix, "_", create_title(state, city)))}
-  par_pmap(ds, f)
+plt_all <- function(tbl, prefix) {
+  output_dir <- dir_create(here::here("plots"))
+  f <- function(grp) {
+    print(colnames(grp))
+    title <- str_c(prefix, ": ", create_title(grp$state[1], grp$city[1]))
+    fpath <- path(output_dir, str_c(title, ".png"))
+    p <- plot_rates(grp, sub_geography)
+    ggsave(fpath, p, width=12, height=6, units="in")
+  }
+  group_by(tbl, state, city) %>% do(f(.))
 }
 
 
 plt <- function(d, prefix) {
-  output_dir <- dir_create(here:here("plots"))
+  output_dir <- dir_create(here::here("plots"))
   fpath <- path(output_dir, str_c(prefix, ".png"))
-  p <- disparity_plot(d$results, sub_geography)
-  ggsave(p, fpath)
+  p <- plot_rates(d, sub_geography)
+  ggsave(fpath, p, width=12, height=6, units="in")
 }
