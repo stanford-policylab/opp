@@ -1,0 +1,68 @@
+filters:
+  - city == "Statewide"
+  - search_conducted == TRUE
+  - race defined
+  - county (or other comparable sub-geo) defined
+  - contraband defined
+output:
+  - AZ
+  - CA
+  - CO
+  - CT 
+  - IL
+  - MA
+  - MD
+  - MO
+  - NC
+  - OH
+  - RI
+  - SC
+  - TX
+  - VT
+  - WA
+  - WI
+final list:
+  - 
+  - SC
+
+AZ:
+  - Notes from old OPP: Excluded from analysis because contraband_found too messy
+  - Contraband seems fine for us; we only include drug seizures (~14% hit rate). Can we use it?
+  - County seems to be processed wrong (~90% NA, plus inconsistencies in trailing " County")
+
+CA:
+  - Notes from old OPP: Excluded from analysis because no contraband info for search incident to arrest
+  
+CO:
+  - County seems to be processed wrong (too many NAs)
+
+CT:
+
+IL:
+  - Use department_name instead of county_name
+MA:
+  - Notes from old OPP: Excluded from analysis because contraband_found too messsy
+
+MD:
+
+MO:
+
+NC:
+
+OH:
+
+RI:
+  - Use zone instead of county_name
+
+SC:
+  - Contraband is determined by `!is.na(ContrabandDesc)`, as the old OPP did.
+  - TODO: Be a little more judicious is separating out the few rows that, while not NA for ContrabandDesc, indicate no contraband was found. There appear to be very few such rows, so this can be a low priority todo. But worth doing to be rigorous.
+ 
+TX:
+
+VT:
+
+WA:
+
+WI:
+
