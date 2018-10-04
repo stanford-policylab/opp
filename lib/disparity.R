@@ -89,7 +89,7 @@ load_data <- function() {
       sg = if_else(city == "Hartford", district, sg),
       sg = if_else(city == "New Orleans", district, sg),
       sg = if_else(city == "Philadelphia", district, sg),
-      sg = if_else(city == "Nashville", precinct, sg),
+      sg = if_else(city == "Nashville", zone, sg),
       sg = if_else(city == "Dallas", district, sg),
       sg = if_else(city == "El Paso", region, sg),
       sg = if_else(city == "San Antonio", substation, sg)

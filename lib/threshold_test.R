@@ -72,13 +72,15 @@ threshold_test <- function(
   metadata['stan_warnings'] <- summary(warnings()) 
   posteriors <- rstan::extract(fit)
 
+  print('before summary stats')
   summary_stats <- collect_average_threshold_test_summary_stats(
     data_summary, 
-    demographic_colq,
-    majority_demographic,
-    posteriors
+    posteriors,
+    !!demographic_colq,
+    majority_demographic
   )
 
+  print('before collect thresholds')
   thresholds_by_group <- collect_thresholds_by_group(data_summary, posteriors)
 
   list(
@@ -206,11 +208,12 @@ format_data_summary_for_stan <- function(data_summary) {
 
 
 collect_average_threshold_test_summary_stats <- function(
-  summary,
-  demographic_colq,
-  majority_demographic,
-  posteriors
+  data_summary,
+  posteriors,
+  demographic_col = subject_race,
+  majority_demographic = "white"
 ) {
+  demographic_colq <- enquo(demographic_col)
   avg_thresh <- accumulateRowMeans(
     t(signal_to_percent(
       posteriors$threshold,
@@ -221,10 +224,10 @@ collect_average_threshold_test_summary_stats <- function(
     summary$n
   )
   format_summary_stats(
-    summary, 
-    demographic_colq,
-    majority_demographic, 
-    avg_thresh
+    data_summary, 
+    avg_thresh,
+    !!demographic_colq,
+    majority_demographic
   )
 } 
 
@@ -265,10 +268,11 @@ na_replace <- function(x, r) if_else(is.finite(x), x, r)
 
 format_summary_stats <- function(
   summary,
-  demographic_colq,
-  majority_demographic,
-  avg_thresh
+  avg_thresh,
+  demographic_col = subject_race,
+  majority_demographic = "white",
 ) {
+  demographic_colq <- enquo(demographic_col)
   majority_idx <-
     summary %>% 
     filter(demographic == majority_demographic) %>% 
