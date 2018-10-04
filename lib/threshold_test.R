@@ -51,27 +51,25 @@ threshold_test <- function(
   outcome_colq <- enquo(outcome_col)
   
   metadata <- list()
-
   tbl <- prepare(
     tbl,
-    metadata,
-    demographic_colq,
-    action_colq,
-    outcome_colq,
-    control_colqs
+    !!!control_colqs,
+    demographic_col=!!demographic_colq,
+    action_col=!!action_colq,
+    outcome_col=!!outcome_colq,
+    metadata=metadata
   )
-
   data_summary <- summarize_for_stan(
     tbl,
-    metadata,
-    demographic_colq,
-    action_colq,
-    outcome_colq,
-    control_colqs
+    !!!control_colqs,
+    demographic_col=!!demographic_colq,
+    action_col=!!action_colq,
+    outcome_col=!!outcome_colq,
+    metadata=metadata
   )
-
-  stan_data <- format_data_summary_for_stan(data_summary, demographic_colq)
+  stan_data <- format_data_summary_for_stan(data_summary)
   fit <- stan_threshold_test(stan_data, n_iter, n_cores)
+  metadata['stan_warnings'] <- summary(warnings()) 
   posteriors <- rstan::extract(fit)
 
   summary_stats <- collect_average_threshold_test_summary_stats(
@@ -114,12 +112,18 @@ rate_warning <- function(rate, message) {
 
 prepare <- function(
   tbl,
-  metadata,
-  demographic_colq,
-  action_colq,
-  outcome_colq,
-  control_colqs
+  ...,
+  demographic_col = subject_race,
+  action_col = search_conducted,
+  outcome_col = contraband_found,
+  metadata = list()
 ) {
+
+  control_colqs <- enquos(...)
+  demographic_colq <- enquo(demographic_col)
+  action_colq <- enquo(action_col)
+  outcome_colq <- enquo(outcome_col)
+
   n_before_drop_na <- nrow(tbl)
   tbl <- 
     tbl %>% 
@@ -154,13 +158,17 @@ prepare <- function(
 
 summarize_for_stan <- function(
   tbl,
-  metadata,
-  demographic_colq,
-  action_colq,
-  outcome_colq,
-  control_colqs
+  ...,
+  demographic_col = subject_race,
+  action_col = search_conducted,
+  outcome_col = contraband_found,
+  metadata = list()
 ) {
-  demographic_colname <- quo_name(demographic_colq)
+
+  control_colqs <- enquos(...)
+  demographic_colq <- enquo(demographic_col)
+  action_colq <- enquo(action_col)
+  outcome_colq <- enquo(outcome_col)
 
   tbl %>% 
   group_by(!!demographic_colq, !!!control_colqs) %>%
@@ -173,23 +181,23 @@ summarize_for_stan <- function(
   unite(controls, !!!control_colqs) %>% 
   # NOTE: keep original column values to map stan output to values
   mutate(
-    control = controls,
+    controls = controls,
     demographic = !!demographic_colq
   ) %>% 
   mutate_at(
-    .vars = c(demographic_colname, "controls"),
+    .vars = c("demographic", "controls"),
     .funs = ~as.integer(as.factor(.x))
   )
 }
 
 
-format_data_summary_for_stan <- function(data_summary, demographic_colq) {
+format_data_summary_for_stan <- function(data_summary) {
   list(
     n_groups = nrow(data_summary),
     n_control_divisions = n_distinct(pull(data_summary, controls)),
-    n_demographic_divisions = n_distinct(pull(data_summary, !!demographic_colq)),
+    n_demographic_divisions = n_distinct(pull(data_summary, demographic)),
     control_division = pull(data_summary, controls),
-    demographic_division = pull(data_summary, !!demographic_colq),
+    demographic_division = pull(data_summary, demographic),
     group_count = pull(data_summary, n),
     action_count = pull(data_summary, n_action),
     outcome_count = pull(data_summary, n_outcome)
