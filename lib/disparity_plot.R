@@ -75,7 +75,7 @@ plot_rates <- function(
   )
   
   axis_limits <- c(
-    min(pull(tbl, !!rate_colq)) - epsilon_rate, 
+    max(min(pull(tbl, !!rate_colq)) - epsilon_rate, 0),
     max(pull(tbl, !!rate_colq)) + epsilon_rate
   )
 

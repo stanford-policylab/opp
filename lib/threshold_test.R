@@ -49,6 +49,8 @@ threshold_test <- function(
   demographic_colq <- enquo(demographic_col)
   action_colq <- enquo(action_col)
   outcome_colq <- enquo(outcome_col)
+
+  stopifnot(length(quos_names(control_colqs)) > 0)
   
   metadata <- list()
   tbl <- prepare(
@@ -69,10 +71,9 @@ threshold_test <- function(
   )
   stan_data <- format_data_summary_for_stan(data_summary)
   fit <- stan_threshold_test(stan_data, n_iter, n_cores)
-  metadata['stan_warnings'] <- summary(warnings()) 
+  metadata["stan_warnings"] <- summary(warnings()) 
   posteriors <- rstan::extract(fit)
 
-  print('before summary stats')
   summary_stats <- collect_average_threshold_test_summary_stats(
     data_summary, 
     posteriors,
@@ -80,8 +81,11 @@ threshold_test <- function(
     majority_demographic
   )
 
-  print('before collect thresholds')
-  thresholds_by_group <- collect_thresholds_by_group(data_summary, posteriors)
+  thresholds_by_group <- collect_thresholds_by_group(
+    data_summary,
+    posteriors,
+    !!demographic_colq
+  )
 
   list(
     metadata = c(
@@ -220,8 +224,8 @@ collect_average_threshold_test_summary_stats <- function(
       posteriors$phi,
       posteriors$lambda
     )),
-    pull(summary, !!demographic_colq), 
-    summary$n
+    pull(data_summary, demographic),
+    data_summary$n
   )
   format_summary_stats(
     data_summary, 
@@ -270,13 +274,13 @@ format_summary_stats <- function(
   summary,
   avg_thresh,
   demographic_col = subject_race,
-  majority_demographic = "white",
+  majority_demographic = "white"
 ) {
   demographic_colq <- enquo(demographic_col)
   majority_idx <-
     summary %>% 
-    filter(demographic == majority_demographic) %>% 
-    pull(!!demographic_colq) %>% 
+    filter(!!demographic_colq == majority_demographic) %>% 
+    pull(demographic) %>% 
     # extracts a single value
     unique() 
   
@@ -288,7 +292,7 @@ format_summary_stats <- function(
     ) 
   
   tibble(
-    demographic = levels(summary$demographic),
+    demographic = levels(pull(summary, !!demographic_colq)),
     avg_threshold = pretty_percent(rowMeans(avg_thresh)),
     threshold_ci = format_confidence_interval(avg_thresh),
     threshold_diff = append(
@@ -363,23 +367,31 @@ stan_threshold_test <- function(
 }
 
 
-collect_thresholds_by_group <- function(data_summary, posteriors) {
+collect_thresholds_by_group <- function(
+  data_summary,
+  posteriors,
+  demographic_col = subject_race
+) {
+  demographic_colq <- enquo(demographic_col)
   data_summary %>%
-  mutate(
-    thresholds = colMeans(signal_to_percent(
-      posteriors$threshold, 
-      posteriors$phi, 
-      posteriors$lambda
-    ))
-  ) %>%
-  group_by(controls) %>%
-  # e.g., number of stops across all races in each district
-  mutate(total_group_count = sum(n)) %>%
-  ungroup() %>% 
-  select(
-    demographic, 
-    control,
-    n_action,
-    thresholds
-  )
+    mutate(
+      thresholds = colMeans(signal_to_percent(
+        posteriors$threshold, 
+        posteriors$phi, 
+        posteriors$lambda
+      ))
+    ) %>%
+    group_by(controls) %>%
+    # e.g., number of stops across all races in each district
+    mutate(total_group_count = sum(n)) %>%
+    ungroup() %>% 
+    select(
+      !!demographic_colq, 
+      controls,
+      n_action,
+      thresholds
+    )
 }
+
+
+quos_names <- function(quos_var) { sapply(quos_var, quo_name) }
