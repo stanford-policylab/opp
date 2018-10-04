@@ -173,8 +173,8 @@ summarize_for_stan <- function(
   unite(controls, !!!control_colqs) %>% 
   # NOTE: keep original column values to map stan output to values
   mutate(
-    original_control = controls,
-    original_demographic = !!demographic_colq
+    control = controls,
+    demographic = !!demographic_colq
   ) %>% 
   mutate_at(
     .vars = c(demographic_colname, "controls"),
@@ -263,7 +263,7 @@ format_summary_stats <- function(
 ) {
   majority_idx <-
     summary %>% 
-    filter(original_demographic == majority_demographic) %>% 
+    filter(demographic == majority_demographic) %>% 
     pull(!!demographic_colq) %>% 
     # extracts a single value
     unique() 
@@ -276,7 +276,7 @@ format_summary_stats <- function(
     ) 
   
   tibble(
-    demographic = levels(summary$original_demographic),
+    demographic = levels(summary$demographic),
     avg_threshold = pretty_percent(rowMeans(avg_thresh)),
     threshold_ci = format_confidence_interval(avg_thresh),
     threshold_diff = append(
@@ -365,8 +365,8 @@ collect_thresholds_by_group <- function(data_summary, posteriors) {
   mutate(total_group_count = sum(n)) %>%
   ungroup() %>% 
   select(
-    original_demographic, 
-    original_control,
+    demographic, 
+    control,
     n_action,
     thresholds
   )

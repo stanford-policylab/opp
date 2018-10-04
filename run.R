@@ -2,6 +2,7 @@
 
 setwd("lib")
 suppressMessages(source("opp.R"))
+suppressMessages(source("disparity.R"))
 
 
 main <- function() {
@@ -14,6 +15,8 @@ main <- function() {
     opp_plot(args$state, args$city)
   if (not_null(args$coverage))
     opp_coverage()
+  if (not_null(args$disparity))
+    disparity()
   if (not_null(args$everything))
     opp_everything()
   print("Finished!")
@@ -27,6 +30,7 @@ get_args <- function() {
                  "[--process]",
                  "[--n_max]",
                  "[--report]",
+                 "[--disparity]",
                  "[--plot]",
                  "--state <state_code>",
                  "--city <city_name>",
@@ -39,6 +43,7 @@ get_args <- function() {
     "process",    "o",          "none",         "logical",
     "n_max",      "n",          "none",         "integer",
     "report",     "r",          "none",         "logical",
+    "disparity",  "d",          "none",         "logical",
     "plot",       "p",          "none",         "logical",
     "state",      "s",          "none",         "character",
     "city",       "c",          "none",         "character",

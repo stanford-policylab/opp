@@ -11,11 +11,12 @@ disparity <- function() {
   tts <- threshold_tests(d)
   plt_all(ots, "outcome")
   plt_all(tts, "threshold")
+  plt(tts, "thresholds by city")
 
   ot <- outcome_test(d, sub_geography)
   tt <- threshold_test(d, sub_geography)
   plt(ot$results, "outcome")
-  plt(tt$results$thresholds_by_group, "threshold")
+  plt(tt$results$thresholds_by_group, "thresholds (aggregate)")
 }
 
 
@@ -108,25 +109,39 @@ load_data <- function() {
 outcome_tests <- function(d) {
   d %>%
     group_by(state, city) %>%
-    do(outcome_test(., sub_geography)$results)
+    do(outcome_test(., sub_geography)$results) %>%
+    ungroup()
 }
 
 
 threshold_tests <- function(d) {
   d %>%
     group_by(state, city) %>%
-    do(threshold_test(., sub_geography)$results$thresholds_by_group)
+    do(threshold_test(., sub_geography)$results$thresholds_by_group) %>%
+    ungroup()
 }
 
 
 plt_all <- function(tbl, prefix) {
   output_dir <- dir_create(here::here("plots"))
   f <- function(grp) {
-    print(colnames(grp))
     title <- str_c(prefix, ": ", create_title(grp$state[1], grp$city[1]))
     fpath <- path(output_dir, str_c(title, ".png"))
-    p <- plot_rates(grp, sub_geography)
+    if (prefix == "outcome") {
+      p <- plot_rates(grp, sub_geography)
+    } else {
+      p <- plot_rates(
+        grp,
+        control,
+        demographic_col = demographic,
+        rate_col = thresholds,
+        size_col = n_action,
+        title = title,
+        axis_title = "threshold"
+      )
+    }
     ggsave(fpath, p, width=12, height=6, units="in")
+    print(str_c("saved: ", fpath))
   }
   group_by(tbl, state, city) %>% do(f(.))
 }
@@ -135,6 +150,19 @@ plt_all <- function(tbl, prefix) {
 plt <- function(d, prefix) {
   output_dir <- dir_create(here::here("plots"))
   fpath <- path(output_dir, str_c(prefix, ".png"))
-  p <- plot_rates(d, sub_geography)
+  if (prefix == "outcome") {
+    p <- plot_rates(d, sub_geography)
+  } else {
+    p <- plot_rates(
+      d,
+      control,
+      demographic_col = demographic,
+      rate_col = thresholds,
+      size_col = n_action,
+      title = prefix,
+      axis_title = "threshold"
+    )
+  }
   ggsave(fpath, p, width=12, height=6, units="in")
+  print(str_c("saved: ", fpath))
 }
