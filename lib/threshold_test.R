@@ -75,22 +75,15 @@ threshold_test <- function(
     majority_demographic
   )
 
-  thresholds_by_group <- collect_thresholds_by_group(
-    data_summary,
-    posteriors,
-    !!demographic_colq
-  )
-
   list(
     metadata = c(
       metadata,
       list(
-        data_summary = data_summary,
         fit = fit
       )
     ),
     results = list(
-      thresholds_by_group = thresholds_by_group,
+      thresholds = add_thresholds(data_summary, posteriors),
       aggregate_thresholds = summary_stats
     )
   )
@@ -304,30 +297,16 @@ stan_threshold_test <- function(
 }
 
 
-collect_thresholds_by_group <- function(
+add_thresholds <- function(
   data_summary,
-  posteriors,
-  ...,
-  demographic_col = subject_race
+  posteriors
 ) {
-  control_colqs <- enquos(...)
-  demographic_colq <- enquo(demographic_col)
   data_summary %>%
     mutate(
-      thresholds = colMeans(signal_to_percent(
+      threshold = colMeans(signal_to_percent(
         posteriors$threshold, 
         posteriors$phi, 
         posteriors$lambda
       ))
-    ) %>%
-    group_by(controls) %>%
-    # e.g., number of stops across all races in each district
-    mutate(total_group_count = sum(n)) %>%
-    ungroup() %>% 
-    select(
-      !!!control_colqs,
-      !!demographic_colq, 
-      n_action,
-      thresholds
     )
 }

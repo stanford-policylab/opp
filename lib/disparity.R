@@ -132,9 +132,9 @@ plt_all <- function(tbl, prefix) {
     } else {
       p <- plot_rates(
         grp,
-        controls,
+        state, city, sub_geography,
         demographic_col = subject_race,
-        rate_col = thresholds,
+        rate_col = threshold,
         size_col = n_action,
         title = title,
         axis_title = "threshold"
@@ -142,8 +142,9 @@ plt_all <- function(tbl, prefix) {
     }
     ggsave(fpath, p, width=12, height=6, units="in")
     print(str_c("saved: ", fpath))
+    grp
   }
-  group_by(tbl, state, city) %>% do(f(.))
+  group_by(tbl, state, city) %>% do(f(.)) %>% ungroup()
 }
 
 
@@ -155,9 +156,9 @@ plt <- function(d, prefix) {
   } else {
     p <- plot_rates(
       d,
-      controls,
+      state, city, sub_geography,
       demographic_col = subject_race,
-      rate_col = thresholds,
+      rate_col = threshold,
       size_col = n_action,
       title = prefix,
       axis_title = "threshold"
