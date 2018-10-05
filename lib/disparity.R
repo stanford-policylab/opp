@@ -8,10 +8,10 @@ disparity <- function() {
   d <- load_data()
 
   ots <- outcome_tests(d)
-  tts <- threshold_tests(d)
   plt_all(ots, "outcome")
+  tts <- threshold_tests(d)
   plt_all(tts, "threshold")
-  plt(tts, "thresholds by city")
+  plt(tts, "thresholds (all cities)")
 
   ot <- outcome_test(d, sub_geography)
   tt <- threshold_test(d, sub_geography)
@@ -96,12 +96,6 @@ load_data <- function() {
     ) %>%
     rename(
       sub_geography = sg
-    ) %>%
-    filter(
-      search_conducted,
-      !is.na(contraband_found),
-      !is.na(subject_race),
-      !is.na(sub_geography)
     )
 }
 
@@ -126,14 +120,14 @@ plt_all <- function(tbl, prefix) {
   output_dir <- dir_create(here::here("plots"))
   f <- function(grp) {
     title <- str_c(prefix, ": ", create_title(grp$state[1], grp$city[1]))
-    fpath <- path(output_dir, str_c(title, ".png"))
+    fpath <- path(output_dir, str_c(title, ".pdf"))
     if (prefix == "outcome") {
       p <- plot_rates(grp, sub_geography)
     } else {
       p <- plot_rates(
         grp,
-        control,
-        demographic_col = demographic,
+        controls,
+        demographic_col = subject_race,
         rate_col = thresholds,
         size_col = n_action,
         title = title,
@@ -149,14 +143,14 @@ plt_all <- function(tbl, prefix) {
 
 plt <- function(d, prefix) {
   output_dir <- dir_create(here::here("plots"))
-  fpath <- path(output_dir, str_c(prefix, ".png"))
+  fpath <- path(output_dir, str_c(prefix, ".pdf"))
   if (prefix == "outcome") {
     p <- plot_rates(d, sub_geography)
   } else {
     p <- plot_rates(
       d,
-      control,
-      demographic_col = demographic,
+      controls,
+      demographic_col = subject_race,
       rate_col = thresholds,
       size_col = n_action,
       title = prefix,

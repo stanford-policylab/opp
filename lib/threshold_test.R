@@ -1,8 +1,4 @@
-library(here)
-library(parallel)
-library(rstan)
-library(tidyverse)
-library(stringr)
+source("analysis_common.R")
 
 #' Threshold Test
 #'
@@ -103,65 +99,6 @@ threshold_test <- function(
 }
 
 
-# Creates a warning indicating that some percent of the data had some property
-rate_warning <- function(rate, message) {
-  warning(
-    str_c(
-      formatC(100 * rate, format = "f", digits = 2), 
-      "% of the data ",
-      message
-    ),
-    call. = FALSE
-  )
-}
-
-
-prepare <- function(
-  tbl,
-  ...,
-  demographic_col = subject_race,
-  action_col = search_conducted,
-  outcome_col = contraband_found,
-  metadata = list()
-) {
-
-  control_colqs <- enquos(...)
-  demographic_colq <- enquo(demographic_col)
-  action_colq <- enquo(action_col)
-  outcome_colq <- enquo(outcome_col)
-
-  n_before_drop_na <- nrow(tbl)
-  tbl <- 
-    tbl %>% 
-    select(
-      !!demographic_colq,
-      !!action_colq,
-      !!outcome_colq,
-      !!!control_colqs
-    ) %>%
-    drop_na() 
-  n_after_drop_na <- nrow(tbl)
-
-  null_rate <- (n_before_drop_na - n_after_drop_na) / n_before_drop_na
-  if (null_rate > 0) { rate_warning(null_rate, "was null and removed") }
-  metadata['null_rate'] <- null_rate
-
-  # NOTE: remove inconsistent data where an outcome was recorded but there
-  # was no action taken
-  tbl <- filter(tbl, !(!!outcome_colq & !(!!action_colq)))
-  correction_rate <- (n_after_drop_na - nrow(tbl)) / n_before_drop_na
-  metadata['outcome_without_action_rate'] <- correction_rate
-  if (correction_rate > 0) {
-    rate_warning(
-      correction_rate,
-      "was inconsistent: outcome was recorded but no action was taken"
-    )
-  }
-
-  tbl
-}
-
-
 summarize_for_stan <- function(
   tbl,
   ...,
@@ -177,23 +114,23 @@ summarize_for_stan <- function(
   outcome_colq <- enquo(outcome_col)
 
   tbl %>% 
-  group_by(!!demographic_colq, !!!control_colqs) %>%
-  summarize(
-    n = n(),
-    n_action = sum(!!action_colq),
-    n_outcome = sum(!!outcome_colq)
-  ) %>% 
-  ungroup() %>% 
-  unite(controls, !!!control_colqs) %>% 
-  # NOTE: keep original column values to map stan output to values
-  mutate(
-    controls = controls,
-    demographic = !!demographic_colq
-  ) %>% 
-  mutate_at(
-    .vars = c("demographic", "controls"),
-    .funs = ~as.integer(as.factor(.x))
-  )
+    group_by(!!demographic_colq, !!!control_colqs) %>%
+    summarize(
+      n = n(),
+      n_action = sum(!!action_colq),
+      n_outcome = sum(!!outcome_colq)
+    ) %>% 
+    ungroup() %>% 
+    unite(controls, !!!control_colqs) %>% 
+    # NOTE: keep original column values to map stan output to values
+    mutate(
+      controls = controls,
+      demographic = !!demographic_colq
+    ) %>% 
+    mutate_at(
+      .vars = c("demographic", "controls"),
+      .funs = ~as.integer(as.factor(.x))
+    )
 }
 
 
@@ -309,11 +246,6 @@ format_summary_stats <- function(
 }
 
 
-pretty_percent <- function(v) {
-  str_c(formatC(100 * v, format = "f", digits = 2), "%")
-}
-
-
 format_confidence_interval <- function(
   # matrix over which confidence intervals are taken
   M,
@@ -392,6 +324,3 @@ collect_thresholds_by_group <- function(
       thresholds
     )
 }
-
-
-quos_names <- function(quos_var) { sapply(quos_var, quo_name) }
