@@ -1,6 +1,6 @@
 library(tidyverse)
 
-#' Plot rates: plot rates across demographic groups to identify disparities
+#' Disparity plot: plot rates across demographic groups to identify disparities
 #'
 #' @param tbl a tibble containing the following data
 #' @param ... additional attributes controlled for when rates were computed
@@ -18,7 +18,7 @@ library(tidyverse)
 #' @return ggplot scatterplot of rates faceted by minority demographics
 #'
 #' @examples
-#' outcome_test(
+#' disparity_plot(
 #'   tbl, 
 #'   precinct, 
 #'   demographic_col = subject_race, 
@@ -26,7 +26,7 @@ library(tidyverse)
 #'   rate_col = `contraband_found where search_conducted`,
 #'   size_col = n_search_conducted
 #'  )
-plot_rates <- function(
+disparity_plot <- function(
   tbl,
   ...,
   demographic_col = subject_race, 
@@ -50,6 +50,14 @@ plot_rates <- function(
     majority_demographic
   )
   
+  tbl <- 
+    tbl %>% 
+    select(
+      !!!control_colqs, 
+      !!demographic_colq,
+      !!size_colq,
+      !!rate_colq
+    )
   majority_and_minority_rates <-
     tbl %>%
     select(-!!size_colq) %>%
