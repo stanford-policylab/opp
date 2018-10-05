@@ -16,7 +16,7 @@ disparity <- function() {
   ot <- outcome_test(d, state, city, sub_geography)
   plt(ot$results, "outcome (filtered)")
   tt <- threshold_test(d, state, city, sub_geography)
-  plt(tt$results$thresholds_by_group, "thresholds (filtered: aggregate)")
+  plt(tt$results$thresholds, "thresholds (filtered: aggregate)")
 }
 
 
