@@ -34,12 +34,16 @@ CA:
   - Notes from old OPP: Excluded from analysis because no contraband info for search incident to arrest
   
 CO:
+  - Used in old OPP threshold test.
   - County seems to be processed wrong (too many NAs)
 
 CT:
+  - Used in old OPP threshold test.
 
 IL:
+  - Used in old OPP threshold test.
   - Use department_name instead of county_name
+
 MA:
   - Notes from old OPP: Excluded from analysis because contraband_found too messsy
 
@@ -48,21 +52,28 @@ MD:
 MO:
 
 NC:
+  - Used in old OPP threshold test.
+  - Use two letter district codes
 
 OH:
 
 RI:
+  - Used in old OPP threshold test.
   - Use zone instead of county_name
 
 SC:
+  - Used in old OPP threshold test.
   - Contraband is determined by `!is.na(ContrabandDesc)`, as the old OPP did.
   - TODO: Be a little more judicious is separating out the few rows that, while not NA for ContrabandDesc, indicate no contraband was found. There appear to be very few such rows, so this can be a low priority todo. But worth doing to be rigorous.
  
 TX:
+  - Used in old OPP threshold test.
 
 VT:
 
 WA:
+  - Used in old OPP threshold test.
 
 WI:
+  - Used in old OPP threshold test.
 
