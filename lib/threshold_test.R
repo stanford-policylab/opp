@@ -46,8 +46,6 @@ threshold_test <- function(
   action_colq <- enquo(action_col)
   outcome_colq <- enquo(outcome_col)
 
-  stopifnot(length(quos_names(control_colqs)) > 0)
-  
   metadata <- list()
   tbl <- prepare(
     tbl,
@@ -121,15 +119,14 @@ summarize_for_stan <- function(
       n_outcome = sum(!!outcome_colq)
     ) %>% 
     ungroup() %>% 
-    unite(controls, !!!control_colqs) %>% 
+    unite(controls, !!!control_colqs, remove = F) %>% 
     # NOTE: keep original column values to map stan output to values
     mutate(
-      controls = controls,
       demographic = !!demographic_colq
     ) %>% 
     mutate_at(
       .vars = c("demographic", "controls"),
-      .funs = ~as.integer(as.factor(.x))
+      .funs = ~as.integer(factor(.x))
     )
 }
 
@@ -208,18 +205,18 @@ na_replace <- function(x, r) if_else(is.finite(x), x, r)
 
 
 format_summary_stats <- function(
-  summary,
+  data_summary,
   avg_thresh,
   demographic_col = subject_race,
   majority_demographic = "white"
 ) {
   demographic_colq <- enquo(demographic_col)
   majority_idx <-
-    summary %>% 
-    filter(!!demographic_colq == majority_demographic) %>% 
-    pull(demographic) %>% 
-    # extracts a single value
-    unique() 
+    data_summary %>% 
+      filter(!!demographic_colq == majority_demographic) %>% 
+      pull(demographic) %>% 
+      # extracts a single value
+      unique() 
   
   avg_diffs <- 
     avg_thresh[-majority_idx,] -
@@ -229,7 +226,15 @@ format_summary_stats <- function(
     ) 
   
   tibble(
-    demographic = levels(pull(summary, !!demographic_colq)),
+    # TODO(danj): make this less dependent on previous operations;
+    # demographic == as.integer(factor(demographic_col)), so to get the
+    # original labels back, we need to re-factor demographic_col; i.e.
+    # it may originally have contained levels 1, 3, 5, but had to be
+    # re-factored to 1, 2, 3 for use in stan; this means that the original
+    # column still has levels 1, 3, 5, while demographic has levels 1, 2, 3
+    # so we need to re-factorize and select levels to get the names; this is
+    # very fragile and likely to break if preceding code changes
+    demographic = levels(factor(pull(data_summary, !!demographic_colq))),
     avg_threshold = pretty_percent(rowMeans(avg_thresh)),
     threshold_ci = format_confidence_interval(avg_thresh),
     threshold_diff = append(
@@ -302,8 +307,10 @@ stan_threshold_test <- function(
 collect_thresholds_by_group <- function(
   data_summary,
   posteriors,
+  ...,
   demographic_col = subject_race
 ) {
+  control_colqs <- enquos(...)
   demographic_colq <- enquo(demographic_col)
   data_summary %>%
     mutate(
@@ -318,8 +325,8 @@ collect_thresholds_by_group <- function(
     mutate(total_group_count = sum(n)) %>%
     ungroup() %>% 
     select(
+      !!!control_colqs,
       !!demographic_colq, 
-      controls,
       n_action,
       thresholds
     )

@@ -8,15 +8,15 @@ disparity <- function() {
   d <- load_data()
 
   ots <- outcome_tests(d)
-  plt_all(ots, "outcome")
+  plt_all(ots, "outcome (filtered)")
   tts <- threshold_tests(d)
-  plt_all(tts, "threshold")
-  plt(tts, "thresholds (all cities)")
+  plt_all(tts, "threshold (filtered)")
+  plt(tts, "thresholds (filtered: all cities)")
 
-  ot <- outcome_test(d, sub_geography)
-  plt(ot$results, "outcome")
-  tt <- threshold_test(d, sub_geography)
-  plt(tt$results$thresholds_by_group, "thresholds (aggregate)")
+  ot <- outcome_test(d, state, city, sub_geography)
+  plt(ot$results, "outcome (filtered)")
+  tt <- threshold_test(d, state, city, sub_geography)
+  plt(tt$results$thresholds_by_group, "thresholds (filtered: aggregate)")
 }
 
 
@@ -81,6 +81,8 @@ load_data <- function() {
       ),
       # NOTE: El Paso is good, possiblly filter region 0 (insufficent data)
       # NOTE: San Antonio looks good
+      # NOTE: remove these to compare only blacks/hispanics with whites
+      !(subject_race %in% c("asian/pacific islander", "other/unknown"))
     ) %>%
     mutate(
       sg = NA_character_,
@@ -89,7 +91,7 @@ load_data <- function() {
       sg = if_else(city == "Hartford", district, sg),
       sg = if_else(city == "New Orleans", district, sg),
       sg = if_else(city == "Philadelphia", district, sg),
-      sg = if_else(city == "Nashville", zone, sg),
+      sg = if_else(city == "Nashville", precinct, sg),
       sg = if_else(city == "Dallas", district, sg),
       sg = if_else(city == "El Paso", region, sg),
       sg = if_else(city == "San Antonio", substation, sg)
@@ -103,7 +105,9 @@ load_data <- function() {
 outcome_tests <- function(d) {
   d %>%
     group_by(state, city) %>%
-    do(outcome_test(., sub_geography)$results) %>%
+    do(
+      outcome_test(., state, city, sub_geography)$results
+    ) %>%
     ungroup()
 }
 
@@ -111,7 +115,9 @@ outcome_tests <- function(d) {
 threshold_tests <- function(d) {
   d %>%
     group_by(state, city) %>%
-    do(threshold_test(., sub_geography)$results$thresholds_by_group) %>%
+    do(
+      threshold_test(., state, city, sub_geography)$results$thresholds_by_group
+    ) %>%
     ungroup()
 }
 
@@ -121,8 +127,8 @@ plt_all <- function(tbl, prefix) {
   f <- function(grp) {
     title <- str_c(prefix, ": ", create_title(grp$state[1], grp$city[1]))
     fpath <- path(output_dir, str_c(title, ".pdf"))
-    if (prefix == "outcome") {
-      p <- plot_rates(grp, sub_geography)
+    if (str_detect(prefix, "outcome")) {
+      p <- plot_rates(grp, state, city, sub_geography)
     } else {
       p <- plot_rates(
         grp,
@@ -144,8 +150,8 @@ plt_all <- function(tbl, prefix) {
 plt <- function(d, prefix) {
   output_dir <- dir_create(here::here("plots"))
   fpath <- path(output_dir, str_c(prefix, ".pdf"))
-  if (prefix == "outcome") {
-    p <- plot_rates(d, sub_geography)
+  if (str_detect(prefix, "outcome")) {
+    p <- plot_rates(d, state, city, sub_geography)
   } else {
     p <- plot_rates(
       d,

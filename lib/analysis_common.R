@@ -19,6 +19,8 @@ prepare <- function(
   action_colq <- enquo(action_col)
   outcome_colq <- enquo(outcome_col)
 
+  stopifnot(length(quos_names(control_colqs)) > 0)
+
   action_colname <- quo_name(action_colq)
   outcome_colname <- quo_name(outcome_colq)
 
