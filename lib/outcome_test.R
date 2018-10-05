@@ -1,5 +1,4 @@
-library(tidyverse)
-
+source("analysis_common.R")
 
 #' Outcome Test
 #'
@@ -39,25 +38,15 @@ outcome_test <- function(
   outcome_colq <- enquo(outcome_col)
   outcome_colname <- quo_name(outcome_colq)
 
-  n <- nrow(tbl)
-  tbl <- select(
+  metadata <- list()
+  tbl <- prepare(
     tbl,
     !!!control_colqs,
-    !!demographic_colq,
-    !!action_colq,
-    !!outcome_colq
-  ) %>%
-  drop_na()
-
-  null_rate <- (n - nrow(tbl)) / n
-  metadata <- list()
-  metadata['null_rate'] <- null_rate
-  if (null_rate > 0) {
-    warning(
-      str_c(formatC(100 * null_rate, format = "f", digits = 2), "%"),
-      " of the data was null and removed"
-    )
-  }
+    demographic_col=!!demographic_colq,
+    action_col=!!action_colq,
+    outcome_col=!!outcome_colq,
+    metadata=metadata
+  )
 
   results <- filter(
     tbl,
