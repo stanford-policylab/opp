@@ -24,6 +24,8 @@ library(lutz)
 #' )
 veil_of_darkness_test <- function(
   tbl,
+  minority_demographic = "black",
+  majority_demographic = "white",
   demographic_col = subject_race,
   date_col = date,
   time_col = time,
@@ -49,23 +51,59 @@ veil_of_darkness_test <- function(
     metadata
   )
 
-  # TODO(danj):
-  # black ~ is_dark + ploy(minute, 6)
   tz <- infer_tz(pull(tbl, !!latq), pull(tbl, !!lngq))
   minutes_per_hour <- 60
-  tbl %>%
+  tbl <- tbl %>%
     mutate(
       sunset = calculate_sunset_times(date, lat, lng, tz),
-      minute = hour(hm(time)) * minutes_per_hour + minute(hm(time)),
-      sunset_minute = hour(hm(sunset)) * minutes_per_hour + minute(hm(sunset)),
-      is_dark = minute > sunset_minute
+      minute = hour(hms(time)) * minutes_per_hour + minute(hms(time)),
+      sunset_minute = hour(hms(sunset)) * minutes_per_hour + minute(hms(sunset)),
+      is_dark = minute > sunset_minute,
+      min_sunset_minute = min(sunset_minute),
+      max_sunset_minute = max(sunset_minute)
+    ) %>%
+    filter(
+      # NOTE: filter to get only the intertwilight period
+      minute >= min_sunset_minute,
+      minute <= max_sunset_minute,
+      !!demographicq %in% c(minority_demographic, majority_demographic)
+    ) %>%
+    mutate(
+      twilight_minute = minute - min_sunset_minute,
+      is_minority_demographic = !!demographicq == minority_demographic,
+      is_majority_demographic = !!demographicq == majority_demographic
     )
-    # ) %>%
-    # NOTE: intertwilight period
-    # filter(
-    #   minute >= min(sunset_minute),
-    #   minute <= max(sunset_minute)
-    # )
+
+  twilight_minute_poly_degree <- 6
+  minority_model = glm(
+    is_minority_demographic 
+      ~ is_dark + poly(twilight_minute, twilight_minute_poly_degree),
+    data = tbl,
+    family = binomial
+  )
+  majority_model = glm(
+    is_majority_demographic 
+      ~ is_dark + poly(twilight_minute, twilight_minute_poly_degree),
+    data = tbl,
+    family = binomial
+  )
+  list(
+    metadata = list(
+      data = tbl,
+      models = list(
+        minority = minority_model,
+        majority = majority_model
+      )
+    ),
+    results = list(
+      coefficients = list(
+        is_dark = list(
+          minority = coef(minority_model)[2],
+          majority = coef(majority_model)[2]
+        )
+      )
+    )
+  )
 }
 
 
@@ -111,7 +149,10 @@ rate_warning <- function(rate, message) {
 
 infer_tz <- function(lats, lngs) {
   sample_idx <- sample.int(length(lats), 10)
-  tz <- unique(tz_lookup_coords(lats[sample_idx], lngs[sample_idx]))
+  # NOTE: uses 'fast' by default, 'accurate' requires a lot more dependencies,
+  # and it doesn't seem to be necessary to be more accurate
+  tzs <- suppressWarnings(tz_lookup_coords(lats[sample_idx], lngs[sample_idx]))
+  tz <- unique(tzs)
   stopifnot(length(tz) == 1)
   tz
 }
@@ -124,7 +165,7 @@ calculate_sunset_times <- function(dates, lats, lngs, tz) {
       keep = c("sunset"),
       tz = tz
     )$sunset,
-    "%H:%M"
+    "%H:%M:%S"
   )
 }
 
@@ -138,5 +179,5 @@ veil_of_darkness_daylight_savings_test <- function(
   longitude_col = lng,
   window_size_in_days = 7
 ) {
-  # TODO: filter to window around, call veil_of_darkness_test
+  # TODO: filter to window around daylight savings, call veil_of_darkness_test
 }
