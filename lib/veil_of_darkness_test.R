@@ -54,6 +54,11 @@ veil_of_darkness_test <- function(
   tz <- infer_tz(pull(tbl, !!latq), pull(tbl, !!lngq))
   minutes_per_hour <- 60
   tbl <- tbl %>%
+    # NOTE: prefilter since calculate sunset times takes a while
+    filter(
+      hour(hms(time)) > 16, # 4 PM
+      hour(hms(time)) < 23, # 11 PM
+    ) %>%
     mutate(
       sunset = calculate_sunset_times(date, lat, lng, tz),
       minute = hour(hms(time)) * minutes_per_hour + minute(hms(time)),
