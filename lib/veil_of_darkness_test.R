@@ -75,19 +75,12 @@ veil_of_darkness_test <- function(
     ) %>%
     mutate(
       twilight_minute = minute - min_sunset_minute,
-      is_minority_demographic = !!demographicq == minority_demographic,
-      is_majority_demographic = !!demographicq == majority_demographic
+      is_minority_demographic = !!demographicq == minority_demographic
     )
 
   twilight_minute_poly_degree <- 6
-  minority_model = glm(
+  model = glm(
     is_minority_demographic 
-      ~ is_dark + poly(twilight_minute, twilight_minute_poly_degree),
-    data = tbl,
-    family = binomial
-  )
-  majority_model = glm(
-    is_majority_demographic 
       ~ is_dark + poly(twilight_minute, twilight_minute_poly_degree),
     data = tbl,
     family = binomial
@@ -95,17 +88,11 @@ veil_of_darkness_test <- function(
   list(
     metadata = list(
       data = tbl,
-      models = list(
-        minority = minority_model,
-        majority = majority_model
-      )
+      model = model
     ),
     results = list(
       coefficients = list(
-        is_dark = list(
-          minority = coef(minority_model)[2],
-          majority = coef(majority_model)[2]
-        )
+        is_dark = coef(model)[2]
       )
     )
   )
