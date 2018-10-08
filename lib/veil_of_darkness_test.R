@@ -1,5 +1,6 @@
 library(tidyverse)
 #library(suncalc)
+library(splines)
 
 
 #' Veil of Darkness Test
@@ -40,15 +41,23 @@ veil_of_darkness_test <- function(
   
   n_sec_day <- 24 * 60 * 60
   
-  tbl <-
+  tbl_intertwilight <-
     tbl %>% 
+    drop_na(
+      !!demographic_colq,
+      !!date_colq,
+      !!time_colq,
+      !!latitude_colq,
+      !!longitude_colq
+    ) %>% 
     mutate(
       sunset = hms::hms(get_sunset_frac(
         !!latitude_colq, 
         !!longitude_colq, 
         as.POSIXct(str_c(!!date_colq, !!time_colq))
       ) * n_sec_day),
-      dark = time > sunset
+      dark = time > sunset,
+      black = !!demographic_colq == "black"
     ) %>% 
     filter(
       time > min(sunset),
@@ -62,13 +71,32 @@ veil_of_darkness_test <- function(
     group_by(dark) %>% 
     mutate(prop = n / sum(n))
   
-  #calculate k
+  k_unadj <- (prob_given_bd(proportion_black, TRUE, FALSE) * 
+          prob_given_bd(proportion_black, FALSE, TRUE)) / 
+    (prob_given_bd(proportion_black, FALSE, FALSE) *
+       prob_given_bd(proportion_black, TRUE, TRUE))
+  
+  model_time_const <- 
+    tbl_intertwilight %>% 
+    glm(formula = black ~ dark + ns(time, df = 6), 
+        family = "binomial")
+  
+  model_time_varying <-
+    tbl_intertwilight %>% 
+    glm(formula = black ~ dark * ns(time, df = 6), 
+        family = "binomial")
+  
+  model_district_adj <-
+    tbl_intertwilight %>% 
+    glm(formula = black ~ dark + ns(time, df = 6) + district, 
+        family = "binomial")
 }
 
 n_sec_day <- 24 * 60 * 60
 
 testsf_wsunset <-
   testsf %>% 
+  filter(!is.na(lat), !is.na(lng), !is.na(date), !is.na(time)) %>% 
   mutate(
     sunset = hms::hms(get_sunset_frac(
       lat, 
@@ -79,6 +107,21 @@ testsf_wsunset <-
 
 min(testsf_wsunset$sunset)
 summary(testsf_wsunset)
+
+testdata <-
+  testsf_wsunset %>% 
+  mutate(
+    dark = time > sunset,
+    black = subject_race == "black"
+  ) %>% 
+  filter(
+    time > min(sunset),
+    time < max(sunset)
+  )
+
+model <-
+  testdata %>% 
+  glm(formula = black ~ dark * ns(time, df = 6), family = "binomial")
 
 prop <- testsf_wsunset %>% 
   mutate(
@@ -98,11 +141,20 @@ k <- (prop %>% filter(black == TRUE, dark == FALSE) %>% pull(prop) *
   (prop %>% filter(black == FALSE, dark == FALSE) %>% pull(prop) *
      prop %>% filter(black == TRUE, dark == TRUE) %>% pull(prop))
 
-kget_sunset_frac <- function(
+# Returns the sunset time at the given latitude and longitude
+# and date/time as a fraction of the day
+get_sunset_frac <- function(
   lat, 
   lng, 
   datetime
 ) {
   crds <- as.matrix(data.frame(lng, lat))
-  sunriset(crds, datetime, direction = "sunset")
+  maptools::sunriset(crds, datetime, direction = "sunset")
+}
+
+# todo - generalize
+prob_given_bd <- function(data, black, dark) {
+  data %>% 
+    filter(black == black, dark == dark) %>% 
+    pull(prop)
 }
