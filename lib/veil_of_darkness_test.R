@@ -1,4 +1,5 @@
 library(tidyverse)
+library(lubridate)
 library(suncalc)
 library(lutz)
 
@@ -51,19 +52,22 @@ veil_of_darkness_test <- function(
   # TODO(danj):
   # black ~ is_dark + ploy(minute, 6)
   tz <- infer_tz(pull(tbl, !!latq), pull(tbl, !!lngq))
-  tbl <-
-    tbl %>%
-    mutate(sunset = calculate_sunset_times(date, lat, lng, tz))
+  minutes_per_hour <- 60
+  tbl %>%
+    mutate(
+      sunset = calculate_sunset_times(date, lat, lng, tz),
+      minute = hour(hm(time)) * minutes_per_hour + minute(hm(time)),
+      sunset_minute = hour(hm(sunset)) * minutes_per_hour + minute(hm(sunset)),
+      is_dark = minute > sunset_minute
+    )
+    # ) %>%
+    # NOTE: intertwilight period
     # filter(
-    #   as.duration(hms(time)) >= min(as.duration(hms(sunset))),
-    #   as.duration(hms(time)) <= max(as.duration(hms(sunset))),
+    #   minute >= min(sunset_minute),
+    #   minute <= max(sunset_minute)
     # )
-    # mutate(
-    #   is_dark = time > sunset,
-    #   minute = as.numeric(as.duration(hms(time) - hms(min(sunset))), "minutes")
-    # )
-  tbl
 }
+
 
 clean <- function(
   tbl,
@@ -104,6 +108,7 @@ rate_warning <- function(rate, message) {
   )
 }
 
+
 infer_tz <- function(lats, lngs) {
   sample_idx <- sample.int(length(lats), 10)
   tz <- unique(tz_lookup_coords(lats[sample_idx], lngs[sample_idx]))
@@ -119,7 +124,7 @@ calculate_sunset_times <- function(dates, lats, lngs, tz) {
       keep = c("sunset"),
       tz = tz
     )$sunset,
-    "%H:%M:%S"
+    "%H:%M"
   )
 }
 
