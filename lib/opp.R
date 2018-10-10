@@ -288,7 +288,7 @@ opp_extract_city_from_path <- function(path) {
 }
 
 
-opp_load <- function(state, city) {
+opp_load <- function(state, city = "statewide") {
   readRDS(opp_clean_data_path(state, city))
 }
 
