@@ -1,6 +1,6 @@
 filters:
   - city == "Statewide"
-  - search_conducted == TRUE
+  - search_conducted
   - race defined
   - county (or other comparable sub-geo) defined
   - contraband defined
@@ -22,7 +22,8 @@ output:
   - WA
   - WI
 final list:
-  - 
+  - CO
+  - CT 
   - SC
 
 AZ:
@@ -35,10 +36,10 @@ CA:
   
 CO:
   - Used in old OPP threshold test.
-  - County seems to be processed wrong (too many NAs)
 
 CT:
   - Used in old OPP threshold test.
+  - Filter to `department_name == "State Police"` for all state analysis
 
 IL:
   - Used in old OPP threshold test.
