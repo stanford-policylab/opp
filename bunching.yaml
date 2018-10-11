@@ -1,0 +1,65 @@
+objectives:
+  - identify discrimination at level of individual (not average)
+  - identify discrimination in discounting speed by race when stopped for same speed
+conclusions:
+  - white drivers are 6% more likely to be discounted by lenient officers (base
+    of 45%), due to minorities being treated less leniently for speeds from 12
+    to 25 MPH over
+  - an officer in the 90th percentile is twice as likely to discount a white
+    driver as a minority driver
+  - 40% of officers explain the entirety of aggregate disparity
+  - minority and female officers practice less discrimination
+  - a large share of disparity is due to minorities driving in areas where
+    officers are less lenient to all motorists
+  - firing ineffective; best solution is to reallocate lenient officers
+todo:
+  - histogram of 'over' speed separated by majority/minority
+  - identify control group (those who have no bunching) - this also gives
+    'true' distribution of speeds; paper uses officers with fewer than 2% of
+    tickets at 9 MPH over
+  - breakdown table of summary statistics (pct of each race, age, etc)
+  - breakdown of cops that ticket at various price points
+  - p. 49, lenient vs non-lenient histograms by race (Figure 7, p49)
+  - linear model (per officer):
+    S_ij = B_0 + B_1*White_i + B_2*Lenient_j + B_3*White_i*Lenient_j +
+    X_ij\gamma + epsilon_ij
+  - B_3 reflects how much more likely a white driver benefits from encountering
+    a lenient officer
+  - Cov(Lenient_j, e_ij) must = 0; meaning officers do not systematically
+    differ in the characeristics of drivers to whom they stop/give a warning
+  - get fee schedules by location
+  - remove stops not on a road (if geolocation present)
+facts:
+  - officers exercise discretion through either a warning or discounting
+  - 9 MPH is the decision point, since most officers don't stop before speeds
+    less than 10 over, this suggests discounting (non-lenient officers have
+    virtually no tickets at the speed)
+  - they have 1.14M citations (fitlered from 2.1M) over 10-year period
+  - discounting components: speeding and discrimination
+  - F_r(x_i): probability of observing speed x with race r
+  - P_j(x,r(i)): probability of officer j discounting speed x when evaluating
+    motorist i with race r(i)
+  - Pr(X_i = x_d|i,j) = F_r(i)(x_d) + \sum_{k>x_d}F_r(i)(k)*P_j(x, r(i)):
+    likelihood of being at or above speed x_d; components are likelihood of
+    traveling that speed and expectation of discount
+  - Pr(X_i = x > x_d|i,j) = F_r(i)(x)*(1 - P_j(x, r(i))):
+    likelihood of traveling that speed above discount speed and not being
+    discounted
+  - discrimination: P_j(x, r(i) == "w") > P(x, r(i) == "m")
+concerns:
+  - Figure 4-7: (p14 read) (p45 graphs), officers don't stop different
+    proportions of races
+  - to what extent is more stringent ticketing due to higher risk, i.e. do
+    minorities speed more often than whites
+  - do lenient and non-lenient officers issue the same number of speeding tickets?
+  - are time and geography predictive of getting a lenient officer?
+  - are the officers incentivised to issue tickets?
+  - don't see the stops that result in warnings/no ticket
+  - taste-based vs statistical discrimination (i.e. are whites less likely to
+    show up in court?)
+  - are officers consistent in lenience over geographic area?
+follow up:
+  - "conditional on location and time, driver characteristics are not
+    predictive of the average lenience of the officer they encounter"?
+  - differences-in-differences framework
+  - bunching estimators: https://www.annualreviews.org/doi/pdf/10.1146/annurev-economics-080315-015234#article-denial
