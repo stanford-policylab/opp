@@ -52,7 +52,12 @@ load_data <- function() {
       ),
       ifelse(
         state == "NC",
-        ##TODO,
+        department_name == "NC State Highway Patrol"
+        # NOTE: 2003-2006 (trickling into 2007 and 2008), many of the state 
+        # highway patrol stops were listed under 
+        # department_name == "SHP - Motor Carrier Enforcement Section"
+        # For consistency, we start our NC analysis at 2009
+        & year(date) >= 2009,
         T
       ),
       ifelse(
