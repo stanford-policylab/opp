@@ -31,9 +31,8 @@ main <- function() {
   # plot rates by officer for over 
   # think about filtering criteria below
   ok <-
-    tbl %>%
+    opp_load_data("ok", "oklahoma city") %>%
     filter(
-      city == "Oklahoma City",
       speed >= 15,
       speed <= 130
     )
