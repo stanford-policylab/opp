@@ -32,11 +32,13 @@ load_raw <- function(raw_data_dir, n_max) {
 
   d$data %>%
     left_join(
-      troops$data,
-      by = c("TroopID" = "Troop")
+      counties$data %>% 
+        select(LocationCounty, county_name),
+      by = "LocationCounty"
     ) %>%
     left_join(
-      counties$data
+      troops$data,
+      by = c("TroopID" = "Troop")
     ) %>%
     bundle_raw(c(
       d$loading_problems,
@@ -59,7 +61,7 @@ clean <- function(d, helpers) {
     Z = "unknown/other"
   )
 
-  tr_search_basis = c(
+  tr_search_basis <- c(
     "Incident to Arrest" = "other",
     "Probable Cause" = "probable cause",
     "Consent" = "consent"
@@ -68,7 +70,8 @@ clean <- function(d, helpers) {
   # NOTE: A row in the data is a citation. There may be multiple citations in
   # a stop. Group by the situational details of the stop and summarize to
   # create a single row for a stop. For search_conducted and contraband_found
-  # fields, >99.9% all stops in group have same value.
+  # fields, >99.9% all stops in group have same value. 
+  # ALS: (not sure what this means or if it's still valid post contraband switch)
   d$data %>%
     group_by(
       officer_id,
