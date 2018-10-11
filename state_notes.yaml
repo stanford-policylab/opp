@@ -24,6 +24,7 @@ output:
 final list:
   - CO
   - CT 
+  - IL
   - SC
 
 AZ:
@@ -40,10 +41,12 @@ CO:
 CT:
   - Used in old OPP threshold test.
   - Filter to `department_name == "State Police"` for all state analysis
+  - Differences from old OPP: We have 6 extra months of data in 2015
 
 IL:
   - Used in old OPP threshold test.
-  - Use department_name instead of county_name
+  - Use beat instead of county_name (corresponds to department districts; many-to-one correspondence with counties)
+  - Differences from old OPP: We drop data prior to 2012, and have two additional years (2016, 2017); Also, we have no state patrol data from 2013; they do, somehow?
 
 MA:
   - Notes from old OPP: Excluded from analysis because contraband_found too messsy
