@@ -82,7 +82,8 @@ load_data <- function() {
       # NOTE: El Paso is good, possiblly filter region 0 (insufficent data)
       # NOTE: San Antonio looks good
       # NOTE: remove these to compare only blacks/hispanics with whites
-      !(subject_race %in% c("asian/pacific islander", "other/unknown"))
+      !(subject_race %in% c("asian/pacific islander", "other/unknown")),
+      type == "vehicular"
     ) %>%
     mutate(
       sg = NA_character_,
