@@ -1,5 +1,5 @@
 library(tidyverse)
-#library(suncalc)
+library(suncalc)
 library(splines)
 
 
@@ -39,14 +39,14 @@ veil_of_darkness_test <- function(
   latitude_colq = enquo(latitude_col)
   longitude_colq = enquo(longitude_col)
   
-  n_sec_day <- 24 * 60 * 60
-  
-  median_lat <-
-    median(tbl, !!latitude_colq, na.rm = TRUE)
-  
-  median_lng <-
-    median(tbl, !!longitude_colq, na.rm = TRUE)
-  
+  median_lat_lng <-
+    tbl %>% 
+    summarise(
+      med_lat = median(lat),
+      med_lng = median(lng)
+    )
+  median_lat <- pull(median_lat_lng, med_lat)
+  median_lng <- pull(median_lat_lng, med_lng)
   lat_lng_tol <- 0.25 #degrees
   
   tbl_intertwilight <-
@@ -64,30 +64,28 @@ veil_of_darkness_test <- function(
       !!longitude_colq > median_lng - lat_lng_tol
     ) %>% 
     mutate(
-      # Add timezone
-      sunset = hms::hms(get_darktime(
-        !!latitude_colq, 
-        !!longitude_colq, 
-        as.POSIXct(str_c(!!date_colq, !!time_colq))
-      ) * n_sec_day),
-      dark = time > sunset,
-      black = (!!demographic_colq == "black")
+      tz = lutz::tz_lookup_coords(lat, lng)
     ) %>% 
+    rowwise() %>%
+    mutate(
+      sunset_dt = get_sunset2(date, lat, lng, tz),
+      sunset_t = hms::hms(strftime(sunset_dt, format = "%H:%M:%S")) 
+    ) %>%
     filter(
-      time > min(sunset),
-      time < max(sunset)
+      time > min(sunset_t),
+      time < max(sunset_t)
     )
-  
-  proportion_black <-
-    tbl_intertwilight %>% 
-    count(black, dark) %>% 
-    group_by(dark) %>% 
-    mutate(prop = n / sum(n))
-  
-  k_unadj <- (prob_given_bd(proportion_black, TRUE, FALSE) * 
-                prob_given_bd(proportion_black, FALSE, TRUE)) / 
-    (prob_given_bd(proportion_black, FALSE, FALSE) *
-       prob_given_bd(proportion_black, TRUE, TRUE))
+
+  # proportion_black <-
+  #   tbl_intertwilight %>% 
+  #   count(black, dark) %>% 
+  #   group_by(dark) %>% 
+  #   mutate(prop = n / sum(n))
+  # 
+  # k_unadj <- (prob_given_bd(proportion_black, TRUE, FALSE) * 
+  #               prob_given_bd(proportion_black, FALSE, TRUE)) / 
+  #   (prob_given_bd(proportion_black, FALSE, FALSE) *
+  #      prob_given_bd(proportion_black, TRUE, TRUE))
   
   # model_time_const <- 
   #   tbl_intertwilight %>% 
@@ -105,8 +103,7 @@ veil_of_darkness_test <- function(
   #       family = "binomial")
   
   list(
-    data = tbl_intertwilight,
-    k = k_unadj
+    data = tbl_intertwilight
   )
 }
 
@@ -119,18 +116,20 @@ testsf_wsunset <-
     !is.na(lng), 
     !is.na(date), 
     !is.na(time),
+    # TODO: filter radially
     lat < median(testsf$lat, na.rm = TRUE) + 0.25,
     lat > median(testsf$lat, na.rm = TRUE) - 0.25,
     lng < median(testsf$lng, na.rm = TRUE) + 0.25,
     lng > median(testsf$lng, na.rm = TRUE) - 0.25
   ) %>% 
   mutate(
-    sunset = hms::hms(get_darktime(
-      lat, 
-      lng, 
-      as.POSIXct(str_c(date, time))
-    ) * n_sec_day)
-  )
+    tz = lutz::tz_lookup_coords(lat, lng)
+  ) %>% 
+  rowwise() %>% 
+  mutate(
+    sunset = get_sunset2(date, lat, lng, tz)
+  ) 
+  
 
 min(testsf_wsunset$sunset)
 summary(testsf_wsunset)
@@ -148,7 +147,7 @@ testdata <-
 
 model <-
   testdata %>% 
-  glm(formula = black ~ dark * ns(time, df = 6), family = "binomial")
+  glm(formula = black ~ dark + ns(time, df = 6), family = "binomial")
 
 prop <- testsf_wsunset %>% 
   mutate(
@@ -184,6 +183,16 @@ get_darktime <- function(
   )
 }
 
+get_sunset2 <- function(
+  date,
+  lat,
+  lng,
+  tz
+) {
+  getSunlightTimes(date = date, lat = lat, lon = lng, keep = "sunset", tz = tz) %>% 
+    pull(sunset)
+}
+
 # todo - generalize
 prob_given_bd <- function(data, b, d) {
   data %>% 
@@ -216,5 +225,18 @@ testsf_wsunset %>%
   ) %>% 
   ggplot(aes(time, hours_since_darkness)) +
   geom_point()
+
+top %>% 
+  mutate(
+    tz = lutz::tz_lookup_coords(lat, lng),
+  ) %>% 
+  rowwise() %>% 
+  mutate(
+    sunset = get_sunset2(date, lat, lng, tz),
+    sunset_t = strftime(sunset, format = "%H:%M:%S"),
+    sunset_hms = hms::as.hms(sunset_t)
+  ) %>% pull(sunset_hms)
+
+attributes(top_tz)
 
 # Generate synthetic data to test
