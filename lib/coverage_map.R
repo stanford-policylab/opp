@@ -1,6 +1,8 @@
+#!/usr/bin/env Rscript
 library(readr)
 library(here)
 library(maps)
+library(fs)
 
 state_names <- map(database = "state")$names
 sufficient_data_states <- c(
@@ -42,11 +44,13 @@ insufficient_data_states <- c(
 
 state_coverage <- c(sufficient_data_states, insufficient_data_states)
 city_coverage <- read_csv(here::here("data", "city_coverage_geocodes.csv"))
-pdf(here::here("plots", "coverage_map.pdf"))
+dir_create(here::here("plots"))
+# pdf(here::here("plots", "coverage_map.pdf"))
+png(here::here("plots", "coverage_map.png"), width=1600, height=900)
 map( database = "state",
   col = c("white", "lightblue3")[1 + (state_names %in% state_coverage)],
   fill=T,
   namesonly=T
 )
-points(city_coverage$lng, city_coverage$lat, col="red", pch=16)
+points(city_coverage$lng, city_coverage$lat, col="red", pch=16, cex=2)
 dev.off()
