@@ -9,7 +9,8 @@ main <- function() {
       speed_not_na = !is.na(speed),
       speed_and_posted_not_na = speed_not_na & !is.na(posted_speed),
       speed_and_officer_not_na = speed_not_na & !is.na(officer_id),
-      speed_and_posted_and_officer_not_na = speed_and_posted_not_na & speed_and_officer_not_na
+      speed_and_posted_and_officer_not_na =
+        speed_and_posted_not_na & speed_and_officer_not_na
     ) %>%
     group_by(state, city) %>%
     summarize(
@@ -25,41 +26,57 @@ main <- function() {
       desc(speed_and_officer_cvg),
       desc(speed_and_posted_and_officer_cvg)
     )
+  plot_dist("ok", "oklahoma city")
+  plot_dist("tx", "dallas")
+  plot_dist("tx", "plano")
+}
 
-  # TODO(danj):
-  # check rates by month-year by beat/division/sector
-  # plot rates by officer for over 
-  # think about filtering criteria below
-  ok <-
-    opp_load_data("ok", "oklahoma city") %>%
+
+# TODO(danj): plot by age/gender
+plot_dist <- function(state, city) {
+  min_tickets_per_officer_per_race <- 10
+  tbl <-
+    opp_load_data(state, city) %>%
+    mutate(
+      over = speed - posted_speed,
+      is_white = subject_race == "white"
+    ) %>%
     filter(
-      speed >= 15,
-      speed <= 130
+      !is.na(over),
+      over > 0,
+      over < 100,
+      !is.na(is_white),
+      !is.na(officer_id)
     )
-  valid_ok_officers <-
-    ok %>%
+  eligibile_officers <-
+    tbl %>%
+    group_by(officer_id, is_white) %>%
+    summarize(cnt = n()) %>%
+    ungroup() %>%
+    filter(cnt > min_tickets_per_officer_per_race) %>%
     group_by(officer_id) %>%
     count() %>%
-    ungroup() %>%
-    filter(n > 20) %>%
+    # NOTE: only get officers that have given tickets to both majority/minority
+    filter(
+      n >= 2,
+      officer_id != "UNKNWN"
+    ) %>%
     pull(officer_id)
-  okf <-
-    ok %>%
-    filter(officer_id %in% valid_ok_officers) %>%
-    mutate(over = speed - posted_speed) %>%
-    group_by(over) %>%
+  tbl <- filter(tbl, officer_id %in% eligibile_officers)
+  tblg <-
+    tbl %>%
+    group_by(is_white, over) %>%
     count() %>%
     ungroup() %>%
-    filter(
-      over > 0,
-      over < 50
-    )
+    group_by(is_white) %>%
+    mutate(total = sum(n), pct = n / total) %>%
+    filter(over < 50)
   p <-
-    ggplot(okf, aes(x=over, y=n)) +
+    ggplot(tblg, aes(x=over, y=pct, color=is_white)) +
     geom_line() +
     scale_x_continuous(
-      breaks = round(seq(0, max(okf$over), by=1), 1)
-    ) +
-    theme(legend.position="none")
-  ggsave("~/ok_officer.png", p, width=12, height=8, units="in")
+      breaks = round(seq(0, max(tblg$over), by=1), 1)
+    )
+  fname <- str_c("~/officer_", str_replace(city, " ", "_"), ".png")
+  ggsave(fname, p, width=12, height=8, units="in")
 }
