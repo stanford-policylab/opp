@@ -1,10 +1,4 @@
-library(here)
-library(parallel)
-library(rstan)
-library(tidyverse)
-library(stringr)
-
-source(here::here("lib", "disparity_plot.R"))
+source("analysis_common.R")
 
 #' Threshold Test
 #'
@@ -49,50 +43,68 @@ threshold_test <- function(
   
   control_colqs <- enquos(...)
   demographic_colq <- enquo(demographic_col)
-  demographic_colname <- quo_name(demographic_colq)
   action_colq <- enquo(action_col)
   outcome_colq <- enquo(outcome_col)
-  
-  n <- nrow(tbl)
-  tbl <- 
-    tbl %>% 
-    select(
-      !!demographic_colq,
-      !!action_colq,
-      !!outcome_colq,
-      !!!control_colqs
-    ) %>%
-    drop_na() 
-  
-  n_no_nas <- nrow(tbl)
-  tbl <-
-    tbl %>% 
-    # remove inconsistent data where an outcome was recorded but there
-    # was no action taken
-    filter(!(!!outcome_colq & !(!!action_colq)))
-  
+
   metadata <- list()
-  
-  null_rate <- (n - n_no_nas) / n
-  metadata['null_rate'] <- null_rate
-  if (null_rate > 0) { 
-    rate_warning(
-      null_rate,
-      "was null and removed"
+  tbl <- prepare(
+    tbl,
+    !!!control_colqs,
+    demographic_col=!!demographic_colq,
+    action_col=!!action_colq,
+    outcome_col=!!outcome_colq,
+    metadata=metadata
+  )
+  data_summary <- summarize_for_stan(
+    tbl,
+    !!!control_colqs,
+    demographic_col=!!demographic_colq,
+    action_col=!!action_colq,
+    outcome_col=!!outcome_colq,
+    metadata=metadata
+  )
+  stan_data <- format_data_summary_for_stan(data_summary)
+  fit <- stan_threshold_test(stan_data, n_iter, n_cores)
+  metadata["stan_warnings"] <- summary(warnings()) 
+  posteriors <- rstan::extract(fit)
+
+  summary_stats <- collect_average_threshold_test_summary_stats(
+    data_summary, 
+    posteriors,
+    !!demographic_colq,
+    majority_demographic
+  )
+
+  list(
+    metadata = c(
+      metadata,
+      list(
+        fit = fit
+      )
+    ),
+    results = list(
+      thresholds = add_thresholds(data_summary, posteriors),
+      aggregate_thresholds = summary_stats
     )
-  }
-  
-  outcome_without_action_rate <- (n_no_nas - nrow(tbl)) / n
-  metadata['outcome_without_action_rate'] <- outcome_without_action_rate
-  if (outcome_without_action_rate > 0) {
-    rate_warning(
-      outcome_without_action_rate,
-      "was removed due to inconsistency: outcome was recorded but no action was taken"
-    )
-  }
-  
-  data_summary <- 
-    tbl %>% 
+  )
+}
+
+
+summarize_for_stan <- function(
+  tbl,
+  ...,
+  demographic_col = subject_race,
+  action_col = search_conducted,
+  outcome_col = contraband_found,
+  metadata = list()
+) {
+
+  control_colqs <- enquos(...)
+  demographic_colq <- enquo(demographic_col)
+  action_colq <- enquo(action_col)
+  outcome_colq <- enquo(outcome_col)
+
+  tbl %>% 
     group_by(!!demographic_colq, !!!control_colqs) %>%
     summarize(
       n = n(),
@@ -100,108 +112,37 @@ threshold_test <- function(
       n_outcome = sum(!!outcome_colq)
     ) %>% 
     ungroup() %>% 
-    unite(controls, !!!control_colqs) %>% 
+    unite(controls, !!!control_colqs, remove = F) %>% 
     # NOTE: keep original column values to map stan output to values
     mutate(
-      original_control = controls,
-      original_demographic = !!demographic_colq
+      demographic = !!demographic_colq
     ) %>% 
     mutate_at(
-      .vars = c(demographic_colname, "controls"),
-      .funs = ~as.integer(as.factor(.x))
+      .vars = c("demographic", "controls"),
+      .funs = ~as.integer(factor(.x))
     )
-  
-  stan_data <- list(
+}
+
+
+format_data_summary_for_stan <- function(data_summary) {
+  list(
     n_groups = nrow(data_summary),
     n_control_divisions = n_distinct(pull(data_summary, controls)),
-    n_demographic_divisions = n_distinct(pull(data_summary, !!demographic_colq)),
+    n_demographic_divisions = n_distinct(pull(data_summary, demographic)),
     control_division = pull(data_summary, controls),
-    demographic_division = pull(data_summary, !!demographic_colq),
+    demographic_division = pull(data_summary, demographic),
     group_count = pull(data_summary, n),
     action_count = pull(data_summary, n_action),
     outcome_count = pull(data_summary, n_outcome)
   )
-  
-  fit <- stan_threshold_test(stan_data, n_iter, n_cores)
-  posteriors <- rstan::extract(fit)
-  
-  summary_stats <- 
-    collect_avg_threshold_test_summary_stats(
-      data_summary, 
-      !!demographic_colq,
-      majority_demographic,
-      posteriors
-    )
-  
-  thresholds_by_group <- 
-    data_summary %>%
-    mutate(
-      thresholds = colMeans(signal_to_percent(
-        posteriors$threshold, 
-        posteriors$phi, 
-        posteriors$lambda
-      ))
-    ) %>%
-    group_by(controls) %>%
-    # e.g., number of stops across all races in each district
-    mutate(total_group_count = sum(n)) %>%
-    ungroup() %>% 
-    select(
-      original_demographic, 
-      original_control,
-      n_action,
-      thresholds
-    )
-  
-  plot <- 
-    plot_rates(
-      thresholds_by_group,
-      original_control,
-      demographic_col = original_demographic, 
-      majority_demographic = majority_demographic, 
-      rate_col = thresholds,
-      size_col = n_action,
-      title = "Thresholds by division",
-      axis_title = "threshold",
-      size_title = "Num searches\nconducted"
-    )
-  
-  list(
-    data = data_summary,
-    fit = fit,
-    metadata = metadata,
-    results = list(
-      thresholds_by_group = thresholds_by_group,
-      aggregate_thresholds = summary_stats,
-      scatterplot_majority_vs_minority = plot
-    )
-  )
 }
 
 
-# Creates a warning indicating that some percent of the data had some property
-rate_warning <- function(rate, message) {
-  warning(
-    str_c(
-      formatC(100 * rate, format = "f", digits = 2), 
-      "% of the data ",
-      message
-    ),
-    call. = FALSE
-  )
-}
-
-# converts the threshold signal into a percent value (0, 1)
-signal_to_percent <- function(x, phi, lambda){
-  phi * dnorm(x, lambda, 1) / 
-    (phi * dnorm(x, lambda, 1) + (1 - phi) * dnorm(x, 0, 1))
-}
-
-collect_avg_threshold_test_summary_stats <- function(
-  summary,
-  demographic_col,
-  majority_demographic,
-  posteriors
+collect_average_threshold_test_summary_stats <- function(
+  data_summary,
+  posteriors,
+  demographic_col = subject_race,
+  majority_demographic = "white"
 ) {
   demographic_colq <- enquo(demographic_col)
   avg_thresh <- accumulateRowMeans(
@@ -210,16 +151,24 @@ collect_avg_threshold_test_summary_stats <- function(
       posteriors$phi,
       posteriors$lambda
     )),
-    pull(summary, !!demographic_colq), 
-    summary$n
+    pull(data_summary, demographic),
+    data_summary$n
   )
   format_summary_stats(
-    summary, 
+    data_summary, 
+    avg_thresh,
     !!demographic_colq,
-    majority_demographic, 
-    avg_thresh
+    majority_demographic
   )
 } 
+
+
+# converts the threshold signal into a percent value (0, 1)
+signal_to_percent <- function(x, phi, lambda){
+  phi * dnorm(x, lambda, 1) / 
+    (phi * dnorm(x, lambda, 1) + (1 - phi) * dnorm(x, 0, 1))
+}
+
 
 # Matrix operation to perfrom accumulated row means over some sub-category i
 # @pre: length(i) == nrow(M)
@@ -244,21 +193,23 @@ accumulateRowMeans <- function(
   weighted_indexer %*% M
 }
 
+
 na_replace <- function(x, r) if_else(is.finite(x), x, r)
 
+
 format_summary_stats <- function(
-  summary,
-  demographic_col,
-  majority_demographic,
-  avg_thresh
+  data_summary,
+  avg_thresh,
+  demographic_col = subject_race,
+  majority_demographic = "white"
 ) {
   demographic_colq <- enquo(demographic_col)
   majority_idx <-
-    summary %>% 
-    filter(original_demographic == majority_demographic) %>% 
-    pull(!!demographic_colq) %>% 
-    # extracts a single value
-    unique() 
+    data_summary %>% 
+      filter(!!demographic_colq == majority_demographic) %>% 
+      pull(demographic) %>% 
+      # extracts a single value
+      unique() 
   
   avg_diffs <- 
     avg_thresh[-majority_idx,] -
@@ -268,7 +219,15 @@ format_summary_stats <- function(
     ) 
   
   tibble(
-    demographic = levels(summary$original_demographic),
+    # TODO(danj): make this less dependent on previous operations;
+    # demographic == as.integer(factor(demographic_col)), so to get the
+    # original labels back, we need to re-factor demographic_col; i.e.
+    # it may originally have contained levels 1, 3, 5, but had to be
+    # re-factored to 1, 2, 3 for use in stan; this means that the original
+    # column still has levels 1, 3, 5, while demographic has levels 1, 2, 3
+    # so we need to re-factorize and select levels to get the names; this is
+    # very fragile and likely to break if preceding code changes
+    demographic = levels(factor(pull(data_summary, !!demographic_colq))),
     avg_threshold = pretty_percent(rowMeans(avg_thresh)),
     threshold_ci = format_confidence_interval(avg_thresh),
     threshold_diff = append(
@@ -282,10 +241,6 @@ format_summary_stats <- function(
       after = majority_idx - 1
     )
   )
-}
-
-pretty_percent <- function(v) {
-  str_c(formatC(100 * v, format = "f", digits = 2), "%")
 }
 
 
@@ -308,12 +263,12 @@ format_confidence_interval <- function(
   )
 }
 
+
 stan_threshold_test <- function(
   data,
   n_iter = 5000,
   n_cores = min(5, parallel::detectCores() / 2)
 ) {
-  
   # NOTE: defaults; may expose more of these in the future
   allow_adaptive_step_size <- T
   initialization_method <- "random"
@@ -322,7 +277,7 @@ stan_threshold_test <- function(
   n_iter_warmup <- min(2500, round(n_iter / 2))
   n_markov_chains <- 5
   nuts_max_tree_depth <- 12
-  path_to_stan_model <- here::here("stan", "threshold_test_2.stan")
+  path_to_stan_model <- here::here("stan", "threshold_test.stan")
   
   rstan::sampling(
     stan_model(path_to_stan_model),
@@ -339,4 +294,19 @@ stan_threshold_test <- function(
     refresh = n_iter_per_progress_update,
     warmup = n_iter_warmup
   )
+}
+
+
+add_thresholds <- function(
+  data_summary,
+  posteriors
+) {
+  data_summary %>%
+    mutate(
+      threshold = colMeans(signal_to_percent(
+        posteriors$threshold, 
+        posteriors$phi, 
+        posteriors$lambda
+      ))
+    )
 }

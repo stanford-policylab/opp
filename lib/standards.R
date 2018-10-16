@@ -123,6 +123,7 @@ city_sub_geographies <- quos(
   reporting_area,
   sector,
   subsector,
+  substation,
   service_area,
   zone
 )
@@ -160,6 +161,7 @@ schema <- c(
   reporting_area                = as.character,
   sector                        = as.character,
   subsector                     = as.character,
+  substation                    = as.character,
   service_area                  = as.character,
   zone                          = as.character,
 
@@ -194,6 +196,8 @@ schema <- c(
   contraband_found              = as.logical,
   contraband_drugs              = as.logical,
   contraband_weapons            = as.logical,
+  contraband_alcohol            = as.logical,
+  contraband_other              = as.logical,
   frisk_performed               = as.logical,
   search_conducted              = as.logical,
   search_person                 = as.logical,

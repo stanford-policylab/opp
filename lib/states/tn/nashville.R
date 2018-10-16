@@ -33,17 +33,21 @@ clean <- function(d, helpers) {
       stop_number
     ) %>%
     rename(
-      location = stop_location_street,
-      frisk_performed = pat_down_search,
-      subject_race = race,
       arrest_made = custodial_arrest_issued,
-      subject_sex = sex,
-      subject_age = age_of_suspect,
+      contraband_drugs = drugs_seized,
+      contraband_found = evidenceseized,
+      contraband_weapons = weapons_seized,
+      frisk_performed = pat_down_search,
+      location = stop_location_street,
+      notes = officers_comments,
       officer_id = officer_employee_number,
-      vehicle_registration_state = vehicle_tag_state,
       search_conducted = searchoccur,
+      search_incident_to_arrest = search_arrest,
       search_vehicle = vehicle_searched,
-      search_incident_to_arrest = search_arrest
+      subject_age = age_of_suspect,
+      subject_race = race,
+      subject_sex = sex,
+      vehicle_registration_state = vehicle_tag_state
     ) %>%
     helpers$add_lat_lng(
     ) %>%
@@ -53,12 +57,12 @@ clean <- function(d, helpers) {
     apply_translator_to(
       tr_yn,
       "arrest_made",
+      "contraband_drugs",
+      "contraband_found",
+      "contraband_weapons",
       "driver_searched",
-      "drugs_seized",
-      "evidenceseized",
       "frisk_performed",
       "misd_state_citation_issued",
-      "other_seized",
       "passenger_searched",
       "search_conducted",
       "search_consent",
@@ -70,7 +74,6 @@ clean <- function(d, helpers) {
       "search_warrant",
       "traffic_citation_issued",
       "verbal_warning_issued",
-      "weapons_seized",
       "written_warning_issued"
     ) %>%
     mutate(
@@ -107,10 +110,7 @@ clean <- function(d, helpers) {
           | search_conducted  # default
         )
       ),
-      contraband_drugs = drugs_seized,
-      contraband_weapons = weapons_seized,
-      contraband_found = contraband_drugs | contraband_weapons,
-      notes = officers_comments
+      precinct = substr(zone, 1, 1)
     ) %>%
     standardize(d$metadata)
 }

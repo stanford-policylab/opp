@@ -950,3 +950,62 @@ unique_value <- function(x) {
 }
 
 quos_names <- function(quos_var) { sapply(quos_var, quo_name) }
+
+count_pct <- function(data, ...) {
+  # Returns data counts and percent of a numeric variable 
+  #
+  # Inputs:
+  #   data (tibble)
+  #       in particular, a dataframe containing vars @... and @x
+  #   ... (variable names)
+  #       variables of which we want to know percent of each pairs of factors
+  # Outputs:
+  #       data (tibble) with fields
+  #         n = count num for each factor in @...
+  #         p = n / total
+  #
+  x <- quos(...)
+  
+  data %>% 
+    ungroup() %>% 
+    count(!!!x) %>% 
+    mutate(p = n / sum(n)) %>% 
+    arrange(desc(p))
+}
+
+bool_to_pct <- function(data, lgl, ...) {
+  # Returns data counts of a logical variable, grouped by 
+  # specified grouping variables, along with the percent 
+  # (within grouping variables) of observations for which logical is true 
+  #
+  # Inputs:
+  #   data (tibble)
+  #       in particular, a dataframe containing vars @... and @lgl
+  #   lgl (variable name)
+  #       logical variable of which we want to know percent true
+  #   ... (variable names)
+  #       name of grouping variables within which we want to know percents of @lgl
+  # Outputs:
+  #       data (tibble) with fields
+  #         ... - same grouping vars as input
+  #         n - count num for which @lgl == TRUE
+  #         total - sum(n) for each elt in grouping_var
+  #         p_lgl = n / total
+  #
+  grouping_vars <- quos(...)
+  lgl <- enquo(lgl)
+  n_lgl_name <- str_c("n_", quo_name(lgl))
+  p_lgl_name <- str_c("p_", quo_name(lgl))
+  
+  data %>% 
+    count(!!lgl, !!!grouping_vars) %>% 
+    spread(!!lgl, n, fill = 0) %>% 
+    group_by(!!!grouping_vars) %>% 
+    mutate(
+      n = `TRUE`,
+      total = sum(n, `FALSE`),
+      !!p_lgl_name := n / total
+    ) %>% 
+    select(-`TRUE`, -`FALSE`) %>% 
+    ungroup()
+}

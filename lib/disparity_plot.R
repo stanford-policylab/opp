@@ -1,6 +1,6 @@
 library(tidyverse)
 
-#' Plot rates: plot rates across demographic groups to identify disparities
+#' Disparity plot: plot rates across demographic groups to identify disparities
 #'
 #' @param tbl a tibble containing the following data
 #' @param ... additional attributes controlled for when rates were computed
@@ -18,7 +18,7 @@ library(tidyverse)
 #' @return ggplot scatterplot of rates faceted by minority demographics
 #'
 #' @examples
-#' outcome_test(
+#' disparity_plot(
 #'   tbl, 
 #'   precinct, 
 #'   demographic_col = subject_race, 
@@ -26,14 +26,14 @@ library(tidyverse)
 #'   rate_col = `contraband_found where search_conducted`,
 #'   size_col = n_search_conducted
 #'  )
-plot_rates <- function(
+disparity_plot <- function(
   tbl,
   ...,
   demographic_col = subject_race, 
   majority_demographic = "white", 
   rate_col = `contraband_found where search_conducted`,
   size_col = n_search_conducted,
-  title = "Contraband recovery rates by precinct",
+  title = "Contraband recovery rates by sub-geography",
   axis_title = "hit rate",
   size_title = "Num searches\nconducted",
   epsilon_rate = 0.05
@@ -50,17 +50,25 @@ plot_rates <- function(
     majority_demographic
   )
   
+  tbl <- 
+    tbl %>% 
+    select(
+      !!!control_colqs, 
+      !!demographic_colq,
+      !!size_colq,
+      !!rate_colq
+    )
   majority_and_minority_rates <-
     tbl %>%
     select(-!!size_colq) %>%
-    spread(!!demographic_colq, !!rate_colq, fill = 0) %>%
+    spread(!!demographic_colq, !!rate_colq) %>%
     rename(majority_rate = majority_demographic) %>%
     gather(minority_demographic, minority_rate, minority_demographics_colnames)
   
   majority_plus_minority_sizes <-
     tbl %>%
     select(-!!rate_colq) %>% 
-    spread(!!demographic_colq, !!size_colq, fill = 0) %>%
+    spread(!!demographic_colq, !!size_colq) %>%
     rename(majority_size = majority_demographic) %>% 
     gather(minority_demographic, minority_size, minority_demographics_colnames) %>% 
     group_by(!!!control_colqs, minority_demographic) %>% 
@@ -75,13 +83,13 @@ plot_rates <- function(
   )
   
   axis_limits <- c(
-    min(pull(tbl, !!rate_colq)) - epsilon_rate, 
+    max(min(pull(tbl, !!rate_colq)) - epsilon_rate, 0),
     max(pull(tbl, !!rate_colq)) + epsilon_rate
   )
 
   data %>%
     ggplot(aes_string("majority_rate", "minority_rate")) +
-    geom_point(aes_string(size = size_colname), shape = 1, alpha = 0.75) +
+    geom_point(aes_string(size = size_colname), shape = 1, alpha = 0.5) +
     geom_abline(linetype = "dashed") +
     facet_grid(cols = vars(minority_demographic)) +
     theme_bw() +

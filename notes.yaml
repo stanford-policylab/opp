@@ -1,9 +1,8 @@
 filters:
-  - cities
-  - 100 stops / year
-  - race recorded 75% of the time
-  - sub geography recorded 75% of the time
-  - search (and contraband when search=T) defined 75% of the time
+  - city != "Statewide"
+  - search_conducted == TRUE
+  - n_searches_per_year > 100
+  - race & sub geography & contraband defined 70% of the time
 output:
   - San Diego, CA
   - San Francisco, CA
@@ -17,16 +16,59 @@ output:
 
 
 San Diego, CA:
-  - service_area only sub-geography
-  - filter search_conducted & not_na_conraband_found: 7.7k
-  - remove service_area 530, 630, 840 and unknown (insufficient data) 
+  - 2014: 70.1% ~5k/year
+  - 2015: 64.4%
+  - sub-geography: service_area* (23)
+  - contraband_found is just a single column
+  - filter: 2015, service_areas 530, 630, 840 and unknown (insufficient data) 
 
 San Francisco, CA:
-  - district is only sub-geography
-  - filter search_conducted & not_na_conraband_found: 53.7k
-  - remove districts K, S, T (mostly missing)
-  - remove 2014 (NA for district, not all months)
-  - 2016 we only have half the year
+  - 2007-2016, excluding 2014: 100% ~5.5k/year (~2k part of 2016)
+  - sub-geography: district* (14)
+  - contraband found is extracted from search_vehicle_description and only
+    has Positive or Negative as outputs
+  - filter: 2014, district K, S, T, NA (mostly missing)
 
 Hartford, CT:
-  - 
+  - 2014: 91.2% 4.4k
+  - 2015: 94.8% 672
+  - sub-geography: district* (18)
+  - notes: sept 2014 has a 2x spike in white searches
+  - contraband is just ContrabandIndicator
+  - filter: 2014 - May 2015 keep (incomplete data for the rest)
+
+New Orleans, LA:
+  - 2010 to 2018-07-18: 98% ~7k to ~12k/year
+  - sub-geography: district* (8) and zone (25)
+  - contraband_found is any evidence siezed (drugs, weapons, other)
+  - filter: May 2013 - June 2018 (early months in 2013 are virtually missing)
+
+Philadelphia, PA:
+  - 2014 to 2018-04-14: 100% ~26k/year
+  - sub-geography: district* (22) and service area (66)
+  - contraband_found is combination of individual/vehicle contraband indicators
+  - filter: nothing, looks good
+
+Nashville, TN:
+  - 2010 to 2016: 85% ~12k/year
+  - sub-geography: reporting_area (1821), zone (74), precinct* (10)
+  - contraband_found is evidenceseized
+  - filter: precinct U (unknown)
+
+Dallas, TX:
+  - 2016: 100% ~55k (is this true?)
+  - sub-geography: district* (7), precinct (36, 50% null), and region (9)
+  - contraband_found is any contraband
+  - filter: district T (mostly empty)
+
+El Paso, TX:
+  - 2012 to 2016: ~93% ~1.5k/year
+  - sub-geography: district (49), region* (7)
+  - contraband is just a simple indicator
+  - filter: consider leaving out region 0 (very little data)
+
+San Antonio, TX:
+  - 2012 to 2018: 94% ~2.8k/year
+  - sub-geography: substation* (7), district (116)
+  - contraband is a simple indicator
+  - filter: nothing, looks good

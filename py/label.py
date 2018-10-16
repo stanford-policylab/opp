@@ -93,7 +93,7 @@ def single_review(df,
             last_n_error.add(not np.array_equal(pred, label))
         else:
             label = get_label(text_to_label, label_classes)
-        if not isinstance(label, list):  # xor labels
+        if not isinstance(label, (np.ndarray, list)):  # xor labels
             label = [label]
         row = {'text': text_to_label}
         row.update(dict(zip(label_cols, label)))
@@ -187,7 +187,8 @@ def should_train_model(df, retrain_every_n):
     label_cols = get_label_cols(df)
     if len(label_cols) > 1:  # multilabel
         for label_col in label_cols:
-            if not df[label_col].sum() > 1:
+            # NOTE: wait to get at least one positive label
+            if df[label_col].sum() == 0:
                 return False
     return True
 

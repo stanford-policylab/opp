@@ -1,0 +1,83 @@
+filters:
+  - city == "Statewide"
+  - search_conducted
+  - race defined
+  - county (or other comparable sub-geo) defined
+  - contraband defined
+output:
+  - AZ
+  - CA
+  - CO
+  - CT 
+  - IL
+  - MA
+  - MD
+  - MO
+  - NC
+  - OH
+  - RI
+  - SC
+  - TX
+  - VT
+  - WA
+  - WI
+final list:
+  - CO
+  - CT 
+  - IL
+  - SC
+
+AZ:
+  - Notes from old OPP: Excluded from analysis because contraband_found too messy
+  - Contraband seems fine for us; we only include drug seizures (~14% hit rate). Can we use it?
+  - County seems to be processed wrong (~90% NA, plus inconsistencies in trailing " County")
+
+CA:
+  - Notes from old OPP: Excluded from analysis because no contraband info for search incident to arrest
+  
+CO:
+  - Used in old OPP threshold test.
+
+CT:
+  - Used in old OPP threshold test.
+  - Filter to `department_name == "State Police"` for all state analysis
+  - Differences from old OPP: We have 6 extra months of data in 2015
+
+IL:
+  - Used in old OPP threshold test.
+  - Use beat instead of county_name (corresponds to department districts; many-to-one correspondence with counties)
+  - Differences from old OPP: We drop data prior to 2012, and have two additional years (2016, 2017); Also, we have no state patrol data from 2013; they do, somehow?
+
+MA:
+  - Notes from old OPP: Excluded from analysis because contraband_found too messsy
+
+MD:
+
+MO:
+
+NC:
+  - Used in old OPP threshold test.
+  - Use two letter district codes
+  - Differences from old OPP: We're missing 2000-2001
+OH:
+
+RI:
+  - Used in old OPP threshold test.
+  - Use zone instead of county_name
+
+SC:
+  - Used in old OPP threshold test.
+  - Contraband is determined by `!is.na(ContrabandDesc)`, as the old OPP did.
+  - TODO: Be a little more judicious is separating out the few rows that, while not NA for ContrabandDesc, indicate no contraband was found. There appear to be very few such rows, so this can be a low priority todo. But worth doing to be rigorous.
+ 
+TX:
+  - Used in old OPP threshold test.
+
+VT:
+
+WA:
+  - Used in old OPP threshold test.
+
+WI:
+  - Used in old OPP threshold test.
+
