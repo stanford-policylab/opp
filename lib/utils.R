@@ -446,6 +446,8 @@ rolling_row_similarity <- function(tbl) {
 
 
 compare_current_row_to_previous <- function(tbl) {
+  # NOTE: there will be 1 fewer rows than in original table, since first row
+  # has no previous row
   diffs <- as_tibble(
     # equal or both NA
     tbl[-1,] == tbl[-nrow(tbl),] | (is.na(tbl[-1,]) & is.na(tbl[-nrow(tbl),]))
@@ -454,8 +456,6 @@ compare_current_row_to_previous <- function(tbl) {
   mutate_all(
     funs(replace(., is.na(.), FALSE))
   )
-  # prepends a row of FALSE for first row
-  rbind(logical(ncol(diffs)), diffs)
 }
 
 

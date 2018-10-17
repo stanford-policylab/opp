@@ -83,20 +83,8 @@ clean <- function(d, helpers) {
   )
 
   d$data %>%
-    # TODO(journalist): how can we dedup this correctly? merging causes null
-    # rates to skyrocket
-    # https://app.asana.com/0/456927885748233/475749789858290 
-    # NOTE: yields about the same as merging on HA_ARREST_KEY, 1.8M rows
-    # merge_rows(
-    #   HA_OFFICER_ID,
-    #   HA_ROAD_LOC,
-    #   HA_ARREST_DATE
-    # ) %>%
-    # NOTE: yields about 1.8M rows
-    # merge_rows(
-    #   HA_ARREST_KEY
-    # ) %>%
     rename(
+      key = HA_ARREST_KEY,
       location = HA_ROAD_LOC,
       lat = HA_LATITUDE,
       lng = HA_LONGITUDE,
@@ -160,6 +148,12 @@ clean <- function(d, helpers) {
       # https://app.asana.com/0/456927885748233/475749789858290 
       subject_race = tr_race[subject_race],
       subject_sex = tr_sex[subject_sex]
+    ) %>%
+    select_(
+      .dots = c("key", intersect(names(schema), colnames(.)))
+    ) %>%
+    merge_rows(
+      key
     ) %>%
     standardize(d$metadata)
 }
