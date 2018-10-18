@@ -1,0 +1,39 @@
+```{r, echo = FALSE}
+opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+source("bunching_test.R")
+
+ok <- opp_load_data("ok", "oklahoma city")
+da <- opp_load_data("tx", "dallas")
+pl <- opp_load_data("tx", "plano")
+
+okr <- prepare(ok)
+oks <- prepare(ok, subject_sex, "male")
+dar <- prepare(da)
+das <- prepare(da, subject_sex, "male")
+plr <- prepare(pl)
+pls <- prepare(pl, subject_sex, "male")
+```
+
+```{r f1, fig.height=4, fig.width=7}
+plot_over(okr, "Oklahoma City MPH Over by Race")
+plot_over(oks, "Oklahoma City MPH Over by Sex", is_male)
+plot_bunching(okr, "Oklahoma City Bunching by Race")
+plot_bunching(oks, "Oklahoma City Bunching by Sex")
+plot_lenient(okr, "Oklahoma City Over by Lenience and Race")
+plot_lenient(oks, "Oklahoma City Over by Lenience and Sex", is_male)
+
+plot_over(dar, "Dallas MPH Over by Race")
+plot_over(das, "Dallas MPH Over by Sex", is_male)
+plot_bunching(dar, "Dallas Bunching by Race")
+plot_bunching(das, "Dallas Bunching by Sex")
+plot_lenient(dar, "Dallas Over by Lenience and Race")
+plot_lenient(das, "Dallas Over by Lenience and Sex", is_male)
+
+plot_over(plr, "Plano MPH Over by Race")
+plot_over(pls, "Plano MPH Over by Sex", is_male)
+plot_bunching(plr, "Plano Bunching by Race")
+plot_bunching(pls, "Plano Bunching by Sex")
+plot_lenient(plr, "Plano Over by Lenience and Race")
+plot_lenient(pls, "Plano Over by Lenience and Sex", is_male)
+```

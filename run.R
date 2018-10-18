@@ -11,6 +11,8 @@ main <- function() {
     opp_process(args$state, args$city, args$n_max)
   if (not_null(args$report))
     opp_report(args$state, args$city)
+  if (not_null(args$bunching))
+    opp_bunching_report()
   if (not_null(args$plot))
     opp_plot(args$state, args$city)
   if (not_null(args$coverage))
@@ -30,6 +32,7 @@ get_args <- function() {
                  "[--process]",
                  "[--n_max]",
                  "[--report]",
+                 "[--bunching]",
                  "[--disparity]",
                  "[--plot]",
                  "--state <state_code>",
@@ -43,6 +46,7 @@ get_args <- function() {
     "process",    "o",          "none",         "logical",
     "n_max",      "n",          "none",         "integer",
     "report",     "r",          "none",         "logical",
+    "bunching",   "b",          "none",         "logical",
     "disparity",  "d",          "none",         "logical",
     "plot",       "p",          "none",         "logical",
     "state",      "s",          "none",         "character",
