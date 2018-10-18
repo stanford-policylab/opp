@@ -706,8 +706,7 @@ opp_process <- function(state, city, n_max = Inf) {
 
 opp_report <- function(state, city) {
   print("building report...")
-  output_dir = here::here("reports")
-  dir_create(output_dir)
+  output_dir <- dir_create(here::here("reports"))
   render(
     "report.Rmd",
     "pdf_document",
@@ -716,6 +715,17 @@ opp_report <- function(state, city) {
       state = state,
       city = city
     )
+  )
+}
+
+
+opp_bunching_report <- function() {
+  print("building report...")
+  output_dir <- dir_create(here::here("reports"))
+  render(
+    "bunching_report.Rmd",
+    "pdf_document",
+    file.path(output_dir, "bunching.pdf")
   )
 }
 
