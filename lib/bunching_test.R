@@ -91,8 +91,9 @@ plot_over <- function(
 ) {
 
   by_colq <- enquo(by_col)
+	by_colname <- quo_name(by_colq)
 
-  tbl <-
+  tbls <-
     tbl %>%
     filter(over <= over_limit) %>%
     group_by(!!by_colq, over) %>%
@@ -100,11 +101,19 @@ plot_over <- function(
     ungroup() %>%
     group_by(!!by_colq) %>%
     mutate(total = sum(n), pct = n / total) %>%
-    ungroup()
+		ungroup()
 
-  ggplot(tbl, aes(x=over, y=pct, color=!!by_colq)) +
+	labels <-
+		tbls %>%
+		select(!!by_colq, total) %>%
+		distinct() %>%
+		unite(label, sep = "  N=") %>%
+		pull(label)
+
+  ggplot(tbls, aes(x=over, y=pct, color=!!by_colq)) +
   geom_line() +
-  scale_x_continuous(breaks = round(seq(0, max(tbl$over), by=5), 1)) +
+  scale_x_continuous(breaks = round(seq(0, max(tbls$over), by=5), 1)) +
+	scale_colour_discrete(labels = labels) +
   theme(text = element_text(size=10)) +
   ylab("proportion") +
   xlab("MPH over speed limit") +
