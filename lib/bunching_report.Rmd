@@ -1,39 +1,144 @@
 ```{r, echo = FALSE}
 opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
-
 source("bunching_test.R")
-
-ok <- opp_load_data("ok", "oklahoma city")
-da <- opp_load_data("tx", "dallas")
-pl <- opp_load_data("tx", "plano")
-
-okr <- prepare(ok)
-oks <- prepare(ok, subject_sex, "male")
-dar <- prepare(da)
-das <- prepare(da, subject_sex, "male")
-plr <- prepare(pl)
-pls <- prepare(pl, subject_sex, "male")
 ```
 
-```{r f1, fig.height=4, fig.width=7}
+# Decisions
+
+1. Across all cities and states, we only had coverage in Oklahoma City, Dallas,
+and Plano; and for these, we only had coverage for race and sex; we don't have
+ages here
+2. Non-lenient officers were defined to be those with $\le 3\%$ of their
+tickets at bunch points (same as original paper)
+3. Used 10 MPH over as the only bunching point for these cities, since adding
+15 MPH and 20 MPH over as bunching points didn't allow for differentiation
+between lenient and non-lenient officers, i.e. very, very few officers had
+fewer than 3% of their tickets at any of these 'bunch' points; it also seems
+likely that the higher values are a mix of bunching and the thresholds at which
+police really start stopping people; the original paper used 9 MPH over, since
+10 MPH over corresponds to the first jump in the fee schedule; however, our
+distributions are quite different from the original paper's, and not only in
+this regard
+
+\newpage
+
+# Oklahoma City
+
+Speeding Fine Schedule: 
+
+1-10 MPH over: \$172 
+
+11-19 MPH over: \$203 
+
+20+ MPH over: \$213 
+
+https://www.okc.gov/departments/municipal-court/fines-fees 
+
+```{r ok_over, fig.height=3.75, fig.width=7}
+ok <- opp_load_data("ok", "oklahoma city")
+okr <- prepare(ok)
+oks <- prepare(ok, subject_sex, "male")
 plot_over(okr, "Oklahoma City MPH Over by Race")
 plot_over(oks, "Oklahoma City MPH Over by Sex", is_male)
+```
+
+\newpage
+
+Used bunching value of 10 MPH over 
+
+```{r ok_bunching, fig.height=4, fig.width=7}
 plot_bunching(okr, "Oklahoma City Bunching by Race")
 plot_bunching(oks, "Oklahoma City Bunching by Sex")
+```
+
+\newpage
+
+Officer is considered lenient if $\le 3\%$ of stops at bunch points
+
+```{r ok_lenience, fig.height=4, fig.width=7}
 plot_lenient(okr, "Oklahoma City Over by Lenience and Race")
 plot_lenient(oks, "Oklahoma City Over by Lenience and Sex", is_male)
+```
+\newpage
 
+# Dallas
+
+Speeding Fine Schedule: 
+
+1-10 MPH over: \$201 
+
+11-15 MPH over: \$226 
+
+16-20 MPH over: \$251 
+
+\>20 MPH over: \$304 
+
+https://dallascityhall.com/departments/courtdetentionservices/DCH%20Documents/OffenseCode_FinesFees_20180705.pdf 
+
+```{r dallas_over, fig.height=3.75, fig.width=7}
+da <- opp_load_data("tx", "dallas")
+dar <- prepare(da)
+das <- prepare(da, subject_sex, "male")
 plot_over(dar, "Dallas MPH Over by Race")
 plot_over(das, "Dallas MPH Over by Sex", is_male)
+```
+
+\newpage
+
+Used bunching value of 10 MPH over 
+
+```{r dallas_bunching, fig.height=4, fig.width=7}
 plot_bunching(dar, "Dallas Bunching by Race")
 plot_bunching(das, "Dallas Bunching by Sex")
+```
+
+\newpage
+
+Officer is considered lenient if $\le 3\%$ of stops at bunch points
+
+```{r dallas_lenience, fig.height=4, fig.width=7}
 plot_lenient(dar, "Dallas Over by Lenience and Race")
 plot_lenient(das, "Dallas Over by Lenience and Sex", is_male)
+```
 
+\newpage
+
+# Plano
+
+Speeding Fine Schedule: 
+
+1-10 MPH over: \$204 
+
+11-20 MPH over: \$204 + \$10 * (MPH over - 10) 
+
+21-25 MPH over: \$304 + \$40 * (MPH over - 20) 
+
+https://www.plano.gov/364/Fine-Payment-Information 
+
+Used bunching value of 10 MPH over 
+
+```{r plano_over, fig.height=3.75, fig.width=7}
+pl <- opp_load_data("tx", "plano")
+plr <- prepare(pl)
+pls <- prepare(pl, subject_sex, "male")
 plot_over(plr, "Plano MPH Over by Race")
 plot_over(pls, "Plano MPH Over by Sex", is_male)
+```
+
+\newpage
+
+Used bunching value of 10 MPH over 
+
+```{r plano_bunching, fig.height=4, fig.width=7}
 plot_bunching(plr, "Plano Bunching by Race")
 plot_bunching(pls, "Plano Bunching by Sex")
+```
+
+\newpage
+
+Officer is considered lenient if $\le 3\%$ of stops at bunch points
+
+```{r plano_lenience, fig.height=4, fig.width=7}
 plot_lenient(plr, "Plano Over by Lenience and Race")
 plot_lenient(pls, "Plano Over by Lenience and Sex", is_male)
 ```
