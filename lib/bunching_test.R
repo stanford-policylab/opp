@@ -5,6 +5,81 @@ library(fs)
 source("opp.R")
 
 
+# original paper filters:
+# 100 citations
+# 20 whites, 20 minorities
+# 0-40 over
+# remove accidents
+# remove tickets not on roads...1.5%
+# fewer than 2% of tickets issued at bunching point are non-lenient
+
+
+bunching_test <- function(
+  tbl,
+  ...,
+  demographic_col = subject_race,
+  demographic_majority_class = "white",
+  min_stops_per_officer = 100,
+  min_stops_per_officer_per_demographic_class = 20,
+  over_limit = 40,
+  bunching_values = c(10),
+  non_lenient_bunching_percent_max = 0.02
+) {
+
+  control_colsq <- enquos(...)
+  demographic_colq <- enquo(demographic_col)
+
+  control_colnames <- quos_names(control_colsq)
+
+  tbl <- prepare(
+    tbl,
+    !!demographic_colq,
+    demographic_majority_class,
+    min_stops_per_officer,
+    min_stops_per_officer_per_demographic_class,
+    over_limit
+  )
+
+  # NOTE: creates a matrix like the following:
+  # V1 V2 V3 ... V<max_over>
+  # 1  2  3  ... <max_over>
+  # 1  2  3  ... <max_over> 
+  # 1  2  3  ... <max_over> 
+  # ...
+  over_speeds <- as_tibble(sapply(
+    seq(1:max(tbl$over))
+    rep,
+    nrow(tbl)
+  ))
+
+  # NOTE: creates a matrix like the following:
+  # V1 V2 V3 ... V<max_over>
+  # T  F  F  ... <max_over>
+  # F  T  F  ... <max_over> 
+  # F  T  F  ... <max_over> 
+  # ...
+  # i.e. each column is a target variable indicating whether
+  # the current record is speed <S> over
+  over_indicators <- as_tibble(sapply(over_speeds, function(s) s == tbl$over))
+  colnames(over_indicators) <- str_c(
+    rep("over_", ncol(over_indicators)),
+    seq(1:ncol(over_indicators))
+  )
+
+  fmla <- as.formula(str_c(
+    "cbind(",
+    str_c(colnames(over_indicators), collapse = ", "),
+    ") ~ is_lenient * is_", demographic_majority_class, " + ",
+    str_c(control_colnames, collapse = " + ")
+  ))
+  print(fmla)
+
+  data <- bind_cols(over_indicators, tbl)
+
+  # m <- lm(cbind())
+}
+
+
 coverage <- function(tbl) {
   tbl %>%
   mutate(
@@ -41,7 +116,9 @@ prepare <- function(
   tbl,
   demographic_col = subject_race,
   demographic_majority_class = "white",
-  min_tickets_per_officer_per_demographic_class = 10
+  min_stops_per_officer = 100,
+  min_stops_per_officer_per_demographic_class = 20,
+  over_limit = 40
 ) {
 
   demographic_colq <- enquo(demographic_col)
@@ -56,20 +133,27 @@ prepare <- function(
     ) %>%
     filter(
       over > 0,
-      over < 100
+      over < over_limit
     ) %>%
     drop_na(
       !!"officer_id",
       !!new_demographic_colname
     )
 
-  eligibile_officers <-
+  officers_with_min_stops <-
+    tbl %>%
+    group_by(officer_id) %>%
+    count() %>%
+    filter(n >= min_stops_per_officer) %>%
+    pull(officer_id)
+  
+  officers_with_min_stops_per_demographic_class <-
     tbl %>%
     # TODO(danj): should this also consider geography?
     group_by_("officer_id", new_demographic_colname) %>%
     summarize(cnt = n()) %>%
     ungroup() %>%
-    filter(cnt >= min_tickets_per_officer_per_demographic_class) %>%
+    filter(cnt >= min_stops_per_officer_per_demographic_class) %>%
     group_by(officer_id) %>%
     count() %>%
     # NOTE: only get officers that have given tickets to both majority/minority
@@ -79,15 +163,19 @@ prepare <- function(
     ) %>%
     pull(officer_id)
 
-  filter(tbl, officer_id %in% eligibile_officers)
+  eligible_officers <- intersect(
+    officers_with_min_stops,
+    officers_with_min_stops_per_demographic_class
+  )
+
+  filter(tbl, officer_id %in% eligible_officers)
 }
 
 
 plot_over <- function(
   tbl,
   title = NULL,
-  by_col = is_white,
-  over_limit = 50
+  by_col = is_white
 ) {
 
   by_colq <- enquo(by_col)
@@ -95,7 +183,6 @@ plot_over <- function(
 
   tbls <-
     tbl %>%
-    filter(over <= over_limit) %>%
     group_by(!!by_colq, over) %>%
     count() %>%
     ungroup() %>%
@@ -127,15 +214,17 @@ plot_bunching <- function(
   bunching_values = c(10)
 ) {
 
+  over_colq <- enquo(over_col)
+
   tbl <-
     tbl %>%
     mutate(is_bunch = over %in% bunching_values) %>%
     group_by(officer_id) %>%
     summarize(bunch_pct = mean(is_bunch))
 
-  ggplot(tbl, aes(x = bunch_pct, y =..count../sum(..count..))) +
-    geom_histogram(bins=20, binwidth=0.05) +
-    theme(text = element_text(size=10)) +
+  ggplot(tbl, aes(x = bunch_pct, y = ..count.. / sum(..count..))) +
+    geom_histogram(bins = 20, binwidth = 0.05) +
+    theme(text = element_text(size = 10)) +
     ylab("proportion of officers") +
     xlab("proportion of stops at bunching point(s)") +
     ggtitle(title)
@@ -147,7 +236,7 @@ plot_lenient <- function(
   title = NULL,
   demographic_col = is_white,
   bunching_values = c(10),
-  bunch_pct_threshold = 0.03
+  non_lenient_bunching_percent_max = 0.02
 ) {
 
   demographic_colq <- enquo(demographic_col)
@@ -159,7 +248,7 @@ plot_lenient <- function(
     group_by(officer_id) %>%
     summarize(bunch_pct = mean(is_bunch)) %>%
     ungroup() %>%
-    mutate(is_lenient = bunch_pct > bunch_pct_threshold) %>%
+    mutate(is_lenient = bunch_pct > non_lenient_bunching_percent_max) %>%
     select(officer_id, is_lenient)
 
   new_colname <- str_c("is_lenient_", demographic_colname)
