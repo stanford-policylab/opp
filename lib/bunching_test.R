@@ -31,6 +31,7 @@ bunching_test <- function(
 
   control_colnames <- quos_names(control_colsq)
 
+  # TODO(danj): add leniency to prepare
   tbl <- prepare(
     tbl,
     !!demographic_colq,
