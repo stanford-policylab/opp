@@ -47,7 +47,7 @@ bunching_test <- function(
   # 1  2  3  ... <max_over> 
   # ...
   over_speeds <- as_tibble(sapply(
-    seq(1:max(tbl$over))
+    seq(1:max(tbl$over)),
     rep,
     nrow(tbl)
   ))
@@ -67,16 +67,16 @@ bunching_test <- function(
   )
 
   fmla <- as.formula(str_c(
-    "cbind(",
-    str_c(colnames(over_indicators), collapse = ", "),
-    ") ~ is_lenient * is_", demographic_majority_class, " + ",
+    "cbind(", str_c(colnames(over_indicators), collapse = ", "), ")",
+    " ~ is_lenient * is_", demographic_majority_class, " + ",
     str_c(control_colnames, collapse = " + ")
   ))
   print(fmla)
+  print(colnames(tbl))
 
   data <- bind_cols(over_indicators, tbl)
 
-  # m <- lm(cbind())
+  glm(fmla, "binomial", data)
 }
 
 
