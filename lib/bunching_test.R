@@ -13,6 +13,9 @@ source("analysis_common.R")
 # remove tickets not on roads...1.5%
 # fewer than 2% of tickets issued at bunching point are non-lenient
 
+# TODO(danj):
+# add difference-in-difference plot for White X Lenient coefficient
+# add additional controls - time, location, vehicle, demographic attributes
 
 bunching_test <- function(
   tbl,
