@@ -65,7 +65,7 @@ prepare <- function(
 
   null_rate <- (n_before_drop_na - n_after_drop_na) / n_before_drop_na
   if (null_rate > 0) {
-    rate_warning(null_rate, "was null for required columns and removed")
+    pct_warning(null_rate, "of data was null for required columns and removed")
   }
   metadata["null_rate"] <- null_rate
 
@@ -75,9 +75,9 @@ prepare <- function(
   correction_rate <- (n_after_drop_na - nrow(tbl)) / n_before_drop_na
   metadata["outcome_without_action_rate"] <- correction_rate
   if (correction_rate > 0) {
-    rate_warning(
+    pct_warning(
       correction_rate,
-      "was inconsistent: outcome was positive but no action was taken"
+      "of data was inconsistent: outcome was positive but no action was taken"
     )
   }
 
@@ -93,12 +93,31 @@ pretty_percent <- function(v) {
 }
 
 
-# Creates a warning indicating that some percent of the data had some property
-rate_warning <- function(rate, message) {
+select_and_filter_missing <- function(d, ...) {
+
+  colqs <- enquos(...)
+  before_drop_na <- nrow(d$data)
+  d$data <- select(d$data, !!!colqs) %>% drop_na
+  after_drop_na <- nrow(d$data)
+
+  null_percent <- (before_drop_na - after_drop_na) / before_drop_na
+  d$metadata["null_rate"] <- null_percent
+  if (null_percent > 0) {
+    pct_warning(
+      null_percent,
+      "of data dropped due to missing values in required columns"
+    )
+  }
+  d
+}
+
+
+
+pct_warning <- function(rate, message) {
   warning(
     str_c(
       formatC(100 * rate, format = "f", digits = 2), 
-      "% of the data ",
+      "% ",
       message
     ),
     call. = FALSE
