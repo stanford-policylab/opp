@@ -398,7 +398,7 @@ train <- function(
   ))
   print(fmla)
 
-  glm(fmla, "gaussian", tbl)
+  lm(fmla, tbl)
 }
 
 
@@ -429,8 +429,7 @@ plot_over <- function(tbl, by_col = is_white) {
     scale_colour_discrete(labels = labels) +
     theme(text = element_text(size=10)) +
     ylab("proportion") +
-    xlab("MPH over speed limit") +
-    ggtitle(title)
+    xlab("MPH over speed limit")
 }
 
 
@@ -444,8 +443,7 @@ plot_bunching <- function(tbl) {
     geom_histogram(bins = 20, binwidth = 0.05) +
     theme(text = element_text(size = 10)) +
     ylab("proportion of officers") +
-    xlab("proportion of stops at bunching point(s)") +
-    ggtitle(title)
+    xlab("proportion of stops at bunching point(s)")
 }
 
 
@@ -469,7 +467,7 @@ plot_lenience <- function(tbl, by_col = is_white) {
       )
     )
    
-  plot_over(tbl, title, !!sym(plot_colname))
+  plot_over(tbl, !!sym(plot_colname))
 }
 
 
