@@ -44,9 +44,9 @@ tbl <-
   )
 bt <- bunching_test(tbl, division, hour_of_day, age_group, vehicle_make)
 bt$results$plots$over
-bt$results$plots$coefficient
 bt$results$plots$bunching
 bt$results$plots$lenience
+bt$results$plots$coefficient
 ```
 
 \newpage
@@ -70,9 +70,9 @@ tbl <- opp_load_data("tx", "dallas")
 tbl <- mutate(tbl, hour_of_day = hour(hms(time)))
 bt <- bunching_test(tbl, region, hour_of_day, vehicle_type)
 bt$results$plots$over
-bt$results$plots$coefficient
 bt$results$plots$bunching
 bt$results$plots$lenience
+bt$results$plots$coefficient
 ```
 \newpage
 
@@ -96,7 +96,7 @@ tbl <- mutate(tbl, hour_of_day = hour(hms(time)))
 # NOTE: location is null 99.97% of the time where speed is defined
 bt <- bunching_test(tbl, hour_of_day, vehicle_make)
 bt$results$plots$over
-bt$results$plots$coefficient
 bt$results$plots$bunching
 bt$results$plots$lenience
+bt$results$plots$coefficient
 ```
