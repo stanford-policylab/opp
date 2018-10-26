@@ -57,7 +57,7 @@ bunching_test <- function(
     non_lenient_bunching_rate_max = non_lenient_bunching_rate_max
   )
 
-  models <- train(
+  fit <- train(
     d$data,
     !!!control_colqs,
     demographic_indicator_col = !!sym(demographic_indicator_colname),
@@ -66,16 +66,16 @@ bunching_test <- function(
 
   list(
     metadata = d$metadata,
+    data = d$data,
     results = list(
-      models = models,
+      fit = fit,
       plots = list(
         over = plot_over(d$data, !!sym(demographic_indicator_colname)),
         bunching = plot_bunching(d$data),
-        lenience = plot_lenience(d$data, !!sym(demographic_indicator_colname))
-        # TODO(danj): model weight B_3
+        lenience = plot_lenience(d$data, !!sym(demographic_indicator_colname)),
+        coefficient = plot_coefficient(fit)
       )
-    ),
-    data = d$data
+    )
   )
 }
 
@@ -432,7 +432,8 @@ plot_over <- function(tbl, by_col = is_white) {
     scale_colour_discrete(labels = labels) +
     theme(text = element_text(size=10)) +
     ylab("proportion") +
-    xlab("MPH over speed limit")
+    xlab("MPH over speed limit") +
+    ggtitle("Proportion of Stops by MPH Over")
 }
 
 
@@ -446,7 +447,8 @@ plot_bunching <- function(tbl) {
     geom_histogram(bins = 20, binwidth = 0.05) +
     theme(text = element_text(size = 10)) +
     ylab("proportion of officers") +
-    xlab("proportion of stops at bunching point(s)")
+    xlab("proportion of stops at bunching point(s)") +
+    ggtitle("Bunching")
 }
 
 
@@ -471,6 +473,32 @@ plot_lenience <- function(tbl, by_col = is_white) {
     )
    
   plot_over(tbl, !!sym(plot_colname))
+}
+
+
+plot_coefficient <- function(fit) {
+  # NOTE: this represents the interaction of is_lenient with whatever
+  # demographic it is interacted with
+  s <- summary(fit)
+  coefficient_pattern <- "is_lenient.*:.*"
+  coefficient_names <- dimnames(s[[1]]$coefficients)[[1]]
+  idx <- which(str_detect(coefficient_names, coefficient_pattern))
+  mtx <- t(sapply(s, function(m) { t(m$coefficients[idx, 1:2]) }))
+  tbl <- as_tibble(mtx)
+  tbl$over <- parse_number(rownames(mtx))
+  colnames(tbl) <- c("estimate", "std_error", "over")
+  tbl <-
+    tbl %>%
+    mutate(lower = estimate - 2 * std_error, upper = estimate + 2 * std_error)
+
+  title <- str_c("Coefficient of ", coefficient_names[idx], " (95% CI)")
+  ggplot(tbl, aes(x=over, y=estimate)) +
+    geom_point() +
+    geom_line() +
+    xlab("MPH over") +
+    ylab("estimate") +
+    geom_errorbar(aes(ymin=lower, ymax=upper)) +
+    ggtitle(title)
 }
 
 

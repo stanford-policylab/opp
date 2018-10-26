@@ -80,7 +80,8 @@ clean <- function(d, helpers) {
       time = parse_time_int(time),
       subject_race = tr_race[subject_race],
       subject_sex = tr_sex[subject_sex],
-      subject_dob = parse_date(subject_dob, "%Y%m%d")
+      subject_dob = parse_date(subject_dob, "%Y%m%d"),
+      subject_age = age_at_date(subject_dob, date)
     ) %>%
     standardize(d$metadata)
 }
