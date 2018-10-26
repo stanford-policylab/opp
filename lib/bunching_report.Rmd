@@ -35,18 +35,18 @@ Speeding Fine Schedule:
 https://www.okc.gov/departments/municipal-court/fines-fees 
 
 ```{r ok, fig.height=3.75, fig.width=7}
-ok <- opp_load_data("ok", "oklahoma city")
-ok <-
-  ok %>%
+tbl <- opp_load_data("ok", "oklahoma city")
+tbl <-
+  tbl %>%
   mutate(
     age_group = as.integer(subject_age / 10),
     hour_of_day = hour(hms(time))
   )
-ok_bt <- bunching_test(ok, division, hour_of_day, age_group, vehicle_make)
-ok_bt$results$plots$over
-ok_bt$results$plots$coefficient
-ok_bt$results$plots$bunching
-ok_bt$results$plots$lenience
+bt <- bunching_test(tbl, division, hour_of_day, age_group, vehicle_make)
+bt$results$plots$over
+bt$results$plots$coefficient
+bt$results$plots$bunching
+bt$results$plots$lenience
 ```
 
 \newpage
@@ -65,32 +65,15 @@ Speeding Fine Schedule:
 
 https://dallascityhall.com/departments/courtdetentionservices/DCH%20Documents/OffenseCode_FinesFees_20180705.pdf 
 
-```{r dallas_over, fig.height=3.75, fig.width=7}
-da <- opp_load_data("tx", "dallas")
-dar <- prepare(da)
-das <- prepare(da, subject_sex, "male")
-plot_over(dar, "Dallas MPH Over by Race")
-plot_over(das, "Dallas MPH Over by Sex", is_male)
+```{r dallas, fig.height=3.75, fig.width=7}
+tbl <- opp_load_data("tx", "dallas")
+tbl <- mutate(tbl, hour_of_day = hour(hms(time)))
+bt <- bunching_test(tbl, region, hour_of_day, vehicle_type)
+bt$results$plots$over
+bt$results$plots$coefficient
+bt$results$plots$bunching
+bt$results$plots$lenience
 ```
-
-\newpage
-
-Used bunching value of 10 MPH over 
-
-```{r dallas_bunching, fig.height=4, fig.width=7}
-plot_bunching(dar, "Dallas Bunching by Race")
-plot_bunching(das, "Dallas Bunching by Sex")
-```
-
-\newpage
-
-Officer is considered lenient if $\le 3\%$ of stops at bunch points
-
-```{r dallas_lenience, fig.height=4, fig.width=7}
-plot_lenient(dar, "Dallas Over by Lenience and Race")
-plot_lenient(das, "Dallas Over by Lenience and Sex", is_male)
-```
-
 \newpage
 
 # Plano
@@ -107,28 +90,13 @@ https://www.plano.gov/364/Fine-Payment-Information
 
 Used bunching value of 10 MPH over 
 
-```{r plano_over, fig.height=3.75, fig.width=7}
-pl <- opp_load_data("tx", "plano")
-plr <- prepare(pl)
-pls <- prepare(pl, subject_sex, "male")
-plot_over(plr, "Plano MPH Over by Race")
-plot_over(pls, "Plano MPH Over by Sex", is_male)
-```
-
-\newpage
-
-Used bunching value of 10 MPH over 
-
-```{r plano_bunching, fig.height=4, fig.width=7}
-plot_bunching(plr, "Plano Bunching by Race")
-plot_bunching(pls, "Plano Bunching by Sex")
-```
-
-\newpage
-
-Officer is considered lenient if $\le 3\%$ of stops at bunch points
-
-```{r plano_lenience, fig.height=4, fig.width=7}
-plot_lenient(plr, "Plano Over by Lenience and Race")
-plot_lenient(pls, "Plano Over by Lenience and Sex", is_male)
+```{r plano, fig.height=3.75, fig.width=7}
+tbl <- opp_load_data("tx", "plano")
+tbl <- mutate(tbl, hour_of_day = hour(hms(time)))
+# NOTE: location is null 99.97% of the time where speed is defined
+bt <- bunching_test(tbl, hour_of_day, vehicle_make)
+bt$results$plots$over
+bt$results$plots$coefficient
+bt$results$plots$bunching
+bt$results$plots$lenience
 ```
