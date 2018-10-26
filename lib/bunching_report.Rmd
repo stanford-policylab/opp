@@ -8,7 +8,7 @@ source("bunching_test.R")
 1. Across all cities and states, we only had coverage in Oklahoma City, Dallas,
 and Plano; and for these, we only had coverage for race and sex; we don't have
 ages here
-2. Non-lenient officers were defined to be those with $\le 3\%$ of their
+2. Non-lenient officers were defined to be those with $\le$ 2% of their
 tickets at bunch points (same as original paper)
 3. Used 10 MPH over as the only bunching point for these cities, since adding
 15 MPH and 20 MPH over as bunching points didn't allow for differentiation
@@ -34,32 +34,21 @@ Speeding Fine Schedule:
 
 https://www.okc.gov/departments/municipal-court/fines-fees 
 
-```{r ok_over, fig.height=3.75, fig.width=7}
+```{r ok, fig.height=3.75, fig.width=7}
 ok <- opp_load_data("ok", "oklahoma city")
-ok_bt <- bunching_test(ok, )
-okr <- prepare(ok)
-oks <- prepare(ok, subject_sex, "male")
-plot_over(okr, "Oklahoma City MPH Over by Race")
-plot_over(oks, "Oklahoma City MPH Over by Sex", is_male)
+ok <-
+  ok %>%
+  mutate(
+    age_group = as.integer(subject_age / 10),
+    hour_of_day = hour(hms(time))
+  )
+ok_bt <- bunching_test(ok, division, hour_of_day, age_group, vehicle_make)
+ok_bt$results$plots$over
+ok_bt$results$plots$coefficient
+ok_bt$results$plots$bunching
+ok_bt$results$plots$lenience
 ```
 
-\newpage
-
-Used bunching value of 10 MPH over 
-
-```{r ok_bunching, fig.height=4, fig.width=7}
-plot_bunching(okr, "Oklahoma City Bunching by Race")
-plot_bunching(oks, "Oklahoma City Bunching by Sex")
-```
-
-\newpage
-
-Officer is considered lenient if $\le 3\%$ of stops at bunch points
-
-```{r ok_lenience, fig.height=4, fig.width=7}
-plot_lenient(okr, "Oklahoma City Over by Lenience and Race")
-plot_lenient(oks, "Oklahoma City Over by Lenience and Sex", is_male)
-```
 \newpage
 
 # Dallas
