@@ -396,7 +396,6 @@ train <- function(
     " + ",
     str_c(control_colnames, collapse = " + ")
   ))
-  print(fmla)
 
   lm(fmla, tbl)
 }
