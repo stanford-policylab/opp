@@ -1,6 +1,6 @@
 library(here)
 library(parallel)
-library(rstan)
+# library(rstan)
 library(tidyverse)
 library(stringr)
 

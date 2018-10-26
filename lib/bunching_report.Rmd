@@ -13,7 +13,7 @@ tickets at bunch points (same as original paper)
 3. Used 10 MPH over as the only bunching point for these cities, since adding
 15 MPH and 20 MPH over as bunching points didn't allow for differentiation
 between lenient and non-lenient officers, i.e. very, very few officers had
-fewer than 3% of their tickets at any of these 'bunch' points; it also seems
+fewer than 2% of their tickets at any of these 'bunch' points; it also seems
 likely that the higher values are a mix of bunching and the thresholds at which
 police really start stopping people; the original paper used 9 MPH over, since
 10 MPH over corresponds to the first jump in the fee schedule; however, our
@@ -36,6 +36,7 @@ https://www.okc.gov/departments/municipal-court/fines-fees
 
 ```{r ok_over, fig.height=3.75, fig.width=7}
 ok <- opp_load_data("ok", "oklahoma city")
+ok_bt <- bunching_test(ok, )
 okr <- prepare(ok)
 oks <- prepare(ok, subject_sex, "male")
 plot_over(okr, "Oklahoma City MPH Over by Race")
