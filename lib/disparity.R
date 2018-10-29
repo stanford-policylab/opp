@@ -6,17 +6,24 @@ source(here::here("lib", "analysis_common.R"))
 
 disparity <- function() {
   d <- load_data()
-
+  cat("\nStarting outcome tests\n")
   ots <- outcome_tests(d)
+  cat("\nStarting outcome plots\n")
   plt_all(ots, "outcome (filtered)")
+  cat("\nStarting threshold tests\n")
   tts <- threshold_tests(d)
+  cat("\nStarting threshold plots\n")
   plt_all(tts, "threshold (filtered)")
-  plt(tts, "thresholds (filtered: all cities)")
-
+  # plt(tts, "thresholds (filtered: all cities)")
+  
+  cat("\nStarting outcome test aggregate\n")
   ot <- outcome_test(d, state, city, sub_geography)
+  cat("\nStarting outcome plot aggregate\n")
   plt(ot$results, "outcome (filtered)")
-  tt <- threshold_test(d, state, city, sub_geography)
-  plt(tt$results$thresholds, "thresholds (filtered: aggregate)")
+  cat("\nStarting threshold test aggregate\n")
+  tt <- threshold_test(d, state, sub_geography)
+  cat("\nStarting threshold plot aggregate\n")
+  plt(tt$results$thresholds, "thresholds (filtered: aggregate, with hier)")
 }
 
 
@@ -117,7 +124,13 @@ threshold_tests <- function(d) {
   d %>%
     group_by(state, city) %>%
     do(
-      threshold_test(., state, city, sub_geography)$results$thresholds
+      threshold_test(
+        ., state, sub_geography,
+        geography_col = city,
+        demographic_col = subject_race,
+        action_col = search_conducted,
+        outcome_col = contraband_found
+      )$results$thresholds
     ) %>%
     ungroup()
 }
