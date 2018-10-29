@@ -81,7 +81,28 @@ threshold_test <- function(
     !!demographic_colq,
     majority_demographic
   )
-
+  
+  # ## TODO(amy): generalize this to any geography --
+  # ## Note that passing in the pathname is hard given how `disparity.R` is 
+  # ## currently written. Maybe change disparity to purrr instead?
+  # output_dir <- dir_create(here::here("tables"))
+  # if(data_summary %>% count(state, city) %>% nrow() == 1) {
+  #   write_rds(
+  #     summary_stats, 
+  #     path = path(output_dir, str_c(
+  #       unique(pull(data_summary, state)), 
+  #       unique(pull(data_summary, city)), 
+  #       "threshold_summary.rds", sep = "_")
+  #     )
+  #   )
+  # }
+  # else {
+  #   write_rds(
+  #     summary_stats, 
+  #     path = path(output_dir, "all_cities_threshold_summary.rds", sep = "_")
+  #   )
+  # }
+  
   list(
     metadata = c(
       metadata,
