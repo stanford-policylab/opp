@@ -8,6 +8,9 @@ source("analysis_common.R")
 #'
 #' @param tbl tibble containing the following data
 #' @param ... additional attributes to control for when inferring thresholds
+#' @param geography_col contains a population division of interest to use 
+#'        hierarchically, i.e. if multiple cities are being test at the district
+#'        level, geography_col = city
 #' @param demographic_col contains a population division of interest, i.e. race,
 #'        age group, sex, etc...
 #' @param action_col identifies the risk population, i.e. those who were
@@ -33,6 +36,7 @@ source("analysis_common.R")
 threshold_test <- function(
   tbl,
   ...,
+  geography_col = city,
   demographic_col = subject_race,
   action_col = search_conducted,
   outcome_col = contraband_found,
@@ -42,6 +46,7 @@ threshold_test <- function(
 ) {
   
   control_colqs <- enquos(...)
+  geography_colq <- enquo(geography_col)
   demographic_colq <- enquo(demographic_col)
   action_colq <- enquo(action_col)
   outcome_colq <- enquo(outcome_col)
@@ -50,6 +55,7 @@ threshold_test <- function(
   tbl <- prepare(
     tbl,
     !!!control_colqs,
+    !!geography_colq,
     demographic_col=!!demographic_colq,
     action_col=!!action_colq,
     outcome_col=!!outcome_colq,
@@ -58,6 +64,7 @@ threshold_test <- function(
   data_summary <- summarize_for_stan(
     tbl,
     !!!control_colqs,
+    geography_col=!!geography_colq,
     demographic_col=!!demographic_colq,
     action_col=!!action_colq,
     outcome_col=!!outcome_colq,
@@ -69,12 +76,33 @@ threshold_test <- function(
   posteriors <- rstan::extract(fit)
 
   summary_stats <- collect_average_threshold_test_summary_stats(
-    data_summary, 
+    data_summary,
     posteriors,
     !!demographic_colq,
     majority_demographic
   )
-
+  
+  # ## TODO(amy): generalize this to any geography --
+  # ## Note that passing in the pathname is hard given how `disparity.R` is 
+  # ## currently written. Maybe change disparity to purrr instead?
+  # output_dir <- dir_create(here::here("tables"))
+  # if(data_summary %>% count(state, city) %>% nrow() == 1) {
+  #   write_rds(
+  #     summary_stats, 
+  #     path = path(output_dir, str_c(
+  #       unique(pull(data_summary, state)), 
+  #       unique(pull(data_summary, city)), 
+  #       "threshold_summary.rds", sep = "_")
+  #     )
+  #   )
+  # }
+  # else {
+  #   write_rds(
+  #     summary_stats, 
+  #     path = path(output_dir, "all_cities_threshold_summary.rds", sep = "_")
+  #   )
+  # }
+  
   list(
     metadata = c(
       metadata,
@@ -93,6 +121,7 @@ threshold_test <- function(
 summarize_for_stan <- function(
   tbl,
   ...,
+  geography_col = city,
   demographic_col = subject_race,
   action_col = search_conducted,
   outcome_col = contraband_found,
@@ -100,25 +129,28 @@ summarize_for_stan <- function(
 ) {
 
   control_colqs <- enquos(...)
+  geography_colq <- enquo(geography_col)
   demographic_colq <- enquo(demographic_col)
   action_colq <- enquo(action_col)
   outcome_colq <- enquo(outcome_col)
 
   tbl %>% 
-    group_by(!!demographic_colq, !!!control_colqs) %>%
+    group_by(!!demographic_colq, !!geography_colq, !!!control_colqs) %>%
     summarize(
       n = n(),
-      n_action = sum(!!action_colq),
-      n_outcome = sum(!!outcome_colq)
+      n_action = sum(!!action_colq, na.rm = TRUE),
+      n_outcome = sum(!!outcome_colq, na.rm = TRUE)
     ) %>% 
     ungroup() %>% 
-    unite(controls, !!!control_colqs, remove = F) %>% 
+    unite(sub_geography, !!!control_colqs, !!geography_colq, remove = F) %>% 
+    unite(geography_race, !!geography_colq, !!demographic_colq, remove = F) %>% 
     # NOTE: keep original column values to map stan output to values
     mutate(
-      demographic = !!demographic_colq
+      race = !!demographic_colq,
+      geography = !!geography_colq
     ) %>% 
     mutate_at(
-      .vars = c("demographic", "controls"),
+      .vars = c("race", "sub_geography", "geography", "geography_race"),
       .funs = ~as.integer(factor(.x))
     )
 }
@@ -127,13 +159,15 @@ summarize_for_stan <- function(
 format_data_summary_for_stan <- function(data_summary) {
   list(
     n_groups = nrow(data_summary),
-    n_control_divisions = n_distinct(pull(data_summary, controls)),
-    n_demographic_divisions = n_distinct(pull(data_summary, demographic)),
-    control_division = pull(data_summary, controls),
-    demographic_division = pull(data_summary, demographic),
-    group_count = pull(data_summary, n),
-    action_count = pull(data_summary, n_action),
-    outcome_count = pull(data_summary, n_outcome)
+    n_sub_geographies = n_distinct(pull(data_summary, sub_geography)),
+    n_races = n_distinct(pull(data_summary, race)),
+    n_geographies = n_distinct(pull(data_summary, geography)),
+    sub_geography = pull(data_summary, sub_geography),
+    race = pull(data_summary, race),
+    geography_race = pull(data_summary, geography_race),
+    stop_count = pull(data_summary, n),
+    search_count = pull(data_summary, n_action),
+    hit_count = pull(data_summary, n_outcome)
   )
 }
 
@@ -149,9 +183,9 @@ collect_average_threshold_test_summary_stats <- function(
     t(signal_to_percent(
       posteriors$threshold,
       posteriors$phi,
-      posteriors$lambda
+      posteriors$delta
     )),
-    pull(data_summary, demographic),
+    pull(data_summary, race),
     data_summary$n
   )
   format_summary_stats(
@@ -164,9 +198,9 @@ collect_average_threshold_test_summary_stats <- function(
 
 
 # converts the threshold signal into a percent value (0, 1)
-signal_to_percent <- function(x, phi, lambda){
-  phi * dnorm(x, lambda, 1) / 
-    (phi * dnorm(x, lambda, 1) + (1 - phi) * dnorm(x, 0, 1))
+signal_to_percent <- function(x, phi, delta){
+  phi * dnorm(x, delta, 1) / 
+    (phi * dnorm(x, delta, 1) + (1 - phi) * dnorm(x, 0, 1))
 }
 
 
@@ -207,7 +241,7 @@ format_summary_stats <- function(
   majority_idx <-
     data_summary %>% 
       filter(!!demographic_colq == majority_demographic) %>% 
-      pull(demographic) %>% 
+      pull(race) %>% 
       # extracts a single value
       unique() 
   
@@ -227,7 +261,7 @@ format_summary_stats <- function(
     # column still has levels 1, 3, 5, while demographic has levels 1, 2, 3
     # so we need to re-factorize and select levels to get the names; this is
     # very fragile and likely to break if preceding code changes
-    demographic = levels(factor(pull(data_summary, !!demographic_colq))),
+    race = levels(factor(pull(data_summary, !!demographic_colq))),
     avg_threshold = pretty_percent(rowMeans(avg_thresh)),
     threshold_ci = format_confidence_interval(avg_thresh),
     threshold_diff = append(
@@ -277,7 +311,7 @@ stan_threshold_test <- function(
   n_iter_warmup <- min(2500, round(n_iter / 2))
   n_markov_chains <- 5
   nuts_max_tree_depth <- 12
-  path_to_stan_model <- here::here("stan", "threshold_test.stan")
+  path_to_stan_model <- here::here("stan", "threshold_test_hierarchical.stan")
   
   rstan::sampling(
     stan_model(path_to_stan_model),
@@ -306,7 +340,7 @@ add_thresholds <- function(
       threshold = colMeans(signal_to_percent(
         posteriors$threshold, 
         posteriors$phi, 
-        posteriors$lambda
+        posteriors$delta
       ))
     )
 }

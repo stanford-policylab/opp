@@ -14,7 +14,7 @@ load_raw <- function(raw_data_dir, n_max) {
   contraband <- r("contraband.csv")
   common_codes <- r("refcommoncode.csv")
   stop_codes <- r("refstopscodenumber.csv")
-
+  
   common_codes_translator <- function(col) {
     translator_from_tbl(
       filter(common_codes, CodeType == col),
@@ -38,6 +38,11 @@ load_raw <- function(raw_data_dir, n_max) {
     r("county_codes.csv"),
     "county_id",
     "county_name"
+  )
+  tr_district <- translator_from_tbl(
+    r("district_county_mapping.csv"),
+    "county_name",
+    "district"
   )
 
   # NOTE: D is Driver and P is Passenger, see refcommoncode.csv;

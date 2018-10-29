@@ -2,10 +2,12 @@ data {
   int<lower=1> n_groups;
   int<lower=1> n_races;
   int<lower=1> n_sub_geographies;
-
+  int<lower=1> n_geographies;
+  
   int<lower=1, upper=n_races> race[n_groups];
   int<lower=1, upper=n_sub_geographies> sub_geography[n_groups];
-
+  int<lower=1, upper=n_geographies*n_races> geography_race[n_groups];
+  
   int<lower=1> stop_count[n_groups];
   int<lower=0> search_count[n_groups];
   int<lower=0> hit_count[n_groups];
@@ -20,11 +22,13 @@ parameters {
   vector[n_groups] threshold_raw;
 
   // parameters for signal distribution
-  vector[n_races] phi_race;
+  // vector[n_races] phi_race;
+  vector[n_geographies * n_races] phi_race; // try race per city
   vector[n_sub_geographies - 1] phi_sub_geography_raw;
   real mu_phi;
 
-  vector[n_races] delta_race;
+  // vector[n_races] delta_race;
+  vector[n_geographies * n_races] delta_race; // try race per city
   vector[n_sub_geographies - 1] delta_sub_geography_raw;
   real mu_delta;
 }
@@ -51,11 +55,13 @@ transformed parameters {
   for (i in 1:n_groups) {
     // phi is the proportion of race x who evidence behavior
     // indicated by the outcome, i.e. whites carrying a weapon
-    phi[i] = inv_logit(phi_race[race[i]]
+    // phi[i] = inv_logit(phi_race[race[i]]
+    phi[i] = inv_logit(phi_race[geography_race[i]] // try race per city
       + phi_sub_geography[sub_geography[i]]);
 
     // mu is the center of the `outcome` distribution
-    delta[i] = exp(delta_race[race[i]]
+    // delta[i] = exp(delta_race[race[i]]
+    delta[i] = exp(delta_race[geography_race[i]] // try race per city
       + delta_sub_geography[sub_geography[i]]);
 
     successful_search_rate =

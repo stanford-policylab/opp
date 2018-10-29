@@ -1,22 +1,29 @@
-source("opp.R")
-source("outcome_test.R")
-source("threshold_test.R")
-source("disparity_plot.R")
-
+source(here::here("lib", "opp.R"))
+source(here::here("lib", "outcome_test.R"))
+source(here::here("lib", "threshold_test.R"))
+source(here::here("lib", "disparity_plot.R"))
+source(here::here("lib", "analysis_common.R"))
 
 disparity <- function() {
   d <- load_data()
-
+  cat("\nStarting outcome tests\n")
   ots <- outcome_tests(d)
+  cat("\nStarting outcome plots\n")
   plt_all(ots, "outcome (filtered)")
+  cat("\nStarting threshold tests\n")
   tts <- threshold_tests(d)
+  cat("\nStarting threshold plots\n")
   plt_all(tts, "threshold (filtered)")
-  plt(tts, "thresholds (filtered: all cities)")
-
+  # plt(tts, "thresholds (filtered: all cities)")
+  
+  cat("\nStarting outcome test aggregate\n")
   ot <- outcome_test(d, state, city, sub_geography)
+  cat("\nStarting outcome plot aggregate\n")
   plt(ot$results, "outcome (filtered)")
-  tt <- threshold_test(d, state, city, sub_geography)
-  plt(tt$results$thresholds, "thresholds (filtered: aggregate)")
+  cat("\nStarting threshold test aggregate\n")
+  tt <- threshold_test(d, state, sub_geography)
+  cat("\nStarting threshold plot aggregate\n")
+  plt(tt$results$thresholds, "thresholds (filtered: aggregate, with hier)")
 }
 
 
@@ -25,7 +32,7 @@ load_data <- function() {
     ~state, ~city,
     "CA", "San Diego",
     "CA", "San Francisco",
-    "CT", "Hartford",
+    # "CT", "Hartford",
     "LA", "New Orleans",
     "PA", "Philadelphia",
     "TN", "Nashville",
@@ -52,13 +59,13 @@ load_data <- function() {
         & !(district %in% c("K", "S", "T")),
         T
       ),
-      ifelse(
-        city == "Hartford",
-        # NOTE: data outside this range is sparse and/or unavailable
-        date >= as.Date("2014-01-01")
-        & as.yearmon(date) <= as.yearmon("2015-05"),
-        T
-      ),
+      # ifelse(
+      #   city == "Hartford",
+      #   # NOTE: data outside this range is sparse and/or unavailable
+      #   date >= as.Date("2014-01-01")
+      #   & as.yearmon(date) <= as.yearmon("2015-05"),
+      #   T
+      # ),
       ifelse(
         city == "New Orleans",
         # NOTE: data outside this range is sparse and/or unavailable
@@ -89,7 +96,7 @@ load_data <- function() {
       sg = NA_character_,
       sg = if_else(city == "San Diego", service_area, sg),
       sg = if_else(city == "San Francisco", district, sg),
-      sg = if_else(city == "Hartford", district, sg),
+      # sg = if_else(city == "Hartford", district, sg),
       sg = if_else(city == "New Orleans", district, sg),
       sg = if_else(city == "Philadelphia", district, sg),
       sg = if_else(city == "Nashville", precinct, sg),
@@ -117,7 +124,13 @@ threshold_tests <- function(d) {
   d %>%
     group_by(state, city) %>%
     do(
-      threshold_test(., state, city, sub_geography)$results$thresholds
+      threshold_test(
+        ., state, sub_geography,
+        geography_col = city,
+        demographic_col = subject_race,
+        action_col = search_conducted,
+        outcome_col = contraband_found
+      )$results$thresholds
     ) %>%
     ungroup()
 }
@@ -167,4 +180,5 @@ plt <- function(d, prefix) {
   }
   ggsave(fpath, p, width=12, height=6, units="in")
   print(str_c("saved: ", fpath))
+  p
 }
