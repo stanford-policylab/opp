@@ -293,7 +293,7 @@ opp_load <- function(state, city = "statewide") {
 }
 
 
-opp_load_data <- function(state, city) {
+opp_load_data <- function(state, city = "statewide") {
   opp_load(state, city)$data
 }
 
