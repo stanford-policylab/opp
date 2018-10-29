@@ -1,8 +1,8 @@
-source("opp.R")
-source("outcome_test.R")
-source("threshold_test.R")
-source("disparity_plot.R")
-
+source(here::here("lib", "opp.R"))
+source(here::here("lib", "outcome_test.R"))
+source(here::here("lib", "threshold_test.R"))
+source(here::here("lib", "disparity_plot.R"))
+source(here::here("lib", "analysis_common.R"))
 
 disparity <- function() {
   d <- load_data()
@@ -25,7 +25,7 @@ load_data <- function() {
     ~state, ~city,
     "CA", "San Diego",
     "CA", "San Francisco",
-    "CT", "Hartford",
+    # "CT", "Hartford",
     "LA", "New Orleans",
     "PA", "Philadelphia",
     "TN", "Nashville",
@@ -52,13 +52,13 @@ load_data <- function() {
         & !(district %in% c("K", "S", "T")),
         T
       ),
-      ifelse(
-        city == "Hartford",
-        # NOTE: data outside this range is sparse and/or unavailable
-        date >= as.Date("2014-01-01")
-        & as.yearmon(date) <= as.yearmon("2015-05"),
-        T
-      ),
+      # ifelse(
+      #   city == "Hartford",
+      #   # NOTE: data outside this range is sparse and/or unavailable
+      #   date >= as.Date("2014-01-01")
+      #   & as.yearmon(date) <= as.yearmon("2015-05"),
+      #   T
+      # ),
       ifelse(
         city == "New Orleans",
         # NOTE: data outside this range is sparse and/or unavailable
@@ -89,7 +89,7 @@ load_data <- function() {
       sg = NA_character_,
       sg = if_else(city == "San Diego", service_area, sg),
       sg = if_else(city == "San Francisco", district, sg),
-      sg = if_else(city == "Hartford", district, sg),
+      # sg = if_else(city == "Hartford", district, sg),
       sg = if_else(city == "New Orleans", district, sg),
       sg = if_else(city == "Philadelphia", district, sg),
       sg = if_else(city == "Nashville", precinct, sg),
@@ -167,4 +167,5 @@ plt <- function(d, prefix) {
   }
   ggsave(fpath, p, width=12, height=6, units="in")
   print(str_c("saved: ", fpath))
+  p
 }
