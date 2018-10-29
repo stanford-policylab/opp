@@ -8,6 +8,9 @@ source("analysis_common.R")
 #'
 #' @param tbl tibble containing the following data
 #' @param ... additional attributes to control for when inferring thresholds
+#' @param geography_col contains a population division of interest to use 
+#'        hierarchically, i.e. if multiple cities are being test at the district
+#'        level, geography_col = city
 #' @param demographic_col contains a population division of interest, i.e. race,
 #'        age group, sex, etc...
 #' @param action_col identifies the risk population, i.e. those who were
@@ -33,6 +36,7 @@ source("analysis_common.R")
 threshold_test <- function(
   tbl,
   ...,
+  geography_col = city,
   demographic_col = subject_race,
   action_col = search_conducted,
   outcome_col = contraband_found,
@@ -42,6 +46,7 @@ threshold_test <- function(
 ) {
   
   control_colqs <- enquos(...)
+  geography_colq <- enquo(geography_col)
   demographic_colq <- enquo(demographic_col)
   action_colq <- enquo(action_col)
   outcome_colq <- enquo(outcome_col)
@@ -58,6 +63,7 @@ threshold_test <- function(
   data_summary <- summarize_for_stan(
     tbl,
     !!!control_colqs,
+    geography_col=!!geography_colq,
     demographic_col=!!demographic_colq,
     action_col=!!action_colq,
     outcome_col=!!outcome_colq,
@@ -69,7 +75,7 @@ threshold_test <- function(
   posteriors <- rstan::extract(fit)
 
   summary_stats <- collect_average_threshold_test_summary_stats(
-    data_summary, 
+    data_summary,
     posteriors,
     !!demographic_colq,
     majority_demographic
@@ -108,8 +114,8 @@ summarize_for_stan <- function(
     group_by(!!demographic_colq, !!!control_colqs) %>%
     summarize(
       n = n(),
-      n_action = sum(!!action_colq),
-      n_outcome = sum(!!outcome_colq)
+      n_action = sum(!!action_colq, na.rm = TRUE),
+      n_outcome = sum(!!outcome_colq, na.rm = TRUE)
     ) %>% 
     ungroup() %>% 
     unite(controls, !!!control_colqs, remove = F) %>% 
@@ -277,7 +283,7 @@ stan_threshold_test <- function(
   n_iter_warmup <- min(2500, round(n_iter / 2))
   n_markov_chains <- 5
   nuts_max_tree_depth <- 12
-  path_to_stan_model <- here::here("stan", "threshold_test.stan")
+  path_to_stan_model <- here::here("stan", "threshold_test_hierarchical.stan")
   
   rstan::sampling(
     stan_model(path_to_stan_model),
