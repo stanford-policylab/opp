@@ -85,7 +85,7 @@ threshold_test <- function(
   # ## TODO(amy): generalize this to any geography --
   # ## Note that passing in the pathname is hard given how `disparity.R` is 
   # ## currently written. Maybe change disparity to purrr instead?
-  # output_dir <- dir_create(here::here("tables"))
+  output_dir <- dir_create(here::here("tables"))
   # if(data_summary %>% count(state, city) %>% nrow() == 1) {
   #   write_rds(
   #     summary_stats, 
@@ -97,10 +97,10 @@ threshold_test <- function(
   #   )
   # }
   # else {
-  #   write_rds(
-  #     summary_stats, 
-  #     path = path(output_dir, "all_cities_threshold_summary.rds", sep = "_")
-  #   )
+    write_rds(
+      summary_stats,
+      path = path(output_dir, "all_cities_threshold_summary.rds", sep = "_")
+    )
   # }
   
   list(

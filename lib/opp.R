@@ -141,7 +141,7 @@ opp_simplify_eligibility <- function(tbl) {
 }
 
 
-opp_load_for_disparity <- function(state, city) {
+opp_load_for_disparity <- function(state, city = "statewide") {
   filter(
     opp_load_data(state, city),
     search_conducted,
@@ -298,7 +298,7 @@ opp_load_data <- function(state, city = "statewide") {
 }
 
 
-opp_load_coverage_data <- function(state, city) {
+opp_load_coverage_data <- function(state, city = "statewide") {
   tbl <- opp_load_data(state, city)
 
   coverage <- select_or_add_as_na(
@@ -391,18 +391,18 @@ opp_load_coverage_data <- function(state, city) {
 }
 
 
-opp_clean_data_path <- function(state, city) {
+opp_clean_data_path <- function(state, city = "statewide") {
   # NOTE: all clean data is stored and loaded in RDS format to
   # maintain data types
   data_dir = opp_data_dir(state, city)
   file.path(data_dir, "clean", str_c(normalize_city(city), ".rds"))
 }
 
-opp_results_dir <- function(state, city) {
+opp_results_dir <- function(state, city = "statewide") {
   dir_create(path(opp_data_dir(state, city), "results"))
 }
 
-opp_data_dir <- function(state, city) {
+opp_data_dir <- function(state, city = "statewide") {
   here::here(
     "data",
     "states",
@@ -421,23 +421,23 @@ normalize_city <- function(city) {
 }
 
 
-opp_load_raw <- function(state, city, n_max = Inf) {
+opp_load_raw <- function(state, city = "statewide", n_max = Inf) {
   source(opp_processor_path(state, city), local = TRUE)
   load_raw(opp_raw_data_dir(state, city), n_max)
 }
 
 
-opp_load_raw_data <- function(state, city, n_max = Inf) {
+opp_load_raw_data <- function(state, city = "statewide", n_max = Inf) {
   opp_load_raw(state, city, n_max)$data
 }
 
 
-opp_load_raw_data_file <- function(state, city, file, n_max = Inf) {
+opp_load_raw_data_file <- function(state, city = "statewide", file, n_max = Inf) {
   read_csv(file.path(opp_raw_data_dir(state, city), file), n_max = n_max)
 }
 
 
-opp_processor_path <- function(state, city) {
+opp_processor_path <- function(state, city = "statewide") {
   here::here(
     "lib",
     "states",
@@ -447,13 +447,13 @@ opp_processor_path <- function(state, city) {
 }
 
 
-opp_raw_data_dir <- function(state, city) {
+opp_raw_data_dir <- function(state, city = "statewide") {
   data_dir = opp_data_dir(state, city)
   file.path(data_dir, "raw_csv")
 }
 
 
-opp_clean <- function(d, state, city) {
+opp_clean <- function(d, state, city = "statewide") {
   source(opp_processor_path(state, city), local = TRUE)
   helpers <- c(
     "add_lat_lng" = opp_add_lat_lng_func(state, city),
@@ -471,7 +471,7 @@ opp_clean <- function(d, state, city) {
 }
 
 
-opp_add_lat_lng_func <- function(state, city) {
+opp_add_lat_lng_func <- function(state, city = "statewide") {
   function(tbl, join_col = "location") {
     join_on <- c("loc")
     names(join_on) <- c(join_col)
@@ -492,7 +492,7 @@ opp_add_lat_lng_func <- function(state, city) {
 }
 
 
-opp_add_search_basis_func <- function(state, city) {
+opp_add_search_basis_func <- function(state, city = "statewide") {
   function(tbl, join_col) {
     join_on <- c("text")
     names(join_on) <- c(join_col)
@@ -516,7 +516,7 @@ opp_add_search_basis_func <- function(state, city) {
 }
 
 
-opp_calculated_features_path <- function(state, city) {
+opp_calculated_features_path <- function(state, city = "statewide") {
   data_dir = opp_data_dir(state, city)
   file.path(data_dir, "calculated_features")
 }
@@ -544,7 +544,7 @@ opp_add_type_func <- function(state, city) {
 }
 
 
-opp_add_county_from_highway_milepost_func <- function(state, city) {
+opp_add_county_from_highway_milepost_func <- function(state, city = "statewide") {
   function(
     tbl,
     highway_col = "highway",
@@ -592,7 +592,7 @@ opp_add_county_from_highway_milepost_func <- function(state, city) {
 }
 
 
-opp_add_contraband_types_func <- function(state, city) {
+opp_add_contraband_types_func <- function(state, city = "statewide") {
   function(tbl, join_col) {
     join_on <- c("text")
     names(join_on) <- c(join_col)
@@ -612,7 +612,7 @@ opp_add_contraband_types_func <- function(state, city) {
 }
 
 
-opp_add_shapefiles_data_func <- function(state, city) {
+opp_add_shapefiles_data_func <- function(state, city = "statewide") {
   function(tbl) {
     source(here::here("lib", "shapefiles.R"), local = TRUE)
     shapes_dfs <- opp_load_all_shapefiles_dfs(state, city)
@@ -629,19 +629,19 @@ opp_add_shapefiles_data_func <- function(state, city) {
 }
 
 
-opp_load_all_shapefiles_dfs <- function(state, city) {
+opp_load_all_shapefiles_dfs <- function(state, city = "statewide") {
   source(here::here("lib", "shapefiles.R"), local = TRUE)
   load_all_shapefiles_dfs(opp_shapefiles_dir(state, city))
 }
 
 
-opp_shapefiles_dir <- function(state, city) {
+opp_shapefiles_dir <- function(state, city = "statewide") {
   data_dir = opp_data_dir(state, city)
   file.path(data_dir, "shapefiles")
 }
 
 
-opp_load_json_func <- function(state, city) {
+opp_load_json_func <- function(state, city = "statewide") {
   function(json_filename) {
     fromJSON(file.path(
       opp_calculated_features_path(state, city),
@@ -651,7 +651,7 @@ opp_load_json_func <- function(state, city) {
 }
 
 
-opp_load_csv_func <- function(state, city) {
+opp_load_csv_func <- function(state, city = "statewide") {
   function(
     csv_filename,
     n_max = Inf,
@@ -691,12 +691,12 @@ opp_load_block_group_data <- function(state) {
 }
 
 
-opp_save <- function(d, state, city) {
+opp_save <- function(d, state, city = "statewide") {
   saveRDS(d, opp_clean_data_path(state, city))
 }
 
 
-opp_process <- function(state, city, n_max = Inf) {
+opp_process <- function(state, city = "statewide", n_max = Inf) {
   dr <- opp_load_raw(state, city, n_max)
   dc <- opp_clean(dr, state, city)
   opp_save(dc, state, city)
@@ -704,7 +704,7 @@ opp_process <- function(state, city, n_max = Inf) {
 }
 
 
-opp_report <- function(state, city) {
+opp_report <- function(state, city = "statewide") {
   print("building report...")
   output_dir <- dir_create(here::here("reports"))
   render(
@@ -735,7 +735,7 @@ pdf_filename <- function(state, city) {
 }
 
 
-opp_plot <- function(state, city) {
+opp_plot <- function(state, city = "statewide") {
   source(here::here("lib", "plot.R"), local = TRUE)
   output_dir = here::here("plots")
   dir_create(output_dir)
