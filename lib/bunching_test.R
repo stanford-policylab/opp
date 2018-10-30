@@ -54,24 +54,29 @@ bunching_test <- function(
     non_lenient_bunching_rate_max = non_lenient_bunching_rate_max
   )
 
-  fit <- train(
-    d$data,
-    !!!control_colqs,
-    demographic_indicator_col = !!sym(demographic_indicator_colname),
-    target_cols_prefix = "target_over_"
-  )
-
   list(
     metadata = d$metadata,
     data = d$data,
     results = list(
       difference_in_difference = calculate_difference_in_difference(d$data),
-      fit = fit,
+      fit = train(
+        d$data,
+        !!!control_colqs,
+        demographic_indicator_col = !!sym(demographic_indicator_colname),
+        target_cols_prefix = "target_over_"
+      ),
       plots = list(
         over = plot_over(d$data, !!sym(demographic_indicator_colname)),
         bunching = plot_bunching(d$data),
         lenience = plot_lenience(d$data, !!sym(demographic_indicator_colname)),
-        coefficient = plot_coefficient(fit)
+        coefficient = plot_coefficient(fit),
+        difference = plot_difference_in_difference(
+          d$data,
+          !!sym(demographic_indicator_col),
+          over,
+          is_bunching,
+          is_lenient
+        )
       )
     )
   )
@@ -409,6 +414,7 @@ plot_difference_in_difference <- function(
   bunching_col = is_bunching,
   lenience_col = is_lenient
 ) {
+
   tbld <-
     tbl %>%
     group_by(demographic_indicator_col, lenience_col) %>%

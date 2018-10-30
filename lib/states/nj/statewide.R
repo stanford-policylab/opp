@@ -67,7 +67,8 @@ clean <- function(d, helpers) {
       vehicle_color = VEH_COLOR,
       vehicle_make = VEH_MAKE,
       vehicle_model = VEH_MODEL,
-      vehicle_registration_state = VEH_STATE
+      vehicle_registration_state = VEH_STATE,
+      violation = STATUTE
     ) %>%
     mutate(
       date = parse_date(date, "%m/%d/%Y"),
