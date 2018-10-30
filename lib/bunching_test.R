@@ -65,6 +65,7 @@ bunching_test <- function(
     metadata = d$metadata,
     data = d$data,
     results = list(
+      difference_in_difference = calculate_difference_in_difference(d$data),
       fit = fit,
       plots = list(
         over = plot_over(d$data, !!sym(demographic_indicator_colname)),
@@ -238,7 +239,7 @@ filter_to_eligible_officers <- function(
   if (proportion_officers_removed > 0) {
     pct_warning(
       proportion_officers_removed,
-      " of officers removed due to not meeting eligibility requirements"
+      "of officers removed due to not meeting eligibility requirements"
     )
   }
 
@@ -248,7 +249,7 @@ filter_to_eligible_officers <- function(
   if (proportion_stops_removed > 0) {
     pct_warning(
       proportion_stops_removed,
-      " of stops removed since they were conducted by ineligible officers"
+      "of stops removed since they were conducted by ineligible officers"
     )
   }
 
@@ -398,6 +399,32 @@ train <- function(
   ))
 
   lm(fmla, tbl)
+}
+
+
+plot_difference_in_difference <- function(
+  tbl,
+  demographic_indicator_col = is_white,
+  over_col = over,
+  bunching_col = is_bunching,
+  lenience_col = is_lenient
+) {
+  tbld <-
+    tbl %>%
+    group_by(demographic_indicator_col, lenience_col) %>%
+    mutate(subtotal = n()) %>%
+    group_by(is_white, is_lenient, over) %>%
+    mutate(proportion = n() / subtotal) %>%
+    select(demographic_indicator_col, over_col, lenience_col) %>%
+    distinct()
+
+  ggplot(tbld, aes(x = over, y = proportion, color = lenience_col)) +
+    geom_line() +
+    facet_grid(. ~ demographic_indicator_col) +
+    theme(text = element_text(size=10)) +
+    ylab("proportion") +
+    xlab("MPH over speed limit") +
+    ggtitle("Proportion of Stops by MPH Over, Lenience, and Demographic")
 }
 
 
