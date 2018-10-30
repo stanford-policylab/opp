@@ -415,16 +415,22 @@ plot_difference_in_difference <- function(
   lenience_col = is_lenient
 ) {
 
+  demographic_indicator_colq <- enquo(demographic_indicator_col)
+  over_colq <- enquo(over_col)
+  bunching_colq <- enquo(bunching_col)
+  lenience_colq <- enquo(lenience_col)
+
   tbld <-
     tbl %>%
-    group_by(demographic_indicator_col, lenience_col) %>%
+    group_by(!!demographic_indicator_colq, !!lenience_colq) %>%
     mutate(subtotal = n()) %>%
-    group_by(is_white, is_lenient, over) %>%
+    group_by(!!demographic_indicator_colq, !!lenience_colq, !!over_colq) %>%
     mutate(proportion = n() / subtotal) %>%
-    select(demographic_indicator_col, over_col, lenience_col) %>%
+    select(!!demographic_indicator_colq, !!over_colq, !!lenience_colq) %>%
     distinct()
 
-  ggplot(tbld, aes(x = over, y = proportion, color = lenience_col)) +
+  print('here')
+  ggplot(tbld, aes(x = over, y = proportion, color = !lenience_colq)) +
     geom_line() +
     facet_grid(. ~ demographic_indicator_col) +
     theme(text = element_text(size=10)) +
