@@ -426,14 +426,20 @@ plot_difference_in_difference <- function(
     mutate(subtotal = n()) %>%
     group_by(!!demographic_indicator_colq, !!lenience_colq, !!over_colq) %>%
     mutate(proportion = n() / subtotal) %>%
-    select(!!demographic_indicator_colq, !!over_colq, !!lenience_colq) %>%
-    distinct()
+    select(
+      !!demographic_indicator_colq,
+      !!over_colq,
+      !!lenience_colq,
+      proportion
+    ) %>%
+    distinct() %>%
+    arrange()
 
-  print('here')
-  ggplot(tbld, aes(x = over, y = proportion, color = !lenience_colq)) +
+  ff <- as.formula(str_c(". ~ ", quo_name(demographic_indicator_colq)))
+  ggplot(tbld, aes(x = !!over_colq, y = proportion, color = !!lenience_colq)) +
     geom_line() +
-    facet_grid(. ~ demographic_indicator_col) +
     theme(text = element_text(size=10)) +
+    facet_grid(ff) +
     ylab("proportion") +
     xlab("MPH over speed limit") +
     ggtitle("Proportion of Stops by MPH Over, Lenience, and Demographic")
