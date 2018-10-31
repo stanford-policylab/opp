@@ -1,6 +1,14 @@
 ```{r, echo = FALSE}
 opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 source("bunching_test.R")
+display <- function(bt) {
+  print(bt$results$plots$over)
+  print(bt$results$plots$bunching)
+  print(bt$results$plots$lenience)
+  print(bt$results$plots$over_by_demographic_and_lenience)
+  print(bt$results$plots$difference)
+  print(bt$results$plots$coefficient)
+}
 ```
 
 # Decisions
@@ -43,10 +51,8 @@ tbl <-
     hour_of_day = hour(hms(time))
   )
 bt <- bunching_test(tbl, division, hour_of_day, age_group, vehicle_make)
-bt$results$plots$over
-bt$results$plots$bunching
-bt$results$plots$lenience
-bt$results$plots$coefficient
+display(bt)
+kable(bt$results$difference_in_difference)
 ```
 
 \newpage
@@ -69,11 +75,10 @@ https://dallascityhall.com/departments/courtdetentionservices/DCH%20Documents/Of
 tbl <- opp_load_data("tx", "dallas")
 tbl <- mutate(tbl, hour_of_day = hour(hms(time)))
 bt <- bunching_test(tbl, region, hour_of_day, vehicle_type)
-bt$results$plots$over
-bt$results$plots$bunching
-bt$results$plots$lenience
-bt$results$plots$coefficient
+display(bt)
+kable(bt$results$difference_in_difference)
 ```
+
 \newpage
 
 # Plano
@@ -95,8 +100,6 @@ tbl <- opp_load_data("tx", "plano")
 tbl <- mutate(tbl, hour_of_day = hour(hms(time)))
 # NOTE: location is null 99.97% of the time where speed is defined
 bt <- bunching_test(tbl, hour_of_day, vehicle_make)
-bt$results$plots$over
-bt$results$plots$bunching
-bt$results$plots$lenience
-bt$results$plots$coefficient
+display(bt)
+kable(bt$results$difference_in_difference)
 ```

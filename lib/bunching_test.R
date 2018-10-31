@@ -4,7 +4,6 @@ library(fs)
 
 source("analysis_common.R")
 
-
 # original paper filters:
 # only speeding violations
 # 100 citations
@@ -54,28 +53,45 @@ bunching_test <- function(
     non_lenient_bunching_rate_max = non_lenient_bunching_rate_max
   )
 
+  fit <- train(
+    d$data,
+    !!!control_colqs,
+    demographic_indicator_col = !!sym(demographic_indicator_colname),
+    target_cols_prefix = "target_over_"
+  )
+
+
   list(
     metadata = d$metadata,
     data = d$data,
     results = list(
-      difference_in_difference = calculate_difference_in_difference(d$data),
-      fit = train(
+      fit = fit,
+      difference_in_difference = calculate_difference_in_difference(
         d$data,
-        !!!control_colqs,
-        demographic_indicator_col = !!sym(demographic_indicator_colname),
-        target_cols_prefix = "target_over_"
+        !!sym(demographic_indicator_colname),
+        over,
+        is_bunching,
+        is_lenient
       ),
       plots = list(
         over = plot_over(d$data, !!sym(demographic_indicator_colname)),
         bunching = plot_bunching(d$data),
         lenience = plot_lenience(d$data, !!sym(demographic_indicator_colname)),
         coefficient = plot_coefficient(fit),
-        difference = plot_difference_in_difference(
+        over_by_demographic_and_lenience = plot_over_by_demographic_and_lenience(
           d$data,
-          !!sym(demographic_indicator_col),
+          !!sym(demographic_indicator_colname),
           over,
           is_bunching,
           is_lenient
+        ),
+        difference = plot_difference_in_difference(
+          d$data,
+          !!sym(demographic_indicator_colname),
+          over,
+          is_bunching,
+          is_lenient,
+          bunching_points
         )
       )
     )
@@ -289,14 +305,14 @@ add_and_filter_over <- function(
 
   n_stops_after <- nrow(tbl)
   n_over_limit_stops_removed <- n_stops_before - n_stops_after
-  proportion_over_limit_stops_removed <-
+  proportion_stops_outside_over_bounds_removed <-
     n_over_limit_stops_removed / n_stops_before
   metadata["n_over_limit_stops_removed"] <- n_over_limit_stops_removed
-  metadata["proportion_over_limit_stops_removed"] <-
-    proportion_over_limit_stops_removed
-  if (proportion_over_limit_stops_removed > 0) {
+  metadata["proportion_stops_outside_over_bounds_removed"] <-
+    proportion_stops_outside_over_bounds_removed
+  if (proportion_stops_outside_over_bounds_removed > 0) {
     pct_warning(
-      proportion_over_limit_stops_removed,
+      proportion_stops_outside_over_bounds_removed,
       str_c(
         "of stops removed due to being less than 1 MPH over or more than ",
         over_limit,
@@ -407,7 +423,7 @@ train <- function(
 }
 
 
-plot_difference_in_difference <- function(
+calculate_difference_in_difference <- function(
   tbl,
   demographic_indicator_col = is_white,
   over_col = over,
@@ -420,29 +436,57 @@ plot_difference_in_difference <- function(
   bunching_colq <- enquo(bunching_col)
   lenience_colq <- enquo(lenience_col)
 
-  tbld <-
-    tbl %>%
-    group_by(!!demographic_indicator_colq, !!lenience_colq) %>%
-    mutate(subtotal = n()) %>%
-    group_by(!!demographic_indicator_colq, !!lenience_colq, !!over_colq) %>%
-    mutate(proportion = n() / subtotal) %>%
-    select(
-      !!demographic_indicator_colq,
-      !!over_colq,
-      !!lenience_colq,
-      proportion
-    ) %>%
-    distinct() %>%
-    arrange()
+  prepare_difference(
+    tbl,
+    !!demographic_indicator_colq,
+    !!over_colq,
+    !!bunching_colq,
+    !!lenience_colq
+  ) %>%
+  filter(is_bunching) %>%
+  spread(!!lenience_colq, proportion) %>%
+  mutate(proportion_difference = `TRUE` - `FALSE`) %>%
+  select(!!over_colq, proportion_difference) %>%
+  spread(!!demographic_indicator_colq, proportion_difference) %>%
+  mutate(difference_in_difference = `TRUE` - `FALSE`) %>%
+  rename(base_rate = `TRUE`) %>%
+  select(!!over_colq, base_rate, difference_in_difference)
+}
 
-  ff <- as.formula(str_c(". ~ ", quo_name(demographic_indicator_colq)))
-  ggplot(tbld, aes(x = !!over_colq, y = proportion, color = !!lenience_colq)) +
-    geom_line() +
-    theme(text = element_text(size=10)) +
-    facet_grid(ff) +
-    ylab("proportion") +
-    xlab("MPH over speed limit") +
-    ggtitle("Proportion of Stops by MPH Over, Lenience, and Demographic")
+
+prepare_difference <- function(
+  tbl,
+  demographic_indicator_col = is_white,
+  over_col = over,
+  bunching_col = is_bunching,
+  lenience_col = is_lenient
+) {
+
+  demographic_indicator_colq <- enquo(demographic_indicator_col)
+  over_colq <- enquo(over_col)
+  bunching_colq <- enquo(bunching_col)
+  lenience_colq <- enquo(lenience_col)
+
+  tbl %>%
+  group_by(!!demographic_indicator_colq, !!lenience_colq) %>%
+  mutate(subtotal = n()) %>%
+  group_by(!!demographic_indicator_colq, !!lenience_colq, !!over_colq) %>%
+  mutate(proportion = n() / subtotal) %>%
+  select(
+    !!demographic_indicator_colq,
+    !!over_colq,
+    !!lenience_colq,
+    !!bunching_colq,
+    proportion
+  ) %>%
+  distinct() %>%
+  mutate(
+    demographic_facet = str_c(
+      quo_name(demographic_indicator_colq),
+      ": ",
+      !!demographic_indicator_colq
+    )
+  )
 }
 
 
@@ -517,6 +561,86 @@ plot_lenience <- function(tbl, by_col = is_white) {
 }
 
 
+plot_over_by_demographic_and_lenience <- function(
+  tbl,
+  demographic_indicator_col = is_white,
+  over_col = over,
+  bunching_col = is_bunching,
+  lenience_col = is_lenient
+) {
+
+  demographic_indicator_colq <- enquo(demographic_indicator_col)
+  over_colq <- enquo(over_col)
+  bunching_colq <- enquo(bunching_col)
+  lenience_colq <- enquo(lenience_col)
+
+  tbl <- prepare_difference(
+    tbl,
+    !!demographic_indicator_colq,
+    !!over_colq,
+    !!bunching_colq,
+    !!lenience_colq
+  )
+
+  ggplot(tbl, aes(x = !!over_colq, y = proportion, color = !!lenience_colq)) +
+    geom_line() +
+    facet_grid(. ~ demographic_facet) +
+    theme(text = element_text(size=10)) +
+    ylab("proportion") +
+    xlab("MPH over speed limit") +
+    ggtitle("Proportion of Stops by MPH Over, Demographic, and Lenience")
+}
+
+
+plot_difference_in_difference <- function(
+  tbl,
+  demographic_indicator_col = is_white,
+  over_col = over,
+  bunching_col = is_bunching,
+  lenience_col = is_lenient,
+  bunching_points = c(10)
+) {
+
+  demographic_indicator_colq <- enquo(demographic_indicator_col)
+  over_colq <- enquo(over_col)
+  bunching_colq <- enquo(bunching_col)
+  lenience_colq <- enquo(lenience_col)
+
+  tbl <- prepare_difference(
+    tbl,
+    !!demographic_indicator_colq,
+    !!over_colq,
+    !!bunching_colq,
+    !!lenience_colq
+  ) %>%
+  spread(!!lenience_colq, proportion) %>%
+  mutate(proportion_difference = `TRUE` - `FALSE`)
+
+  step = 0.01
+  y_breaks <- seq(
+    from = round(min(tbl$proportion_difference, na.rm = T) - step, 2),
+    to = round(max(tbl$proportion_difference, na.rm = T) + step, 2),
+    by = step
+  )
+
+  ggplot(
+    tbl,
+    aes(
+      x = over,
+      y = proportion_difference,
+      color = !!demographic_indicator_colq
+    )
+  ) +
+  geom_line() +
+  geom_vline(xintercept = bunching_points, color = "red", linetype = "dotted") +
+  theme(text = element_text(size=10)) +
+  scale_y_continuous(breaks = y_breaks) +
+  ylab("proportion difference (is lenient - is not lenient)") +
+  xlab("MPH over speed limit") +
+  ggtitle("Difference-in-difference by demographic and lenience")
+}
+
+
 plot_coefficient <- function(fit) {
   # NOTE: this represents the interaction of is_lenient with whatever
   # demographic it is interacted with
@@ -532,7 +656,12 @@ plot_coefficient <- function(fit) {
     tbl %>%
     mutate(lower = estimate - 2 * std_error, upper = estimate + 2 * std_error)
 
-  title <- str_c("Coefficient of ", coefficient_names[idx], " (95% CI)")
+  title <- str_c(
+    "Coefficient of ",
+    coefficient_names[idx],
+    " (95% CI)",
+    " in linear probability model"
+  )
   ggplot(tbl, aes(x=over, y=estimate)) +
     geom_point() +
     geom_line() +
