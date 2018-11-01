@@ -2,6 +2,7 @@ library(here)
 source(here::here("lib", "opp.R"))
 
 
+# TODO(danj): finish
 prima_facie_stats_aggregated <- function(use_cache = TRUE) {
   cache_path <- here::here("cache", "coverage.rds")
   if (use_cache & file.exists(cache_path)) {

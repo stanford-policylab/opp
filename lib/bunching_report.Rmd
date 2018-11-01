@@ -1,6 +1,9 @@
 ```{r, echo = FALSE}
 opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 source("bunching_test.R")
+
+over_limit <- 40
+
 display <- function(bt) {
   print(bt$results$plots$over)
   print(bt$results$plots$bunching)
@@ -50,7 +53,14 @@ tbl <-
     age_group = as.integer(subject_age / 10),
     hour_of_day = hour(hms(time))
   )
-bt <- bunching_test(tbl, division, hour_of_day, age_group, vehicle_make)
+bt <- bunching_test(
+  tbl,
+  division,
+  hour_of_day,
+  age_group,
+  vehicle_make,
+  over_limit = over_limit
+)
 display(bt)
 kable(bt$results$difference_in_difference)
 ```
@@ -74,7 +84,13 @@ https://dallascityhall.com/departments/courtdetentionservices/DCH%20Documents/Of
 ```{r dallas, fig.height=3.75, fig.width=7}
 tbl <- opp_load_data("tx", "dallas")
 tbl <- mutate(tbl, hour_of_day = hour(hms(time)))
-bt <- bunching_test(tbl, region, hour_of_day, vehicle_type)
+bt <- bunching_test(
+  tbl,
+  region,
+  hour_of_day,
+  vehicle_type,
+  over_limit = over_limit
+)
 display(bt)
 kable(bt$results$difference_in_difference)
 ```
@@ -99,7 +115,12 @@ Used bunching value of 10 MPH over
 tbl <- opp_load_data("tx", "plano")
 tbl <- mutate(tbl, hour_of_day = hour(hms(time)))
 # NOTE: location is null 99.97% of the time where speed is defined
-bt <- bunching_test(tbl, hour_of_day, vehicle_make)
+bt <- bunching_test(
+  tbl,
+  hour_of_day,
+  vehicle_make,
+  over_limit = over_limit
+)
 display(bt)
 kable(bt$results$difference_in_difference)
 ```
