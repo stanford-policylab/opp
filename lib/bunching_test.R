@@ -60,7 +60,6 @@ bunching_test <- function(
     target_cols_prefix = "target_over_"
   )
 
-
   list(
     metadata = d$metadata,
     data = d$data,

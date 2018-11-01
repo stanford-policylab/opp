@@ -20,11 +20,22 @@ clear <- function() {
 cl <- clear
 
 
+opp_run_for_all <- function(func) {
+  paths <- opp_data_paths()
+  cvg <- tibble(
+      state = sapply(paths, opp_extract_state_from_path),
+      city = sapply(paths, opp_extract_city_from_path)
+    ) %>%
+    select(state, city) %>%
+    pmap(func) %>%
+    bind_rows() %>%
+    arrange(state, city)
+}
+
+
 opp_data_paths <- function() {
-  here::here(
-    "data",
-    list.files(here::here("data"), ".*\\.rds$", recursive = TRUE)
-  )
+  paths <- list.files(here::here("data"), ".*\\.rds", recursive = T)
+  here::here("data", paths[str_detect(paths, "clean")])
 }
 
 
@@ -261,6 +272,8 @@ opp_everything <- function() {
   par_pmap(tbl, opp_process)
   par_pmap(tbl, opp_report)
   opp_coverage()
+  opp_prima_facie_stats()
+  # TODO(danj): add outcome, threshold, maps, bunching, and vod
 }
 
 
@@ -298,99 +311,6 @@ opp_load_data <- function(state, city = "statewide") {
 }
 
 
-opp_load_coverage_data <- function(state, city = "statewide") {
-  tbl <- opp_load_data(state, city)
-
-  coverage <- select_or_add_as_na(
-    tbl,
-    c(
-      "date",
-      "time",
-      "lat",
-      "lng",
-      "subject_race",
-      "subject_sex",
-      "type",
-      "warning_issued",
-      "citation_issued",
-      "arrest_made",
-      "contraband_found",
-      "frisk_performed",
-      "search_conducted",
-      "speed"
-    )
-  ) %>%
-  rename(
-    veh_or_ped = type
-  ) %>%
-  mutate(
-    geolocation = !is.na(lat) & !is.na(lng)
-  ) %>%
-  select(
-    -lat,
-    -lng
-  )
-
-  vehicle_desc <- select_least_na(
-    tbl,
-    c(
-      "vehicle_color",
-      "vehicle_make",
-      "vehicle_model",
-      "vehicle_type"
-    ),
-    rename = "vehicle_desc"
-  )
-
-  subject_age <- select_least_na(
-    tbl,
-    c(
-      "subject_age",
-      "subject_dob",
-      "subject_yob"
-    ),
-    rename = "subject_age"
-  )
-
-  violation_desc <- select_least_na(
-    tbl,
-    c(
-      "disposition",
-      "violation"
-    ),
-    rename = "violation_desc"
-  )
-
-  geodivision <- select_least_na(
-    tbl,
-    c(
-      "beat",
-      "district",
-      "subdistrict",
-      "division",
-      "subdivision",
-      "police_grid_number",
-      "precinct",
-      "region",
-      "reporting_area",
-      "sector",
-      "subsector",
-      "service_area",
-      "zone"
-    ),
-    rename = "police_geodivision"
-  )
-
-  bind_cols(
-    coverage,
-    vehicle_desc,
-    subject_age,
-    violation_desc,
-    geodivision
-  )
-}
-
-
 opp_clean_data_path <- function(state, city = "statewide") {
   # NOTE: all clean data is stored and loaded in RDS format to
   # maintain data types
@@ -398,9 +318,11 @@ opp_clean_data_path <- function(state, city = "statewide") {
   file.path(data_dir, "clean", str_c(normalize_city(city), ".rds"))
 }
 
+
 opp_results_dir <- function(state, city = "statewide") {
   dir_create(path(opp_data_dir(state, city), "results"))
 }
+
 
 opp_data_dir <- function(state, city = "statewide") {
   here::here(
@@ -410,6 +332,7 @@ opp_data_dir <- function(state, city = "statewide") {
     normalize_city(city)
   )
 }
+
 
 normalize_state <- function(state) {
   str_to_lower(state)
@@ -829,11 +752,23 @@ opp_demographics <- function(state, city) {
 
 opp_coverage <- function() {
   print("assessing coverage...")
-  output_dir = here::here("coverage")
+  output_dir = here::here("reports")
   dir_create(output_dir)
   render(
     "coverage.Rmd",
     "pdf_document",
     file.path(output_dir, "coverage.pdf")
+  )
+}
+
+
+opp_prima_facie_stats <- function() {
+  print("calculating prima facie stats...")
+  output_dir = here::here("reports")
+  dir_create(output_dir)
+  render(
+    "prima_facie_stats.Rmd",
+    "pdf_document",
+    file.path(output_dir, "prima_facie_stats.pdf")
   )
 }

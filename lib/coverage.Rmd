@@ -1,19 +1,26 @@
 ---
-title: "Open Policing Project - City: Coverage Rates"
+title: "Open Policing Project: Coverage Rates"
 classoption: landscape
 ---
 
 ```{r echo = FALSE, message = FALSE, warning = FALSE}
 library(kableExtra)
-source("coverage.R")
-cvg <- coverage() %>%
-  select(-path, -modified_time) %>%
-  arrange(state, city)
-  
-kable(cvg, row.names = TRUE, format = "latex", booktabs = TRUE, align = 'r') %>%
-  kable_styling(latex_options = "scale_down")
+library(here)
+source(here::here("lib", "coverage.R"))
+cvg <- coverage()
+ct <- filter(cvg, city != "Statewide")
+kable(ct, row.names = TRUE, format = "latex", booktabs = TRUE, align = 'r') %>%
+kable_styling(latex_options = "scale_down")
 ```
+total city stops: `r prettyNum(sum(ct$nrows), big.mark = ',', scientific = F)`
 
-total stops: `r prettyNum(sum(cvg$nrows), big.mark = ',', scientific=F)`
+number of states with city data: `r length(unique(ct$state))`
 
-number of states represented: `r length(unique(cvg$state))`
+\newpage
+
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+st <- filter(cvg, city == "Statewide")
+kable(st, row.names = TRUE, format = "latex", booktabs = TRUE, align = 'r') %>%
+kable_styling(latex_options = "scale_down")
+```
+total state stops: `r prettyNum(sum(st$nrows), big.mark = ',', scientific = F)`

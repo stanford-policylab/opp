@@ -1,64 +1,21 @@
 library(here)
-library(purrr)
-
-source("opp.R")
+source(here::here("lib", "opp.R"))
 
 
-coverage <- function() {
-  cache_file <- here::here("cache", "coverage.rds")
-  cvg <- get_or_create_cache(cache_file)
-  cvg_to_update <- filter(
-    cvg,
-    is.na(nrows)
-  ) %>%
-  select(
-    path,
-    state,
-    city,
-    modified_time
-  )
-
-  if (nrow(cvg_to_update) > 0) {
-    cvg_updates <- cvg_to_update %>% 
-      select(state, city) %>%
-      pmap(city_coverage) %>%
-      bind_rows()
-
-    cvg <- bind_rows(
-      filter(cvg, !is.na(nrows)),
-      left_join(cvg_to_update, cvg_updates)
-    )
+coverage <- function(use_cache = TRUE) {
+  cache_path <- here::here("cache", "coverage.rds")
+  if (use_cache & file.exists(cache_path)) {
+    cvg <- readRDS(cache_path)
+  } else {
+    cvg <- opp_run_for_all(calculate_coverage)
+    saveRDS(cvg, here::here("cache", "coverage.rds"))
   }
-  saveRDS(cvg, cache_file)
   cvg
 }
 
 
-get_or_create_cache <- function(cache_file) {
-  paths <- opp_data_paths()
-  cvg <- tibble(
-    path = paths,
-    state = sapply(paths, opp_extract_state_from_path),
-    city = sapply(paths, opp_extract_city_from_path),
-    modified_time = sapply(paths, modified_time)
-  ) %>% 
-  filter(
-    # NOTE: sometimes we have statewide data that is processed once for all
-    # cities; however, each will show up independently so no need to report
-    city != "Statewide"
-  )
-  if (file.exists(cache_file)) {
-    # NOTE: joins by: path, state, city, modified_time
-    # so if the modified time isn't the same, all fields are NA
-    cvg <- left_join(cvg, readRDS(cache_file))
-  }
-  # TODO(danj): hack to create signal column; think of something clearer
-  mutate(cvg, nrows = if (exists("nrows", where = cvg)) nrows else NA)
-}
-
-
-city_coverage <- function(state, city) {
-  tbl <- opp_load_coverage_data(state, city)
+calculate_coverage <- function(state, city) {
+  tbl <- load_coverage_data(state, city)
   date_range = range(tbl$date, na.rm = TRUE)
   c(
     list(
@@ -70,5 +27,98 @@ city_coverage <- function(state, city) {
       end_date = date_range[2]
     ),
     lapply(lapply(tbl, coverage_rate), pretty_percent)
+  )
+}
+
+
+load_coverage_data <- function(state, city) {
+  tbl <- opp_load_data(state, city)
+
+  coverage <- select_or_add_as_na(
+    tbl,
+    c(
+      "date",
+      "time",
+      "lat",
+      "lng",
+      "subject_race",
+      "subject_sex",
+      "type",
+      "warning_issued",
+      "citation_issued",
+      "arrest_made",
+      "contraband_found",
+      "frisk_performed",
+      "search_conducted",
+      "speed"
+    )
+  ) %>%
+  rename(
+    veh_or_ped = type
+  ) %>%
+  mutate(
+    geolocation = !is.na(lat) & !is.na(lng)
+  ) %>%
+  select(
+    -lat,
+    -lng
+  )
+
+  vehicle_desc <- select_least_na(
+    tbl,
+    c(
+      "vehicle_color",
+      "vehicle_make",
+      "vehicle_model",
+      "vehicle_type"
+    ),
+    rename = "vehicle_desc"
+  )
+
+  subject_age <- select_least_na(
+    tbl,
+    c(
+      "subject_age",
+      "subject_dob",
+      "subject_yob"
+    ),
+    rename = "subject_age"
+  )
+
+  violation_desc <- select_least_na(
+    tbl,
+    c(
+      "disposition",
+      "violation"
+    ),
+    rename = "violation_desc"
+  )
+
+  geodivision <- select_least_na(
+    tbl,
+    c(
+      "beat",
+      "district",
+      "subdistrict",
+      "division",
+      "subdivision",
+      "police_grid_number",
+      "precinct",
+      "region",
+      "reporting_area",
+      "sector",
+      "subsector",
+      "service_area",
+      "zone"
+    ),
+    rename = "police_geodivision"
+  )
+
+  bind_cols(
+    coverage,
+    vehicle_desc,
+    subject_age,
+    violation_desc,
+    geodivision
   )
 }

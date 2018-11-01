@@ -1,10 +1,25 @@
-source('opp.R')
+library(here)
+source(here::here("lib", "opp.R"))
 
 
-calculate_rates <- function(state, city) {
+prima_facie_stats_aggregated <- function(use_cache = TRUE) {
+  cache_path <- here::here("cache", "coverage.rds")
+  if (use_cache & file.exists(cache_path)) {
+    stats <- readRDS(cache_path)
+  } else {
+    stats <- opp_run_for_all(calculate_rates)
+    saveRDS(stats, here::here("cache", "prima_facie_stats.rds"))
+  }
+  stats
+}
+
+
+prima_facie_stats <- function(state, city) {
   tbl <- opp_load_data(state, city)
   dem_tbl <- opp_demographics(state, city)
   list(
+    state = state,
+    city = city,
     stop_rate = rate(tbl, dem_tbl),
     frisk_rate = rate(tbl, dem_tbl, fltr("frisk_performed")),
     search_rate = rate(tbl, dem_tbl, fltr("search_conducted"))
@@ -14,7 +29,7 @@ calculate_rates <- function(state, city) {
 
 fltr <- function(colname) {
   function(tbl) {
-    if (colname %in% colnames(d)) {
+    if (all(c(colname, "subject_race") %in% colnames(tbl))) {
       filter_(tbl, colname)
     } else {
       NA

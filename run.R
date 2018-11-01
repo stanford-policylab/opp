@@ -17,6 +17,8 @@ main <- function() {
     opp_plot(args$state, args$city)
   if (not_null(args$coverage))
     opp_coverage()
+  if (not_null(args$prima_facie))
+    opp_prima_facie_stats()
   if (not_null(args$disparity))
     disparity()
   if (not_null(args$everything))
@@ -42,17 +44,18 @@ get_args <- function() {
                  sep = " ")
   spec <- tribble(
     ~long_name,   ~short_name,  ~argument_type, ~data_type,
-    "help",       "h",          "none",         "logical",
-    "process",    "o",          "none",         "logical",
-    "n_max",      "n",          "none",         "integer",
-    "report",     "r",          "none",         "logical",
-    "bunching",   "b",          "none",         "logical",
-    "disparity",  "d",          "none",         "logical",
-    "plot",       "p",          "none",         "logical",
-    "state",      "s",          "none",         "character",
-    "city",       "c",          "none",         "character",
-    "coverage",   "v",          "none",         "logical",
-    "everything", "e",          "none",         "logical"
+    "help",        "h",         "none",         "logical",
+    "process",     "o",         "none",         "logical",
+    "n_max",       "n",         "none",         "integer",
+    "report",      "r",         "none",         "logical",
+    "prima_facie", "f",         "none",         "logical",
+    "bunching",    "b",         "none",         "logical",
+    "disparity",   "d",         "none",         "logical",
+    "plot",        "p",         "none",         "logical",
+    "state",       "s",         "none",         "character",
+    "city",        "c",         "none",         "character",
+    "coverage",    "v",         "none",         "logical",
+    "everything",  "e",         "none",         "logical"
   )
   args <- parse_args(spec)
 
