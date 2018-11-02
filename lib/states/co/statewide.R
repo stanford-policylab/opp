@@ -142,7 +142,7 @@ clean <- function(d, helpers) {
       # NOTE: missing specific contraband type column.
       contraband_found = SearchContraband == "1",
       search_conducted = !is.na(SearchBase) | coalesce(Search == "1", FALSE),
-      search_type = tr_search_basis[SearchBase]
+      search_basis = tr_search_basis[SearchBase]
     ) %>%
     standardize(d$metadata)
 }

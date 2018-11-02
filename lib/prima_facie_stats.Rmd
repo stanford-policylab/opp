@@ -1,0 +1,22 @@
+---
+title: "Open Policing Project: Prima Facie Stats"
+classoption: landscape
+---
+
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+library(kableExtra)
+library(here)
+source(here::here("lib", "prima_facie_stats.R"))
+stats <- prima_facie_stats()
+tbl <- filter(stats, city != "Statewide")
+kable(tbl, row.names = TRUE, format = "latex", booktabs = TRUE, align = 'r') %>%
+kable_styling(latex_options = "scale_down")
+```
+
+\newpage
+
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+tbl <- filter(stats, city == "Statewide")
+kable(tbl, row.names = TRUE, format = "latex", booktabs = TRUE, align = 'r') %>%
+kable_styling(latex_options = "scale_down")
+```
