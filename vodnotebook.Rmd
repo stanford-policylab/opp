@@ -239,6 +239,15 @@ data %>%
 ### All data
 
 ```{r}
+full_models <- read_rds(here::here("cache", "vod_full_models.Rds"))
+full_results <- read_rds(here::here("cache", "vod_full_results.Rds"))
+```
+
+```{r}
+full_models$model_time_const %>% broom::tidy()
+```
+
+```{r}
 log(calculate_k(data))
 ```
 
@@ -270,6 +279,13 @@ broom::tidy(geo_model)
 
 
 ### DST 
+```{r}
+dst_models <- read_rds(here::here("cache", "vod_dst_models.Rds"))
+dst_results <- read_rds(here::here("cache", "vod_dst_results.Rds"))
+
+dst_models$model_district_adjusted %>% broom::tidy()
+```
+
 
 ```{r}
 log(calculate_k(data %>% filter(is_dst_period == TRUE)))
