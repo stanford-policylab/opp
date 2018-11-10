@@ -28,77 +28,84 @@ veil_of_darkness_test <- function(
   minority_demographic = "black",
   majority_demographic = "white",
   demographic_col = subject_race,
-  geographic_col = district,
+  geographic_col = NULL,
+  subgeographic_col = district,
   date_col = date,
   time_col = time,
   lat_col = lat,
-  lng_col = lng
+  lng_col = lng,
+  has_sunset_times = FALSE,
+  filter_to_DST = FALSE
 ) {
 
   demographicq <- enquo(demographic_col)
-  geographicq <- enquo(geographic_col)
+  geographicq <- NULL
+  if (!is.null(geographic_col)) {
+    geographicq <- enquo(geographic_col)
+  }
+  subgeographicq <- enquo(subgeographic_col)
   dateq <- enquo(date_col)
   timeq <- enquo(time_col)
   latq = enquo(lat_col)
   lngq = enquo(lng_col)
 
   metadata <- list()
-  tbl <- add_sunset_times(tbl, metadata)
-
-  summary <-
-    tbl %>%
-    count(is_minority_demographic, is_dark) %>%
-    group_by(is_dark) %>%
-    mutate(prop = n / sum(n))
   
-  prop_minority_dark <- 
-    summary %>% 
-    filter(is_minority_demographic == TRUE, is_dark == TRUE) %>% 
-    pull(prop)
+  if (!has_sunset_times) {
+    tbl <- add_sunset_times(
+      tbl, 
+      metadata,
+      minority_demographic,
+      majority_demographic,
+      demographic_col,
+      geographic_col,
+      date_col,
+      time_col,
+      lat_col,
+      lng_col,
+      multi_tz = is.null(geographic_col)
+    )
+  }
   
-  prop_minority_light <- 
-    summary %>% 
-    filter(is_minority_demographic == TRUE, is_dark == FALSE) %>% 
-    pull(prop)
+  if (filter_to_DST) {
+    tbl <- 
+      tbl %>% 
+      filter(is_dst_period == TRUE)
+  }
   
-  prop_majority_dark <- 
-    summary %>% 
-    filter(is_minority_demographic == FALSE, is_dark == TRUE) %>% 
-    pull(prop)
+  tbl <- 
+    tbl %>% 
+    filter(minute < sunset_minute | minute > sunset_minute + minutes(30))
   
-  prop_majority_light <- 
-    summary %>% 
-    filter(is_minority_demographic == FALSE, is_dark == FALSE) %>% 
-    pull(prop)
-  
-  k_unadj <- (prop_minority_light * prop_majority_dark) /
-    (prop_majority_light * prop_minority_dark)
+  k_unadj <- calculate_k(tbl)
   
   model_time_const <-
     tbl %>%
     glm(
-      formula = is_minority_demographic ~ is_dark + ns(twilight_minute, df = 6),
+      formula = is_minority_demographic ~ is_dark + ns(minute, df = 6),
       family = "binomial"
     )
 
   model_time_varying <-
     tbl %>%
     glm(
-      formula = is_minority_demographic ~ is_dark * ns(twilight_minute, df = 6),
+      formula = is_minority_demographic ~ is_dark * ns(minute, df = 6),
       family = "binomial"
     )
 
   model_district_adjusted <-
     tbl %>%
     glm(
-      formula = is_minority_demographic ~ is_dark + ns(twilight_minute, df = 6) + district,
+      formula = is_minority_demographic ~ is_dark + ns(minute, df = 6) + subgeography,
       family = "binomial"
     )
 
   list(
-    metadata = list(
+    data = list(
       data = tbl,
-      summary_proportions = summary,
+      summary_proportions = summary
+    ),
+    models = list(
       model_time_const = model_time_const,
       model_time_varying = model_time_varying,
       model_district_adjusted = model_district_adjusted
@@ -132,13 +139,12 @@ add_sunset_times <- function(
   timeq <- enquo(time_col)
   latq <- enquo(lat_col)
   lngq <- enquo(lng_col)
-  print("test")
+
   geographicq <- NULL
   if (multi_tz) {
     geographicq <- enquo(geographic_col)
   }
-  print("test")
-  # Drop NA and filter geocoding errors
+  
   tbl <- clean(
     tbl,
     !!latq,
@@ -148,7 +154,6 @@ add_sunset_times <- function(
     !!timeq,
     metadata = metadata
   )
-  print("test")
   
   if (is.null(geographicq)) {
     tz <- infer_tz(pull(tbl, !!latq), pull(tbl, !!lngq))
@@ -168,7 +173,7 @@ add_sunset_times <- function(
       left_join(tbl, tzs, by = by)
   }
   
-  sunset_times <- infer_sunset_times(tbl, !!latq, !!lngq, !!dateq, tz) ## FIX THIS - do by tz?
+  sunset_times <- infer_sunset_times(tbl, !!latq, !!lngq, !!dateq, tz)
   date_colname <- quo_text(dateq)
   tbl <-
     left_join(tbl, sunset_times, by = c(date_colname, "tz"))
@@ -200,11 +205,46 @@ add_sunset_times <- function(
       month = month(date),
       day = day(date),
       is_dst = dst(as.POSIXct(date, tz = tz)),
-      is_dst_period = (month == 2 & day >= 25 | 
-                  month == 3 & day <= 25 | 
-                  month == 10 & day >= 15 | 
-                  month == 11 & day <= 15)
+      is_dst_period = 
+        (month == 2 & day >= 25 | 
+           month == 3 & day <= 25 | 
+           month == 10 & day >= 15 | 
+           month == 11 & day <= 15)
     )
+}
+
+calculate_k <- function(tbl)
+{
+  summary <-
+    tbl %>%
+    count(is_minority_demographic, is_dark) %>%
+    group_by(is_dark) %>%
+    mutate(prop = n / sum(n))
+  
+  prop_minority_dark <- 
+    summary %>% 
+    filter(is_minority_demographic == TRUE, is_dark == TRUE) %>% 
+    pull(prop)
+  
+  prop_minority_light <- 
+    summary %>% 
+    filter(is_minority_demographic == TRUE, is_dark == FALSE) %>% 
+    pull(prop)
+  
+  prop_majority_dark <- 
+    summary %>% 
+    filter(is_minority_demographic == FALSE, is_dark == TRUE) %>% 
+    pull(prop)
+  
+  prop_majority_light <- 
+    summary %>% 
+    filter(is_minority_demographic == FALSE, is_dark == FALSE) %>% 
+    pull(prop)
+  
+  k_unadj <- (prop_minority_light * prop_majority_dark) /
+    (prop_majority_light * prop_minority_dark)
+  
+  k_unadj
 }
 
 clean <- function(
@@ -212,8 +252,7 @@ clean <- function(
   lat_col,
   lng_col,
   ...,
-  metadata = list(),
-  latlng_tol = 0.5
+  metadata = list()
 ) {
   latq = enquo(lat_col)
   lngq = enquo(lng_col)
@@ -228,14 +267,16 @@ clean <- function(
     rate_warning(metadata[["null_rate"]], "dropped due to missing values")
   }
   
+  US_LAT_LIMITS <- c(19.5, 64.9)
+  US_LNG_LIMITS <- c(-161.8, -68)
   n_before_filter_geo <- nrow(tbl)
   tbl <- 
     tbl %>% 
     filter(
-      !!latq < median(!!latq) + latlng_tol,
-      !!latq > median(!!latq) - latlng_tol,
-      !!lngq < median(!!lngq) + latlng_tol,
-      !!lngq > median(!!lngq) - latlng_tol
+      !!latq < US_LAT_LIMITS[2],
+      !!latq > US_LAT_LIMITS[1],
+      !!lngq < US_LNG_LIMITS[2],
+      !!lngq > US_LNG_LIMITS[1]
     )
   n_after_filter_geo <- nrow(tbl)
   metadata["geo_error_rate"] <-
@@ -271,7 +312,8 @@ infer_tz_by_group <- function(tbl, group_val, group_var = city, n = 10)
     tbl %>% 
     filter(!!group_var == group_val) %>% 
     pull(lng)
-    
+  
+  print(str_c("Inferring TZ for ", group_val))
   tibble(
     group = group_val,
     tz = infer_tz(lats, lngs, n)
@@ -340,15 +382,21 @@ veil_of_darkness_daylight_savings_test <- function(
 
 plot_prop_minority_by_time <- function(
     tbl,
+    min_time,
+    max_time,
     title = "",
     DST_only = FALSE,
+    city_only = NULL,
+    clock_time_col = minute,
     dark_minute_col = minutes_since_dark,
     demographic_col = is_minority_demographic,
+    smooth_method = "loess",
     time_range = list(low = -3, high = 3), # hours
     time_accuracy = 15 # minutes
 ) {
   dark_minuteq <- enquo(dark_minute_col)
   demographicq <- enquo(demographic_col)
+  clock_timeq <- enquo(clock_time_col)
   
   minutes_per_hour <- 60
   
@@ -356,27 +404,111 @@ plot_prop_minority_by_time <- function(
     tbl <- filter(tbl, is_dst_period == TRUE)
   }
   
+  if(!is.null(city_only)) {
+    tbl <- filter(tbl, city == city_only)
+  }
+  
   tbl %>% 
     filter(
-      !!dark_minuteq > time_range$low * minutes_per_hour, 
-      !!dark_minuteq < time_range$high * minutes_per_hour
+      time > min_time,
+      time < max_time,
+      !!dark_minuteq <= 90,
+      !!dark_minuteq >= -90
     ) %>% 
     mutate(
-      time_bin = !!dark_minuteq %/% time_accuracy * time_accuracy
+      min_since_sunset_bin = !!dark_minuteq %/% time_accuracy * time_accuracy,
+      clock_time = hms::hms(min = !!clock_timeq - 12 * 60),
+      clock_time_bin = case_when(
+        clock_time < hms::hms(hours = 5, min = 45) ~ "5:30-5:45",
+        clock_time < hms::hms(hours = 6, min = 00) ~ "5:45-6:00",
+        clock_time < hms::hms(hours = 6, min = 15) ~ "6:00-6:15",
+        clock_time < hms::hms(hours = 6, min = 30) ~ "6:15-6:30",
+        clock_time < hms::hms(hours = 6, min = 45) ~ "6:30-6:45",
+        clock_time < hms::hms(hours = 7, min = 00) ~ "6:45-7:00",
+        clock_time < hms::hms(hours = 7, min = 15) ~ "7:00-7:15",
+        TRUE ~ "7:15-7:30"
+      )
     ) %>% 
-    group_by(time_bin) %>% 
+    group_by(min_since_sunset_bin, clock_time_bin) %>% 
     summarise(prop_minority = sum(!!demographicq) / n(), total = n()) %>% 
-    ggplot(aes(time_bin, prop_minority)) +
+    ggplot(aes(min_since_sunset_bin, prop_minority, color = clock_time_bin)) +
     geom_vline(xintercept = 0) +
-    geom_point(aes(size = total), color = "grey60") +
-    geom_smooth() +
-    ylim(c(0, 1)) +
+    geom_smooth(method = smooth_method, se = FALSE) +
     scale_x_continuous(
       breaks = seq(
-        time_range$low * minutes_per_hour, 
-        time_range$high * minutes_per_hour, 
-        by = 30)
+        -90,
+        90,
+        by = 30),
+      limits = c(-90, 90)
     ) +
+    lims(y = c(0.2, 0.7)) +
+    labs(
+      title = title,
+      x = "Minutes since sunset",
+      y = "Proportion minority drivers stopped"
+    )
+}
+
+plot_prop_minority_by_time_dst <- function(
+  tbl,
+  min_time,
+  max_time,
+  title = "",
+  city_only = NULL,
+  clock_time_col = minute,
+  dark_minute_col = minutes_since_dark,
+  demographic_col = is_minority_demographic,
+  smooth_method = "loess",
+  time_range = list(low = -3, high = 3), # hours
+  time_accuracy = 15 # minutes
+) {
+  dark_minuteq <- enquo(dark_minute_col)
+  demographicq <- enquo(demographic_col)
+  clock_timeq <- enquo(clock_time_col)
+  
+  minutes_per_hour <- 60
+  
+  tbl <- filter(tbl, is_dst_period == TRUE)
+  
+  if(!is.null(city_only)) {
+    tbl <- filter(tbl, city == city_only)
+  }
+  
+  tbl %>% 
+    filter(
+      time > min_time,
+      time < max_time,
+      !!dark_minuteq <= 90,
+      !!dark_minuteq >= -90
+    ) %>% 
+    mutate(
+      min_since_sunset_bin = !!dark_minuteq %/% time_accuracy * time_accuracy,
+      clock_time = hms::hms(min = !!clock_timeq - 12 * 60),
+      clock_time_bin = case_when(
+        clock_time < hms::hms(hours = 5, min = 45) ~ "5:30-5:45",
+        clock_time < hms::hms(hours = 6, min = 00) ~ "5:45-6:00",
+        clock_time < hms::hms(hours = 6, min = 15) ~ "6:00-6:15",
+        clock_time < hms::hms(hours = 6, min = 30) ~ "6:15-6:30",
+        clock_time < hms::hms(hours = 6, min = 45) ~ "6:30-6:45",
+        clock_time < hms::hms(hours = 7, min = 00) ~ "6:45-7:00",
+        clock_time < hms::hms(hours = 7, min = 15) ~ "7:00-7:15",
+        TRUE ~ "7:15-7:30"
+      )
+    ) %>% 
+    group_by(min_since_sunset_bin, clock_time_bin, is_dst) %>% 
+    summarise(prop_minority = sum(!!demographicq) / n(), total = n()) %>% 
+    ggplot(aes(min_since_sunset_bin, prop_minority, color = is_dst)) +
+    geom_vline(xintercept = 0) +
+    geom_smooth(method = smooth_method, se = FALSE) +
+    facet_wrap(. ~ clock_time_bin, scales = "free_y") +
+    scale_x_continuous(
+      breaks = seq(
+        -90,
+        90,
+        by = 30),
+      limits = c(-90, 90)
+    ) +
+    lims(y = c(0.2, 0.7)) +
     labs(
       title = title,
       x = "Minutes since sunset",
@@ -410,91 +542,3 @@ filter_to_DST <- function(tbl) {
         month == 10 & day >= 15 | 
         month == 11 & day <= 15)
 }
-
-madison %>%
-  filter(
-    year(date) == 2010,
-    month(date) %in% c(10, 11)
-  ) %>% 
-  ggplot(aes(date, sunset_minute)) +
-  geom_point()
-
-madison %>%
-  group_by(district) %>% 
-  summarise(prop_black = sum(is_minority_demographic) / n())
-
-madison %>% 
-  group_by(hour = hour(time), district) %>% 
-  summarise(
-    n = n(),
-    prop_black = sum(is_minority_demographic) / n(),
-    n_all_black = sum(prop_black == 1)
-  ) %>% 
-  ggplot(aes(district, n_all_black)) +
-  geom_col()
-
-# approximate spring times: 1080-1130, fall times: 1000-1060
-madison %>% 
-  filter(
-    month(date) %in% c(10, 11), 
-    minute %in% seq(1000, 1060, by = 1)
-  ) %>% 
-  group_by(year = year(date), date) %>% 
-  summarise(
-    prop_black = sum(is_minority_demographic) / n(),
-    is_dark = sum(is_dark) > 0,
-    n = n()
-  ) %>% 
-  ggplot(aes(update(date, year = 2010), prop_black, color = is_dark, size = n)) +
-  geom_point(alpha = 1/2) +
-  facet_wrap(year ~ .) +
-  labs(
-    title = "Madison, WI",
-    subtitle = "Stops between 16:40 - 17:40,\nOct and Nov (Fall DST period), 2007-2017",
-    y = "Proportion black",
-    x = "Date (all years)"
-  )
-
-# filter_to_DST(data$madison) %>% View()
-# 
-# madison %>% 
-#   filter(
-#     is_dst_period == TRUE, 
-#     year(date) == 2010,
-#     month < 4
-#   ) %>% mutate(dst = dst(ymd(date))) %>% count(dst)
-#   ggplot(aes(date, sunset_minute, color = dst) +
-#   geom_point()
-
-# Note: Green Bay only has 43 stops. Wichita has 865,346 stops, but 100% white
-# eligible_cities <- tribble(
-#   ~state, ~city,
-#   "WI", "Madison",
-#   "KY", "Owensboro",
-#   "VT", "Burlington"
-# )
-# cities <- opp_load_all_data(only=eligible_cities)
-# metadata = list()
-# cities_wsunset <- add_sunset_times(
-#   sample_frac(cities),
-#   metadata = metadata,
-#   multiple_tz = T
-# )
-# 
-# eligibility %>% 
-#   mutate(
-#     date = parse_number(date),
-#     time = parse_number(time),
-#     subject_race = parse_number(subject_race),
-#     geolocation = parse_number(geolocation)
-#   ) %>% 
-#   filter_at(
-#     vars(date, time, subject_race, geolocation),
-#     all_vars(. > 75)
-#   ) %>% View()
-
-
-## TODO: figure out how to aggregate data
-## TODO: better time binning for plots
-## TODO: Plot city level for white cities
-## TODO: Plot district level for those with district

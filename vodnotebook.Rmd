@@ -1,0 +1,339 @@
+---
+title: "Vod Report"
+author: "Samantha Robertson"
+date: "11/6/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+source(here::here("lib", "opp.R"))
+source(here::here("lib", "veil_of_darkness_test.R"))
+```
+
+```{r}
+cities_w_data_problems <- c("Green Bay", "Camden", "Bakersfield", "Little Rock")
+```
+
+
+## Load data & clean up
+
+```{r}
+data <- 
+  read_rds(here::here("cache", "aggregated_cities_wsunset.Rds")) %>% 
+  filter(!(city %in% cities_w_data_problems)) %>% 
+  filter(minute < sunset_minute | minute > sunset_minute + 30)
+
+subgeos <- 
+  data %>% 
+  group_by(city) %>% 
+  summarise_at(
+    vars(
+      neighborhood, 
+      region, 
+      precinct, 
+      reporting_area, 
+      district, 
+      beat, 
+      sector, 
+      police_grid_number
+    ), 
+    n_distinct,
+    na.rm = TRUE
+  ) %>% 
+  gather(-city, key = "subgeo", value = "n_distinct") %>% 
+  filter(
+    n_distinct >= 5, n_distinct <= 30, 
+    (city != "Dallas" | subgeo != "district")
+  ) %>% 
+  select(-n_distinct)
+
+
+get_subgeo_cities <- function(name) {
+  subgeos %>% 
+    filter(subgeo == name) %>% 
+    pull(city)
+}
+
+region_cities <- get_subgeo_cities("region")
+precinct_cities <- get_subgeo_cities("precinct")
+district_cities <- get_subgeo_cities("district")
+beat_cities <- get_subgeo_cities("beat")
+sector_cities <- get_subgeo_cities("sector")
+
+data <-
+  data %>% 
+  filter(city %in% pull(subgeos, city)) %>% 
+  mutate(
+    subgeography = case_when(
+      city %in% region_cities ~ region,
+      city %in% precinct_cities ~ precinct,
+      city %in% district_cities ~ district,
+      city %in% beat_cities ~ beat,
+      city %in% sector_cities ~ sector
+    )
+  ) %>% 
+  filter(!is.na(subgeography)) %>% 
+  unite("geo_adj_var", city, subgeography, remove = FALSE)
+```
+
+### Find best times
+
+```{r}
+data %>% 
+  ggplot(aes(time, fill = is_dark)) +
+   geom_density(alpha = 1/2)
+```
+
+## Visualize
+
+```{r}
+plot_prop_minority_by_time(
+  data, 
+  title = "All stops", 
+  min_time = hms::hms(hours = 18, min = 30), 
+  max_time = hms::hms(hours = 19, min = 30)
+)
+```
+
+```{r}
+plot_prop_minority_by_time(
+  data, 
+  title = "All stops", 
+  min_time = hms::hms(hours = 18, min = 30), 
+  max_time = hms::hms(hours = 19, min = 30),
+  smooth_method = "lm"
+)
+```
+
+```{r}
+data %>% filter(is_dst_period == TRUE) %>% count(city, sort = TRUE)
+```
+
+Use city with most stops around DST: Philadelphia
+
+Get days of daylight savings:
+```{r}
+dst_dates <- 
+  data %>% 
+  filter(city == "Philadelphia", is_dst_period == TRUE) %>% 
+  arrange(date) %>% 
+  mutate(
+    year = year(date),
+    prev_dst = lead(is_dst),
+    season = if_else(month < 6, "spring", "fall")
+  ) %>% 
+  filter(prev_dst != is_dst) %>% 
+  select(year, dst_date = date, season)
+```
+
+Find time period  
+```{r}
+data %>% 
+  group_by(date) %>% 
+  summarise(sunset = min(sunset)) %>% 
+  mutate(prev_sunset = lag(sunset)) %>% 
+  filter(date %in% pull(dst_dates, dst_date)) %>% 
+  mutate(season = if_else(month(date) < 6, "spring", "fall")) %>% 
+  gather(sunset:prev_sunset, key = "day", value = "sunset_time") %>% 
+  ggplot(aes(date, sunset_time, color = day, group = day)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(. ~ season)
+```
+
+5:15-5:30 in the fall and 6:10-6:25 in the spring
+
+```{r}
+data %>% 
+  filter(city == "Philadelphia", is_dst_period == TRUE) %>% 
+  mutate(
+    year = year(date), 
+    season = if_else(month > 6, "fall", "spring")
+  ) %>% 
+  left_join(dst_dates, by = c("year", "season")) %>% 
+  mutate(days_since_dst = date - dst_date) %>%
+  filter(
+    days_since_dst < days(15),
+    days_since_dst > days(-15),
+    season == "spring" & time < hms::hms(hours = 18, min = 25) & time > hms::hms(hours = 18, min = 10) |
+      season == "fall" & time < hms::hms(hours = 17, min = 30) & time > hms::hms(hours = 17, min = 15)
+  ) %>% 
+  group_by(days_since_dst, season, is_dark) %>% 
+  summarise(prop_minority = sum(is_minority_demographic) / n(), n = n()) %>% 
+  ggplot(aes(days_since_dst, prop_minority, color = is_dark))+
+  geom_vline(xintercept = days(0)) +
+  geom_point(aes(size = n), alpha = 1/2) +
+  geom_smooth(se = FALSE, method = "lm") +
+  facet_grid(. ~ season) +
+  labs(
+    title = "Philadelphia (2015-2018)",
+    subtitle = "Time periods: 5:15-5:30 in the Fall & 6:10-6:25 in the Spring"
+  )
+```
+
+
+Same for Nashville:
+Get days of daylight savings:
+```{r}
+dst_dates_nashville <- 
+  data %>% 
+  filter(city == "Nashville", is_dst_period == TRUE) %>% 
+  arrange(date) %>% 
+  mutate(
+    year = year(date),
+    prev_dst = lead(is_dst),
+    season = if_else(month < 6, "spring", "fall")
+  ) %>% 
+  filter(prev_dst != is_dst) %>% 
+  select(year, dst_date = date, season)
+```
+
+```{r}
+data %>% 
+  group_by(date) %>% 
+  summarise(sunset = min(sunset)) %>% 
+  mutate(prev_sunset = lag(sunset)) %>% 
+  filter(date %in% pull(dst_dates_nashville, dst_date)) %>% 
+  mutate(season = if_else(month(date) < 6, "spring", "fall")) %>% 
+  gather(sunset:prev_sunset, key = "day", value = "sunset_time") %>% 
+  ggplot(aes(date, sunset_time, color = day, group = day)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(. ~ season)
+```
+Filter to 2011 - 2014: 5:30-5:45 fall, 6:10-6:25 spring
+```{r}
+data %>% 
+  filter(city == "Nashville", is_dst_period == TRUE, year(date) <= 2014, year(date) >= 2011) %>% 
+  mutate(
+    year = year(date), 
+    season = if_else(month > 6, "fall", "spring")
+  ) %>% 
+  left_join(dst_dates, by = c("year", "season")) %>% 
+  mutate(days_since_dst = date - dst_date) %>%
+  filter(
+    days_since_dst < days(15),
+    days_since_dst > days(-15),
+    season == "spring" & time < hms::hms(hours = 18, min = 45) & time > hms::hms(hours = 18, min = 30) |
+      season == "fall" & time < hms::hms(hours = 17, min = 45) & time > hms::hms(hours = 17, min = 30)
+  ) %>% 
+  group_by(days_since_dst, season, is_dark) %>% 
+  summarise(prop_minority = sum(is_minority_demographic) / n(), n = n()) %>% 
+  ggplot(aes(days_since_dst, prop_minority, color = is_dark))+
+  geom_vline(xintercept = days(0)) +
+  geom_point(aes(size = n), alpha = 1/2) +
+  geom_smooth(se = FALSE, method = "lm") +
+  facet_grid(. ~ season) +
+  labs(
+    title = "Nashville (2011-2014)",
+    subtitle = "Time periods: 5:30-5:45 in the Fall; 6:30-6:45 in the Spring"
+  )
+```
+
+## Regressions
+
+### All data
+
+```{r}
+log(calculate_k(data))
+```
+
+```{r}
+simple_model <-
+  data %>% 
+  group_by(is_dark, minute) %>% 
+  summarise(
+    n = n(),
+    k = sum(is_minority_demographic)
+  ) %>% 
+  glm(formula = cbind(k, n-k) ~ is_dark + ns(minute, df = 6), family = "binomial")
+
+broom::tidy(simple_model)
+```
+
+```{r}
+geo_model <-
+  data %>% 
+  group_by(is_dark, minute, geo_adj_var) %>% 
+  summarise(
+    n = n(), 
+    k = sum(is_minority_demographic)
+  ) %>% 
+  glm(formula = cbind(k, n-k) ~ is_dark + ns(minute, df = 6) + geo_adj_var, family = "binomial")
+
+broom::tidy(geo_model)
+```
+
+
+### DST 
+
+```{r}
+log(calculate_k(data %>% filter(is_dst_period == TRUE)))
+```
+
+
+```{r}
+dst_simple_model <-
+  data %>% 
+  filter(is_dst_period == TRUE) %>% 
+  group_by(is_dark, minute) %>% 
+  summarise(
+    n = n(),
+    k = sum(is_minority_demographic)
+  ) %>% 
+  glm(formula = cbind(k, n-k) ~ is_dark + ns(minute, df = 6), family = "binomial")
+
+broom::tidy(dst_simple_model)
+```
+
+```{r}
+dst_geo_model <-
+  data %>% 
+  filter(is_dst_period == TRUE) %>% 
+  group_by(is_dark, minute, geo_adj_var) %>% 
+  summarise(
+    n = n(),
+    k = sum(is_minority_demographic)
+  ) %>% 
+  glm(formula = cbind(k, n-k) ~ is_dark + ns(minute, df = 6) + geo_adj_var, family = "binomial")
+
+broom::tidy(dst_geo_model)
+```
+
+### Separately on each city
+
+```{r}
+reg <- function(city_name){
+  model <-
+    data %>% 
+    filter(city == city_name) %>% 
+    group_by(is_dark, minute, geo_adj_var) %>% 
+    summarise(
+      n = n(), 
+      k = sum(is_minority_demographic)
+    ) %>% 
+    glm(formula = cbind(k, n-k) ~ is_dark + ns(minute, df = 6) + geo_adj_var, family = "binomial")
+  
+  broom::tidy(model) %>% 
+    filter(term == "is_darkTRUE") %>% 
+    mutate(city = city_name) %>% 
+    select(city, estimate, std.error)
+}
+
+by_city <- 
+  subgeos %>% 
+  pull(city) %>% 
+  map_dfr(~reg(.))
+
+by_city %>% 
+  filter(city != "Plano") %>% 
+  mutate(low = estimate - std.error, high = estimate + std.error) %>% 
+  ggplot(aes(reorder(city, estimate), estimate)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = low, ymax = high))
+```
+

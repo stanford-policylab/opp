@@ -1,20 +1,68 @@
 source(here::here("lib", "opp.R"))
 source(here::here("lib", "veil_of_darkness_test.R"))
 
-eligible_cities <- tribble(
-  ~state, ~city,
-  "WI", "Madison",
-  "KY", "Owensboro",
-  "KS", "Wichita",
-  "VT", "Burlington",
-  "WI", "Green Bay"
-)
-cities <- opp_load_all_data(only=eligible_cities)
+data <- 
+  read_rds(here::here("cache", "aggregated_cities_wsunset.Rds")) %>% 
+  filter(!(city %in% cities_w_data_problems))
 
-metadata = list()
-cities <- add_sunset_times(
-  cities,
-  metadata = metadata,
-  multi_tz = TRUE
-)
-write_rds(cities, here::here("cache", "white_cities_wsunset.Rds"))
+subgeos <- 
+  data %>% 
+  group_by(city) %>% 
+  summarise_at(
+    vars(
+      neighborhood, 
+      region, 
+      precinct, 
+      reporting_area, 
+      district, 
+      beat, 
+      sector, 
+      police_grid_number
+    ), 
+    n_distinct,
+    na.rm = TRUE
+  ) %>% 
+  gather(-city, key = "subgeo", value = "n_distinct") %>% 
+  filter(
+    n_distinct >= 5, n_distinct <= 30, 
+    (city != "Dallas" | subgeo != "district")
+  ) %>% 
+  select(-n_distinct)
+
+
+get_subgeo_cities <- function(name) {
+  subgeos %>% 
+    filter(subgeo == name) %>% 
+    pull(city)
+}
+
+region_cities <- get_subgeo_cities("region")
+precinct_cities <- get_subgeo_cities("precinct")
+district_cities <- get_subgeo_cities("district")
+beat_cities <- get_subgeo_cities("beat")
+sector_cities <- get_subgeo_cities("sector")
+
+data <-
+  data %>% 
+  filter(city %in% pull(subgeos, city)) %>% 
+  mutate(
+    subgeography = case_when(
+      city %in% region_cities ~ region,
+      city %in% precinct_cities ~ precinct,
+      city %in% district_cities ~ district,
+      city %in% beat_cities ~ beat,
+      city %in% sector_cities ~ sector
+    )
+  ) %>% 
+  filter(!is.na(subgeography)) %>% 
+  unite("geo_adj_var", city, subgeography, remove = FALSE)
+
+results_full <- veil_of_darkness_test(data, has_sunset_times = TRUE)
+results_dst <- veil_of_darkness_test(data, has_sunset_times = TRUE, filter_to_DST = TRUE)
+
+write_rds(results_full$data, here::here("cache", "vod_full_data.Rds"))
+write_rds(results_full$models, here::here("cache", "vod_full_models.Rds"))
+write_rds(results_full$results, here::here("cache", "vod_full_results.Rds"))
+write_rds(results_dst$data, here::here("cache", "vod_dst_data.Rds"))
+write_rds(results_dst$models, here::here("cache", "vod_dst_models.Rds"))
+write_rds(results_dst$results, here::here("cache", "vod_dst_results.Rds"))
