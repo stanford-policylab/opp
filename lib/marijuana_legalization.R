@@ -1,4 +1,34 @@
 #!/usr/bin/env Rscript
+source("opp.R")
+
+
+marijuana_legalization_comparison <- function(
+  test_tbl = tribble(
+    ~state, ~city, ~legalization_date, ~violation_colname, ~marijuana_regex,
+    "CO", "Statewide", "2012-12-10", 
+    "WA", "Statewide", "2012-12-09"
+  ),
+  control_tbl = tribble(
+    ~state, ~city,
+    "AZ", "Statewide",
+    "CA", "Statewide",
+    "FL", "Statewide",
+    "MA", "Statewide",
+    "MT", "Statewide",
+    "NC", "Statewide",
+    "OH", "Statewide",
+    "RI", "Statewide",
+    "SC", "Statewide",
+    "TX", "Statewide",
+    "VT", "Statewide",
+    "WI", "Statewide"
+  )
+) {
+}
+
+if (!interactive()) {
+  marijuana_legalization()
+}
 
 # This script produces time series plots 5a, 5b, 5c in the paper,
 # representing the effect of marijuana legalization in Colorado and Washington.
