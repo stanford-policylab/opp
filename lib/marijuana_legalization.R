@@ -2,32 +2,78 @@
 source("opp.R")
 
 
-marijuana_legalization_comparison <- function(
-  test_tbl = tribble(
-    ~state, ~city, ~legalization_date, ~violation_colname, ~marijuana_regex,
-    "CO", "Statewide", "2012-12-10", 
-    "WA", "Statewide", "2012-12-09"
-  ),
-  control_tbl = tribble(
-    ~state, ~city,
-    "AZ", "Statewide",
-    "CA", "Statewide",
-    "FL", "Statewide",
-    "MA", "Statewide",
-    "MT", "Statewide",
-    "NC", "Statewide",
-    "OH", "Statewide",
-    "RI", "Statewide",
-    "SC", "Statewide",
-    "TX", "Statewide",
-    "VT", "Statewide",
-    "WI", "Statewide"
+marijuana_legalization <- function() {
+  results <- policy_change_test(
+    test_tbl = tribble(
+      ~state, ~city, ~change_date, ~violation_regex,
+      "CO", "Statewide", "2012-12-10", "marijuana",
+      # TODO(danj): WA also has Drugs Paraphernalia - Misdemeanor
+      "WA", "Statewide", "2012-12-09", "drugs - misdemeanor"
+    ),
+    # TODO(danj): ensure all of these have correctly classified search bases
+    control_tbl = tribble(
+      ~state, ~city,
+      "AZ", "Statewide",
+      "CA", "Statewide",
+      "FL", "Statewide",
+      "MA", "Statewide",
+      "MT", "Statewide",
+      "NC", "Statewide",
+      "OH", "Statewide",
+      "RI", "Statewide",
+      "SC", "Statewide",
+      "TX", "Statewide",
+      "VT", "Statewide",
+      "WI", "Statewide"
+    ),
+    eligible_search_bases = c("k9", "plain view", "probable cause")
   )
-) {
 }
 
+# test_tbl: <state, city, change_date, violation_regex>
+# control_tbl: <state, city>
+# eligible_searches: c("<type_1>", "<type_2>", ...) [see standards.R]
+policy_change_test <- function(
+  test_tbl,
+  control_tbl,
+  eligible_searches
+) {
+
+  tbl <-
+    bind_rows(select(test_tbl, state, city), control_tbl) %>%
+    opp_load_all_data() %>%
+    add_violation_indicator(test_tbl) %>%
+    mutate(search_is_eligible = search_basis %in% eligible_search_bases) %>%
+    group_by(state, city, date, subject_race) %>%
+    summarize(
+      n = n(),
+      n_target_violation = sum(violation_indicator),
+      n_violation = sum(!is.na(violation)),
+      n_eligible_searches = sum(search_is_eligible),
+      n_searches = sum(search_conducted, na.rm = T)
+    ) %>%
+    ungroup()
+
+  # TODO(danj): compute trendlines
+}
+
+
+add_violation_indicator <- function(tbl, test_tbl) {
+  tbl <- mutate(tbl, violation_indicator = F)
+  for (i in 1:nrow(test_tbl)) {
+    tbl <- mutate(tbl, violation_indicator = if_else(
+      state == test_tbl[i, "state"]
+      & city == test_tbl[i, "city"]
+      & str_detect(str_c_to_lower(violation), test_tbl[i, "violation_regex"]),
+      T,
+      violation_indicator
+    ))
+  }
+}
+
+
 if (!interactive()) {
-  marijuana_legalization()
+  marijuana_legalization_analysis()
 }
 
 # This script produces time series plots 5a, 5b, 5c in the paper,
