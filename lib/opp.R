@@ -34,7 +34,7 @@ opp_run_for_all <- function(func) {
 
 
 opp_data_paths <- function() {
-  paths <- list.files(here::here("data"), ".*\\.rds", recursive = T)
+  paths <- list.files(here::here("data"), ".*\\.rds$", recursive = T)
   here::here("data", paths[str_detect(paths, "clean")])
 }
 
