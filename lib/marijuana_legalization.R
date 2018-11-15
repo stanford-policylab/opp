@@ -64,6 +64,7 @@ add_legalization_info <- function(tbl) {
 
 calculate_difference_in_difference_coefficients <- function(tbl) {
   tbl <- 
+    # TODO(danj): difference due to probable cause search?
     tbl %>%
     filter(
       type == "vehicular",
