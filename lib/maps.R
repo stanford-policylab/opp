@@ -13,23 +13,14 @@ stop_maps <- function(
   if (is.na(api_key)) {
     api_key <- load_default_api_key()
   }
+  register_google(api_key)
   tbl <- opp_load_data(state, city) 
   bounding_box <- calculate_bounding_box(tbl, pad)
   population_samples <- sample_block_groups(state, bounding_box, n_samples)
   stop_samples <- sample_stops(tbl, bounding_box, n_samples)
   title <- create_title(state, city)
-  save_plot(
-    population_samples,
-    bounding_box,
-    str_c("Population: ", title),
-    api_key
-  )
-  save_plot(
-    stop_samples,
-    bounding_box,
-    str_c("Stops: ", title),
-    api_key
-  )
+  save_plot(population_samples, bounding_box, str_c("Population: ", title))
+  save_plot(stop_samples, bounding_box, str_c("Stops: ", title))
 }
 
 
@@ -109,31 +100,26 @@ sample_stops <- function(tbl, bounding_box, n_samples) {
 save_plot <- function(
   samples,
   bounding_box,
-  title,
-  api_key
+  title
 ) {
-  ggmap(get_map(
-    location = bounding_box,
-    maptype = "roadmap",
-    api_key = api_key
-  )) +
-  geom_jitter(
-    data=samples,
-    aes(
-      x=lng,
-      y=lat,
-      color=race
-    ),
-    width=0.005,
-    height=0.005,
-    size=0.5
-  ) +
-  guides(color = guide_legend(override.aes = list(size=3))) +
-  scale_color_discrete(breaks=valid_races, labels=valid_races) +
-  theme(legend.title = element_blank(), legend.key = element_blank()) +
-  xlab("longitude") +
-  ylab("latitude") +
-  ggtitle(title)
+  ggmap(get_map(location = bounding_box, maptype = "roadmap")) +
+    geom_jitter(
+      data=samples,
+      aes(
+        x=lng,
+        y=lat,
+        color=race
+      ),
+      width=0.005,
+      height=0.005,
+      size=0.5
+    ) +
+    guides(color = guide_legend(override.aes = list(size=3))) +
+    scale_color_discrete(breaks=valid_races, labels=valid_races) +
+    theme(legend.title = element_blank(), legend.key = element_blank()) +
+    xlab("longitude") +
+    ylab("latitude") +
+    ggtitle(title)
 
   ggsave(here::here("plots", str_c(title, ".png")))
 }
