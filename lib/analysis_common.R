@@ -128,3 +128,26 @@ pct_warning <- function(rate, message) {
 if_else_na <- function(pred, pred_true, pred_false_or_na) {
   if_else(!is.na(pred) & pred, pred_true, pred_false_or_na)
 }
+
+
+base_theme <- function() {
+  theme_bw(base_size = 15) +
+    theme(
+      # NOTE: remove the title
+      plot.title = element_blank(),
+      # NOTE: make the background white
+      panel.background = element_rect(fill = "white", color = "white"),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      # NOTE: minimize margins
+      plot.margin = unit(rep(0.2, 4), "cm"),
+      panel.margin = unit(0.25, "lines"),
+      # NOTE: tiny space between axis labels and tick marks
+      axis.title.x = element_text(margin = ggplot2::margin(t = 6.0)),
+      axis.title.y = element_text(margin = ggplot2::margin(t = 6.0)),
+      # NOTE: simplify legend
+      legend.key = element_blank(),
+      legend.background = element_rect(fill = "transparent"),
+      legend.title = element_blank()
+    )
+}

@@ -64,41 +64,42 @@ clean <- function(d, helpers) {
     )
 
   # NOTE: We do a similar deduplication as above for old_data.
-  new_data <- d$data %>%
-    filter(
-      schema_type == "SRIS",
-      !is.na(ReportDateTime)
-    ) %>%
-    group_by(
-      ReportDateTime,
-      County,
-      OfficerIDNo
-    ) %>%
-    summarize(
-      City = unique_value(City),
-      Race = unique_value(Race),
-      Ethnicity = unique_value(Ethnicity),
-      Off_Age_At_Stop = unique_value(Off_Age_At_Stop),
-      Off_YrsExp_At_Stop = unique_value(Off_YrsExp_At_Stop),
-      Off_Sex = unique_value(Off_Sex),
-      Off_Race = unique_value(Off_Race),
-      OfficerOrgUnit = unique_value(OfficerOrgUnit),
-      ReasonForStop = combine_multiple(ReasonForStop),
-      EnforcementAction = combine_multiple(c(
-        EnforcementAction1,
-        EnforcementAction2,
-        EnforcementAction3
-      )),
-      Violation = combine_multiple(c(Violation1, Violation2, Violation3)),
-      SearchType = combine_multiple(SearchType),
-      SearchRationale = combine_multiple(c(
-        SearchRationale1,
-        SearchRationale2,
-        SearchRationale3
-      )),
-      Comments = combine_multiple(Comments)
-    ) %>%
-    ungroup()
+  new_data <-
+    d$data %>%
+      filter(
+        schema_type == "SRIS",
+        !is.na(ReportDateTime)
+      ) %>%
+      group_by(
+        ReportDateTime,
+        County,
+        OfficerIDNo
+      ) %>%
+      summarize(
+        City = unique_value(City),
+        Race = unique_value(Race),
+        Ethnicity = unique_value(Ethnicity),
+        Off_Age_At_Stop = unique_value(Off_Age_At_Stop),
+        Off_YrsExp_At_Stop = unique_value(Off_YrsExp_At_Stop),
+        Off_Sex = unique_value(Off_Sex),
+        Off_Race = unique_value(Off_Race),
+        OfficerOrgUnit = unique_value(OfficerOrgUnit),
+        ReasonForStop = combine_multiple(ReasonForStop),
+        EnforcementAction = combine_multiple(c(
+          EnforcementAction1,
+          EnforcementAction2,
+          EnforcementAction3
+        )),
+        Violation = combine_multiple(c(Violation1, Violation2, Violation3)),
+        SearchType = combine_multiple(SearchType),
+        SearchRationale = combine_multiple(c(
+          SearchRationale1,
+          SearchRationale2,
+          SearchRationale3
+        )),
+        Comments = combine_multiple(Comments)
+      ) %>%
+      ungroup()
 
   # NOTE: We join the data because some stops are in both old_data and new_data.
   joined_data <- full_join(
