@@ -73,18 +73,16 @@ get_eligible_officer_leniency <- function(tbl) {
     sample_n(100) %>% 
     pull(officer_id) 
   
-  d <-
-    tbl %>% 
+  tbl %>% 
     filter(officer_id %in% eligible_officers, subject_race == "white") %>% 
     mutate(over = speed - posted_speed) %>%
     filter(over >= 10, over <= 40, !is.na(over)) %>% 
     group_by(officer_id) %>% 
-    summarise(leniency_raw = mean(over == 10))
-  
-  d %>% 
-    mutate(
-      leniency = (leniency_raw - mean(d$leniency_raw) / sd(d$leniency_raw))
+    summarise(
+      leniency_p = mean(over == 10),
+      leniency = log(leniency_p / (1 - leniency_p))
     )
+  
 }
 
 format_for_stan <- function(data_summary) {
