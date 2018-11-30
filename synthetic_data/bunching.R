@@ -11,9 +11,9 @@ main <- function() {
   n <- n_majority + n_minority
   majority_lambda <- 5
   minority_lambda <- 6
-  discount <- function(true_excess_bunching_speed, race, leniency) {
+  discount <- function(true_excess_bunching_speed, is_majority, leniency) {
     if_else(
-      rnorm(1) <= 1 / true_excess_bunching_speed + 
+      rnorm(1) <= 1 / true_excess_bunching_speed + 0.1 * is_majority
     )
   }
   tbl <- tibble(
@@ -27,7 +27,11 @@ main <- function() {
     )
     leniency = dnorm(n, mean = 0, sd = 0.5),
     leniency = if_else(leniency < 0, 0, leniency),
-    recorded_excess_bunching_speed <- 1 / 
+    recorded_excess_bunching_speed <- discount(
+      true_excess_bunching_speed,
+      is_majority,
+      leniency 
+    )
   )
     
   output_dir <- dir_create(here::here("synthetic_data"))
