@@ -18,11 +18,11 @@ parameters {
 
 transformed parameters {
   
-  vector[n_observations] pr_bunching_excess_speed = 
-    rep_vector(poisson_lpmf(0 | mu_race[race]), n_observations);
+  vector[n_observations] pr_bunching_excess_speed;
     
   for (obs in 1:n_observations) {
     // for stops at bunching point
+    pr_bunching_excess_speed[obs] = poisson_lpmf(0 | mu_race[race[obs]]);
     for (i in 1:max_bunching_excess_speed) {
       pr_bunching_excess_speed[obs] = log_sum_exp(
         pr_bunching_excess_speed[obs],
