@@ -43,16 +43,16 @@ load <- function() {
     # control
     "AZ", "Statewide",
     "CA", "Statewide",
-    # TODO: something is off in Florida, almost no eligible black and white
+    # TODO(amyshoe): something is off in Florida, almost no eligible black and white
     # searches
     # "FL", "Statewide",
     "MA", "Statewide",
-    # TODO: something wrong here too, values are very small
+    # TODO(amyshoe): something wrong here too, values are very small
     # "MT", "Statewide",
     "NC", "Statewide",
     "OH", "Statewide",
     "RI", "Statewide",
-    # TODO: something wrong here too, glm doesn't converge, values are very
+    # TODO(amyshoe): something wrong here too, glm doesn't converge, values are very
     # small
     # "SC", "Statewide",
     "TX", "Statewide",
@@ -192,6 +192,15 @@ compose_search_rate_plots <- function(tbl) {
 to_rates_by_quarter <- function(tbl, numerator_col, denominator_col) {
   nq <- enquo(numerator_col)
   dq <- enquo(denominator_col)
+  n_name <- quo_name(nq)
+  d_name <- quo_name(dq)
+  group_by_colnames <- c(
+    setdiff(
+      colnames(tbl),
+      c(n_name, d_name, "date")
+    ),
+    "quarter"
+  )
   tbl <-
     tbl %>%
     mutate(
@@ -201,8 +210,9 @@ to_rates_by_quarter <- function(tbl, numerator_col, denominator_col) {
         "15"
       ))
     ) %>%
-    group_by(state, legalization_date, subject_race, quarter) %>%
-    summarize(rate = sum(!!nq) / sum(!!dq))
+    group_by(.dots = group_by_colnames) %>%
+    summarize(rate = sum(!!nq) / sum(!!dq)) %>%
+    ungroup()
 }
 
 
@@ -267,7 +277,7 @@ compose_timeseries_rate_plot <- function(tbl, y_axis_label) {
   scale_y_continuous(y_axis_label, labels = scales::percent, expand = c(0, 0)) +
   expand_limits(y = -0.0001) +
   facet_wrap(~ state, scales = "free_y") +
-  geom_vline(xintercept = legalization_date, linetype = "longdash") +
+  geom_vline(aes(xintercept = legalization_date), linetype = "longdash") +
   base_theme() +
   theme(
     # NOTE: default for control states
