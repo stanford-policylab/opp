@@ -8,7 +8,14 @@ load_raw <- function(raw_data_dir, n_max) {
     col_types = cols(.default = "c"),
     n_max = n_max
   )
-
+  d_2017 <- load_single_file(
+    raw_data_dir,
+    "2017_data.csv",
+    na = c("", "NA","NULL", "N/A"),
+    col_types = cols(.default = "c"),
+    n_max = n_max
+  )
+  
   troops <- load_single_file(raw_data_dir, "csp_troops.csv")
   counties <- load_single_file(raw_data_dir, "counties.csv")
 
@@ -31,6 +38,14 @@ load_raw <- function(raw_data_dir, n_max) {
   colnames(d$data)[146] <- "officer_gender"
 
   d$data %>%
+    bind_rows(
+      d_2017$data %>% 
+        rename(
+          LocationMilePost = LocationMilePostRound,
+          Age = AGE
+        ) %>% 
+        mutate(Ethnicity = if_else(Ethnicity == "HIS", "H", Race))
+    ) %>% 
     left_join(
       counties$data %>% 
         select(LocationCounty, county_name),
@@ -58,7 +73,14 @@ clean <- function(d, helpers) {
     I = "unknown/other",
     U = "unknown/other",
     W = "white",
-    Z = "unknown/other"
+    Z = "unknown/other",
+    # include translations for 2017 data
+    BLK = "black",
+    NAN = "unknown/other",
+    ORI = "asian/pacific islander",
+    PAI = "asian/pacific islander",
+    UNK = "unkown/other",
+    WHT = "white"
   )
 
   tr_search_basis <- c(
