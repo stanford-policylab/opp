@@ -131,7 +131,9 @@ clean <- function(d, helpers) {
         "probable cause" = search_conducted 
       ),
       contraband_drugs = !is.na(DrugSeizureType),
-      contraband_found = contraband_drugs,
+      contraband_other = (DriverItemsSeized != 'N' & !is.na(DriverItemsSeized)) |
+        (VehicleItemsSeized != 'N' & !is.na(VehicleItemsSeized)),
+      contraband_found = contraband_drugs | contraband_other,
       warning_issued = str_detect(OutcomeOfStop, "WA"),
       citation_issued = str_detect(OutcomeOfStop, "CI|DV|TC"),
       arrest_made = str_detect(OutcomeOfStop, "AR|WR"),
