@@ -9,14 +9,14 @@ generate <- function(
   n_officers = 100,
   n_stops_per_officer = 100,
   # NOTE: used for generating what proportion of stops are miniorities
-  mean_proportion_minority = 0.3,
+  mean_proportion_minority = 0.4,
   sd_proportion_minority = 0.1,
   mean_leniency = 0.0,
   sd_leniency = 0.5,
   # NOTE: lambda is center of distribution above bunching speed
-  minority_lambda = 5,
   majority_lambda = 5,
-  intercept = 0.05,
+  minority_lambda = 6,
+  base_discount_rate = ,
   beta_bunching_excess_speed = -0.02,
   beta_leniency = 1.0,
   beta_majority = 0.05,
@@ -30,6 +30,23 @@ generate <- function(
       + beta_bunching_excess_speed * bunching_excess_speed
       + beta_leniency * leniency
       + beta_majority * is_majority
+    )
+  }
+
+  discount <- function(
+    leniency,
+    excess_bunching_speed,
+    is_majority,
+    majority_bias
+  ) {
+    if_else(
+      leniency * (
+        1 
+        + 1 / (1 + excess_bunching_speed)
+        + majority_bias * is_majority
+      ) < runif(length(leniency)),
+      TRUE,
+      FALSE
     )
   }
   
