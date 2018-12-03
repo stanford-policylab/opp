@@ -40,10 +40,7 @@ load_raw <- function(raw_data_dir, n_max) {
   d$data %>%
     bind_rows(
       d_2017$data %>% 
-        rename(
-          LocationMilePost = LocationMilePostRound,
-          Age = AGE
-        ) %>% 
+        rename(Age = AGE) %>% 
         mutate(Ethnicity = if_else(Ethnicity == "HIS", "H", Race))
     ) %>% 
     left_join(
