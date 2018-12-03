@@ -98,6 +98,12 @@ clean <- function(d, helpers) {
         fast_tr(County, tr_county),
         county
       ),
+      # rename to for consistency in county naming
+      county_name = if_else(
+        !str_detect(county_name, "County"), 
+        str_c(county_name, " County"), 
+        county_name
+      ),
       location = coalesce(
         OtherLocation,
         str_c_na(Highway, Milepost, sep = " ")
