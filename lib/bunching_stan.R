@@ -1,6 +1,7 @@
 library(tidyverse)
 library(here)
 library(rstan)
+rstan_options(auto_write = TRUE)
 
 source(here::here("lib", "bunching_test.R"))
 source(here::here("lib", "opp.R"))
@@ -14,7 +15,7 @@ bunching_analysis <- function(
   stan_data <- format_for_stan(data_summary)
   stan_data
   fit <- stan_bunching(stan_data, 2000, 5)
-  write_rds(here::here("cache", str_c("bunching_fit_", city, "_.rds")))
+  write_rds(fit, here::here("cache", str_c("bunching_fit_", city, "_.rds")))
 }
 
 stan_bunching <- function(
@@ -65,6 +66,7 @@ summarise_for_stan <- function(tbl) {
 }
 
 get_eligible_officer_leniency <- function(tbl) {
+  set.seed(4747)
   eligible_officers <-
     tbl %>% 
     filter(subject_race == "white") %>% 
@@ -79,10 +81,12 @@ get_eligible_officer_leniency <- function(tbl) {
     filter(over >= 10, over <= 40, !is.na(over)) %>% 
     group_by(officer_id) %>% 
     summarise(
-      leniency_p = mean(over == 10),
+      leniency_p = (sum(over == 10) + 1) / (length(over) + 10),
+      # leniency_p = mean(over == 10) + 1e-6
       leniency = log(leniency_p / (1 - leniency_p))
     )
   
+  #d %>% mutate(leniency = (leniency_p - mean(d$leniency_p)) / sd(d$leniency_p))
 }
 
 format_for_stan <- function(data_summary) {
