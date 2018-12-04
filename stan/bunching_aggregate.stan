@@ -38,7 +38,7 @@ model {
       ) * count[i];
     } else {
       vector[max_bunching_excess_speed + 1] log_pr_vec;
-      # NOTE: truncated poisson
+      // NOTE: truncated poisson
       log_pr_vec[1] = poisson_lpmf(0 | lambda[is_majority[i]])
         - poisson_lcdf(max_bunching_excess_speed | lambda[is_majority[i]]);
       for (s in 1:max_bunching_excess_speed) {
@@ -48,12 +48,12 @@ model {
           + beta_leniency * leniency[i]
           + beta_majority * is_majority[i]
         );
-        # NOTE: truncated poisson
+        // NOTE: truncated poisson
         log_pr_vec[s + 1] = poisson_lpmf(s | lambda[is_majority[i]])
           - poisson_lcdf(max_bunching_excess_speed | lambda[is_majority[i]])
           + log(p_discount);
       }
-      target += log_sum_exp(log_pr_rev) * count[i];
+      target += log_sum_exp(log_pr_vec) * count[i];
     }
   }
 }
