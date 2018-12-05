@@ -16,9 +16,19 @@ generate <- function(
   # NOTE: lambda is center of distribution above bunching speed
   majority_lambda = 5,
   minority_lambda = 6,
-  base_discount_rate = ,
-  beta_bunching_excess_speed = -0.02,
+  # NOTE: exp(-1.5) ~ 0.22, meaning that conditional on nothing, the odds
+  # of being discounted are roughly 1 in 5
+  intercept = -1.5,
+  # NOTE: exp(-0.2) ~ 0.82, which means each unit increase in excess buncing
+  # speed decreases the odds of discount by ~18%; exp(-0.2 * 5) ~ 0.37,
+  # representing a decrease in odds of ~63%
+  beta_bunching_excess_speed = -0.2,
+  # NOTE: exp(1.0) ~ e ~ 2.7, so if the officer is fully lenient, the odds
+  # of being discounted increase by ~3x; similarly, if the officer leniency
+  # increases by 0.1, exp(0.1) ~ 1.11, meaning odds increase by ~11%
   beta_leniency = 1.0,
+  # NOTE: exp(0.05) ~ 1.05, so if the driver is in the majority class,
+  # the odds of being discounted increase by 5%
   beta_majority = 0.05,
   seed = 0
 ) {
@@ -33,22 +43,23 @@ generate <- function(
     )
   }
 
-  discount <- function(
-    leniency,
-    excess_bunching_speed,
-    is_majority,
-    majority_bias
-  ) {
-    if_else(
-      leniency * (
-        1 
-        + 1 / (1 + excess_bunching_speed)
-        + majority_bias * is_majority
-      ) < runif(length(leniency)),
-      TRUE,
-      FALSE
-    )
-  }
+  # TODO(danj): what decision points create reasonable betas?
+  # discount <- function(
+  #   leniency,
+  #   excess_bunching_speed,
+  #   is_majority,
+  #   majority_bias
+  # ) {
+  #   if_else(
+  #     leniency * (
+  #       1 
+  #       + 1 / (1 + excess_bunching_speed)
+  #       + majority_bias * is_majority
+  #     ) < runif(length(leniency)),
+  #     TRUE,
+  #     FALSE
+  #   )
+  # }
   
   tibble(
     officer_id = seq(1:n_officers),
