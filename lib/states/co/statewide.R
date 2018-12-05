@@ -41,7 +41,11 @@ load_raw <- function(raw_data_dir, n_max) {
     bind_rows(
       d_2017$data %>% 
         rename(Age = AGE) %>% 
-        mutate(Ethnicity = if_else(Ethnicity == "HIS", "H", Race))
+        mutate(
+          Ethnicity = if_else(Ethnicity == "HIS", "H", Race),
+          # change / to - in order to match main data pull, for parsing
+          IncidentDate = str_replace_all(IncidentDate, "/", "-")
+        )
     ) %>% 
     left_join(
       counties$data %>% 
