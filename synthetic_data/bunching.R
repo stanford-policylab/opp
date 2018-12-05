@@ -101,7 +101,9 @@ format_for_stan_bunching_aggregate <- function(tbl) {
     group_by(officer_id, leniency) %>%
     summarize(leniency_estimate = mean(recorded_excess_speed == 0)) %>%
     ungroup()
-  # TODO(danj): finish
+  # TODO(danj): finish; when we use leniency to generate data for each
+  # officer, the mean of p_discount, or mean(recorded_excess_speed == 0),
+  # should be equal to the leniency rate that went into the model
 }
 
 
