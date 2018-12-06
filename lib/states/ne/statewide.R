@@ -197,7 +197,14 @@ clean <- function(d, helpers) {
       subject_race = tr_race[Race],
       search_conducted = Outcome == "Search Conducted",
       # NOTE: All stops in these sources are vehicular.
-      type = "vehicular"
+      type = "vehicular",
+      department_name = case_when(
+        dept_lvl %in% c(1,5,9,10,11) ~ "Nebraska State Agency",
+        dept_lvl == 4 ~ "Federal Agency",
+        dept_lvl == 12 ~ "Private Agency",
+        dept_lvl == 7 ~ "Other",
+        TRUE ~ NA_character_
+      )
     ) %>%
     standardize(d$metadata)
 }

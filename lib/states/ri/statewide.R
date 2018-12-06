@@ -71,9 +71,16 @@ clean <- function(d, helpers) {
         "citation" = citation_issued,
         "warning" = warning_issued
       ),
-      contraband_drugs = SearchResultOne == "A" | SearchResultOne == "D",
-      contraband_weapons = SearchResultOne == "W",
-      contraband_found = contraband_drugs | contraband_weapons,
+      contraband_drugs = (SearchResultOne == 'D') | (SearchResultTwo == 'D') | (SearchResultThree == 'D'),
+      contraband_alcohol = (SearchResultOne == 'A') | (SearchResultTwo == 'A') | (SearchResultThree == 'A'),
+      contraband_weapons = (SearchResultOne == 'W') | (SearchResultTwo == 'W') | (SearchResultThree == 'W'),
+      contraband_other = (SearchResultOne %in% c('M','O')) | 
+                         (SearchResultTwo %in% c('M','O')) | 
+                         (SearchResultThree %in% c('M','O')),
+      contraband_true = contraband_drugs | contraband_weapons | contraband_alcohol | contraband_other,
+      contraband_false = is.na(contraband_true) &
+          (!contraband_drugs | !contraband_weapons | !contraband_alcohol | !contraband_other),
+      contraband_found = if_else(contraband_false, FALSE, contraband_true),
       frisk_performed = Frisked == "Y",
       search_conducted = Searched == "Y" | frisk_performed,
       multi_search_reasons = str_c_na(
