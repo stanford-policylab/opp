@@ -52,6 +52,15 @@ load_raw <- function(raw_data_dir, n_max) {
         select(LocationCounty, county_name),
       by = "LocationCounty"
     ) %>%
+    # NOTE: fill in 2017 county with LocationCounty, 
+    # which is name, not code (like the other years)
+    mutate(
+      county_name = if_else(
+        is.na(county_name), 
+        str_c(LocationCounty, " County"), 
+        county_name
+      )
+    ) %>% 
     left_join(
       troops$data,
       by = c("TroopID" = "Troop")
