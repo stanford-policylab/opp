@@ -11,14 +11,15 @@ from utils import (
     syntax_higlight_code,
 )
 
+
 def lookup(
-        regex,
-        state,
-        city,
-        n_lines_before,
-        n_lines_after,
-        update_repo,
-    ):
+    regex,
+    state,
+    city,
+    n_lines_before,
+    n_lines_after,
+    update_repo,
+):
 
     if update_repo:
         git_pull_rebase_if_online('.')
@@ -80,7 +81,8 @@ def find_all_notes(code, n_lines_before, n_lines_after):
 
 
 def find_all_todos(code, n_lines_before, n_lines_after):
-    regex = '(.*#\s+TODO.*\n)(.*#.*\n)*'
+    # TODO(danj): fix
+    regex = '(.*#\s+TODO.*\n)(.*#\s+^(?!TODO).*\n)*'
     return find_all(regex, code, n_lines_before, n_lines_after)
 
 
