@@ -1,6 +1,7 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
+  # VALIDATION: 
   # TODO(phoebe): what is this file? it has similar fields but far fewer records
   # ytd_traffic_stops_from_rms_data_export_tool.csv  
   # https://app.asana.com/0/456927885748233/592025853254518

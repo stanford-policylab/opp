@@ -61,10 +61,12 @@ def find(pattern, path, n_lines_after):
     with open(path) as f:
         code = f.read()
     if pattern_rx.match('notes?'):
-        return find_all_notes(code, n_lines_after)
+        return find_all(special_regex()['note'], code, n_lines_after)
     # TODO(danj): add possible assignee here
     elif pattern_rx.match('todos?'):
-        return find_all_todos(code, n_lines_after)
+        return find_all(special_regex()['todo'], code, n_lines_after)
+    elif pattern_rx.match('valid(ation)?'):
+        return find_all(special_regex()['validation'], code, n_lines_after)
     elif pattern_rx.match('files?'):
         return [code]
     else:
@@ -74,17 +76,18 @@ def find(pattern, path, n_lines_after):
         return find_all(pattern, code, n_lines_after)
 
 
-def find_all_notes(code, n_lines_after):
-    return find_all('.*#\s*NOTE.*', code, n_lines_after)
-
-
-def find_all_todos(code, n_lines_after):
-    return find_all('.*#\s*TODO.*', code, n_lines_after)
+def special_regex():
+    return {
+        'note': '.*#\s*NOTE.*',
+        'todo': '.*#\s*TODO.*',
+        'validation': '.*#\s*VALIDATION.*',
+    }
 
 
 def find_all(pattern, code, n_lines_after):
     pattern_rx = re.compile(pattern)
     comment_rx = re.compile('.*#.*')
+    special_rx = re.compile('|'.join(special_regex().values()))
     matches = []
     last_was_comment = False
     lines = code.split('\n')
@@ -94,7 +97,11 @@ def find_all(pattern, code, n_lines_after):
             matches.append(line)
             if comment_rx.match(line):
                 last_was_comment = True
-        elif last_was_comment and comment_rx.match(line):
+        elif (
+            last_was_comment
+            and comment_rx.match(line)
+            and not special_rx.match(line)
+        ):
             matches[-1] += '\n' + line
         elif last_was_comment:
             last_was_comment = False
