@@ -7,6 +7,8 @@
 .RData
 */__pycache__/*
 lib/report.*.md
+cache
+cache/*
 data
 data/*
 plots
