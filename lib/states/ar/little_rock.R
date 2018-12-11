@@ -6,6 +6,7 @@ load_raw <- function(raw_data_dir, n_max) {
 	# https://app.asana.com/0/456927885748233/592025853254518
   load_single_file(
     raw_data_dir,
+    # NOTE: this only includes stops through the beginning of November
     "traffic_citation_stats_-_year-to-date_2017.csv",
     n_max
   )
@@ -44,6 +45,9 @@ clean <- function(d, helpers) {
       time = format(datetime, "%H:%M:%S"),
       # NOTE: all of the stops have an associated `Vehicle Type`
       type = "vehicular",
+      # TODO(phoebe): can we get all stops, even those that didn't result
+      # in an action taken? pg.8 of the reports looks like they have this:
+      # https://www.littlerock.gov/media/3938/lrpd-annual-report-final-draft.pdf
       # TODO(phoebe): can we get other outcomes (warnings/arrests)?
       # https://app.asana.com/0/456927885748233/592025853254520
       citation_issued = TRUE,
