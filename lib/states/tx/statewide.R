@@ -139,20 +139,22 @@ clean <- function(d, helpers) {
     B = "black",
     H = "hispanic",
     W = "white",
+    # NOTE: In line with census definitions, we define middle eastern as white
+    # This is in contrast to old OPP definitions, which classified as other
+    M = "white", # Middle Eastern
     U = "other/unknown",
     O = "other/unknown",
-    I = "other/unknown",
-    M = "other/unknown" # Middle Eastern
+    I = "other/unknown"
   )
 
   # NOTE: Normalizes a name for joining the dataset with last name race
   # statistics.
   normalize_name <- function(x) {
-    x <- tolower(str_trim(x))
+    x <- str_to_lower(str_trim(x))
     # NOTE: Removing punctuation.
     x <- str_replace_all(x, ",|\\.", "")
     # NOTE: Removing suffix.
-    x <- str_replace_all(x, " jr$| sr$| i$| ii$| iii$| iv$|  v$| vi$", "")
+    x <- str_replace_all(x, " jr$| sr$| i$| ii$| iii$| iv$| v$| vi$", "")
     x <- str_replace_all(x, "\\-", " ")
     pieces <- str_split(x, " ")
     sapply(pieces, function(y) y[length(y)])
@@ -161,12 +163,10 @@ clean <- function(d, helpers) {
   # NOTE: Dataset with race statistics for last names to help correct race, in
   # particular, hispanic not being correctly recorded. Source:
   # http://www.census.gov/topics/population/genealogy/data/2000_surnames.html
-  surnames <- helpers$load_csv("surnames.csv")
   # NOTE: Replacing "(S)" with NA everywhere; "(S)" represents values suppressed
   # for confidentiality.
-  surnames[surnames == "(S)"] <- NA
-  surnames <- select(
-    surnames,
+  surnames <- helpers$load_csv("surnames.csv", na = c("", "NA", "(S)"))
+  surnames <- select(surnames,
     name,
     pcthispanic
   ) %>%
@@ -174,7 +174,7 @@ clean <- function(d, helpers) {
     str_length(name) > 0
   ) %>%
   mutate(
-    normalized_last_name = tolower(name),
+    normalized_last_name = str_to_lower(name),
     pH = coalesce(parse_number(pcthispanic) / 100, 0)
   )
 
@@ -187,6 +187,7 @@ clean <- function(d, helpers) {
     officer_last_name = HA_N_TROOPER,
     search_conducted = HA_SEARCHED_boolean,
     search_vehicle = HA_VEH_SEARCH_boolean,
+    contraband_found = HA_CONTRABAN_boolean,
     contraband_drugs = HA_CONTRAB_DRUGS_boolean,
     contraband_weapons = HA_CONTRAB_WEAPON_boolean,
     vehicle_color = HA_VEH_COLOR,
@@ -230,7 +231,7 @@ clean <- function(d, helpers) {
       "probable cause" = HA_SEARCH_PC_boolean,
       "other" = HA_INCIDTO_ARREST_boolean | HA_VEHICLE_INVENT_boolean
     ),
-    contraband_found = contraband_drugs | contraband_weapons
+    contraband_found = contraband_found | contraband_drugs | contraband_weapons
   ) %>%
   left_join(
     surnames,
@@ -240,10 +241,10 @@ clean <- function(d, helpers) {
     # NOTE: If the race is white or NA, and the last name is more than 75%
     # likely to be hispanic, we set race as hispanic.
     subject_race = if_else(
-      (subject_race_recorded == "White" | is.na(subject_race_recorded))
+      (subject_race_recorded %in% c("white", "other/unknown") | is.na(subject_race_recorded))
       & !is.na(pH)
       & pH > 0.75,
-      "Hispanic",
+      "hispanic",
       subject_race_recorded
     )
   )
