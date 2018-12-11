@@ -1,5 +1,6 @@
 source("common.R")
 
+# VALIDATION: 
 # TODO(phoebe): what are the differences between the files that have only a
 # year, i.e. 2007-2012 and the other files that seem to only have to do with
 # traffic citations?
