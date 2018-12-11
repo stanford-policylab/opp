@@ -669,7 +669,7 @@ seconds_to_hms <- function(v) {
 
 format_two_digit_year <- function(yr, cutoff = year(Sys.Date())) {
   yr_int <- as.integer(yr)
-  ifelse(yr_int <= cutoff - 2000, 2000 + yr_int, 1900 + yr_int)
+  as.integer(if_else(yr_int <= cutoff - 2000, 2000 + yr_int, 1900 + yr_int))
 }
 
 
