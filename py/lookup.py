@@ -13,10 +13,9 @@ from utils import (
 
 
 def lookup(
-    regex,
+    pattern,
     state,
     city,
-    n_lines_before,
     n_lines_after,
     update_repo,
 ):
@@ -43,7 +42,7 @@ def lookup(
             # and a specific city name provided, i.e. 'long beach'
             if not os.path.exists(city_path):
                 continue
-            matches = find(regex, city_path, n_lines_before, n_lines_after)
+            matches = find(pattern, city_path, n_lines_after)
             matches_formatted = syntax_highlight(matches)
             state_name = state.upper()
             city_name = make_proper_noun(
@@ -57,50 +56,49 @@ def normalize(name):
     return name.lower().replace(' ', '_')
 
 
-def find(regex, path, n_lines_before, n_lines_after):
-    regexc = re.compile(regex, re.IGNORECASE)
+def find(pattern, path, n_lines_after):
+    pattern_rx = re.compile(pattern, re.IGNORECASE)
     with open(path) as f:
         code = f.read()
-    if regexc.match('notes?'):
-        return find_all_notes(code, n_lines_before, n_lines_after)
+    if pattern_rx.match('notes?'):
+        return find_all_notes(code, n_lines_after)
     # TODO(danj): add possible assignee here
-    elif regexc.match('todos?'):
-        return find_all_todos(code, n_lines_before, n_lines_after)
-    elif regexc.match('files?'):
+    elif pattern_rx.match('todos?'):
+        return find_all_todos(code, n_lines_after)
+    elif pattern_rx.match('files?'):
         return [code]
     else:
         # NOTE: if the user provided a single token, match containing line
-        if re.compile('^\w+$').match(regex):
-            regex = '(.*' + regex + '.*\n)'
-        return find_all(regex, code, n_lines_before, n_lines_after)
+        if re.compile('^\w+$').match(pattern):
+            pattern = '.*' + pattern + '.*'
+        return find_all(pattern, code, n_lines_after)
 
 
-def find_all_notes(code, n_lines_before, n_lines_after):
-    regex = '(.*#\s+NOTE.*\n)(.*#.*\n)*'
-    return find_all(regex, code, n_lines_before, n_lines_after)
+def find_all_notes(code, n_lines_after):
+    return find_all('.*#\s*NOTE.*', code, n_lines_after)
 
 
-def find_all_todos(code, n_lines_before, n_lines_after):
-    # TODO(danj): fix
-    regex = '(.*#\s+TODO.*\n)(.*#\s+^(?!TODO).*\n)*'
-    return find_all(regex, code, n_lines_before, n_lines_after)
+def find_all_todos(code, n_lines_after):
+    return find_all('.*#\s*TODO.*', code, n_lines_after)
 
 
-def find_all(regex, code, n_lines_before, n_lines_after):
-    line_regex = '(.*\n)'
-    regexc = re.compile(
-        '{before}{match}{after}'.format(
-            # NOTE: repeated matches of capture groups aren't allowed by re
-            # StackOverflow: http://www.goo.gl/aKqPFG
-            before=line_regex * n_lines_before,
-            match=regex,
-            after=line_regex * n_lines_after
-        )
-    )
+def find_all(pattern, code, n_lines_after):
+    pattern_rx = re.compile(pattern)
+    comment_rx = re.compile('.*#.*')
     matches = []
-    for captures in regexc.findall(code):
-        match = ''.join([capture for capture in captures if capture != ''])
-        matches.append(match)
+    last_was_comment = False
+    lines = code.split('\n')
+    n = len(lines)
+    for i, line in enumerate(lines):
+        if pattern_rx.match(line):
+            matches.append(line)
+            if comment_rx.match(line):
+                last_was_comment = True
+        elif last_was_comment and comment_rx.match(line):
+            matches[-1] += '\n' + line
+        elif last_was_comment:
+            last_was_comment = False
+            matches[-1] += '\n' + '\n'.join(lines[i:min(i + n_lines_after, n)])
     return matches
 
 
@@ -128,7 +126,7 @@ def parse_args(argv):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument(
-        'regex',
+        'pattern',
         help=(
             'special tokens: "file" will return entire file contents '
             '"note" will return all NOTEs, and "todo" will return all '
@@ -144,17 +142,10 @@ def parse_args(argv):
         help='city or "statewide"; type "all" to get all cities within a state'
     )
     parser.add_argument(
-        '-b',
-        '--n_lines_before',
-        type=int,
-        default=0,
-        help='returns n lines of context before regex pattern match',
-    )
-    parser.add_argument(
         '-a',
         '--n_lines_after',
         type=int,
-        default=3,
+        default=0,
         help='returns n lines of context after regex pattern match',
     )
     parser.add_argument(
@@ -169,10 +160,9 @@ def parse_args(argv):
 if __name__ == '__main__':
     args = parse_args(sys.argv) 
     lookup(
-        args.regex,
+        args.pattern,
         args.state,
         args.city,
-        args.n_lines_before,
         args.n_lines_after,
         args.update_repo,
     )

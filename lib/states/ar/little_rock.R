@@ -1,9 +1,9 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
-	# TODO(phoebe): what is this file? it has similar fields but far fewer records
-	# ytd_traffic_stops_from_rms_data_export_tool.csv	
-	# https://app.asana.com/0/456927885748233/592025853254518
+  # TODO(phoebe): what is this file? it has similar fields but far fewer records
+  # ytd_traffic_stops_from_rms_data_export_tool.csv  
+  # https://app.asana.com/0/456927885748233/592025853254518
   load_single_file(
     raw_data_dir,
     # NOTE: this only includes stops through the beginning of November
@@ -29,17 +29,17 @@ clean <- function(d, helpers) {
   # TODO(phoebe): can we get reason_for_stop/search/contraband fields?
   # https://app.asana.com/0/456927885748233/592025853254519
   d$data %>%
-		rename(
+    rename(
       subject_age = `Defendant Age`,
       lat = Latitude,
       lng = Longitude,
       vehicle_type = `Vehicle Body Type`
-		) %>%
+    ) %>%
     separate_cols(
       `Reporting Officer` = c("officer_last_name", "officer_first_name"),
       sep = " - "
     ) %>%
-		mutate(
+    mutate(
       datetime = parse_datetime(DateTime, "%m/%d/%Y %I:%M:%S %p"),
       date = as.Date(datetime),
       time = format(datetime, "%H:%M:%S"),
@@ -54,7 +54,7 @@ clean <- function(d, helpers) {
       outcome = "citation",
       subject_race = tr_race[`Defendant Race`],
       subject_sex = tr_sex[`Defendant Gender`]
-		) %>%
+    ) %>%
     # NOTE: filter out rows where DateTime is null
     filter(
       !is.na(date)
