@@ -185,7 +185,7 @@ clean <- function(d, helpers) {
   # https://app.asana.com/0/456927885748233/737933462134621
   d$data %>%
     rename(
-      police_department = dept
+      department_name = dept
     ) %>%
     mutate(
       county = if_else(
@@ -197,14 +197,17 @@ clean <- function(d, helpers) {
       subject_race = tr_race[Race],
       search_conducted = Outcome == "Search Conducted",
       # NOTE: All stops in these sources are vehicular.
-      type = "vehicular",
-      department_name = case_when(
-        dept_lvl %in% c(1,5,9,10,11) ~ "Nebraska State Agency",
-        dept_lvl == 4 ~ "Federal Agency",
-        dept_lvl == 12 ~ "Private Agency",
-        dept_lvl == 7 ~ "Other",
-        TRUE ~ NA_character_
-      )
+      type = "vehicular"
+      # NOTE: old opp filters out dept_lvl 4, 7, 12; however, we won't be able 
+      # to distinguish in our cleaned data; if this is important, maybe add
+      # dept_lvl classification to location? or concatenate with dept categorization
+      # department_name = case_when(
+      #   dept_lvl %in% c(1,5,9,10,11) ~ "Nebraska State Agency",
+      #   dept_lvl == 4 ~ "Federal Agency",
+      #   dept_lvl == 12 ~ "Private Agency",
+      #   dept_lvl == 7 ~ "Other",
+      #   TRUE ~ NA_character_
+      # )
     ) %>%
     standardize(d$metadata)
 }
