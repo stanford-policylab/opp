@@ -20,7 +20,12 @@ load_raw <- function(raw_data_dir, n_max) {
   # are not crosstabulated. 
   agg <- left_join(
     d$data,
-    dept$data,
+    dept$data %>% 
+      select(AgencyID, PoliceDepartment, WorkCity) %>% 
+      # NOTE: to standardize city spellings; 
+      # TODO(amyshoe) needs more standardization if it's to be trust
+      mutate(WorkCity = str_to_title(str_replace_all(WorkCity, "'", ""))) %>%
+      distinct(),
     by = 'AgencyID'
   ) %>%
   # NOTE: We drop values that are logically inconsistent. In particular, if
@@ -40,6 +45,9 @@ load_raw <- function(raw_data_dir, n_max) {
       TotalStops_Discovery,
       year = Year,
       department_name = PoliceDepartment,
+      # NOTE: Including city is iffy because depts have multiple cities per
+      # agency (and multiple spellings of department, and multiple spellings of cities
+      # within department) which causes duplicates in disaggregation.
       location = WorkCity,
       race = Race
     ) %>%

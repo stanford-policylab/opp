@@ -87,6 +87,17 @@ load_raw <- function(raw_data_dir, n_max) {
     )
 
   nh <- rbind(nh14, nh15)
+  
+  # Remove duplicates
+  nh <- nh %>% 
+    group_by(INFRACTION_DATE, INFRACTION_TIME, INFRACTION_COUNTY_NAME, INFRACTION_CITY_NME,
+             INFRACTION_LOCATION_TXT, GENDER_CDE, DEF_BIRTH_DATE, RACE_CDE, LATITUDE,
+             LONGITUDE, LICENSE_STATE_CDE, AIRCRAFT_EVENT_ID) %>%
+    summarize(
+      INFRACTION_RSA_CDE        = paste(unique(INFRACTION_RSA_CDE), collapse=','),
+      DMV_INFRACTION_REASON_CDE = paste(unique(DMV_INFRACTION_REASON_CDE), collapse=','),
+      CITATION_RESPONSE_DSC     = paste(unique(CITATION_RESPONSE_DSC), collapse=',')) %>%
+    ungroup() 
 
   loading_problems <- c(
     nh14_1$loading_problems,
@@ -164,10 +175,10 @@ clean <- function(d, helpers) {
       subject_sex = fast_tr(GENDER_CDE, tr_sex),
       # NOTE: only vehicular stops in data
       type = "vehicular",
-      citation_issued = CITATION_RESPONSE_DSC == "PBM",
-      warning_issued = CITATION_RESPONSE_DSC == "W",
+      citation_issued = str_detect(CITATION_RESPONSE_DSC, "PBM"),
+      warning_issued = str_detect(CITATION_RESPONSE_DSC, "W"),
       outcome = first_of(
-        summons = CITATION_RESPONSE_DSC == "MA",
+        summons = str_detect(CITATION_RESPONSE_DSC, "MA"),
         citation = citation_issued,
         warning = warning_issued
       )
