@@ -1,0 +1,291 @@
+---
+title: "OPP Veil of Darkness Report"
+author: "Samantha Robertson"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r}
+suppressMessages(source(here::here("lib", "opp.R")))
+suppressMessages(source(here::here("lib", "veil_of_darkness_test.R")))
+
+data <- read_rds(here::here("cache", "vod_full_data.Rds"))
+```
+
+# Introduction
+To explore discrimination at the stop level, we implemented the veil of darkness test as proposed by Grogger & Ridgeway in 2006. The test uses darkness as a proxy for the visibility of a driver’s race. Under this assumption, we would consider there to be evidence of racial discrimination if the proportion of minority race drivers stopped when it is dark is lower than the proportion stopped when it is light. 
+
+# Summary of the dataset
+The analysis is carried out on both city-level stops and statewide highway patrol stops. The requirements of the test are quite stringent: the data must contain date, time and location of the stop, and the race of the driver. There are 19 cities and XX states that meet this requirement. An additional control considered is police subdivision. Requiring subdivision limits our analysis again to 8 cities and 7 states.
+
+```{r data_summary}
+data %>% 
+  group_by(city) %>% 
+  summarise(
+    n = n(),
+    n_dst = sum(is_dst_period),
+    proportion_minority = sum(is_minority_demographic) / n
+  ) %>% 
+  arrange(desc(n)) %>% 
+  knitr::kable()
+```
+
+#### TODO: Statewide summary
+
+## Location and subdivision
+Latitude and longitude are required to calculate whether it was light or dark at the time of the stop. The raw data rarely includes this data, so latitude and longitude are estimated. For the city data, latitude and longitude are estimated using Google Maps based on the officer’s description of the stop location, often the nearest intersection. For the statewide data, the county centroid is used, as defined by NHGIS.
+
+For the statewide data, county was used as the geographic subdivision. For the cities, the exact type of subdivision used varies by city. The subdivision selected for each city, one of precinct, district, beat or sector, was the geographic subdivision variable that existed in the data and had between 5 and 30 distinct values.
+
+## Definitions
+As emphasised by Grogger & Ridgeway, racial driving patterns may vary significantly with time, so the analysis is limited to the “inter-twilight zone”, which is the period of time during which it is light at least one day of the year and dark at least one day of the year. Since the darkness between sunset and dusk is ambiguous, “darkness” is defined as after dusk and “lightness” is defined as before sunset. Thus the intertwilight zone is defined as the minutes between the earliest dusk and the latest sunset. In addition, any stops between sunset and dusk are excluded due to this ambiguity.
+
+The analysis is limited to black and white drivers. Throughout this report, “minority” refers to black drivers, and “majority” refers to white drivers.
+
+## Aggregation
+The Grogger & Ridgeway analysis was limited to only the city of Oakland. In order to apply the test to data across multiple cities, a number of assumptions were made. Firstly, the sunset times were calculated at the city or county centroid.  Secondly, the intertwilight zone was defined on a by-city or by-county (for statewide data) basis.
+
+## Controls
+There are a number of factors that affect the proportion of minority drivers in the at-risk population. Firstly, since driving patterns change over time, we control for clock time in all models with the natural spline of the time of the stop with 6 degrees of freedom. We also fit a model that controls for time and geography. Since it is reasonable, if not likely, that discrimination varies greatly by city or state, we also fit the time and geography controlled model on each city and each state individually.
+
+A concern raised but not addressed by Grogger & Ridgeway is the role of seasonal effects. To control for seasonal effects we fit both a regression on the full dataset with an additional control for month of the year, and the time and geography-controlled regression on a subset of the data that includes only the two weeks before and after the Daylight Savings Time (DST) shift.
+
+# Raw Data Visualizations
+## City-level Analysis
+
+```{r full_city_plot}
+plot_prop_minority_by_time(
+  filter(data, city != "El Paso"),
+  min_clock_time = hms::hms(hours = 18, min = 30), 
+  max_clock_time = hms::hms(hours = 19, min = 30),
+  smooth_method = "lm"
+)
+```
+
+Figure x shows the mean proportion of minority drivers stopped in the 90 minutes before and after sunset. The proportion of minority drivers is calculated over 15 minute bins of both clock time and time relative to sunset in each geographic subdivision, and the mean is taken across the subdivisions, weighted by the number of observations. The clock time period of 6:30-7:30 was selected to ensure that every city and time bin relative to sunset contained a sufficient number of points. Downward sloping lines in this visualization are indicative of potential discrimination against minority drivers.
+
+```{r madison_plot}
+plot_prop_minority_by_time(
+    data,
+    city_only = "Madison",
+    title = "Madison, WI",
+    min_clock_time = hms::hms(hours = 18, min = 30), 
+    max_clock_time = hms::hms(hours = 19, min = 30),
+    smooth_method = "lm"
+  )
+```
+
+Figure x+1 is the same as Figure x, but limited to only the stops in Madison, WI.
+
+### Daylight Savings Time Shift
+The analysis of the data around the DST shift limits the data to 8 weeks of the year. This significantly reduces the number of observations, as seen in Table x. We are interested in the period around the DST shift, because the shift creates a period of approximately one hour that is dark before the shift occurs in the Fall, and light after, and vice versa in the Spring. To visualize this effect, we consider the date of the stop in days relative to the DST shift. The proportion of minority drivers stopped in the 20 minute period in the center of this discontinuity is calculated for each geographic subdivision, and again the mean is taken, weighted by the number of points in that geography on that day relative to the shift. Figure x+2 shows the result, where we expect the cluster of dark blue points, the mean proportion minority stopped in the dark, to be lower than the cluster of yellow points, in the presence of discrimination. Though the linear fit to the points in Figure x+2 does indicate discrimination, the points are too noisy to consider this strong evidence.
+
+```{r discontinuity_city}
+date_lims <- 
+  data %>% 
+  filter(is_dst_period == TRUE) %>% 
+  summarise(min = min(date), max = max(date))
+
+city_years <- 
+  data %>% 
+  distinct(city, year = year(date))
+
+city_centroids <-
+  data %>% 
+  group_by(city) %>% 
+  summarise(
+    lat = median(lat),
+    lng = median(lng),
+    tz = min(tz)
+  )
+
+dst_sunsets <-
+  tibble(
+     date = seq(date_lims$min, date_lims$max, by = "days")
+  ) %>% 
+  mutate(
+    is_dst = dst(as.POSIXct(date, tz = Sys.timezone())),
+    is_dst_tomorrow = lead(is_dst),
+    day_of_change = is_dst == FALSE & is_dst_tomorrow == TRUE | 
+      is_dst == TRUE & is_dst_tomorrow == FALSE,
+    day_before_change = lead(day_of_change) == TRUE
+  ) %>% 
+  filter(day_of_change == TRUE | day_before_change == TRUE) %>% 
+  mutate(
+    year = year(date),
+    season = if_else(month(date) < 6, "fall", "spring")
+  ) %>% 
+  select(year, season, date, day_before_change, day_of_change) %>% 
+  left_join(city_years, by = "year") %>% 
+  left_join(city_centroids, by = "city") %>% 
+  mutate(subgeography = city) %>% 
+  left_join(infer_sunset_times(.), by = c("date", "tz", "subgeography"))
+
+dst_times <-
+  dst_sunsets %>% 
+  mutate(
+    day = if_else(day_before_change == TRUE, "day_before", "day_of"),
+    sunset_minute = hour(hms(sunset)) * 60 + minute(hms(sunset))
+  ) %>% 
+  select(-day_before_change, -day_of_change, -date, -sunset, -dusk) %>% 
+  spread(key = day, value = sunset_minute) %>% 
+  mutate(
+    earlier = if_else(day_before < day_of, day_before, day_of),
+    later = if_else(day_before > day_of, day_before, day_of),
+    min_minute = earlier + 20,
+    max_minute = earlier + 40
+  ) %>% 
+  filter(max_minute < later) %>% 
+  select(year, season, city, min_minute)
+
+dst_dates <-
+  dst_sunsets %>% 
+  filter(day_of_change) %>% 
+  distinct(year, season, date) %>% 
+  select(year, season, dst_date = date)
+
+full_data <-
+  data %>% 
+  mutate(
+    year = year(date),
+    season = if_else(month < 6, "fall", "spring")
+  ) %>% 
+  left_join(dst_dates, by = c("year", "season")) %>% 
+  left_join(dst_times, by = c("year", "season", "city")) %>% 
+  mutate(days_since_dst = date - dst_date)
+
+plot_data <-
+  full_data %>% 
+  filter(
+    days_since_dst < days(15),
+    days_since_dst > days(-15),
+    minute >= min_minute,
+    minute <= min_minute + 20,
+    city != "El Paso"
+  ) %>% 
+  mutate(
+    is_dark = factor(is_dark, levels = c(TRUE, FALSE), labels = c("Dark", "Light")),
+    before_dst = days_since_dst < 0
+  ) %>% 
+  group_by(days_since_dst, before_dst, season, is_dark, geo_control) %>% 
+  summarise(prop_minority = sum(is_minority_demographic) / n(), n = n()) %>%
+  summarise(weighted_mean_prop = weighted.mean(prop_minority, n))
+  
+plot_data %>% 
+  ggplot(aes(days_since_dst, weighted_mean_prop)) +
+  geom_vline(xintercept = days(0), color = "grey60") +
+  geom_point(aes(color = is_dark)) +
+  geom_smooth(aes(group = is_dark), method = "lm", color = "grey40", se = FALSE) +
+  scale_color_manual(values = c("#2b8cbe", "#feb24c")) +
+  labs(
+    title = "DST Discontinuity (20 minute period) over 9 cities",
+    x = "Days since DST change",
+    y = "Proportion minority drivers stopped - Mean over cities",
+    color = NULL
+  ) +
+  facet_grid(season ~ .)
+```
+
+## Statewide Analysis
+The plots as above are replicated for the statewide data.
+Full data
+DST
+
+# Regression Results
+## Introduction to log K (move to methods)
+## City-level Analysis
+Table x+1 shows the value of the log K as calculated from the raw data, and as estimated by three models. As in Grogger & Ridgeway, the estimate from the regression models is $-\beta_1$ where $\beta_1$ is the coefficient on `is_dark`. The first model controls only for clock time, using a natural spline of the stop minute with 6 degrees of freedom. The second model additionally controls for geographic subdivision, and the final model additionally controls for month of the stop. Standard errors are included for the regression estimates.
+
+```{r full_city_reg}
+read_rds(here::here("cache", "vod_full_results.Rds")) %>% 
+  knitr::kable()
+```
+
+We can see that although the proportion of minority drivers stopped after dark is higher than the proportion stopped during light hours, since the raw log K is negative, the estimate is positive and statistically significant at the 0.05 level when any controls are added. The effect size is increased by controlling for geographic subdivision in addition to clock time, and is negligibly changed by controlling for month.
+
+It is highly possible that discriminatory behavior varies by city. To explore this, we additionally fit the model that controls for geography (AND ?) on each city individually.  Figure x+3 shows the estimated log K with 95% confidence intervals for each city. We can see that the estimate is only negative and statistically significant at the 0.05 level for Columbus. Nashville, Philadelphia, San Francisco and Madison show statistically significant evidence of discrimination at the 0.05 level. The largest estimate for log K was in Madison, WI, which matches the intuition gained from figure x+1.
+
+```{r by_city_full}
+by_city <- read_rds(here::here("cache", "vod_geo_adj_by_city.Rds"))
+
+by_city %>%  
+  mutate(
+    log_k = -estimate, 
+    low = log_k - 1.96*std.error, 
+    high = log_k + 1.96*std.error
+  ) %>% 
+  ggplot(aes(reorder(city, -log_k), log_k)) +
+  geom_hline(yintercept = 0, color = "red") +
+  geom_point() +
+  geom_errorbar(aes(ymin = low, ymax = high)) +
+  theme(
+    axis.text.x = element_text(hjust = 1, angle = 30)
+  ) +
+  labs(
+    x = NULL,
+    y = "logK with 95% conf int",
+    title = "Clock-time, Month and Subgeography Adjusted Models by City"
+  )
+```
+
+
+### DST Shift
+The same analysis is replicated using only the data in the two weeks before and the two weeks after the DST shift. To effectively control for season, the model is fit separately on the Fall and Spring data. The model controlling for month is not used, since the data only spans four weeks. The estimates and standard errors where appropriate are shown in Table x+2. We also fit the model with geographic controls on each city, and the equivalent to figure x+3 is shown in figure x+4.
+
+```{r dst_reg_table_city}
+dst_fall <- read_rds(here::here("cache", "vod_dst_fall.Rds"))
+dst_spring <- read_rds(here::here("cache", "vod_dst_spring.Rds"))
+
+tribble(
+  ~adjustments, ~Fall_logK,  ~Fall_SE, ~Spring_logK,  ~Spring_SE,
+  "None",       log(dst_fall$k), NA, log(dst_spring$k),  NA,
+  "Clock time", -coef(dst_fall$model_time_const)[2], coef(summary(dst_fall$model_time_const))[2, 2], -coef(dst_spring$model_time_const)[2], coef(summary(dst_spring$model_time_const))[2, 2],
+  "Clock time and Subgeography", -coef(dst_fall$model_geo_adjusted)[2], coef(summary(dst_fall$model_geo_adjusted))[2,2], -coef(dst_spring$model_geo_adjusted)[2], coef(summary(dst_spring$model_geo_adjusted))[2,2]
+) %>% 
+  knitr::kable()
+```
+
+```{r by_city_dst}
+by_city_dst <- read_rds(here::here("cache", "vod_dst_by_city.Rds"))
+
+by_city_dst %>%  
+  mutate(
+    log_k = -estimate, 
+    low = log_k - 1.96*std.error, 
+    high = log_k + 1.96*std.error
+  ) %>% 
+  ggplot(aes(reorder(city, -log_k), log_k)) +
+  geom_hline(yintercept = 0, color = "red") +
+  geom_point() +
+  geom_errorbar(aes(ymin = low, ymax = high)) +
+  theme(
+    axis.text.x = element_text(hjust = 1, angle = 30)
+  ) +
+  labs(
+    x = NULL,
+    y = "Coefficient on isDarkTRUE with 95% conf int",
+    title = "Clock-time and Subgeography Adjusted DST Models by City"
+  ) +
+  facet_grid(season ~ .)
+```
+
+We see similar values of the estimates, however none of the results are statistically significant at the 0.05 level. It is possible that there is no effect, or that the effect is very small and there is not sufficient data to provide any evidence of discrimination.
+
+## Statewide Analysis
+All of the city level results are replicated for the statewide data.
+Full data:
+Table
+By-state plot
+DST:
+Table
+By-state plot
+
+# Discussion
+Seasonal effect - compare month control to DST control
+Officer-by-officer?
+Is this even a good proxy for darkness
+Perhaps discrimination not at the stop level or based on another factor
+Further work - look at 19 cities, but wouldn’t recommend
