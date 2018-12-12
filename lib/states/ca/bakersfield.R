@@ -1,11 +1,15 @@
 source("common.R")
 
-# VALIDATION: 
-# TODO(phoebe): what are the differences between the files that have only a
-# year, i.e. 2007-2012 and the other files that seem to only have to do with
-# traffic citations?
-# https://app.asana.com/0/456927885748233/711489574452817
+# VALIDATION: [YELLOW] Bakersfield Police Department provides crime mapping
+# here: https://www.crimemapping.com/map/ca/bakersfield, but doesn't appear to
+# offer any annual report; however, the top figures look reasonable given a
+# population of roughly 350k; see outstanding TODOs for outstanding issues
+# TODO(phoebe): why do we see a dip in stops in 2013? See report
+# https://app.asana.com/0/456927885748233/944841731070584
 load_raw <- function(raw_data_dir, n_max) {
+  # NOTE: the files that are named with just years are the CAD Call
+  # information, which are not loaded or processed here but available in the
+  # raw data directory
   data <- tibble()
   loading_problems <- list()
   for (year in range_of_years_from_filenames(raw_data_dir, "_traffic_")) {
@@ -55,7 +59,9 @@ clean <- function(d, helpers) {
   # https://app.asana.com/0/456927885748233/645792862056546
   d$data %>%
     mutate(
-      # TODO(danj): improve this once we figure out the statutes
+      # TODO(danj): improve this once we get decodings for statute_section;
+      # until then, going with vehicular stops since the file has
+      # traffic_citations in the name
       # https://app.asana.com/0/456927885748233/645792862056547
       type = "vehicular",
       date = parse_date(occ_date),
