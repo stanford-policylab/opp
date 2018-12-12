@@ -93,10 +93,15 @@ load_city_cache <- function() {
 }
 
 # NOTE: to load the state cache you must have the files 
-# "state_centroids.rds" and "stateFIPS.csv" in the data/ directory
+# "county_centroids.rds" and "state_FIPS.csv" in the data/ directory
+# They should be found in /share/data/opp/data/
+# 
+# Source: Steven Manson, Jonathan Schroeder, David Van Riper, and Steven Ruggles. 
+# IPUMS National Historical Geographic Information System: Version 13.0 [Database]. 
+# Minneapolis: University of Minnesota. 2018. http://doi.org/10.18128/D050.V13.0
 load_state_cache <- function() {
-  COUNTY_FILE <- here::here("data", "state_centroids.rds") # Figure out what to do with these
-  STATE_FILE <- here::here("data", "stateFIPS.csv")
+  COUNTY_FILE <- here::here("data", "county_centroids.rds")
+  STATE_FILE <- here::here("data", "state_FIPS.csv")
   STATE_ABBS <- c("AZ", "CT", "MI", "MT", "ND", "OH", "TN", "TX", "WY", "WI")
   
   print("loading data...")
@@ -143,17 +148,19 @@ load_state_cache <- function() {
   states_wsunset <- add_sunset_times(states, metadata = list())
   
   print("saving data...")
-  write_rds(states, here::here("cache", "states_wsunset.rds"))
+  write_rds(states, here::here("cache", "states_wsunset.Rds"))
 }
 
 run_city_analysis <- function() {
   data_no_geo <-
-    read_rds(here::here("cache", "aggregated_cities_wsunset.Rds"))
+    read_rds(here::here("cache", "aggregated_cities_wsunset.Rds")) %>% 
+    mutate(geo_control = city)
+  
   data <-
     read_rds(here::here("cache", "aggregated_cities_wsunset_and_subgeo.Rds"))
   
   print("running regression on all stops without subgeography...")
-  results_no_geo <- veil_of_darkness_test(data_no_geo, has_sunset_times = TRUE)
+  results_no_geo <- veil_of_darkness_test(data_no_geo, has_sunset_times = TRUE, has_geo_control = TRUE)
   print("regression complete")
   
   print("writing results")
@@ -174,7 +181,8 @@ run_city_analysis <- function() {
   results_dst_no_geo <- veil_of_darkness_test(
     data_no_geo,
     has_sunset_times = TRUE,
-    filter_to_DST = TRUE
+    filter_to_DST = TRUE,
+    has_geo_control = TRUE
   )
   print("regression complete")
   
@@ -205,7 +213,7 @@ run_city_analysis <- function() {
     results <-
       data %>%
       filter(city == city_name) %>%
-      veil_of_darkness_test(has_sunset_times = TRUE, has_geo_control = FALSE)
+      veil_of_darkness_test(has_sunset_times = TRUE, has_geo_control = TRUE)
     
     broom::tidy(results$models$model_time_const) %>%
       filter(term == "is_darkTRUE") %>%
@@ -213,7 +221,7 @@ run_city_analysis <- function() {
   }
   
   by_city_no_geo <-
-    data %>%
+    data_no_geo %>%
     distinct(city) %>%
     pull(city) %>% 
     map_dfr(~reg(.))
@@ -285,8 +293,8 @@ run_state_analysis <- function() {
   model_time_geo_adj <- broom::tidy(results_full$models$model_geo_adjusted)
   model_month_adj <- broom::tidy(results_full$models$model_month_adjusted)
   
-  write_rds(model_time_adj, here::here("cache", "vod_statewide_time_const.rds"))
-  write_rds(model_time_geo_adj, here::here("cache", "vod_statewide_geo_adj.rds"))
+  write_rds(model_time_adj, here::here("cache", "vod_statewide_time_const.Rds"))
+  write_rds(model_time_geo_adj, here::here("cache", "vod_statewide_geo_adj.Rds"))
   write_rds(model_month_adj, here::here("cache", "vod_statewide_month_adj.Rds"))
 
   print("running regression on DST period...")
