@@ -1,5 +1,14 @@
 source("common.R")
 
+# VALIDATION: [YELLOW] While the nubmers seem to be on the right order of
+# magnitude, they don't clearly line up with the city report put out by the San
+# Jose government; see TODOs for outstanding issues, including this one
+# TODO(phoebe): arrets for years 2014-2016 in our data are between 1.5k and 4k,
+# but the "City of San Jose -- Annual Report on City Services 2016-17" says
+# there were around 17k arrests for each of those year; is this not the
+# universe of stops? It not, what are we missing?
+# https://app.asana.com/0/456927885748233/945228590949547 
+# NOTE: We have incomplete data for 2013 and 2018 (missing months)
 load_raw <- function(raw_data_dir, n_max) {
   data <- tibble()
   loading_problems <- list()
@@ -147,26 +156,15 @@ clean <- function(d, helpers) {
       time = `REPORT TIME (HMS)`,
       call_desc = `TYCOD DESCRIPTION`
     ) %>%
-    filter(
-      str_detect(
-        call_desc,
-        str_c(vehicle_keywords, pedestrian_keywords, sep = "|")
-      ),
-      !str_detect(
-        call_desc,
-        str_c(
-          "STOLEN",
-          "ABANDONED",
-          "BURGLARY",
-          sep = "|"
-        )
-      )
-    ) %>%
     mutate(
       type = if_else(
         str_detect(call_desc, vehicle_keywords),
         "vehicular",
-        "pedestrian"
+        if_else(
+          str_detect(call_desc, pedestrian_keywords),
+          "pedestrian",
+          NA_character_
+        )
       ),
       date = parse_date(`REPORT DATE`, "%Y%m%d"),
       # NOTE: COMMONPLACE seems to be a name for places with addresses,
@@ -176,11 +174,13 @@ clean <- function(d, helpers) {
         str_c(XSTREET1, XSTREET2, sep = " AND ")
       ),
       event_desc = tr_event[`EVENT DISPO`],
-      # TODO(ravi): should we filter out the other outcomes?
-      # https://app.asana.com/0/456927885748233/649920459235533
+      arrest_made = str_detect(event_desc, "ARREST"),
+      citation_issued = str_detect(event_desc, "CITATION"),
+      # NOTE: there are other outcomes that don't fall into our schema of
+      # warning, citation, and arrest, but aren't put into this factor
       outcome = first_of(
-        "arrest" = str_detect(event_desc, "ARREST"),
-        "citation" = str_detect(event_desc, "CITATION")
+        "arrest" = arrest_made,
+        "citation" = citation_issued
       ),
       reason_for_stop = tr_reason[`REASON FOR STOP`],
       subject_race = tr_race[RACE],
