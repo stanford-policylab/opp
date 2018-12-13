@@ -47,7 +47,6 @@ get_or_create_cache <- function(cache_file) {
     # cities; however, each will show up independently so no need to report
     city != "Statewide"
   )
-
   if (file.exists(cache_file)) {
     # NOTE: joins by: path, state, city, modified_time
     # so if the modified time isn't the same, all fields are NA
