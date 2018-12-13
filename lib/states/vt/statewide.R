@@ -1,4 +1,6 @@
 source("common.R")
+# TODO(amyshoe): old opp ran StopCity through google geocoder to get county;
+# at some point we should do the same
 
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_single_file(
