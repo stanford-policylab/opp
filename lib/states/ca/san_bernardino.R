@@ -3,7 +3,7 @@ source("common.R")
 # VALIDATION: [YELLOW] The San Bernardino City's website offers traffic and
 # crime stats, and the county sheriff's 2017 Annual Report also lists detailed
 # crime, but there doesn't appear to be any easily accessible public reference
-# for vehicular/pedestrian stops; however, the number of offenses seems
+# for vehicular/pedestrian stops; however, the number of stops seems
 # relatively appropriate given a population of ~200k; see TODOs for outstanding
 # issues
 # NOTE: in 2011 we only have partial data
