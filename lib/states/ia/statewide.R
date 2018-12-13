@@ -45,7 +45,6 @@ clean <- function(d, helpers) {
       # NOTE: subject_age, officer_id, department_name are NA for all warnings.
       subject_age = LOCKAGE,
       officer_id = BADGENUMBER,
-      department_name = DEPARTMENTNAME,
       # NOTE: vehicle_* is NA for all warnings.
       vehicle_color = LOCKVEHICLECOLOR,
       vehicle_make = LOCKVEHICLEMAKE,
@@ -62,6 +61,7 @@ clean <- function(d, helpers) {
         parse_time(VIOLATIONTIME, "%H:%M"),
         parse_time(VIOLATIONTIME, "%I:%M:%S %p")
       ),
+      department_name = str_to_title(DEPARTMENTNAME),
       # NOTE: county_name is NA for all warnings.
       # TODO(walterk): Should we use COUNTY or LOCKCOUNTY?
       # https://app.asana.com/0/456927885748233/729888734192512
@@ -92,5 +92,35 @@ clean <- function(d, helpers) {
       citation_issued = outcome == "citation",
       warning_issued = outcome == "warning"
     ) %>%
+    # records with NA for key have no other fields
+    filter(!is.na(INDIVKEY)) %>%
+    # dedupe
+    # NOTE: (old opp) There are duplicates where more than one warning or citation is given within 
+    # the same stop. We remove these by grouping by the remaining fields by the stop key and date.
+    # In some cases, there are multiple time stamps per unique (key, date) combination. 
+    # In most of these cases, the timestamps differ by a few minutes, but all other fields 
+    # (except for violation) are the same. In 0.1% of stops, the max span between timestamps 
+    # is more than 60 minutes. In those cases it looks like the same officer stopped the same 
+    # individual more than once in the same day.
+    group_by(INDIVKEY, date) %>%
+    summarize(
+      time                       = min(time, na.rm=T),
+      department_name            = paste(na.omit(unique(department_name           )), collapse=','),
+      location                   = paste(na.omit(unique(location                  )), collapse=','),
+      subject_race               = paste(na.omit(unique(subject_race              )), collapse=','),
+      officer_id                 = paste(na.omit(unique(officer_id                )), collapse=','),
+      county_name                = paste(na.omit(unique(county_name               )), collapse=','),
+      subject_sex                = paste(na.omit(unique(subject_sex               )), collapse=','),
+      type                       = paste(na.omit(unique(type                      )), collapse=','),
+      violation                  = paste(na.omit(unique(violation                 )), collapse=','),
+      vehicle_model              = paste(na.omit(unique(vehicle_model             )), collapse=','),
+      vehicle_year               = paste(na.omit(unique(vehicle_year              )), collapse=','),
+      vehicle_color              = paste(na.omit(unique(vehicle_color             )), collapse=','),
+      vehicle_registration_state = paste(na.omit(unique(vehicle_registration_state)), collapse=','),
+      citation_issued            = paste(na.omit(unique(citation_issued           )), collapse=','),
+      warning_issued             = paste(na.omit(unique(warning_issued            )), collapse=','),
+      outcome                    = paste(na.omit(unique(outcome                   )), collapse=',')
+    ) %>% 
+    ungroup() %>% 
     standardize(d$metadata)
 }
