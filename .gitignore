@@ -19,3 +19,4 @@ census_api.key
 .Rhistory
 .Rproj.user
 tags
+cache/*

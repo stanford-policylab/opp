@@ -129,7 +129,7 @@ data.dst_fall %>%
   )
 ```
 
-G & R define the veil of darkness parameter $K_{vod} = \frac{P(B|S, d = 0)P(\bar{B} | S, d = 1)}{P(\bar{B}|S, d = 0)P(B | S, d = 1)}$, where $B$ is the event a driver is black, $S$ is the event a driver is stopped, and $d$ is darkness as we define it, where $d = 1$ indicates it is dark and $d = 0$ indicates it is light. Their analysis focuses on $log K$, which is negative in the presence of discrimination. As described in the paper, $-\beta_1$, where $\beta_1$ is the coefficient on the darkness variable in the logistic regression models, is an estimate for $logK$.  In this analysis we choose to consider the coefficient directly, as we find this a more intuitive and interpretable approach. A negative coefficient estimate $\hat{\beta}_1$ indicates that darkness is associated with a lower proportion of minorities stopped, and thus a negative coefficient is indicative of VOD discrimination.
+G & R define the veil of darkness parameter $K_{vod} = \frac{P(B|S, d = 0)P(\bar{B} | S, d = 1)}{P(\bar{B}|S, d = 0)P(B | S, d = 1)}$, where $B$ is the event a driver is black, $S$ is the event a driver is stopped, and $d$ is darkness as we define it, where $d = 1$ indicates it is dark and $d = 0$ indicates it is light. Their analysis focuses on $log K$, which is greater than 0 in the presence of discrimination. As described in the paper, $-\beta_1$, where $\beta_1$ is the coefficient on the darkness variable in the logistic regression models, is an estimate for $logK$.  In this analysis we choose to consider the coefficient directly, as we find this a more intuitive and interpretable approach. A coefficient estimate $\hat{\beta}_1 < 0$ indicates that darkness is associated with a lower proportion of minorities stopped, and thus a negative coefficient is indicative of VOD discrimination.
 
 # Results
 ## City-level Data
@@ -312,8 +312,8 @@ plot_data <-
 plot_data %>% 
   ggplot(aes(days_since_dst, weighted_mean_prop)) +
   geom_vline(xintercept = days(0), color = "grey60") +
-  geom_point(aes(color = is_dark)) +
   geom_smooth(method = "lm", color = "grey40", se = FALSE) +
+  geom_point(aes(color = is_dark)) +
   scale_color_manual(values = c("#2b8cbe", "#feb24c")) +
   labs(
     title = "Figure 4",
@@ -413,7 +413,7 @@ plot_prop_minority_by_time(
 
 The results of the logistic regression models controlling for clock time only and for clock time and geography are shown in Table 8. The coefficient on the darkness variable is negative in both models, and larger in magnitude in the model that controls additionally for geography. Both coefficient estimates are statistically significant at the 0.05 level, suggesting there is VOD discrimination present.[^8]
 
-[^8]: The state-by-state analysis, using the model with county controls, returned exactly the same coefficient and standard error on the darkness variable ($\hat{\beta}_1 = -0.0949$, $SE = 0.00406$) as the aggregated model. I can't find any obvious bugs with the code, which makes me concerned that there is an issue with the way the models are being fit. Since the dataset is so large, I didn't have time to investigate what's going on here before the end of the quarter. The code is in the `run_state_analysis` function in `run_vod.R` (see Appendix 2).
+[^8]: The state-by-state analysis, using the model with county controls, returned exactly the same coefficient and standard error on the darkness variable ($\hat{\beta}_1 = -0.0949$, $SE = 0.00406$) as the aggregated model for every state. I can't find any obvious bugs in the code, which makes me concerned that there is an issue with the way the models are being fit. Since the dataset is so large, I didn't have time to investigate what's going on here before the end of the quarter. The code is in the `run_state_analysis` function in `run_vod.R` (see Appendix 2).
 
 ```{r statewide_models}
 statewide_models <- 
@@ -436,9 +436,9 @@ tribble(
 # Discussion
 With the exception of the clock time and geography adjusted models fit on only the city data in the DST period, we see statistically significant evidence of VOD discrimination across the logistic regression models fit on both the city-level and the statewide data. When we consider discrimination at a city-level, we see statistically significant discrimination in Madison, San Francisco, Philadelphia and Nashville.
 
-The lack of statistical significance in the DST analysis when adjusting for geographic subdivision is likely indicative that the restriction of the data to only four weeks of the year significantly reduces the power of the test. The coefficient estimates in the models fit only on the DST shift data look qualitatively similar to those in the models fit on all of the data, and the model fit on all the data with a control for month showed no significant difference from those that do not control for month. This provides further reason to believe that the discrepancy in statistical significance is a symptom of the significant reduction in the size of the datasets. The quantity of data could be increased by including cities that do not have subdivision data available and running only the clock-time adjusted regression, or adjusting for geography using the city rather than the subdivision.[^9] It will also be interesting to see whether the DST analysis on the much larger statewide dataset has the same issues of power.
+The lack of statistical significance in the DST analysis when adjusting for geographic subdivision is likely indicative that the restriction of the data to only four weeks of the year significantly reduces the power of the test. The coefficient estimates in the models fit only on the DST shift data look qualitatively similar to those in the models fit on all of the data, and the model fit on all the data with a control for month showed no significant difference from those that do not control for month. This provides further reason to believe that the discrepancy in statistical significance is a symptom of the significant reduction in the size of the datasets. The quantity of data could be increased by including cities that do not have subdivision data available and running only the clock-time adjusted regression, or adjusting for geography using the city rather than the subdivision.[^9] It will also be interesting to see whether the DST analysis using the much larger statewide dataset shows a similar decrease in power.
 
-[^9]: See 1 for the list of these cities. See Appendix 1 for preliminary results of this analysis.
+[^9]: See Footnote 1 for the list of these cities. See Appendix 1 for preliminary results of this analysis.
 
 Despite the high statistical significance observed in many of the models, there are valid concerns with the premise of the veil of darkness test that should be considered. Firstly, the test makes the assumption that darkness is a good proxy for the visibility of a drivers. Further, it assumes that darkness is a binary variable, which implicitly assumes that the "extent" of darkness is the same across all geographic subdivisions at all times after dusk. This ignores factors such as street and ambient lighting which we could justifiably expect to vary significantly between urban, suburban and rural cities and counties.
 
@@ -488,15 +488,15 @@ When limiting the analysis to the DST period only, the clock time and city adjus
 
 # Appendix 2: Code Summary
 
-The bulk of the veil of darkness code is implemented in `opp/lib/vod/veil_of_darkness_test.R`. The function `add_sunset_times` allows the user to filter to the intertwilight zone and save the results. Since adding sunset times is a long process, it's highly recommended to call `add_sunset_times` once, save the result, then use this result in multiple calls to `veil_of_darkness_test`. Set the boolean argument `has_sunset_times` to `TRUE` if you want to run `veil_of_darkness_test` on a pre-processed tibble.
+The bulk of the veil of darkness code is implemented in `opp/lib/veil_of_darkness_test.R`. The function `add_sunset_times()` allows the user to filter to the intertwilight zone and save the results. Since adding sunset times is a long process, it's highly recommended to call `add_sunset_times()` once, save the result, then use this result in multiple calls to `veil_of_darkness_test()`. Set the boolean argument `has_sunset_times` to `TRUE` if you want to run `veil_of_darkness_test()` on a pre-processed tibble.
 
-The most important assumption made by `add_sunset_times` is that the data has a column `subgeography`, which is the grouping variable used to calculate timezones and sunset times. The function calculates __one__ timezone per `subgeography`, __one__ sunset time and __one__ dusk time per combination of `subgeography` and `date`, and __one__ intertwilight zone per `subgeography`.
+The most important assumption made by `add_sunset_times()` is that the data has a column `subgeography`, which is the grouping variable used to calculate timezones and sunset times. The function calculates __one__ timezone per `subgeography`, __one__ sunset time and __one__ dusk time per combination of `subgeography` and `date`, and __one__ intertwilight zone per `subgeography`.
 
-The argument `has_geo_control` to `veil_of_darkness_test` indicates whether or not to run an additional model with an additive control for geographic subdivision. If `has_geo_control = TRUE`, then your data __must__ contain a column `geo_control`, which is used as this control. This allows you to change the variable used as the geographic control by creating a column called `geo_control` (using a `mutate`, `unite`, etc.).
+The argument `has_geo_control` to `veil_of_darkness_test()` indicates whether or not to run an additional model with an additive control for geographic subdivision. If `has_geo_control = TRUE`, then your data __must__ contain a column `geo_control`, which is used as this control. This allows you to change the variable used as the geographic control by creating a column called `geo_control` (using a `mutate`, `unite`, etc.).
 
-The code to generate the data and results used in this report is contained in `opp/lib/vod/run_vod.R`. __WARNING__: This script takes many days to run if you want to generate all the data and run all the analyses. In particular, the statewide data is huge and the function `run_state_analysis()` will take days. Make sure you comment out the parts of the script you don't want to run.
+The code to generate the data and results used in this report is contained in `opp/lib/vod/run_vod.R`. __WARNING__: This script takes a very long time to run if you want to generate all the data and run all the analyses. In particular, the statewide data is huge and the functions `load_state_cache()` and `run_state_analysis()` take many hours to run. Make sure you comment out the parts of the script you don't want to run. As mentioned in Footnote 8, the state analysis is likely buggy which may be contributing to the very long runtime.
 
-As a caveat, I generated the data and results included in this report over time and over several smaller scripts, and created the master `run_vod.R` script in retrospect. I have done my best to debug by sight, but since the script takes days, I haven't actually tested `run_vod.R`. I don't guarantee against small bugs.
+As a caveat, I generated the data and results included in this report over time and over several smaller scripts, and created the master `run_vod.R` script in retrospect. I have done my best to debug by sight, but since the script takes a long time to run, I haven't actually tested `run_vod.R` and don't guarantee against small bugs. Any bugs beyond the statewide regression analyses should be limited to small discrepancies in variable and filenames. Files generated while working on this project have been included in `opp/lib/vod/scraps` in case they are helpful to further work or debugging.
 
 # Works Cited
 

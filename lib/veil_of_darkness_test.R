@@ -24,7 +24,7 @@ library(lutz)
 #' @param geofilter_tol A tolerance in degrees of latitude and longitude. Points more than +/-\code{geofilter_tol} 
 #' away from the median latitude or longitude of their respective subgeography are dropped. Default 0.5.
 #' 
-#' @return list with \code{results} and \code{metadata} keys
+#' @return list containing data, models, and results. Exact list keys depend on \code{filter_to_DST}
 #'
 #' @examples
 #' veil_of_darkness_test(tbl)
@@ -65,8 +65,27 @@ veil_of_darkness_test <- function(
       tbl %>% 
       filter(fall == TRUE)
     
-    # Results
-    k_unadj <- calculate_k(fall_tbl)
+    if (has_geo_control) {
+      intertwilight_zone <-
+        fall_tbl %>% 
+        group_by(geo_control) %>% 
+        summarise(dst_min_dusk = min(dusk_minute), dst_max_sunset = max(sunset_minute))
+      
+      fall_tbl <-
+        fall_tbl %>% 
+        left_join(intertwilight_zone, by = "geo_control") %>% 
+        filter(minute > dst_min_dusk, minute < dst_max_sunset)
+    } else {
+      intertwilight_zone <-
+        fall_tbl %>% 
+        group_by(subgeography) %>% 
+        summarise(dst_min_dusk = min(dusk_minute), dst_max_sunset = max(sunset_minute))
+      
+      fall_tbl <-
+        fall_tbl %>% 
+        left_join(intertwilight_zone, by = "subgeography") %>% 
+        filter(minute > dst_min_dusk, minute < dst_max_sunset)
+    }
     
     model_time_const <-
       fall_tbl %>%
@@ -76,7 +95,7 @@ veil_of_darkness_test <- function(
       )
     
     model_geo_adjusted <- NULL
-    if (has_geo_control) {
+    if (has_geo_control) { 
       model_geo_adjusted <-
         fall_tbl %>%
         glm(
@@ -87,16 +106,35 @@ veil_of_darkness_test <- function(
     
     fall <- 
       list(
-        k = k_unadj,
         model_time_const = model_time_const,
         model_geo_adjusted = model_geo_adjusted
       )
+    
     spring_tbl <-
       tbl %>% 
       filter(fall == FALSE)
     
-    # Results
-    k_unadj <- calculate_k(spring_tbl)
+    if (has_geo_control) {
+      intertwilight_zone <-
+        spring_tbl %>% 
+        group_by(geo_control) %>% 
+        summarise(dst_min_dusk = min(dusk_minute), dst_max_sunset = max(sunset_minute))
+      
+      spring_tbl <-
+        spring_tbl %>% 
+        left_join(intertwilight_zone, by = "geo_control") %>% 
+        filter(minute > dst_min_dusk, minute < dst_max_sunset)
+    } else {
+      intertwilight_zone <-
+        spring_tbl %>% 
+        group_by(subgeography) %>% 
+        summarise(dst_min_dusk = min(dusk_minute), dst_max_sunset = max(sunset_minute))
+      
+      spring_tbl <-
+        spring_tbl %>% 
+        left_join(intertwilight_zone, by = "subgeography") %>% 
+        filter(minute > dst_min_dusk, minute < dst_max_sunset)
+    }
     
     model_time_const <-
       spring_tbl %>%
@@ -117,34 +155,24 @@ veil_of_darkness_test <- function(
     
     spring <- 
       list(
-        k = k_unadj,
         model_time_const = model_time_const,
         model_geo_adjusted = model_geo_adjusted
       )
     
     return(
       list(
-        data = tbl,
+        fall_data = fall_tbl,
+        spring_data = spring_tbl,
         fall = fall,
         spring = spring
       )
     )
   }
-
-  # Results
-  k_unadj <- calculate_k(tbl)
   
   model_time_const <-
     tbl %>%
     glm(
       formula = is_minority_demographic ~ is_dark + ns(minute, df = 6),
-      family = "binomial"
-    )
-
-  model_time_varying <-
-    tbl %>%
-    glm(
-      formula = is_minority_demographic ~ is_dark * ns(minute, df = 6),
       family = "binomial"
     )
 
@@ -159,16 +187,35 @@ veil_of_darkness_test <- function(
     
     model_month_adjusted <-
       tbl %>%
+      mutate(month = factor(month(date))) %>% 
       glm(
-        formula = is_minority_demographic ~ is_dark + ns(minute, df = 6) + geo_control + month(date),
+        formula = is_minority_demographic ~ is_dark + ns(minute, df = 6) + geo_control + month,
         family = "binomial"
       )
   } else {
     model_month_adjusted <-
       tbl %>%
+      mutate(month = factor(month(date))) %>% 
       glm(
-        formula = is_minority_demographic ~ is_dark + ns(minute, df = 6) + month(date),
+        formula = is_minority_demographic ~ is_dark + ns(minute, df = 6) + month,
         family = "binomial"
+      )
+  }
+  
+  if (has_geo_control) {
+    results <-
+      tribble(
+        ~controls,                            ~coefficient,                  ~se,
+        "Clock time",                         coef(model_time_const)[2],     coef(summary(model_time_const))[2, 2],
+        "Clock time and Subgeography",        coef(model_geo_adjusted)[2],   coef(summary(model_geo_adjusted))[2,2],
+        "Clock time, Month and Subgeography", coef(model_month_adjusted)[2], coef(summary(model_month_adjusted))[2,2]
+      )
+  } else {
+    results <-
+      tribble(
+        ~controls,              ~coefficient,                  ~se,
+        "Clock time",           coef(model_time_const)[2],     coef(summary(model_time_const))[2, 2],
+        "Clock time and Month", coef(model_month_adjusted)[2], coef(summary(model_month_adjusted))[2,2]
       )
   }
 
@@ -176,17 +223,10 @@ veil_of_darkness_test <- function(
     data = tbl,
     models = list(
       model_time_const = model_time_const,
-      model_time_varying = model_time_varying,
       model_geo_adjusted = model_geo_adjusted,
       model_month_adjusted = model_month_adjusted
     ),
-    results = tribble(
-      ~adjustments,                  ~logK,                        ~Standard_Error,
-      "None",                        log(k_unadj),                 NA,
-      "Clock time",                  -coef(model_time_const)[2],   coef(summary(model_time_const))[2, 2],
-      "Clock time and Subgeography", -coef(model_geo_adjusted)[2], coef(summary(model_geo_adjusted))[2,2],
-      "Clock time, Month and Subgeography", -coef(model_month_adjusted)[2], coef(summary(model_month_adjusted))[2,2]
-    )
+    results = results
   )
 }
 
@@ -196,7 +236,6 @@ load_sunset_data <- function(state, city) {
     add_sunset_times(metadata = list(), multi_tz = FALSE)
 }
 
-# Helper function for veil_of_darkness_test.
 # Calculate the k as defined in Grogger & Ridgeway:
 #    P(minority | light) / P(minority | dark) * 
 #              P(majority | dark) / P(majority | light)
@@ -329,6 +368,7 @@ add_sunset_times <- function(
     )
 }
 
+# Drops NA values and geographic outliers
 clean <- function(
   tbl,
   ...,
@@ -387,6 +427,7 @@ rate_warning <- function(rate, message) {
   )
 }
 
+# Infers the timzone for the subgeography subgeo_name
 infer_tz_by_group <- function(tbl, subgeo_name, n = 10) 
 {
   lats <- 
@@ -406,6 +447,8 @@ infer_tz_by_group <- function(tbl, subgeo_name, n = 10)
   )
 }
 
+# Infer timezone from a sample of latitudes and longitudes
+# MUST BE FROM ONLY ONE TIMEZONE
 infer_tz <- function(lats, lngs, n = 10) {
   sample_idx <- sample.int(length(lats), min(n, length(lats)))
   # NOTE: uses 'fast' by default, 'accurate' requires a lot more dependencies,
@@ -417,6 +460,7 @@ infer_tz <- function(lats, lngs, n = 10) {
   tz
 }
 
+# Infer sunset times for subgeography subgeo_name
 infer_sunset_times_by_group <- function(tbl, subgeo_name) 
 {
   tbl <- 
@@ -427,6 +471,8 @@ infer_sunset_times_by_group <- function(tbl, subgeo_name)
   infer_sunset_times(tbl)
 }
 
+# Infer sunset times at median latitude and longitude of subgeographies
+# for each date.
 infer_sunset_times <- function(tbl) 
 {
   tbl %>% 
@@ -443,6 +489,8 @@ infer_sunset_times <- function(tbl)
     select(-med_lat, -med_lng)
 }
 
+# wrapper around suncalc::getSunsetTimes to get sunset time
+# as a character string
 calculate_sunset_times <- function(dates, lats, lngs, tz) {
   format(
     getSunlightTimes(
@@ -454,6 +502,8 @@ calculate_sunset_times <- function(dates, lats, lngs, tz) {
   )
 }
 
+# wrapper around suncalc::getSunsetTimes to get dusk time
+# as a character string
 calculate_dusk_times <- function(dates, lats, lngs, tz) {
   format(
     getSunlightTimes(
@@ -465,11 +515,14 @@ calculate_dusk_times <- function(dates, lats, lngs, tz) {
   )
 }
 
+# Produce the plot of proportion minority by time relative to sunset
+# controlling for clock time
 plot_prop_minority_by_time <- function(
     tbl,
     min_clock_time = hms::hms(hours = 17, min = 30),
     max_clock_time = hms::hms(hours = 19, min = 45),
     title = "",
+    subtitle = "",
     DST_only = FALSE,
     city_only = NULL,
     smooth_method = "loess",
@@ -510,27 +563,30 @@ plot_prop_minority_by_time <- function(
         TRUE ~ "7:30-7:45"
       )
     ) %>% 
-    group_by(min_since_sunset_bin, clock_time_bin, geo_control) %>% 
-    summarise(prop_minority = sum(is_minority_demographic) / n(), total = n()) %>% 
-    summarise(mean_prop_minority = weighted.mean(prop_minority, total), total = sum(total))
+    group_by(min_since_sunset_bin, clock_time_bin) %>% 
+    summarise(prop_minority = sum(is_minority_demographic) / n(), total = n())
   
   plot_data %>% 
     mutate(is_dark = min_since_sunset_bin > 0) %>% 
     unite(smooth_group, is_dark, clock_time_bin, remove = FALSE) %>% 
-    ggplot(aes(min_since_sunset_bin, mean_prop_minority, color = clock_time_bin)) +
+    ggplot(aes(min_since_sunset_bin, prop_minority, color = clock_time_bin)) +
     geom_vline(xintercept = 0) +
     geom_smooth(method = smooth_method, se = FALSE) +
     scale_x_continuous(
       breaks = seq(
         time_range$low,
         time_range$high,
-        by = 30),
+        by = 30
+      ),
       limits = c(time_range$low, time_range$high)
     ) +
+    scale_y_continuous(labels = scales::percent_format()) +
     labs(
       title = title,
+      subtitle = subtitle,
       x = "Minutes since sunset",
-      y = "Mean proportion minority drivers stopped"
+      y = "Percentage Minority Drivers",
+      color = "Clock Time (PM)"
     )
 }
 
