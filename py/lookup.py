@@ -65,7 +65,7 @@ def find(pattern, path, n_lines_after):
     # TODO(danj): add possible assignee here
     elif pattern_rx.match('todos?'):
         return find_all(special_regex()['todo'], code, n_lines_after)
-    elif pattern_rx.match('valid(ation)?'):
+    elif pattern_rx.match('validation'):
         return find_all(special_regex()['validation'], code, n_lines_after)
     elif pattern_rx.match('files?'):
         return [code]
@@ -137,7 +137,7 @@ def parse_args(argv):
         help=(
             'special tokens: "file" will return entire file contents '
             '"note" will return all NOTEs, and "todo" will return all '
-            'TODOs'   
+            'TODOs and "valid(ation)" will return all VALIDATIONs'
         )
     )
     parser.add_argument(

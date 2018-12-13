@@ -1,5 +1,8 @@
 source("common.R")
 
+# VALIDATION: [YELLOW] 2014 appears to have data collection issues, and in 2018
+# we are missing months after April; unfortunately, the annual reports only
+# seem to provide budgeting details, but the data looks reasonable
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_single_file(raw_data_dir, "citation_audit_summary.csv", n_max)
   bundle_raw(d$data, d$loading_problems)
@@ -28,9 +31,6 @@ clean <- function(d, helpers) {
     ) %>%
     helpers$add_type(
       "violation"
-    ) %>%
-    filter(
-      type != "other"
     ) %>%
     mutate(
       subject_race = tr_race[Race],

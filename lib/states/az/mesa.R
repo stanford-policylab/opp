@@ -1,5 +1,12 @@
 source("common.R")
 
+# VALIDATION: [GREEN] The Mesa Police Department's "2017 Annual Report
+# indicates that they had between 115k and 144k traffic stops each year from
+# 2014 to 2017, since our numbers are around 30k each year (except 2017 where
+# we only have part of the year), it appears as though we only have those stops
+# that resulted in actions taken, i.e. arrests, citations, warnings; it's also
+# a little unclear as to which charges are specifically pedestrian vs.
+# vehicular, so our categorization here is weak; see outstanding TODO
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_single_file(
     raw_data_dir,
@@ -30,13 +37,7 @@ clean <- function(d, helpers) {
 
   d$data %>%
     mutate(
-      location = str_trim(
-        str_c(
-          block,
-          city,
-          sep = ", "
-        )
-      )
+      location = str_trim(str_c(block, city, sep = ", "))
     ) %>%
     helpers$add_lat_lng(
     ) %>%
@@ -49,12 +50,16 @@ clean <- function(d, helpers) {
     mutate(
       time = parse_time_int(time),
       charge_prefix = str_extract(charge, "[0-9]+"),
-      # TODO(ravi): ped vs veh, and what should we filter out?
-      # https://app.asana.com/0/456927885748233/521735743717414 
-      type = ifelse(
-        charge_prefix == "28" & !str_detect(violation, "BICYC"),
+      # TODO(phoebe): can we get clearer definitions of ped vs veh?
+      # https://app.asana.com/0/456927885748233/571408593843006
+      type = if_else(
+        charge_prefix == "28" & !str_detect(violation, "BICYC|PARK"),
         "vehicular",
-        NA
+        if_else(
+          charge_prefix == "10" & !str_detect(violation, "SPEED LIMIT|PARK"),
+          "pedestrian",
+          NA_character_
+        )
       ),
       arrest_made = !is.na(arrest_no),
       citation_issued = !is.na(cite_no),
@@ -65,9 +70,7 @@ clean <- function(d, helpers) {
         warning = warning_issued
       ),
       subject_sex = tr_sex[sex],
-      subject_race = tr_race[
-        ifelse(ethnicity_fixed == "H", "H", race_fixed)
-      ]
+      subject_race = tr_race[if_else(ethnicity_fixed == "H", "H", race_fixed)]
     ) %>%
     standardize(d$metadata)
 }

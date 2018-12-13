@@ -1,5 +1,12 @@
 source("common.R")
 
+# VALIDATION: [YELLOW] The San Bernardino City's website offers traffic and
+# crime stats, and the county sheriff's 2017 Annual Report also lists detailed
+# crime, but there doesn't appear to be any easily accessible public reference
+# for vehicular/pedestrian stops; however, the number of stops seems
+# relatively appropriate given a population of ~200k; see TODOs for outstanding
+# issues
+# NOTE: in 2011 we only have partial data
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_single_file(raw_data_dir, "stop_data.csv", n_max)
   bundle_raw(d$data, d$loading_problems)
@@ -26,7 +33,7 @@ clean <- function(d, helpers) {
       time = format(datetime, "%H:%M:%S"),
       # TODO(phoebe): CallType T = Traffic? CKS = ?
       # https://app.asana.com/0/456927885748233/594103520238660
-      type = ifelse(CallType == "T", "vehicular", "pedestrian"),
+      type = if_else(CallType == "T", "vehicular", NA_character_),
       citation_issued = ifelse(disposition == "CIT", TRUE, FALSE),
       arrest_made = ifelse(disposition == "ARR", TRUE, FALSE),
       outcome = first_of(

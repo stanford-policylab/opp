@@ -1,5 +1,13 @@
 source("common.R")
 
+# VALIDATION: [YELLOW] According to the 2014 Annual Report, there were 130k
+# traffic citations, 94.18% of which were vehicular, so roughly 122k.
+# our data shows 65k citations in 2014, although we do have a small gap in
+# reporting in 2014
+# TODO(phoebe): Why are they showing nearly double the citations for 2014 in
+# their report ~122k vs 65k?
+# https://app.asana.com/0/456927885748233/945224207067251
+# NOTE: we only have partial data for 2016
 load_raw <- function(raw_data_dir, n_max) {
   # TODO(phoebe): what are the crossroads files, and are filenames significant?
   # https://app.asana.com/0/456927885748233/755505222650828

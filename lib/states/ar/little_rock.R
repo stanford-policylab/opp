@@ -1,16 +1,22 @@
 source("common.R")
 
+# VALIDATION: [YELLOW] While the data seems reasonable -- there were ~51k
+# traffic stop calls in 2017 according to the "2017 Annual Report Little Rock
+# Police Department" and we have ~20k citations through November
+# 2017 -- we appear to only have data on those stops that resulted in
+# citations, which means we don't have stops that didn't result in an action
+# taken and we don't have the other actions taken, namely warnings and arrests
 load_raw <- function(raw_data_dir, n_max) {
-  # VALIDATION: 
   # TODO(phoebe): what is this file? it has similar fields but far fewer records
   # ytd_traffic_stops_from_rms_data_export_tool.csv  
   # https://app.asana.com/0/456927885748233/592025853254518
-  load_single_file(
+  d <- load_single_file(
     raw_data_dir,
     # NOTE: this only includes stops through the beginning of November
     "traffic_citation_stats_-_year-to-date_2017.csv",
     n_max
   )
+  bundle_raw(d$data, d$metadata)
 }
 
 
@@ -48,7 +54,7 @@ clean <- function(d, helpers) {
       type = "vehicular",
       # TODO(phoebe): can we get all stops, even those that didn't result
       # in an action taken? pg.8 of the reports looks like they have this:
-      # https://www.littlerock.gov/media/3938/lrpd-annual-report-final-draft.pdf
+      # https://www.littlerock.gov/media/3937/lrpd-annual-report-final-draft.pdf
       # TODO(phoebe): can we get other outcomes (warnings/arrests)?
       # https://app.asana.com/0/456927885748233/592025853254520
       citation_issued = TRUE,

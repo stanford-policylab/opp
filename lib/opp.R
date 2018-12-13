@@ -574,14 +574,14 @@ opp_load_json_func <- function(state, city = "statewide") {
 }
 
 
-opp_load_csv_func <- function(state, city = "statewide", na = c("", "NA")) {
+opp_load_csv_func <- function(state, city = "statewide") {
   function(
     csv_filename,
     n_max = Inf,
     col_types = cols(.default = "c"),
     col_names = TRUE,
     skip = 0,
-    na = na
+    na = c("", "NA")
   ) {
     read_csv(
       file.path(opp_calculated_features_path(state, city), csv_filename),

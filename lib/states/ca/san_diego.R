@@ -1,5 +1,7 @@
 source("common.R")
 
+# VALIDATION: 
+# TODO(danj): reprocess
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_single_file(
     raw_data_dir,
@@ -11,7 +13,7 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
-  # TODO(ravi): check this map
+  # TODO(phoebe): can we get the meanings of these race codes?
   # https://app.asana.com/0/456927885748233/519045240013538
   tr_race = c(
     "A" = "asian/pacific islander",
@@ -89,7 +91,7 @@ clean <- function(d, helpers) {
     ) %>%
     mutate(
       type = "vehicular",
-      outcome = ifelse(arrest_made, "arrest", NA),
+      outcome = if_else(arrest_made, "arrest", NA_character_),
       subject_race = tr_race[Race],
       subject_sex = tr_sex[Sex],
       search_basis = first_of(

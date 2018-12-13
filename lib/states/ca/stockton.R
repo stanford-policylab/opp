@@ -1,8 +1,12 @@
 source("common.R")
 
+# VALIDATION: [YELLOW] We only have partial data in 2012; the PD doesn't seem
+# to issue annual reports to validate these figures, but the data seems
+# reasonable for the size of the city
 load_raw <- function(raw_data_dir, n_max) {
   # TODO(phoebe): how do we join these sets of files? 
   # stop_files contain date, time, location, officer demographics
+  # https://app.asana.com/0/456927885748233/523125532932048 
   stop_files <- c(
     "jenna_fowler_013117_-_stocktonpd_cad_tstops_2012_2013.csv",
     "jenna_fowler_013117_-_stocktonpd_cad_tstops__2014_july_2016.csv",
@@ -32,7 +36,6 @@ clean <- function(d, helpers) {
     "White/Caucasian" = "white"
   )
 
-  # TODO(ravi): what to do about this outcome?
   tr_outcome <- c(
     "1-In-Custody Arrest" = "arrest",
     "2-Citation Issued" = "citation",

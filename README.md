@@ -21,7 +21,10 @@ Open Policing Project -- City Data
 * lutz
   
 ## TODO
+* reprocess san diego with updated data
 * change all contraband_found to include all types of contraband
+* create function to join raw data to clean data
+* remove filters for non-pedestrian, non-vehicular stops
 * force coerce contraband_found to NA when search_conducted FALSE
 * see if cities are sufficiently homogeneous in their tests to aggregate @city 
 * select comparable sub-geographies by city 
