@@ -103,7 +103,7 @@ load_raw <- function(raw_data_dir, n_max) {
       searches = coalesce(as.integer(number_of_search_arrests), 0L)
         + coalesce(as.integer(number_of_search_stops), 0L)
     ) %>%
-    left_join(d_juris$data)
+    left_join(d_juris$data, by = "jurisdiction_code")
 
   # NOTE: De-aggregate the data, so that one row represents one stop. Create
   # one row for each search conducted in a week, and another row for each stop
@@ -125,19 +125,11 @@ clean <- function(d, helpers) {
   # Dictionaries
   tr_race = c(
     # Trooper race column keys
-    "A" = "white",
-    "B" = "black",
-    "b" = "black",
-    "C" = "hispanic",
-    "D" = "asian/pacific islander",
-    "E" = "other/unknown",
-    "U" = "other/unknown",
-    # Subject race column keys
     "white" = "white",
     "black" = "black",
     "hispanic" = "hispanic",
+    "indian" = "asian/pacific islander",
     "asian" = "asian/pacific islander",
-    "indian" = "other/unknown",
     "other" = "other/unknown",
     "unknown" = "other/unknown"
   )
@@ -157,12 +149,15 @@ clean <- function(d, helpers) {
       date = parse_date(week, "%Y%m%d"),
       location = str_c_na(
         jurisdiction_name,
-        jurisdiction_type,
+        replace_na(jurisdiction_type, "CITY"),
         sep = " "
       ),
+      # TODO(amyshoe): In the old opp, for the jurisdictions that are cities,
+      # the county column was populated with city; we leave it as NA. The 
+      # optimal solution is mapping from city to county (with google's geocoder) 
       county_name = if_else(
         jurisdiction_type == "COUNTY",
-        jurisdiction_name,
+        str_c(str_to_title(jurisdiction_name), " County"),
         NA_character_
       ),
       officer_race = tr_race[trooper_race],
