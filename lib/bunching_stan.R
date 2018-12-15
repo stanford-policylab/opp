@@ -7,22 +7,34 @@ source(here::here("lib", "bunching_test.R"))
 source(here::here("lib", "opp.R"))
 
 bunching_analysis <- function(
-  state,
-  city
+  state = NULL,
+  city = "florida",
+  fl = NULL
 ) {
-  data <- opp_load_data(state, city)
-  data_summary <- summarise_for_stan(data)
+  if(!is.null(fl)) {
+    data <- haven::read_dta(here::here("data", "bunching", "Cite_05_15_Use.dta"))
+    data_summary <- summarise_fl_for_stan(data)
+  } else { 
+    data <- opp_load_data(state, city)
+    data_summary <- summarise_for_stan(data)
+  }
   stan_data <- format_for_stan(data_summary)
   fit <- stan_bunching(stan_data, 2000, 5)
   write_rds(fit, here::here("cache", str_c("agg_bunching_fit_", str_replace(city, " ", "_"), ".rds")))
 }
 
 agg_bunching_analysis <- function(
-  state,
-  city
+  state = NULL,
+  city = "florida",
+  fl = NULL
 ) {
-  data <- opp_load_data(state, city)
-  data_summary <- agg_for_stan(data)
+  if(!is.null(fl)) {
+    data <- haven::read_dta(here::here("data", "bunching", "Cite_05_15_Use.dta"))
+    data_summary <- agg_fl_for_stan(data)
+  } else { 
+    data <- opp_load_data(state, city)
+    data_summary <- agg_for_stan(data)
+  }
   stan_data <- format_for_stan(data_summary, agg = TRUE)
   fit <- stan_bunching(stan_data, 2000, 5, here::here("stan", "bunching_aggregate.stan"))
   write_rds(fit, here::here("cache", str_c("agg_bunching_fit_", str_replace(city, " ", "_"), ".rds")))
@@ -59,6 +71,65 @@ stan_bunching <- function(
     refresh = n_iter_per_progress_update,
     warmup = n_iter_warmup
   )
+}
+
+summarise_fl_for_stan <- function(tbl) {
+  tbl %>% 
+    rename(
+      subject_race = Race, 
+      officer_id = OfficerId, 
+      speed = ActualSpeed, 
+      posted_speed = PostedSpeed
+    ) %>% 
+    filter(!is.na(subject_race)) %>% 
+    select(subject_race, officer_id, speed, posted_speed) %>% 
+    mutate(
+      over_bunch_pt = speed - posted_speed - 9, # 9 is bunching in fl 
+      is_white = subject_race == "W"
+    ) %>%
+    filter(
+      over_bunch_pt >= 0, over_bunch_pt <= 30,
+      subject_race %in% c("W", "B")
+    ) %>%
+    inner_join(
+      get_eligible_officer_leniency(., downsample = T), 
+      by = "officer_id"
+    )
+}
+
+agg_fl_for_stan <- function(tbl) {
+  d <-
+    tbl %>% 
+    rename(
+      subject_race = Race, 
+      officer_id = OfficerId, 
+      speed = ActualSpeed, 
+      posted_speed = PostedSpeed
+    ) %>% 
+    filter(!is.na(subject_race)) %>% 
+    select(subject_race, officer_id, speed, posted_speed) %>% 
+    mutate(
+      over_bunch_pt = speed - posted_speed - 9, # 9 is bunching in fl
+      is_white = subject_race == "W"
+    ) %>%
+    filter(
+      over_bunch_pt >= 0, over_bunch_pt <= 30,
+      subject_race %in% c("B", "W")
+    ) %>%
+    inner_join(
+      get_eligible_officer_leniency(.), 
+      by = "officer_id"
+    )
+  q <- d$leniency %>% quantile(seq(0,1,0.2))
+  d %>% 
+    mutate(leniency_bin = case_when(
+      leniency < q[[2]] ~ mean(c(q[[1]], q[[2]])),
+      leniency < q[[3]] ~ mean(c(q[[2]], q[[3]])),
+      leniency < q[[4]] ~ mean(c(q[[3]], q[[4]])),
+      leniency < q[[5]] ~ mean(c(q[[4]], q[[5]])),
+      leniency <= q[[6]] ~ mean(c(q[[5]], q[[6]]))
+    )) %>% 
+    count(is_white, leniency_bin, over_bunch_pt)
 }
 
 summarise_for_stan <- function(tbl) {
@@ -155,10 +226,8 @@ format_for_stan <- function(data_summary, agg = FALSE) {
   }
 }
 
-cat("\nStarting OK City\n")
-agg_bunching_analysis("ok", "oklahoma city")
-cat("\nStarting Plano\n")
-agg_bunching_analysis("tx", "plano")
-cat("\nStarting Dallas\n")
-agg_bunching_analysis("tx", "dallas")
+cat("\nStarting FL\n")
+agg_bunching_analysis(fl = TRUE)
+# cat("\nStarting Plano\n")
+# agg_bunching_analysis("tx", "plano")
 

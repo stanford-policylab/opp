@@ -33,6 +33,47 @@ this regard
 
 \newpage
 
+# Original FL data
+
+Bunching point at 9MPH
+
+```{r ok, fig.height=3.75, fig.width=7}
+tbl <- haven::read_dta(here::here("data", "bunching", "Cite_05_15_Use.dta")) %>% 
+  rename(
+      subject_race = Race,
+      subject_age = Age,
+      officer_id = OfficerId, 
+      speed = ActualSpeed, 
+      posted_speed = PostedSpeed,
+      vehicle_make = VehicleMake
+    ) %>% 
+  mutate(subject_race = plyr::mapvalues(
+    subject_race, 
+    from = c("B", "H", "W"), 
+    to = c("black", "hispanic", "white")
+  ))
+tbl <-
+  tbl %>%
+  mutate(
+    age_group = as.integer(subject_age / 10),
+    hour_of_day = if_else(Hour == 99, NA_real_, Hour)
+  )
+bt <- bunching_test(
+  tbl,
+  CountyNum,
+  hour_of_day,
+  age_group,
+  vehicle_make,
+  over_limit = over_limit,
+  bunching_points = c(9)
+)
+display(bt)
+kable(bt$results$difference_in_difference)
+```
+
+
+\newpage
+
 # Oklahoma City
 
 Speeding Fine Schedule: 
@@ -77,7 +118,7 @@ Speeding Fine Schedule:
 
 16-20 MPH over: \$251 
 
-\>20 MPH over: \$304 
+20 MPH over: \$304 
 
 https://dallascityhall.com/departments/courtdetentionservices/DCH%20Documents/OffenseCode_FinesFees_20180705.pdf 
 
