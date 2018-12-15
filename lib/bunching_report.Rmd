@@ -37,7 +37,7 @@ this regard
 
 Bunching point at 9MPH
 
-```{r ok, fig.height=3.75, fig.width=7}
+```{r fl, fig.height=3.75, fig.width=7}
 tbl <- haven::read_dta(here::here("data", "bunching", "Cite_05_15_Use.dta")) %>% 
   rename(
       subject_race = Race,
