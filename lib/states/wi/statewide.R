@@ -66,7 +66,7 @@ load_raw <- function(raw_data_dir, n_max) {
   )
   wi_cit_2 <- load_single_file(
     raw_data_dir,
-    "tracs7.3_trafficstops_outcomewarnings.csv",
+    "tracs7.3_trafficstops_outcomecitations.csv",
     n_max = n_max
   )
   wi_cit <- bind_rows(
@@ -133,7 +133,7 @@ load_raw <- function(raw_data_dir, n_max) {
     registrationIssuanceState
   ) %>%
   summarize(
-    all_violations = str_c_na(StatuteDescription, collapse = ",")
+    all_violations = str_c_na(StatuteDescription, collapse = "|")
   ) %>%
   ungroup(
   ) %>%
@@ -231,14 +231,24 @@ clean <- function(d, helpers) {
         "other" = str_detect(individualSearchBasis, "[34569]")
           | str_detect(vehicleSearchBasis, "[34569]")
       ),
-      # NOTE: Contraband codes come from data dictionary. Code "5" means
-      # "INTOXICANT(S)," which we don't include with drugs; we only consider
-      # code 3: "ILLICIT DRUG(S)/PARAPHERNALIA."
+      # NOTE: Contraband codes come from data dictionary:
+      #03,"ILLICIT DRUG(S)/PARAPHERNALIA"
+      #05,INTOXICANT(S)
+      #01,WEAPON(S)
+      #04,"EVIDENCE OF A CRIME"
+      #06,"STOLEN GOODS"
+      #02,"EXCESSIVE CASH"
+      #00,NONE
+      #99,OTHER
       contraband_drugs = str_detect(individualContraband, "3")
         | str_detect(vehicleContraband, "3"),
       contraband_weapons = str_detect(individualContraband, "1")
         | str_detect(vehicleContraband, "1"),
-      contraband_found = contraband_drugs | contraband_weapons
+      contraband_alcohol = str_detect(individualContraband, "5")
+      | str_detect(vehicleContraband, "5"),
+      contraband_other = str_detect(individualContraband, "4|6|2|99")
+      | str_detect(vehicleContraband, "4|6|2|99"),
+      contraband_found = contraband_drugs | contraband_weapons | contraband_alcohol | contraband_other
     ) %>%
     standardize(d$metadata)
 }
