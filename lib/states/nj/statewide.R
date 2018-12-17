@@ -37,7 +37,11 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
-  
+  # NOTE: race differs slightly from old opp (far fewer asians, far more na/other),
+  # but categorizations are from raw to clean are identical; old opp mentioned new
+  # data that they hadn't used? perhaps this accounts for the discrepancy? it's also
+  # not a large enough discrepancy to be too worrisome, and counts of overall number
+  # of stops are the same, by month
   tr_race <- c(
     "W - WHITE" = "white",
     "B - BLACK" = "black",
@@ -84,6 +88,10 @@ clean <- function(d, helpers) {
       `Case Number`
     ) %>%
     mutate(
+      # NOTE(jnu): the state claimed there was no way to join the RMS and CAD files. 
+      # But I noticed that you could join the files if you combine a few of the 
+      # fields in a certain way. But this method isn't perfect, and there are lots of
+      # nulls; we include it in hopes that some data is better than no data
       arrest_made = any(Arrested == "Y"),
       citation_issued = any(ACTION == "SUMMONS"),
       warning_issued = any(ACTION == "WARNING"),
