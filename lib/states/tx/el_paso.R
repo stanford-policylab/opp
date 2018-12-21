@@ -1,5 +1,7 @@
 source("common.R")
 
+
+# VALIDATION: [YELLOW] 
 load_raw <- function(raw_data_dir, n_max) {
 	loading_problems <- list()
   d <- load_single_file(
@@ -12,6 +14,7 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
+
   tr_race <- c(
     "A" = "asian/pacific islander",
     "B" = "black",
@@ -51,14 +54,11 @@ clean <- function(d, helpers) {
       Officer = c("officer_last_name", "officer_first_name"),
       sep = ", "
     ) %>%
-    filter(
-      type != "other"
-    ) %>%
     mutate(
       # NOTE: these are all citations since indexed by citation number
+      citation_issued = TRUE,
       outcome = "citation",
       time = parse_time(Time, "%I:%M%p"),
-      citation_issued = TRUE,
       subject_race = tr_race[Race],
       subject_sex = tr_sex[Sex],
       search_conducted = tr_yn[Search],

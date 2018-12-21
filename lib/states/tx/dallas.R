@@ -1,5 +1,7 @@
 source("common.R")
 
+
+# VALIDATION: [YELLOW] 
 load_raw <- function(raw_data_dir, n_max) {
   # NOTE: commercial vehicle inspections is not currently processed but exists
   # in the raw_data_dir; same with some of their lookup tables:
@@ -88,8 +90,6 @@ clean <- function(d, helpers) {
       location = HA_ROAD_LOC,
       lat = HA_LATITUDE,
       lng = HA_LONGITUDE,
-      # TODO(phoebe): what are HA_REGION and HA_DISTRICT?
-      # https://app.asana.com/0/456927885748233/553393937447381
       precinct = HA_PRECINCT,
       district = HA_DISTRICT,
       region = HA_REGION,
@@ -132,23 +132,21 @@ clean <- function(d, helpers) {
       warning_issued = !is.na(AW_VIOLATION_CODE),
       # TODO(phoebe): how can we determine whether an arrest happened?
       # https://app.asana.com/0/456927885748233/475749789858290 
-      arrest_made = !citation_issued && !warning_issued,
       outcome = first_of(
-        arrest = arrest_made,
         citation = citation_issued,
         warning = warning_issued
       ),
       search_basis = first_of(
         "consent" = search_consent,
-        "probable cause" = search_probable_cause,
         "other" = search_incident_to_arrest,
-        "probable cause" = search_conducted # default
+        "probable cause" = search_probable_cause | search_conducted # default
       ),
       # TODO(phoebe): what should we use as reason for stop?
       # https://app.asana.com/0/456927885748233/475749789858290 
       subject_race = tr_race[subject_race],
       subject_sex = tr_sex[subject_sex]
     ) %>%
+    # NOTE: select only desired columns to reduce cost of merging rows
     select_(
       .dots = c("key", intersect(names(schema), colnames(.)))
     ) %>%

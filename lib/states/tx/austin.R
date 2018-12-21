@@ -1,5 +1,9 @@
 source("common.R")
 
+
+# VALIDATION: [YELLOW] The Austin PD's Annual Report doesn't list traffic
+# statistics. 2016 only has partial data. That said, the aggregate annual stops
+# appear to be reasonable given the population.
 load_raw <- function(raw_data_dir, n_max) {
 
   loading_problems <- list()
@@ -78,8 +82,6 @@ clean <- function(d, helpers) {
     rename(
       date = occurred_date,
       reason_for_stop = reason_checked_description,
-      subject_race = race,
-      subject_ethnicity = ethnicity,
       subject_sex = sex,
       search_person = person_searched,
       search_vehicle = vehicle_searched,
@@ -92,9 +94,9 @@ clean <- function(d, helpers) {
     mutate(
       date = parse_date(date, "%Y/%m/%d"),
       subject_race = tr_race[if_else_na(
-        subject_ethnicity == "H",
+        ethnicity == "H",
         "H",
-        subject_race
+        race
       )],
       subject_sex = tr_sex[subject_sex],
       subject_age = year(date) - as.integer(yob),
@@ -102,10 +104,10 @@ clean <- function(d, helpers) {
       search_vehicle = str_detect(search_vehicle, "YES"),
       search_conducted = search_person | search_vehicle,
       # NOTE: SUSPICIOUS PERSON / VEHICLE is one category, so this will
-      # pick up some suspicious persons unfortunately
+      # pick up some suspicious persons unfortunately; there are no clear
+      # pedestrian-only discretionary stops in reason_checked_description
       type = first_of(
-        "vehicular" = search_vehicle | str_detect(reason_for_stop, "VEHICLE"),
-        "pedestrian" = TRUE  # default if not vehicular
+        "vehicular" = search_vehicle | str_detect(reason_for_stop, "VEHICLE")
       ),
       # TODO(phoebe): we appear to lose about 10% by predicating on search
       # https://app.asana.com/0/456927885748233/548400265824560 
@@ -147,7 +149,13 @@ clean <- function(d, helpers) {
         person_search_search_discovered,
         vehicle_search_search_discovered
       ),
-      contraband_found = contraband_drugs | contraband_weapons
+      contraband_found = str_detect(
+        person_search_search_discovered,
+        "OTHER|WEAPONS|DRUGS|CASH|ALCOHOL"
+      ) | str_detect(
+        vehicle_search_search_discovered,
+        "OTHER|WEAPONS|DRUGS|CASH|ALCOHOL"
+      )
     ) %>%
     # TODO(danj): add shapefiles after location given
     # https://app.asana.com/0/456927885748233/743595706194913 
