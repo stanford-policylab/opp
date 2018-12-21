@@ -1,5 +1,10 @@
 source("common.R")
 
+
+# VALIDATION: [YELLOW] 2013 has only the last 2 months and 2016 all but the
+# last 3 months of data. While Hartford has weekly crime reports, it doesn't
+# seem to produce any other report that could be used to validate these
+# figures.
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_single_file(raw_data_dir, "hartford_data_13-16.csv", n_max)
   bundle_raw(d$data, d$loading_problems)
@@ -20,17 +25,16 @@ clean <- function(d, helpers) {
     C = "consent",
     # NOTE: inventory
     I = "other",
-    # NOTE: Other includes: Probable Cause, Incident to Arrest,
+    # NOTE: [O]ther includes: Probable Cause, Incident to Arrest,
     # Reasonable Suspicion, Plain View Contraband, Drug Dog Alert, and
     # Exigent Circumstances; since most of these are "probable cause" related
     # reasons, we have made it probable cause even though it's possible to have
-    # a other search here (like incident to arrest)
+    # other non-discretionary search bases here, i.e. incident to arrest
     O = "probable cause"
   )
 
   d$data %>%
     rename(
-    # NOTE: lat/lng provided in the data are 99.99% null
       contraband_found = ContrabandIndicator,
       department_name = `Department Name`,
       location = InterventionLocationDescriptionText,
@@ -52,6 +56,9 @@ clean <- function(d, helpers) {
         ifelse(SubjectEthnicityCode == "H", "H", SubjectRaceCode)
       ],
       subject_sex = tr_sex[SubjectSexCode],
+      # TODO(phoebe): the search rate is ~30%, this seems extremely high, is
+      # this true?
+      # https://app.asana.com/0/456927885748233/946544362639776 
       search_conducted = as.logical(search_vehicle)
         | SearchAuthorizationCode != "N",
       search_basis = tr_search_basis[SearchAuthorizationCode],
@@ -69,6 +76,7 @@ clean <- function(d, helpers) {
         warning = warning_issued
       )
     ) %>%
+    # NOTE: lat/lng provided in the data are 99.99% null
     helpers$add_lat_lng(
     ) %>%
     helpers$add_shapefiles_data(

@@ -2,7 +2,7 @@ source("common.R")
 
 # VALIDATION: [YELLOW] Long Beach's Police Department's FY 2018 report is
 # mostly budgeting and high level aggregate figures, but it does say there were
-# 567k calls responded to in 2016, and we have 15k tickets issued, which seams
+# 567k calls responded to in 2016, and we have 15k tickets issued, which seems
 # reasonable; it appears as though this data is ticket/citation related, so we
 # don't have other types of outcomes; see TODOs for outstanding issues
 # TODO(phoebe): why are the stops going down so fast yoy from 2009 to 2016?
@@ -38,7 +38,7 @@ clean <- function(d, helpers) {
     "Chinese" = "asian/pacific islander",
     "Filipino" = "asian/pacific islander",
     "Guamanian" = "asian/pacific islander",
-    "Hawiian" = "other/unknown",
+    "Hawiian" = "asian/pacific islander",
     "Japanese" = "asian/pacific islander",
     "Korean" = "asian/pacific islander",
     "Laotian" = "asian/pacific islander",

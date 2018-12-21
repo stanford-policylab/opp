@@ -1,9 +1,27 @@
 source("common.R")
 
+
+# VALIDATION: [YELLOW] The Grand Forks PD's 2016 Annual Report cites figures
+# that don't totally correspond to our classification here, but are not far
+# off. It's not clear what is considered a traffic stop by the PD (i.e. a
+# pedestrian stop but as it relates to traffic law?). There are also some
+# peculiar spikes, usually at least 1 day a year, that is a clear outlier. See
+# TODOs for outstanding tasks.
+
+# TODO(phoebe): why are there always spikes around may/june? The following days
+# have massive spikes, relatively speaking:
+# 2010-05-08 (147)
+# 2011-06-02 (157)
+# 2012-05-05 (173)
+# 2013-05-04 (185)
+# 2014-05-10 (138)
+# 2015-05-09 (112)
+# 2016-05-20 (78)
+# https://app.asana.com/0/456927885748233/953848354811707 
 load_raw <- function(raw_data_dir, n_max) {
   cit <- load_regex(
     raw_data_dir,
-    'Citations',
+    "Citations",
     n_max = n_max,
     col_names = c(
       "agency",
@@ -25,7 +43,7 @@ load_raw <- function(raw_data_dir, n_max) {
   )
   warn <- load_regex(
     raw_data_dir,
-    'Warnings',
+    "Warnings",
     n_max = n_max,
     col_names = c(
       "contact",
@@ -56,16 +74,10 @@ clean <- function(d, helpers) {
     W = "white"
   )
   
-  # TODO(phoebe): can we get search fields?
-  # https://app.asana.com/0/456927885748233/579650153274288
-  # TODO(phoebe): can we get contraband fields?
-  # https://app.asana.com/0/456927885748233/579650153274289
+  # NOTE: search and contraband-related fields are not recorded by the PD
   d$data %>%
     helpers$add_type(
       "desc"
-    ) %>%
-    filter(
-      type != "other"
     ) %>%
     rename(
       reason_for_stop = desc
@@ -79,8 +91,8 @@ clean <- function(d, helpers) {
       location = str_c_na(house, street, sep = " "),
       warning_issued = !is.na(contact),
       citation_issued = !is.na(citation_number),
-      # TODO(phoebe): can we get arrests?
-      # https://app.asana.com/0/456927885748233/579650153274287
+      # NOTE: PD says they cannot give arrests as they are not recorded with
+      # traffic stops
       outcome = first_of(
         warning = warning_issued,
         citation = citation_issued

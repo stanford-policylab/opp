@@ -1,5 +1,11 @@
 source("common.R")
 
+
+# VALIDATION: [YELLOW] There is almost no data from 2010 and only the first 7
+# months of 2018. The annual report put out by denvergov.org doesn't supply
+# stop figures, but these figures seem reasonable given the population;
+# unfortunately, we don't get key demographic information; see TODOS for
+# outstanding tasks
 load_raw <- function(raw_data_dir, n_max) {
   # TODO(phoebe): what is police_pedestrian_stops_and_vehicle_stops.zip?
   # it unzips to .gb tables?
@@ -20,6 +26,9 @@ clean <- function(d, helpers) {
   # TODO(phoebe): can we get reason_for_stop/search/contraband fields?
   # https://app.asana.com/0/456927885748233/758649899422593
   d$data %>%
+    merge_rows(
+      MASTER_INCIDENT_NUMBER
+    ) %>%
     rename(
       location = ADDRESS,
       lat = GEO_LAT,
@@ -31,6 +40,7 @@ clean <- function(d, helpers) {
       disposition = CALL_DISPOSITION
     ) %>%
     mutate(
+      # NOTE: stops are either a Vehicle Stop or a Subject Stop
       type = if_else(PROBLEM == "Vehicle Stop", "vehicular", "pedestrian"),
       # NOTE: we don't get time of stop, but time of phone call
       datetime = parse_datetime(TIME_PHONEPICKUP),

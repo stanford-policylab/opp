@@ -1,104 +1,126 @@
 source("common.R")
 
 # VALIDATION: 
-# TODO(danj): reprocess
 load_raw <- function(raw_data_dir, n_max) {
-  d <- load_single_file(
+
+  # TODO(phoebe): There are 1,824 duplicated stop_ids representing ~4k rows;
+  # curiously, they have different information, i.e. are at different dates,
+  # times, and service areas; what is going on here?
+  # https://app.asana.com/0/456927885748233/953928960154784
+  stops <- load_regex(
     raw_data_dir,
-    "pra_16-1288_vehiclestop2014-2015_sheet_1.csv",
+    "vehicle_stops_\\d{4}_datasd.csv",
     n_max
   )
-  bundle_raw(d$data, d$loading_problems)
+
+  searches <- load_regex(
+    raw_data_dir,
+    "vehicle_stops_search_details_\\d{4}_datasd.csv"
+  )
+
+  searches_data_merged <-
+    searches$data %>%
+    select(-search_details_id) %>%
+    group_by(stop_id, search_details_type) %>%
+    summarize(
+      search_details_description = str_c(
+        search_details_description,
+        collapse = "|"
+      )
+    ) %>%
+    spread(
+      search_details_type,
+      search_details_description
+    )
+
+  data <-
+    left_join(
+      stops$data,
+      searches_data_merged
+    ) %>%
+    left_join(
+      load_single_file(
+        raw_data_dir,
+        "vehicle_stops_race_codes.csv"
+      )$data,
+      by = c("subject_race" = "Race Code")
+    ) %>%
+    rename(subject_race_description = Description)
+
+  bundle_raw(data, c(stops$loading_problems, searches$loading_problems))
+
+  # NOTE: the updated data is loaded above; this will load the old data
+  # d <- load_single_file(
+  #   raw_data_dir,
+  #   "pra_16-1288_vehiclestop2014-2015_sheet_1.csv",
+  #   n_max
+  # )
+  # bundle_raw(d$data, d$loading_problems)
 }
 
 
 clean <- function(d, helpers) {
-  # TODO(phoebe): can we get the meanings of these race codes?
-  # https://app.asana.com/0/456927885748233/519045240013538
-  tr_race = c(
-    "A" = "asian/pacific islander",
-    "B" = "black",
-    "C" = "other/unknown",
-    "D" = "other/unknown",
-    "F" = "other/unknown",
-    "G" = "other/unknown",
-    "H" = "hispanic",
-    "I" = "other/unknown",
-    "J" = "other/unknown",
-    "K" = "other/unknown",
-    "L" = "other/unknown",
-    "O" = "other/unknown",
-    "P" = "other/unknown",
-    "S" = "other/unknown",
-    "U" = "other/unknown",
-    "V" = "other/unknown",
-    "W" = "white",
-    "X" = "other/unknown",
-    "Z" = "other/unknown"
-  )
 
-  tr_stop_cause = c(
-    "MUNI, County, H&S Code" = "MUNI, County, H&S Code",
-    "Muni, County, H&S Code" = "MUNI, County, H&S Code",
-    "Suspect Info (I.S., Bulletin, Log)" = "Suspect Info",
-    "UNI, &County, H&&S Code" = "MUNI, County, H&S Code",
-    "&Equipment Violation" = "Equipment Violation",
-    "&Moving Violation" = "Moving Violation",
-    "&Radio Call/Citizen Contact" = "Radio Call/Citizen Contact",
-    "CAUSE NOT LISTED ACTION NOT LISTED" = "None",
-    "Equipment Violation" = "Equipment Violation",
-    "Moving Violation" = "Moving Violation",
-    "NA" = "None",
-    "NOT MARKED" = "None",
-    "NOTHING MARKED" = "None",
-    "NULL" = "None",
-    "No Cause Specified on a Card" = "None",
-    "Other" = "None",
-    "Pedestrian" = "Pedestrian",
-    "Personal Knowledge/Informant" = "Personal Knowledge/Informant",
-    "Personal Observ/Knowledge" = "Personal Observation/Informant",
-    "Radio Call/Citizen Contact" = "Radio Call/Citizen Contact",
-    "Suspect Info" = "Suspect Info",
-    "none listed" = "None",
-    "none noted" = "None",
-    "not listed" = "None",
-    "not marked  not marked" = "None",
-    "not marked" = "None",
-    "not noted" = "None",
-    "not secified" = "None"
+  tr_race <- c(
+    tr_race,
+    "other asian" = "asian/pacific islander",
+    "filipino" = "asian/pacific islander",
+    "vietnamese" = "asian/pacific islander",
+    "chinese" = "asian/pacific islander",
+    "indian" = "asian/pacific islander",
+    "korean" = "asian/pacific islander",
+    "japanese" = "asians/pacific islander",
+    "pacific islander" = "asian/pacific islander",
+    "asian indian" = "asian/pacific islander",
+    "laotian" = "asian/pacific islander",
+    "samoan" = "asian/pacific islander",
+    "cambodian" = "asian/pacific islander",
+    "guamanian" = "asian/pacific islander",
+    "hawaiian" = "asian/pacific islander" 
   )
 
   # TODO(phoebe): can we get location?
   # https://app.asana.com/0/456927885748233/569484839430728
   d$data %>%
     rename(
-      date = StopDate,
-      time = StopTime,
-      subject_age = age,
-      search_conducted = Searched,
-      search_consent = ObtainedConsent,
-      contraband_found = ContrabandFound,
-      arrest_made = Arrested,
-      service_area = ServArea,
-      department_name = Agency
+      reason_for_stop = stop_cause,
+      date = stop_date,
+      time = stop_time,
+      search_conducted = searched,
+      search_consent = obtained_consent,
+      reason_for_search = SearchBasis,
+      arrest_made = arrested
     ) %>%
     apply_translator_to(
       tr_yn,
+      "arrest_made",
       "search_conducted",
       "search_consent",
-      "contraband_found",
-      "arrest_made"
+      "contraband_found"
     ) %>%
     mutate(
       type = "vehicular",
-      outcome = if_else(arrest_made, "arrest", NA_character_),
-      subject_race = tr_race[Race],
-      subject_sex = tr_sex[Sex],
-      search_basis = first_of(
-        "consent" = search_consent,
-        "probable cause" = search_conducted 
+      citation_issued = str_detect(ActionTaken, "Citation"),
+      warning_issued = str_detect(ActionTaken, "Warning"),
+      outcome = first_of(
+        arrest = arrest_made,
+        citation = citation_issued,
+        warning = warning_issued
       ),
-      reason_for_stop = tr_stop_cause[StopCause]
+      subject_race = tr_race[tolower(subject_race_description)],
+      subject_sex = tr_sex[subject_sex],
+      search_person = str_detect(SearchType, "Driver|Passenger"),
+      search_vehicle = str_detect(SearchType, "Vehicle"),
+      sr = tolower(reason_for_search),
+      search_basis = first_of(
+        "k9" = str_detect(sr, "k9"),
+        "plain view" = str_detect(sr, "visible"),
+        "consent" = search_consent | str_detect(sr, "consent"),
+        # NOTE: 4th Waiver Search applies to those on parole/probation who have
+        # waived their right to consent searches
+        "other" = str_detect(sr, "4th|other|incident|waiver|inventory|warrant"),
+        "probable cause" = search_conducted  # default
+      )
     ) %>%
     # TODO(danj): add shapefile data once we get location
     # https://app.asana.com/0/456927885748233/681325483960257

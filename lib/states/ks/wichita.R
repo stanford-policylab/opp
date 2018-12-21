@@ -1,5 +1,8 @@
 source("common.R")
 
+
+# VALIDATION: [YELLOW] The Wichita Police Department's Year In Review for 2016
+# has no substantial statistics.
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_years(raw_data_dir, n_max)
   colnames(d$data) <- make_ergonomic(colnames(d$data))
@@ -21,9 +24,8 @@ clean <- function(d, helpers) {
   # TODO(phoebe): can we get reason_for_stop/search/contraband fields?
   # https://app.asana.com/0/456927885748233/595493946182532
   d$data %>%
-    filter(
-      # NOTE: filter out PARKING related charges
-      !str_detect(charge_description, "PARKING")
+    merge_rows(
+      citation_number
     ) %>%
     rename(
       subject_age = defendant_age,
@@ -36,8 +38,23 @@ clean <- function(d, helpers) {
       officer_name = c("officer_first_name", "officer_last_name")
     ) %>%
     mutate(
-      # NOTE: all charge descriptions appear to be vehicle related
-      type = "vehicular",
+      type = if_else(
+        str_detect(
+          violation,
+          str_c(
+            "BICYCLE-LICENSE REQUIRED",
+            "BIKE( IMPEDE|-OBSERVE|-PEDAL)",
+            "LOITERING-OBST TRF/PEDESTRIAN",
+            "PED( CROSS| USE|-SOLICIT|-USE|-YIELD)",
+            "PEDESTRAIN UNDER INFLUENCE", # NOTE: misspelled in data
+            "PEDESTRIAN (DISOBEY|FAIL|MUST|RUN|STOP|USE|WALK|YIELD)",
+            "PEDESTRIAN-YIELD",
+            sep = "|"
+          )
+        ),
+        "pedestrian",
+        "vehicular"
+      ),
       datetime = coalesce(
         parse_datetime(citation_date_time, locale = locale(tz = "US/Central")),
         parse_datetime(citation_date_time, "%Y/%m/%d %H:%M:%S"),
@@ -47,6 +64,7 @@ clean <- function(d, helpers) {
       time = format(datetime, "%H:%M:%S"),
       # NOTE: all the files are named citations_<year>.csv
       citation_issued = TRUE,
+      outcome = "citation",
       # TODO(phoebe): can we get other outcomes (warnings, arrests)?
       # https://app.asana.com/0/456927885748233/595493946182534
       location = str_c_na(
@@ -56,7 +74,6 @@ clean <- function(d, helpers) {
         citation_zip,
         sep = ", "
       ),
-      outcome = "citation",
       subject_race = tr_race[if_else_na(
         defendant_ethnicity == "H",
         "H",

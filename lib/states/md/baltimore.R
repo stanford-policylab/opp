@@ -1,5 +1,11 @@
 source("common.R")
 
+
+# VALIDATION: [RED] A lot of key features are missing here, and the annual
+# report for 2016 only has one statistic that can really be used for evaluating
+# the likelihood that this data is valid: the number of total calls for
+# service, which was 992k. 2016 had 127k stops in this dataset, which is
+# probably reasonable. See TODOs for oustanding tasks
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_years(raw_data_dir, n_max = n_max)
   bundle_raw(d$data, d$loading_problems)
@@ -13,10 +19,13 @@ clean <- function(d, helpers) {
   # TODO(phoebe): can we get subject race?
   # https://app.asana.com/0/456927885748233/672314799705086
   d$data %>%
+    merge_rows(
+      `Citation Number`
+    ) %>%
     rename(
       officer_id = `Officer ID`,
       district = District,
-      # TODO(phoebe): is Post like policy beat?
+      # TODO(phoebe): is Post like police beat?
       # https://app.asana.com/0/456927885748233/672314799705092<Paste>
       beat = Post
     ) %>%
@@ -48,12 +57,11 @@ clean <- function(d, helpers) {
           NA
         )
       ),
-      citation_issued = !is.na(Ticket),
+      # NOTE:  primary key is Citation Number
+      citation_issued = TRUE,
       # TODO(phoebe): can we get other types of outcomes? arrests/warnings?
       # https://app.asana.com/0/456927885748233/672314799705093
-      outcome = first_of(
-        "citation" = citation_issued
-      )
+      outcome = "citation"
     ) %>%
     # TODO(phoebe): can we get location?
     # https://app.asana.com/0/456927885748233/672314799705094

@@ -44,5 +44,5 @@ Open Policing Project -- City Data
 * use load_years in all opp_city
 * check for violation used in place of reason for stop
 * pull out granularity of "other/non-discretionary" search types
-* add notes to report pdf
+* add VALIDATION/TODO/NOTES to report pdf
 * cite IPUMS/NHGIS as data sources and get permission for redistribution

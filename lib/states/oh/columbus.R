@@ -1,5 +1,10 @@
 source("common.R")
 
+
+# VALIDATION: [YELLOW] It appears as though the Annual Reports only include
+# Violent and Property crime statistics (in addition to complaints). That said,
+# the number of stops and consistency year over year appear reasonable. See
+# TODOs for outstanding tasks.
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_single_file(raw_data_dir, "columbus_oh_data.csv")
   bundle_raw(d$data, d$loading_problems)
@@ -7,17 +12,6 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
-  tr_race = c(
-    Asian = "asian/pacific islander",
-    Black = "black",
-    Hispanic = "hispanic",
-    Other = "other/unknown",
-    White = "white"
-  )
-  tr_sex = c(
-    MALE = "male",
-    FEMALE = "female"
-  )
 
   d$data %>%
     mutate(
@@ -49,15 +43,10 @@ clean <- function(d, helpers) {
       # NOTE: all stop reasons are vehicle related
       type = "vehicular",
       date = parse_date(date, "%Y/%m/%d"),
-      subject_race = tr_race[Ethnicity],
+      subject_race = tr_race[tolower(Ethnicity)],
       subject_sex = tr_sex[Gender],
       search_conducted = `Enforcement Taken` %in%
         c("Vehicle Search", "Driver Search"),
-      search_basis = if_else(
-        search_conducted,
-        "probable cause",
-        NA_character_
-      ), 
       arrest_made = `Enforcement Taken` == "Arrest",
       citation_issued = `Enforcement Taken` %in%
         c("Traffic Citation", "Misd. Citation or Summons"),

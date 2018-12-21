@@ -1,5 +1,16 @@
 source("common.R")
 
+
+# VALIDATION: [YELLOW] This data is from a FOIA request directly to the Chicago
+# Police Department. There is also local Chicago data in the statewide
+# directory, but it has disparate schemas and organization; i.e. 2007 is
+# consistent, but other years have the PD broken down into sub-PDs, i.e.
+# University Police, Ridge Police, North Chicago Police, etc. Because of the
+# difficulty in reconciling all those disparate data sources over years, we
+# elected to use the data delivered directly from our city-level FOIA request
+# here. The 2017 annual report has arrests by race for 2016 (pg. 83). The total
+# number of arrests is stated as 85,752; we have 37,817 associated with traffic
+# stops which seems reasonable. See TODOs for outstanding issues
 load_raw <- function(raw_data_dir, n_max) {
 
   arrests <- load_single_file(raw_data_dir, "arrests.csv", n_max)
@@ -52,7 +63,11 @@ clean <- function(d, helpers) {
 			officer_id = officer_employee_no
     ) %>%
     mutate(
-      type = "vehicular",
+      type = if_else(
+        str_detect(violation, "PEDESTRIAN"),
+        "pedestrian",
+        "vehicular"
+      ),
       time = parse_time(arrest_hour, "%H"),
       location = str_trim(
         str_c(

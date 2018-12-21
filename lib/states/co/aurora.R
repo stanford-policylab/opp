@@ -1,5 +1,8 @@
 source("common.R")
 
+# VALIDATION: [YELLOW] auroragov.org was down (2018-12-13), so the annual
+# report couldn't be accessed for validation, but the data seems reasonable;
+# see TODOs for outstanding issues
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_regex(
     raw_data_dir,
@@ -40,9 +43,6 @@ clean <- function(d, helpers) {
     ) %>%
     helpers$add_type(
       "violation"
-    ) %>%
-    filter(
-      type != "other"
     ) %>%
     mutate(
       # TODO(phoebe): do we really only get citations?

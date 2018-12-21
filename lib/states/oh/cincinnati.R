@@ -1,5 +1,15 @@
 source("common.R")
 
+
+# VALIDATION: [YELLOW] Prior to 2009, there are only random stops recorded, and
+# 2018 only has partial data. The Cincinnati PD doesn't seem to put out Annual
+# Reports but does have crime statistics ("STARS" reports). Despite the lack of
+# validation, the data seems relatively reasonable. However, there is a notable
+# downward trend in stops from 2009 to 2017. See TODOs for outstanding tasks.
+
+# TODO(phoebe): Why do the number of stops drop so precipitously from 2009 to
+# 2017?
+# https://app.asana.com/0/456927885748233/953928960154783
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_regex(raw_data_dir, "Traffic", n_max)
   colnames(d$data) <- make_ergonomic(colnames(d$data))
@@ -25,6 +35,13 @@ clean <- function(d, helpers) {
   # TODO(phoebe): can we get search/contraband fields?
   # https://app.asana.com/0/456927885748233/757611127540100
   d$data %>%
+    merge_rows(
+      instance_id
+    ) %>%
+    filter(
+      # NOTE: filtering out passengers, since we are concerned about drivers
+      !str_detect(field_subject_cid, "PASS")
+    ) %>%
     rename(
       location = address_x,
       disposition = disposition_text,
@@ -49,11 +66,6 @@ clean <- function(d, helpers) {
     helpers$add_lat_lng(
       "geocoded_location"
     ) %>%
-    filter(
-      !is.na(date),
-      # NOTE: filtering out passengers, since we are concerned about drivers
-      !str_detect(field_subject_cid, "PASS")
-    ) %>%
     mutate(
       datetime = parse_datetime(interview_date, "%m/%d/%Y %H:%M:%S %p %Z"),
       date = as.Date(datetime),
@@ -61,7 +73,11 @@ clean <- function(d, helpers) {
       type = if_else(
         str_detect(field_subject_cid, "DRIV"),
         "vehicular",
-        "pedestrian"
+        if_else(
+          str_detect(field_subject_cid, "PEDESTRIAN"),
+          "pedestrian",
+          NA_character_
+        )
       ),
       lat = coalesce(as.numeric(latitude_x), lat),
       lng = coalesce(as.numeric(longitude_x), lng),
@@ -71,19 +87,12 @@ clean <- function(d, helpers) {
       citation_issued = str_detect(actiontakencid, "CITATION"),
       warning_issued = actiontakencid == "WARNING",
       outcome = first_of(
-        arrest = arrest_made,
-        citation = citation_issued,
-        warning = warning_issued
+        "arrest" = arrest_made,
+        "citation" = citation_issued,
+        "warning" = warning_issued
       ),
       vehicle_registration_state =
         tr_state_to_abbreviation[tolower(license_plate_state)]
-    ) %>%
-    filter(
-      # NOTE: looks like there are only random stops recorded prior to 2009
-      year(date) > 2008,
-    ) %>%
-    merge_rows(
-      instance_id
     ) %>%
     standardize(d$metadata)
 }
