@@ -1,5 +1,10 @@
 source("common.R")
 
+
+# VALIDATION: [YELLOW] Tulsa's 2016 Annual Report doesn't list traffic
+# statistics, but does list calls for service and arrests; these figures seem
+# to be on the right order of magnitude relative to the number of calls for
+# service. See TODOs for outstanding tasks.
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_years(raw_data_dir, n_max = n_max)
   bundle_raw(d$data, d$loading_problems)
@@ -44,17 +49,17 @@ clean <- function(d, helpers) {
   colnames(d$data) <- tolower(colnames(d$data))
   d$data %>%
     rename(
-      reason_for_stop = charge,
+      violation = charge,
       location = violation_location,
+      speed = vehspeed,
+      posted_speed = vehspeedlimit,
       vehicle_color = color,
       vehicle_make = make,
       vehicle_model = model,
       vehicle_registration_state = tagstate
     ) %>%
     helpers$add_type(
-    ) %>%
-    filter(
-      type != "other"
+      "violation"
     ) %>%
     mutate(
       datetime = coalesce(

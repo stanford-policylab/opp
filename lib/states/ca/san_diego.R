@@ -1,6 +1,9 @@
 source("common.R")
 
-# VALIDATION: 
+
+# VALIDATION: [YELLOW] There is only partial data for 2017. The PD doesn't
+# appear to produce annual reports with traffic figures, but the numbers seem
+# reasonable given the population.
 load_raw <- function(raw_data_dir, n_max) {
 
   # TODO(phoebe): There are 1,824 duplicated stop_ids representing ~4k rows;
@@ -69,7 +72,7 @@ clean <- function(d, helpers) {
     "chinese" = "asian/pacific islander",
     "indian" = "asian/pacific islander",
     "korean" = "asian/pacific islander",
-    "japanese" = "asians/pacific islander",
+    "japanese" = "asian/pacific islander",
     "pacific islander" = "asian/pacific islander",
     "asian indian" = "asian/pacific islander",
     "laotian" = "asian/pacific islander",
@@ -79,12 +82,9 @@ clean <- function(d, helpers) {
     "hawaiian" = "asian/pacific islander" 
   )
 
-  # TODO(phoebe): can we get location?
-  # https://app.asana.com/0/456927885748233/569484839430728
   d$data %>%
     rename(
       reason_for_stop = stop_cause,
-      date = stop_date,
       time = stop_time,
       search_conducted = searched,
       search_consent = obtained_consent,
@@ -99,7 +99,12 @@ clean <- function(d, helpers) {
       "contraband_found"
     ) %>%
     mutate(
+      # NOTE: all of the files are prefixed with vehicle_stops_*
       type = "vehicular",
+      date = coalesce(
+        parse_date(stop_date),
+        parse_date(stop_date, "%m/%d/%y")
+      ),
       citation_issued = str_detect(ActionTaken, "Citation"),
       warning_issued = str_detect(ActionTaken, "Warning"),
       outcome = first_of(
@@ -122,7 +127,7 @@ clean <- function(d, helpers) {
         "probable cause" = search_conducted  # default
       )
     ) %>%
-    # TODO(danj): add shapefile data once we get location
-    # https://app.asana.com/0/456927885748233/681325483960257
+    # NOTE: there are shapefiles but no location data; fortunately, there is
+    # service area
     standardize(d$metadata)
 }

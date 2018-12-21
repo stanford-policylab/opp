@@ -1,5 +1,11 @@
 source("common.R")
 
+
+# VALIDATION: [YELLOW] Prior to 2011, it appears as though there is only
+# partial data, same with the latter part of 2017. The Oklahoma City PD doesn't
+# appear to produce annual reports or anything with traffic statistics
+# (although crime is reported). That said, the figures for years where there
+# appears to be complete data, 2012-2016, the counts seem reasonable.
 load_raw <- function(raw_data_dir, n_max) {
   stops <- load_single_file(
     raw_data_dir,
@@ -22,7 +28,9 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
-  # TODO(ravi): check this race mapping
+
+  # TODO(phoebe): can we get search/contraband information?
+  # https://app.asana.com/0/456927885748233/739362458819579 
   tr_race = c(
     A = "asian/pacific islander",
     B = "black",
@@ -43,7 +51,7 @@ clean <- function(d, helpers) {
       subject_race = DfndRace,
       subject_sex = DfndSex,
       subject_dob = DfndDOB,
-      reason_for_stop = OffenseDesc,
+      violation = OffenseDesc,
       officer_id = ofc_badge_no,
       speed = viol_actl_spd,
       posted_speed = viol_post_spd,
@@ -65,16 +73,14 @@ clean <- function(d, helpers) {
       sector = SECTOR,
       beat = BEAT
     ) %>%
-    # TODO(ravi): check these classifications
-    # https://app.asana.com/0/456927885748233/521735743717408
     helpers$add_type(
-    ) %>%
-    filter(
-      type != "other"
+      "violation"
     ) %>%
     mutate(
       # NOTE: these are all citations
       citation_issued = TRUE,
+      # TODO(phoebe): can we get other types of outcomes?
+      # https://app.asana.com/0/456927885748233/739362458819581 
       outcome = "citation",
       date = parse_date(date, "%Y%m%d"),
       time = parse_time_int(time),

@@ -21,7 +21,7 @@ Open Policing Project -- City Data
 * lutz
   
 ## TODO
-* reprocess san diego with updated data
+* lat/lng checks?
 * change all contraband_found to include all types of contraband
 * create function to join raw data to clean data
 * remove filters for non-pedestrian, non-vehicular stops
