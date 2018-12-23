@@ -46,6 +46,9 @@ percent <- function(col) {
 }
 
 
+# NOTE: this can make some percentages appear high; for instance,
+# when search_conducted is true and contraband_found is only TRUE or NA, it
+# will remove the NAs so only count TRUE instances
 predicated_percent <- function(col, pred_col) {
   idx <- data[[pred_col]]
   pretty_percent(mean(data[[col]][idx], na.rm = TRUE))

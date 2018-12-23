@@ -1,7 +1,14 @@
 source("common.R")
 
 
-# VALIDATION: [YELLOW] 
+# VALIDATION: [RED] The primary key, Citation number appears to overcount
+# events, or at least be really high relative to the population. The EEPD
+# apparently released a racial profiling report to the town council, although
+# it doesn't seem to have been released online yet. The report notes that in
+# 2017 (a year not present in our data), there were 85k traffic stops, which is
+# considerably lower than the years in the data here. Even deduping on
+# location, date, and time, these figures seem a bit high.
+# NOTE: there is only partial data for 2016
 load_raw <- function(raw_data_dir, n_max) {
 	loading_problems <- list()
   d <- load_single_file(

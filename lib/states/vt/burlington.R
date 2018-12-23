@@ -1,5 +1,9 @@
 source("common.R")
 
+
+# VALIDATION: [GREEN] The Burlington PD's 2017 Annual Report lists figures that
+# are very close to those in the data; the discrepancy is likely due to the
+# exclusion of warrants and other small filters.
 load_raw <- function(raw_data_dir, n_max) {
   # NOTE: calls/incidents are also in the raw data, but aren't loaded here
   d <- load_single_file(raw_data_dir, "TrafficTicketsWarnings12_17.csv", n_max)
@@ -10,9 +14,11 @@ load_raw <- function(raw_data_dir, n_max) {
 
 clean <- function(d, helpers) {
 
-  tr_race <- c(tr_race,
+  tr_race <- c(
+    tr_race,
     "nat.amer" = "other/unknown"
   )
+
   tr_sex <- c(
     "Male - M" = "male",
     "Female - F" = "female"

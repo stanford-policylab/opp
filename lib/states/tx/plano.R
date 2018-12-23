@@ -1,5 +1,15 @@
 source("common.R")
 
+
+# VALIDATION: [RED] These data sources are extremely disparate and the annual
+# report from 2017 reports that there were ~85k and ~89k traffic stops in 2016
+# and 2017, respectively (the two years after this data ends). This would
+# represent a huge increase from 62k and 59k for 2014 and 2015 in this data.
+# See TODOs for outstanding tasks
+# TODO(phoebe): can we get updated data, i.e. 2016-2018? Also, if the Annual
+# Report is correct, stops went up by more than 30% from 2015 to 2016/7 -- why
+# is this?
+# https://app.asana.com/0/456927885748233/955159586009897
 load_raw <- function(raw_data_dir, n_max) {
   # TODO(phoebe): what are the B/R prefixes?
   # https://app.asana.com/0/456927885748233/574633988593752
@@ -329,8 +339,12 @@ clean <- function(d, helpers) {
         "consent" = is_true(search_consent),
         "probable cause" = search_conducted  # default
       ),
-      contraband_found = str_detect(contraband, 'DRUG|MARI|WEAPON')
-        | str_detect(contraband_found, 'DRUG|MARI'),
+      contraband_drugs = str_detect(contraband, "DRUG|MARI")
+        | str_detect(contraband_found, "DRUG|MARI"),
+      contraband_weapons = str_detect(contraband, "WEAPON")
+        | str_detect(contraband_found, "WEAPON"),
+      contraband_found = str_detect(contraband, "DRUG|MARI|WEAPON|OTHE")
+        | str_detect(contraband_found, "DRUG|MARI|WEAPON|OTHE"),
       # NOTE: offense seems to be the closest thing to the violation
       # violation_description is 73.81% null
       # primary_violation is 99.35% null
@@ -351,6 +365,12 @@ clean <- function(d, helpers) {
       )
     ) %>%
     helpers$add_lat_lng(
+    ) %>%
+    helpers$add_shapefiles_data(
+    ) %>%
+    mutate(
+      beat = coalesce(beat, as.character(BEAT)),
+      sector = coalesce(sector, as.character(SECTOR))
     ) %>%
     filter(
       # NOTE: there is only one aberrant date from 2016

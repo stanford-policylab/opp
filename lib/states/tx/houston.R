@@ -1,5 +1,9 @@
 source("common.R")
 
+
+# VALIDATION: [YELLOW] The Houston PD's Annual Reports don't list traffic
+# figures, but the stop counts don't appear unreasonable for a city of 2M
+# people. 2018 only has partial data.
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_years(raw_data_dir, n_max = n_max)
   bundle_raw(d$data, d$loading_problems)
@@ -20,6 +24,9 @@ clean <- function(d, helpers) {
   # TODO(phoebe): can we get search/contraband fields?
   # https://app.asana.com/0/456927885748233/663043550621572
   d$data %>%
+    merge_rows(
+      `Case Number`
+    ) %>%
     rename(
       vehicle_color = `V Color`,
       vehicle_make = `V Make`,
@@ -49,7 +56,6 @@ clean <- function(d, helpers) {
     ) %>%
     helpers$add_lat_lng(
     ) %>%
-    # TODO(danj)
     helpers$add_shapefiles_data(
     ) %>%
     rename(

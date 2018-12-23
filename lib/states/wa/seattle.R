@@ -1,5 +1,13 @@
 source("common.R")
 
+
+# VALIDATION: [YELLOW] The Seattle PD doesn't appear to put out Annual Reports
+# or statistics on all traffic stops, but the numbers seem reasonable given the
+# population. Unfortunately, a lot of relevant demographic data appears to be
+# missing. See NOTEs and TODOs for outstanding tasks
+
+# NOTE: The Seattle PD has a smaller dataset focused only on Terry stops here:
+# https://www.seattle.gov/police/information-and-data/terry-stops
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_years(raw_data_dir, n_max)
   colnames(d$data) <- make_ergonomic(colnames(d$data))
@@ -30,8 +38,7 @@ clean <- function(d, helpers) {
     "WELFARE"
   ), collapse = "|")
 
-  # TODO(phoebe): what is "pri"? precinct?
-  # https://app.asana.com/0/456927885748233/745309166221473
+  # NOTE: pri in original dataset means 'priority'
   d$data %>%
     # NOTE: when rin is null, almost every column is null, so filter out
     filter(

@@ -1,7 +1,10 @@
 source("common.R")
 
 
-# VALIDATION: [YELLOW] 
+# VALIDATION: [GREEN] The Nashville PD's Annual Report only lists violent and
+# property crime statistics, but this lab did an in-depth study here that
+# aligns well with the public data received here:
+# https://policylab.stanford.edu/projects/nashville-traffic-stops.html
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_years(raw_data_dir, n_max = n_max)
   colnames(d$data) <- make_ergonomic(colnames(d$data))

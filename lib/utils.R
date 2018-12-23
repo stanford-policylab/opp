@@ -363,8 +363,9 @@ add_data <- function(
 rename_cols <- function(tbl, rename_map) {
   # NOTE: rename_map format: c("from_1" = "to_1", "from_2" = "to_2")
   nms <- colnames(tbl)
+  rm <- rename_map[names(rename_map) %in% nms]
   names(nms) <- nms
-  nms[names(rename_map)] <- rename_map
+  nms[names(rm)] <- rm
   colnames(tbl) <- nms
   tbl
 }

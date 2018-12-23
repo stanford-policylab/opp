@@ -7,9 +7,11 @@ source("common.R")
 # from traffic violations, which is in the same neighborhood. The Annual
 # Report doesn't give any traffic statistics but the data here seems to be on
 # the same magnitude as that in the report; see TODOs for outstanding issues
+# NOTE: There are some aggregate statistics in excel files for 2016/early 2017
+# on citations and drugs in the data directory
 load_raw <- function(raw_data_dir, n_max) {
-  # TODO(phoebe): what are FI CARDS?
-  # https://app.asana.com/0/456927885748233/585575759775409 
+  # NOTE: FI CARDS are "when an officer comes across a person/persons in a
+  # suspicious circumstance or around an area being watched"
 
   # NOTE: there is a list_of_officers.csv as well as the excel spreadsheet
   # (preferable given the formatting) that have more officer information.

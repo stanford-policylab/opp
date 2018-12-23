@@ -1,7 +1,11 @@
 source("common.R")
 
 
-# VALIDATION: [YELLOW] 
+# VALIDATION: [RED] For the year of 2016, the only year received, there were
+# 1.8M rows after deduping on the primary key HA_ARREST_KEY. This number is too
+# high, given that the population is only 1.2M as of the 2010 census, as this
+# would suggest everyone in Dallas was stopped on average once in 2016; see
+# TODOs for outstanding tasks
 load_raw <- function(raw_data_dir, n_max) {
   # NOTE: commercial vehicle inspections is not currently processed but exists
   # in the raw_data_dir; same with some of their lookup tables:
@@ -150,6 +154,9 @@ clean <- function(d, helpers) {
     select_(
       .dots = c("key", intersect(names(schema), colnames(.)))
     ) %>%
+    # TODO(phoebe): even deduping on the primary key leaves 1.8M million rows
+    # for a population of ~1.2M in one year; this can't be right
+    # https://app.asana.com/0/456927885748233/548816045773955
     merge_rows(
       key
     ) %>%
