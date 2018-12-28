@@ -1,5 +1,11 @@
 source("common.R")
 
+
+# VALIDATION: [YELLOW] Data prior to 2009 looks like it could be incomplete,
+# and 2017 only has part of the year. The Madison PD's Annual Report doesn't
+# seem to contain traffic figures, but it does contain calls for service, which
+# are around 200k each year. Given there are around 30k warnings and citations
+# each year, this seems reasonable.
 load_raw <- function(raw_data_dir, n_max) {
   # NOTE: "IBM" is the officers department ID
   cit <- load_single_file(
@@ -20,6 +26,7 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
+
   tr_race <- c(
     "A" = "asian/pacific islander",
     "B" = "black",
@@ -43,7 +50,10 @@ clean <- function(d, helpers) {
       OfficerName = c("officer_last_name", "officer_first_name")
     ) %>%
     mutate(
-      # NOTE: Statute Descriptions all appear to be vehicle related
+      # NOTE: Statute Descriptions are almost all vehicular, there are a few
+      # pedestrian related Statute Descriptions, but it's unclear whether
+      # the pedestrian or vehicle is failing to yield, but this represents a
+      # quarter of a percent maximum
       type = "vehicular",
       speed = as.integer(posted_speed) + as.integer(OverLimit),
       date = parse_date(Date, "%Y/%m/%d"),

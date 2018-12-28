@@ -1,5 +1,7 @@
 source("common.R")
 
+
+# VALIDATION: [RED] It looks like the PD gave us only a sample.
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_single_file(raw_data_dir, "green_bay.csv", n_max)
   bundle_raw(d$data, d$loading_problems)

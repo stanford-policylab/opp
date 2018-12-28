@@ -1,5 +1,10 @@
 source("common.R")
 
+
+# VALIDATION: [RED] 2016 Annual Report doesn't list traffic statistics, but
+# something very peculiar is going on here. The total stops yoy decreases
+# dramatically from 2016 to 2016 and most records are null for most features
+# that indicate the violation.
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_regex(raw_data_dir, "^\\d{4}.csv", n_max = n_max)
   codes <- load_single_file(
@@ -31,15 +36,6 @@ clean <- function(d, helpers) {
     "Unknown" = "other/unknown",
     "White" = "white"
   )
-  tr_search_conducted = c(
-    Yes = TRUE,
-    No = FALSE,
-    Unknown = NA
-  )
-  tr_sex = c(
-    "Female" = "female",
-    "Male" = "male"
-  )
 
   d$data %>%
     rename(
@@ -47,7 +43,8 @@ clean <- function(d, helpers) {
       contraband_found = Contraband_Found,
       arrest_made = Arrest,
       citation_issued = Citation,
-      warning_issued = Verbal_Warning,  # no written_warning or other type
+      # NOTE: no written warning or other type of warning
+      warning_issued = Verbal_Warning,
       subject_sex = Sex,
       reason_for_stop = Reason,
       reason_for_arrest = ArrestBasedOn,
@@ -64,10 +61,11 @@ clean <- function(d, helpers) {
     ) %>%
     mutate(
       # NOTE: we don't have most of these, and it's dicey to reverse engineer
-      # from arrest_offense_charged_desc
+      # from arrest_offense_charged_desc, which also has a very high null rate
       type = if_else(
         str_detect(reason_for_stop, "Traffic Violation"),
         "vehicular",
+        # NOTE: pre-existing knowledge or "violation other than traffic"
         "pedestrian"
       ),
       datetime = parse_datetime(Stop_Date),
@@ -80,13 +78,13 @@ clean <- function(d, helpers) {
       ),
       # NOTE: Hispanic ethnicity > race subdivision
       subject_race =
-        tr_race[ifelse(Ethnicity == "Hispanic", "Hispanic", Race)],
+        tr_race[if_else(Ethnicity == "Hispanic", "Hispanic", Race)],
       subject_sex = tr_sex[subject_sex],
-      search_conducted = tr_search_conducted[Search_Conducted],
+      search_conducted = tr_yn[Search_Conducted],
       reason_for_search = str_c_na(
         Search_reason,
         Facts_Supporting_Search,
-        sep = "; "
+        sep = "|"
       )
     ) %>%
     helpers$add_lat_lng(

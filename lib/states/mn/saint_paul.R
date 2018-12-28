@@ -1,5 +1,11 @@
 source("common.R")
 
+
+# VALIDATION: [GREEN] While it doesn't appear as though the St. Paul PD puts
+# out an annual report, they do have a very well documented open data portal
+# from which this data is taken. Given the transparency of their government
+# data portal, it seems unlikely the PD would report numbers in opposition to
+# those available here; see TODOs for outstanding requests/clarifications
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_single_file(
     raw_data_dir,
@@ -35,13 +41,17 @@ clean <- function(d, helpers) {
       # NOTE: all stops either involved driver or vehicle, so vehicular
       type = "vehicular",
       citation_issued = tr_yn[`CITATION ISSUED?`],
+      # TODO(phoebe): if a citation wasn't issued, was it a warning?
+      # https://app.asana.com/0/456927885748233/950796405221402 
+      warning_issued = !citation_issued,
       frisk_performed = tr_yn[`DRIVER FRISKED?`],
       search_vehicle = tr_yn[`VEHICLE SEARCHED?`],
-      search_conducted = frisk_performed | search_vehicle,
+      search_conducted = search_vehicle,
       # TODO(phoebe): can we get other outcomes?
       # https://app.asana.com/0/456927885748233/573247093484092
       outcome = first_of(
-        citation = citation_issued
+        "citation" = citation_issued,
+        "warning" = warning_issued
       ),
       # TODO(phoebe): can we get contraband?
       # https://app.asana.com/0/456927885748233/573247093484095

@@ -21,7 +21,7 @@ Open Policing Project -- City Data
 * lutz
   
 ## TODO
-* reprocess san diego with updated data
+* lat/lng checks?
 * change all contraband_found to include all types of contraband
 * create function to join raw data to clean data
 * remove filters for non-pedestrian, non-vehicular stops
@@ -44,5 +44,5 @@ Open Policing Project -- City Data
 * use load_years in all opp_city
 * check for violation used in place of reason for stop
 * pull out granularity of "other/non-discretionary" search types
-* add notes to report pdf
+* add VALIDATION/TODO/NOTES to report pdf
 * cite IPUMS/NHGIS as data sources and get permission for redistribution

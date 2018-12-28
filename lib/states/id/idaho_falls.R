@@ -1,11 +1,16 @@
 source("common.R")
 
 
+# VALIDATION: [YELLOW] The figures look close to Traffic Citations section (pg.
+# 16) of the 2016 Idaho Falls Police Department's Annual Report, but we have
+# not yet received translations for the 'reptspec' column, so we can't
+# translate these into typical outcomes (warning, citation, arrest); there is
+# also only partial data for 2008 and 2016 (see NOTE for details on 2016); see
+# TODOs for outstanding issues
 load_raw <- function(raw_data_dir, n_max) {
-  # TODO(ravi): should we separately process the new data files, even though
-  # we'll only have like 6 months of data?
-  # https://app.asana.com/0/456927885748233/592025853254509
-	# NOTE: the updated files have completely new (but consistent) formats
+	# NOTE: there are 6 months of new data that weren't processed here because
+  # they were in a completely different format and a small fraction of the data
+  # compared to the main files
 	# ss_new_format <- "ss_july_16_to_sep_17_sheet_2.csv"
 	# ts_new_format <- "ts_july_25_to_dec_31_2016_sheet_1.csv" 
   d <- load_regex(

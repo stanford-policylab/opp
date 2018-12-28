@@ -1,5 +1,14 @@
 source("common.R")
 
+
+# VALIDATION: [YELLOW] There is only partial data for 2018, and it looks like
+# the first month or two of 2014 are missing. According to the 2017 Annual
+# Report, recorded pedestrian stops are 20-30k higher than that reported here
+# each year. See TODOs for outstanding tasks, including this one
+
+# TODO(phoebe): why are pedestrian stops 20-30k higher each year according to
+# the 2017 Annual Report than in this data?
+# https://app.asana.com/0/456927885748233/955011230721892 
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_single_file(raw_data_dir, "car_ped_stops.csv", n_max = n_max)
   bundle_raw(d$data, d$loading_problems)
@@ -43,10 +52,11 @@ clean <- function(d, helpers) {
     ) %>%
     apply_translator_to(
       tr_int_str_to_bool,
-      "individual_contraband",
-      "vehicle_contraband",
+      "arrest_made",
       "search_person",
       "search_vehicle",
+      "individual_contraband",
+      "vehicle_contraband",
       "individual_frisked",
       "vehicle_frisked"
     ) %>%
@@ -65,9 +75,6 @@ clean <- function(d, helpers) {
       # TODO(ravi):  is a vehicle_frisk a frisk?
       # https://app.asana.com/0/456927885748233/658391963833528
       frisk_performed = individual_frisked | vehicle_frisked,
-      search_basis = first_of(
-        "probable cause" = search_conducted | frisk_performed
-      ),
       subject_sex = tr_sex[gender],
       subject_race = tr_race[race]
     ) %>%

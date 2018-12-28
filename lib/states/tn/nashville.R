@@ -1,5 +1,10 @@
 source("common.R")
 
+
+# VALIDATION: [GREEN] The Nashville PD's Annual Report only lists violent and
+# property crime statistics, but this lab did an in-depth study here that
+# aligns well with the public data received here:
+# https://policylab.stanford.edu/projects/nashville-traffic-stops.html
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_years(raw_data_dir, n_max = n_max)
   colnames(d$data) <- make_ergonomic(colnames(d$data))
@@ -8,6 +13,7 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
+
   tr_race <- c(
     A = "asian/pacific islander",
     B = "black",
@@ -17,6 +23,7 @@ clean <- function(d, helpers) {
     U = "other/unknown",
     W = "white"
   )
+
   tr_stop_type <- c(
     "CR" = "child restraint",
     "INV" = "investigative stop",
@@ -77,6 +84,8 @@ clean <- function(d, helpers) {
       "written_warning_issued"
     ) %>%
     mutate(
+      # NOTE: all the files are traffic_stop_* and the violations are vehicle
+      # related
       type = "vehicular",
       date = parse_date(date, "%m/%d/%Y"),
       time = parse_time(time, "%I:%M:%S %p"),
@@ -87,7 +96,7 @@ clean <- function(d, helpers) {
         citation = citation_issued,
         warning = warning_issued
       ),
-      reason_for_stop = tr_stop_type[stop_type],
+      violation = tr_stop_type[stop_type],
       search_person = driver_searched | passenger_searched,
       subject_race = tr_race[if_else_na(
         (suspect_ethnicity == "H" | suspect_ethnicity == "LATINO"),

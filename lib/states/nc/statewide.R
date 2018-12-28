@@ -49,7 +49,11 @@ load_raw <- function(raw_data_dir, n_max) {
   # drop Type as well, since it's now useless and Type in search.csv
   # corresponds to search type, which we want to keep
   only_drivers <- filter(person, Type == "D") %>% select(-Type)
-  collapsed_search_basis <- group_by(
+
+  # NOTE: there can be multiple search bases per stop-search-person, so we
+  # collapse them here
+  collapsed_search_basis <-
+    group_by(
       search_basis,
       StopID,
       SearchID,
@@ -224,10 +228,6 @@ clean <- function(d, helpers) {
         gt_0(Weapons),
         NA
       )
-    ) %>%
-    filter(
-      # NOTE: remove incomplete data from 2000-2001
-      year(date) > 2001
     ) %>%
     standardize(d$metadata)
 }

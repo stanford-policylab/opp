@@ -1,9 +1,11 @@
 source("common.R")
 
-# VALIDATION: [YELLOW] While the nubmers seem to be on the right order of
+# VALIDATION: [GREEN] While the numbers seem to be on the right order of
 # magnitude, they don't clearly line up with the city report put out by the San
-# Jose government; see TODOs for outstanding issues, including this one
-# TODO(phoebe): arrets for years 2014-2016 in our data are between 1.5k and 4k,
+# Jose government; however, the racial breakdown does closely match that in
+# "San Jose Police Department Traffic and Pedestrian Stop Study"; see TODOs for
+# outstanding issues
+# TODO(phoebe): arrests for years 2014-2016 in our data are between 1.5k and 4k,
 # but the "City of San Jose -- Annual Report on City Services 2016-17" says
 # there were around 17k arrests for each of those year; is this not the
 # universe of stops? It not, what are we missing?
@@ -55,7 +57,7 @@ clean <- function(d, helpers) {
     "U" = "other/unknown",
     "E" = "other/unknown",
     "X" = "other/unknown",
-    "J" = "other/unknown",
+    "J" = "asian/pacific islander",
     "G" = "other/unknown",
     "Q" = "other/unknown",
     "0" = "other/unknown",
@@ -63,7 +65,7 @@ clean <- function(d, helpers) {
     "5" = "other/unknown",
     "L" = "other/unknown",
     "4" = "other/unknown",
-    "K" = "other/unknown",
+    "K" = "asian/pacific islander",
     "." = "other/unknown",
     "6" = "other/unknown",
     "a" = "other/unknown",

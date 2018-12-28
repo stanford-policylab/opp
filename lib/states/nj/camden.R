@@ -1,5 +1,11 @@
 source("common.R")
 
+
+# VALIDATION: [YELLOW] For 2013 and 2018 there is only half of the year of
+# data. The Camden PD doesn't appear to have released any annual report
+# recently, so it's hard to validate these numbers. They are a little high some
+# years relative to the population, but crime in Camden has also been high, so
+# these may be reasonable figures. See TODOs for oustanding tasks.
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_years(raw_data_dir, n_max)
   mutate(
@@ -42,7 +48,9 @@ clean <- function(d, helpers) {
       unit = Unit
     ) %>%
     mutate(
-      # NOTE: the 30 or so that aren't explicitly tagged appear to be vehicular
+      # NOTE: There are TRAFFIC STOP and PEDESTRIAN STOP and what looks like
+      # some accidental free form text for this column, but most reference
+      # patrol so classifying as vehicular
       type = if_else_na(
         CFS_Code == "PEDESTRIAN STOP",
         "pedestrian",
@@ -60,13 +68,15 @@ clean <- function(d, helpers) {
       subject_dob = parse_date(DateofBirth),
       subject_age = age_at_date(subject_dob, date),
       disposition = tolower(Disposition),
+      # NOTE: FIELD CONTACT CARD just records the event when no action was
+      # taken
       warning_issued = str_detect(disposition, "warning"),
-      # TODO(phoebe): can we get citations? looks like we only have warnings
-      # and arrests and "FIELD CONTACT CARD", which means?
-      # https://app.asana.com/0/456927885748233/757611127540102
+      # NOTE: according to the PD, summons is a citation
+      citation_issued = str_detect(disposition, "summons"),
       arrest_made = str_detect(disposition, "arrest"),
       outcome = first_of(
         arrest = arrest_made,
+        citation = citation_issued,
         warning = warning_issued
       )
     ) %>%

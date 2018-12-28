@@ -19,7 +19,7 @@ clean <- function(d, helpers) {
     F = "asian/pacific islander", # Filipino
     G = "asian/pacific islander", # Guamanian
     H = "hispanic", # Hispanic
-    I = "other/unknown", # Indian
+    I = "asian/pacific islander", # Indian
     J = "asian/pacific islander", # Japanese
     K = "asian/pacific islander", # Korean
     L = "asian/pacific islander", # Laotian

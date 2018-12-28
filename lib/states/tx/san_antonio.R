@@ -1,5 +1,9 @@
 source("common.R")
 
+
+# VALIDATION: [YELLOW] Only partial data for 2018. The San Antonio PD doesn't
+# appear to issue annual reports or traffic statistics. That said, the number
+# of stops seems reasonable if not a little low for a state of 1.4M people.
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_years(raw_data_dir, n_max = n_max)
   bundle_raw(d$data, d$loading_problems)
@@ -51,9 +55,6 @@ clean <- function(d, helpers) {
     ) %>%
     helpers$add_type(
     ) %>%
-    filter(
-      type != "other"
-    ) %>%
     mutate(
       date = parse_date(`Violation Date`),
       time = parse_time(`Violation Time`),
@@ -68,7 +69,9 @@ clean <- function(d, helpers) {
       outcome = first_of(
         "arrest" = arrest_made,
         "citation" = citation_issued
-      )
+      ),
+      # NOTE: 0 seems to indicate not recorded rather than 2000
+      vehicle_year = if_else(vehicle_year == "0", NA_character_, vehicle_year)
     ) %>%
     helpers$add_lat_lng(
     ) %>%

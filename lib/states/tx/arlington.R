@@ -1,5 +1,13 @@
 source("common.R")
 
+
+# VALIDATION: [GREEN] There is only 2016 data and there are a lot of missing
+# data dictionary mappings from features to descriptions, but the 2016 Annual
+# Report's total number of traffic stops very closely matches this data. See
+# TODOs for outstanding tasks
+
+# TODO(phoebe): can we get more than just 2016?
+# https://app.asana.com/0/456927885748233/661685466505378 
 load_raw <- function(raw_data_dir, n_max) {
   subject <- load_single_file(
     raw_data_dir,
@@ -56,8 +64,8 @@ clean <- function(d, helpers) {
       # TODO(phoebe): can we get a data dictionary for this? R, C, K, L?
       # https://app.asana.com/0/456927885748233/653410849000225
       outcome = `4th digit (Final Outcome)`,
-      # TODO(phoebe): can we get a data dictionary for 6th digit (Search
-      # Outcome?)
+      # TODO(phoebe): can we get a data dictionary for `6th digit (Search
+      # Outcome)`?
       # https://app.asana.com/0/456927885748233/653410849000225
       search_conducted = !is.na(`6th digit (Search Outcome)`),
       date = parse_date(InitiateDate),

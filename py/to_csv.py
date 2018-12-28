@@ -374,11 +374,11 @@ def perr(*args, **kwargs):
 
 
 def get_converter(
-        file_type,
-        sas_load_file=None,
-        sql_server_load_file=None,
-        **kwargs
-    ):
+    file_type,
+    sas_load_file=None,
+    sql_server_load_file=None,
+    **kwargs
+):
     func_name = file_type + '_to_csv'
     # NOTE: IPUMS provides fixed width dat files with custom load scripts;
     # SAS are the easiest to parse and convert
