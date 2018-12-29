@@ -41,8 +41,8 @@ load_raw <- function(raw_data_dir, n_max) {
   )
   tr_district <- translator_from_tbl(
     r("district_county_mapping.csv"),
-    "county_name",
-    "district"
+    "district",
+    "county_name"
   )
 
   # NOTE: D is Driver and P is Passenger, see refcommoncode.csv;
@@ -134,7 +134,14 @@ load_raw <- function(raw_data_dir, n_max) {
     action_description = tr_action[Action],
     search_type_description = tr_search_type[Type], 
     stop_purpose_description = tr_stop_purpose[Purpose],
-    county = tr_county[StopLocation]
+    county_name = tr_county[StopLocation],
+    # NOTE: Map length-2 county district codes to county name, and normalize
+    # non-mapped names
+    county_name = if_else(
+      str_length(county_name) == 2, 
+      tr_district[county_name],
+      str_c(county_name, " County")
+    )
   ) %>%
   bundle_raw(loading_problems)
 }
@@ -176,7 +183,7 @@ clean <- function(d, helpers) {
       # https://app.asana.com/0/456927885748233/635930602677956
       location = str_c_na(
         StopCity,
-        str_c(county, " County"),
+        county_name,
         sep = ", "
       ),
       arrest_made = str_detect(action_description, "Arrest"),
