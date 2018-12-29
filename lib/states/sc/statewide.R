@@ -49,8 +49,8 @@ clean <- function(d, helpers) {
       subject_race = fast_tr(Race, tr_race),
       subject_sex = fast_tr(Sex, tr_sex),
       officer_race = fast_tr(`Officer Race`, tr_race),
-      # NOTE: Data received in Aug 2016 was vehicular stops.
-      type = "vehicular",
+      # NOTE: Data received in Aug 2016 was mostly vehicular stops.
+      type = if_else(reason_for_stop == "Pedestrian", "pedestrian", "vehicular"),
       violation = str_c_na(SectionNum, OffenseCode, sep = " "),
       arrest_made = FelonyArrest == "1" | Jailed == "1",
       citation_issued = `Contact Type` == "Citation",
@@ -79,7 +79,9 @@ clean <- function(d, helpers) {
         | Contraband == "1" | !is.na(ContrabandDesc),
       search_person = SubjectSearched == "1" | PassengerSearched == "1",
       search_vehicle = VehicleSearched == "1",
-      search_conducted = Searched == "1" | search_person | search_vehicle
+      search_conducted = Searched == "1" | search_person | search_vehicle,
+      # NOTE: mimics old opp
+      contraband_found = if_else(search_conducted & is.na(contraband_found), FALSE, contraband_found)
     ) %>%
     standardize(d$metadata)
 }
