@@ -1,3 +1,15 @@
+# NOTE: January 2013 looks suspiciously low in both the old OPP data and in this cleaned version
+# NOTE: search/hit counts are a bit different between old opp and this version, because the old
+# opp counted all search NAs as FALSE, whereas we check other fields when NA. (i believe our new
+# method to be more accurate)
+# NOTE: there are also some slight discrepancy in by-month numbers throughout 2013 and 2014, between
+# old opp and this cleaned data (even after filtering to the patrol-only data); 
+# though the total counts and race breakdowns are identical between
+# old opp and newly cleaned data. it is unclear to me where these discrepancies arise from. it is 
+# possible that 2013 sheets 23467 should be used instead of sheet 1, however when merging the two,
+# they line up identically, so i can't see that helping.
+# TODO(amyshoe): figure out what is causing discrepancies between old and new opp data in by-month 
+# 2013 counts 
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
@@ -6,11 +18,12 @@ load_raw <- function(raw_data_dir, n_max) {
     '2013_master_traffic_stop_data_for_2014_report_sheet_1.csv',
     n_max = n_max
   )
-  d13_23467 <- load_regex(
-    raw_data_dir,
-    '2013_master_traffic_stop_data_for_2014_report_sheet_[23467].csv',
-    n_max = n_max
-  )
+  # NOTE: pages 23467 contain duplicates of pg 1, so we don't process them
+  # d13_23467 <- load_regex(
+  #   raw_data_dir,
+  #   '2013_master_traffic_stop_data_for_2014_report_sheet_[23467].csv',
+  #   n_max = n_max
+  # )
   d13_5 <- load_single_file(
     raw_data_dir,
     '2013_master_traffic_stop_data_for_2014_report_sheet_5.csv',
@@ -20,8 +33,8 @@ load_raw <- function(raw_data_dir, n_max) {
     d13_1$data %>%
       select(-`Age at the time of stop`, -X8) %>%
       rename(Registration = `Registration (tag)`),
-    d13_23467$data %>%
-      rename(Location = LOCATION),
+    #d13_23467$data %>%
+    #  rename(Location = LOCATION),
     d13_5$data %>%
       rename(
         Location = LOCATION,
@@ -99,7 +112,7 @@ load_raw <- function(raw_data_dir, n_max) {
   ) %>%
   bundle_raw(c(
     d13_1$loading_problems,
-    d13_23467$loading_problems,
+    # d13_23467$loading_problems,
     d13_5$loading_problems,
     d07_1$loading_problems,
     d09$loading_problems,
@@ -209,7 +222,7 @@ clean <- function(d, helpers) {
       subject_dob = parse_date(dob_raw, "%Y/%m/%d"),
       subject_age = age_at_date(subject_dob, date),
       subject_sex = fast_tr(Gender, tr_sex),
-      subject_race = fast_tr(Race, tr_race),
+      subject_race = fast_tr(str_to_lower(Race), tr_race),
       # NOTE: Source data only include vehicle stops.
       type = "vehicular",
       # NOTE: `Arrest Made` column isn't complete, so supplement with "arrest"
