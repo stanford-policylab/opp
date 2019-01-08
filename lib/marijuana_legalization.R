@@ -5,9 +5,9 @@ source("analysis_common.R")
 
 marijuana_legalization_analysis <- function() {
   tbl <- load()
-  srp <- compose_search_rates_plots(tbl)
   list(
-    tables = (
+    data = tbl,
+    tables = list(
       # TODO(danj): directionally, the coefficients are the same, but they
       # differ non-trivially; one reason may be that in reprocessing
       # the data, if search_conducted was true but search_basis was
@@ -21,15 +21,16 @@ marijuana_legalization_analysis <- function() {
       # take precedence; lastly, there could be new data that was processed
       search_rate_difference_in_difference_coefficients =
         calculate_search_rate_difference_in_difference_coefficients(tbl)
+    ),
+    plots = (
+      search_rate = compose_search_rate_plots(tbl)
+      # co_wa_misdemeanor_and_search_rates = 
+      #   compose_test_misdemeanor_and_search_rates_plot(tbl),
+      # control_search_rates = 
+      #   compose_control_search_rates_plot(tbl),
+      # inferred_threshold_changes =
+      #   compose_inferred_threshold_changes_plot(tbl)
     )
-    # plots = (
-    #   co_wa_misdemeanor_and_search_rates = 
-    #     compose_test_misdemeanor_and_search_rates_plot(tbl),
-    #   control_search_rates = 
-    #     compose_control_search_rates_plot(tbl),
-    #   inferred_threshold_changes =
-    #     compose_inferred_threshold_changes_plot(tbl)
-    # )
   )
 }
 
@@ -47,14 +48,13 @@ load <- function() {
     # searches
     # "FL", "Statewide",
     "MA", "Statewide",
-    # TODO(amyshoe): something wrong here too, values are very small
-    # "MT", "Statewide",
+    # TODO(amyshoe): something wrong here, the coefficient is a large negative
+    "MT", "Statewide",
     "NC", "Statewide",
     "OH", "Statewide",
     "RI", "Statewide",
-    # TODO(amyshoe): something wrong here too, glm doesn't converge, values are very
-    # small
-    # "SC", "Statewide",
+    # TODO(amyshoe): something seems wrong here
+    "SC", "Statewide",
     "TX", "Statewide",
     "VT", "Statewide",
     "WI", "Statewide"
@@ -69,7 +69,7 @@ load <- function() {
 add_legalization_info <- function(tbl) {
   tbl %>%
     mutate(
-      # NOTE: default is WA's legalization date, which is 1 day earlier than CO
+      # NOTE: default for control and WA is WA's legalization date
       legalization_date = as.Date("2012-12-09"),
       legalization_date = if_else(
         state == "CO",
@@ -84,6 +84,7 @@ add_legalization_info <- function(tbl) {
 
 
 calculate_search_rate_difference_in_difference_coefficients <- function(tbl) {
+
   tbl <- 
     tbl %>%
     filter(
@@ -104,8 +105,8 @@ calculate_search_rate_difference_in_difference_coefficients <- function(tbl) {
       search_conducted
     ) %>%
     mutate(
+      # NOTE: excludes consent and other (non-discretionary)
       is_eligible_search =
-        # NOTE: excludes consent and other (non-discretionary)
         search_basis %in% c("k9", "plain view", "probable cause")
     ) %>%
     group_by(
@@ -132,11 +133,14 @@ calculate_search_rate_difference_in_difference_coefficients <- function(tbl) {
     binomial,
     tbl
   )
+
   coefs <- summary(m)$coefficients[, c("Estimate", "Std. Error")]
+
   as_tibble(coefs) %>%
     mutate(coefficient = rownames(coefs)) %>%
     rename(estimate = Estimate, std_error = `Std. Error`) %>%
     select(coefficient, estimate, std_error)
+
 }
 
 
@@ -179,10 +183,10 @@ compose_search_rate_plots <- function(tbl) {
 
   trendlines <- group_by(tbl, state) %>% do(compute_search_trendline(.))
 
-  # NOTE: roll up to quarters and remove data around legalization quarter
-  # to reduce noise
   tbl <- tbl %>%
+    # NOTE: roll up to quarters to reduce noisiness
     to_rates_by_quarter(n_eligible_searches, n_stops_with_search_data) %>%
+    # NOTE: remove data around legalization quarter since it will be mixed
     filter(quarter != as.Date("2012-11-15"))
 
   list(t = trendlines, tbl = tbl)
@@ -190,6 +194,7 @@ compose_search_rate_plots <- function(tbl) {
 
 
 to_rates_by_quarter <- function(tbl, numerator_col, denominator_col) {
+
   nq <- enquo(numerator_col)
   dq <- enquo(denominator_col)
   n_name <- quo_name(nq)
@@ -213,6 +218,7 @@ to_rates_by_quarter <- function(tbl, numerator_col, denominator_col) {
     group_by(.dots = group_by_colnames) %>%
     summarize(rate = sum(!!nq) / sum(!!dq)) %>%
     ungroup()
+
 }
 
 
@@ -259,6 +265,7 @@ compute_search_trendline <- function(tbl) {
 
 
 compose_timeseries_rate_plot <- function(tbl, y_axis_label) {
+
   ggplot(
     tbl,
     aes(
@@ -274,10 +281,17 @@ compose_timeseries_rate_plot <- function(tbl, y_axis_label) {
     "black" = "black",
     "hispanic" = "red"
   )) +
-  scale_y_continuous(y_axis_label, labels = scales::percent, expand = c(0, 0)) +
+  scale_y_continuous(
+    y_axis_label,
+    labels = scales::percent,
+    expand = c(0, 0)
+  ) +
   expand_limits(y = -0.0001) +
   facet_wrap(~ state, scales = "free_y") +
-  geom_vline(aes(xintercept = legalization_date), linetype = "longdash") +
+  geom_vline(
+    aes(xintercept = legalization_date),
+    linetype = "longdash"
+  ) +
   base_theme() +
   theme(
     # NOTE: default for control states
@@ -288,12 +302,14 @@ compose_timeseries_rate_plot <- function(tbl, y_axis_label) {
   )
   # TODO(danj): change legend position for CO/WA
   # TODO(danj): add geom_segment trendlines for those with trendlines
+
 }
 
 
 compose_test_misdemeanor_plots <- function(tbl) {
 
-  tbl <- tbl %>%
+  tbl <-
+    tbl %>%
     filter(
       type == "vehicular",
       subject_race %in% c("black", "hispanic", "white"),
@@ -334,12 +350,12 @@ compose_test_misdemeanor_plots <- function(tbl) {
     ) %>%
     ungroup(
     ) %>%
-    # NOTE: roll up to quarters and remove data around legalization quarter
-    # to reduce noise
+    # NOTE: roll up to quarters to reduce noisiness
     to_rates_by_quarter(
       n_eligible_searches,
       n_stops_with_search_data
     ) %>%
+    # NOTE: remove data around legalization quarter since it will be mixed
     filter(
       quarter != as.Date("2012-11-15")
     )

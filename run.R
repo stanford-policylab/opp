@@ -34,6 +34,7 @@ get_args <- function() {
                  "[--process]",
                  "[--n_max]",
                  "[--report]",
+                 "[--prima_facie]",
                  "[--bunching]",
                  "[--disparity]",
                  "[--plot]",
