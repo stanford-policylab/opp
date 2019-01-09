@@ -103,7 +103,6 @@ clean <- function(d, helpers) {
   # a stop. Group by the situational details of the stop and summarize to
   # create a single row for a stop. For search_conducted and contraband_found
   # fields, >99.9% all stops in group have same value. 
-  # ALS: (not sure what this means or if it's still valid post contraband switch)
   d$data %>%
     group_by(
       officer_id,
