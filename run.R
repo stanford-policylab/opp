@@ -20,7 +20,7 @@ main <- function() {
   if (not_null(args$prima_facie))
     opp_prima_facie_stats()
   if (not_null(args$disparity))
-    disparity()
+    disparity(args$disparity)
   if (not_null(args$everything))
     opp_everything()
   print("Finished!")
@@ -35,7 +35,7 @@ get_args <- function() {
                  "[--n_max]",
                  "[--report]",
                  "[--bunching]",
-                 "[--disparity]",
+                 "[--disparity [state_or_city]]",
                  "[--plot]",
                  "--state <state_code>",
                  "--city <city_name>",
@@ -50,7 +50,7 @@ get_args <- function() {
     "report",      "r",         "none",         "logical",
     "prima_facie", "f",         "none",         "logical",
     "bunching",    "b",         "none",         "logical",
-    "disparity",   "d",         "none",         "logical",
+    "disparity",   "d",         "none",         "character",
     "plot",        "p",         "none",         "logical",
     "state",       "s",         "none",         "character",
     "city",        "c",         "none",         "character",
