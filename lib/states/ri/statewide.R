@@ -91,8 +91,8 @@ clean <- function(d, helpers) {
       ),
       search_basis = first_of(
         "plain view" = str_detect(multi_search_reasons, "C"),
-        "probable cause" = str_detect(multi_search_reasons, "O|P"),
-        "other" = str_detect(multi_search_reasons, "A|I|R|T"),
+        "probable cause" = str_detect(multi_search_reasons, "O|P|R|T"),
+        "other" = str_detect(multi_search_reasons, "A|I"),
         "probable cause" = search_conducted
       ),
       reason_for_search = str_c_na(

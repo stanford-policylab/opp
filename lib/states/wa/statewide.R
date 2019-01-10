@@ -94,8 +94,13 @@ clean <- function(d, helpers) {
     "I2" = "other", # Impound Search
     "K1" = "k9",
     "K2" = "k9",
-    "W1" = "other",
-    "W2" = "other"
+    "P1" = "probable cause", # Frisk (technically RAS)
+    "P2" = "probable cause", # Frisk (technically RAS)
+    "W1" = "other", # Warrant Search
+    "W2" = "other",  # Warrant Search
+    "-" = NA_character_,
+    "NULL" = NA_character_,
+    "N" = NA_character_ # No search
   )
 
   # NOTE: Replacing "NULL" with NA everywhere.

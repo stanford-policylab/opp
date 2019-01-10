@@ -49,7 +49,6 @@ clean <- function(d, helpers) {
   d$data %>%
     rename(
       location = ZIP,
-      beat = BeatLocationOfStop,
       # TODO(walterk): Determine whether Chicago should be removed from this
       # dataset.
       # https://app.asana.com/0/456927885748233/727769678078651
@@ -72,6 +71,11 @@ clean <- function(d, helpers) {
       subject_age = year(date) - subject_yob,
       subject_sex = tr_sex[parse_character(DriverSex)],
       subject_race = tr_race[parse_character(DriverRace)],
+      beat = if_else(
+        department_name == "ILLINOIS STATE POLICE",
+        str_pad(BeatLocationOfStop, width = "2", side = "left", pad = "0"),
+        BeatLocationOfStop
+      ),
       # NOTE: The schema indicates that this data is vehicle specific. All
       # subject and search related columns are prefaced with Vehicle, Driver, or
       # Passenger.

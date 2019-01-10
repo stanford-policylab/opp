@@ -59,13 +59,14 @@ clean <- function(d, helpers) {
         citation = citation_issued,
         warning = warning_issued
       ),
-      contraband_drugs = RsltSrchDrg == "1",
-      contraband_weapons = RsltSrchWpn == "1",
-      contraband_found = any_matches(
-        "1",
-        RsltSrchDrg,
-        RsltSrchWpn
-      ),
+      # NOTE: there are very few cases where "RsltSrchNo" and "RsltSrchXX" are both
+      # true (< 1%). In these cases, we give RsltSrchNo precedence 
+      contraband_drugs = RsltSrchDrg == "1" & RsltSrchNo == "0",
+      contraband_weapons = RsltSrchWpn == "1" & RsltSrchNo == "0",
+      contraband_alcohol = RsltSrchAlc == "1" & RsltSrchNo == "0",
+      contraband_other = (RsltSrchMny == "1" | RsltSrchOth == "1") & RsltSrchNo == "0",
+      contraband_found = contraband_drugs | contraband_weapons | 
+        contraband_alcohol | contraband_other,
       search_conducted = SearchYN == "Yes" | !is.na(SearchDescr),
       frisk_performed = search_conducted & SearchDescr == "Terry Frisk",
       search_basis = fast_tr(SearchType, tr_search_basis),
