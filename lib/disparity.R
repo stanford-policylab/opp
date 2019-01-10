@@ -2,33 +2,49 @@ source(here::here("lib", "opp.R"))
 source(here::here("lib", "outcome_test.R"))
 source(here::here("lib", "threshold_test.R"))
 source(here::here("lib", "disparity_plot.R"))
-source(here::here("lib", "analysis_common.R"))
 
-disparity <- function() {
-  d <- load_data()
-  # cat("\nStarting outcome tests\n")
-  # ots <- outcome_tests(d)
-  # cat("\nStarting outcome plots\n")
-  # plt_all(ots, "outcome (filtered)")
-  # cat("\nStarting threshold tests\n")
+disparity <- function(state_or_city = c("state", "city")) {
+  if(state_or_city == "TRUE") 
+    state_or_city = c("state", "city")
+  state_or_city %>% 
+    map(generate_disparity_report)
+}
+
+generate_disparity_report <- function(state_or_city) {
+  print(sprintf("Generating %s disparity reports.",  state_or_city))
+  d <- load_data(state_or_city)
+  print("Data loaded.")
+  write_rds(d, here::here("cache/test_data_load_states.rds"))
+  print("Starting outcome test...")
+  ot <- outcome_test(d, state, city, sub_geography)
+  write_rds(ot, here::here("cache", str_c("disparity_", state_or_city, "outcome.rds")))
+  print(sprintf(
+    "Results saved to: %s", 
+    here::here("cache", str_c("disparity_", state_or_city, "outcome.rds"))
+  ))
+  print("Starting local outcome plots...")
+  plt_all(ot$results, "outcome")
+  print("Starting aggregate outcome plot...")
+  plt(ot$results, "outcome aggregate")
+  # cat("\nStarting threshold tests")
   # tts <- threshold_tests(d)
   # cat("\nStarting threshold plots\n")
   # plt_all(tts, "threshold (filtered)")
   # # plt(tts, "thresholds (filtered: all cities)")
-  # 
-  # cat("\nStarting outcome test aggregate\n")
-  # ot <- outcome_test(d, state, city, sub_geography)
-  # cat("\nStarting outcome plot aggregate\n")
-  # plt(ot$results, "outcome (filtered)")
-  cat("\nStarting threshold test aggregate\n")
-  tt <- threshold_test(d, state, sub_geography)
-  write_rds("~/opp/cache/aggregate_city_threshold_fit.rds")
+  # cat("\nStarting threshold test aggregate\n")
+  # tt <- threshold_test(d, state, sub_geography)
+  # write_rds("~/opp/cache/aggregate_city_threshold_fit.rds")
   # cat("\nStarting threshold plot aggregate\n")
   # plt(tt$results$thresholds, "thresholds (filtered: aggregate, with hier)")
 }
 
+load_data <- function(state_or_city) {
+  if(state_or_city == "state") load_state_data()
+  else if(state_or_city == "city") load_city_data()
+  else print("Error in disparity load_data: Speficy state or city")
+}
 
-load_data <- function() {
+load_city_data <- function() {
   eligible_cities <- tribble(
     ~state, ~city,
     "CA", "San Diego",
@@ -110,6 +126,268 @@ load_data <- function() {
     )
 }
 
+load_state_data <- function() {
+  eligible_states <- tribble(
+    ~state, ~city,
+    "AZ", "Statewide",
+    "CO", "Statewide",
+    "CT", "Statewide",
+    "IL", "Statewide",
+    "MA", "Statewide",
+    "NC", "Statewide",
+    "OH", "Statewide",
+    "RI", "Statewide",
+    "SC", "Statewide",
+    "TX", "Statewide",
+    "WA", "Statewide",
+    "WI", "Statewide"
+  )
+  print("Loading eligible states...")
+  opp_load_all_data(only=eligible_states) %>% 
+    filter(
+      if_else(
+        # NOTE: old OPP doesn't use AZ because the contraband data is too messy
+        # Our contraband data, while indeed a little messy, seems reasonable.
+        state == "AZ",
+        # NOTE: 2009 and 2010 have insufficient data
+        year(date) >= 2011
+        # NOTE: remove non-discretionary searches
+        & (is.na(search_basis) | search_basis != "other")
+        # NOTE: don't use NA county (15 non-NA counties, account for ~90%)
+        & !is.na(county_name)
+        # NOTE: these counties have insufficient data for all races
+        & !county_name %in% c("Greenlee County")
+        # NOTE: these counties have insufficient data for one race
+        & !(county_name %in% c("Gila County", "Graham County", "Santa Cruz County")
+            & subject_race == "black"),
+        T
+      ),
+      if_else(
+        state == "CO",
+        # NOTE: remove non-discretionary searches
+        (is.na(search_basis) | search_basis != "other")
+        # NOTE: remove the stops for which a search was conducted but we don't have
+        # contraband recovery info
+        & !(search_conducted & is.na(contraband_found))
+        # NOTE: these counties have insufficient data for 2 or all 3 races
+        & !county_name %in% c(
+          "Archuleta County", "Baca County", "Bent County", "Broomfield County",
+          "Cheyenne County", "Crowley County", "Denver County", "Dolores County",
+          "Fremont County", "Gilpin County", "Grand County", "Gunnison County",
+          "Jackson County", "Kiowa County", "Lake County", "Mineral County",
+          "Otero County", "Ouray County", "Park County", "Phillips County",
+          "Pitkin County", "Rio Blanco County", "Saguache County", "San Juan County",
+          "San Miguel County", "Sedgwick County", "Teller County", "Washington County",
+          "Yuma County"
+        )
+        # NOTE: these counties have insufficient data for one race
+        & !(county_name %in% c(
+            "Adams County", "Alamosa County", "Boulder County", "Chaffee County",
+            "Clear Creek County", "Costilla County", "Delta County", "Elbert County",
+            "Huerfano County", "La Plata County", "Las Animas County", "Moffat County",
+            "Montezuma County", "Montrose County", "Prowers County", "Rio Grande County",
+            "Routt County"
+            )
+          & subject_race == "black"),
+        T
+      ),
+      if_else(
+        state == "CT",
+        # NOTE: use just state patrol stops
+        department_name == "State Police"
+        # NOTE: remove non-discretionary searches (5% of searches)
+        # NOTE: keeps searches for which search basis is not given (~7%)
+        & (is.na(search_basis) | search_basis != "other")
+        # NOTE: all counties are fine; just filter the 1 NA entry
+        & !is.na(county_name),
+        T
+      ),
+      # if_else(
+      #   state == "IL",
+      #   # NOTE: we're missing state patrol stops from 2013
+      #   # NOTE: we don't have information on non-discretionary searches
+      #   # NOTE: use just state patrol stops
+      #   department_name == "ILLINOIS STATE POLICE"
+      #   # NOTE: these police districts have insufficient data for 2 or all 3 races
+      #   & !beat %in% c("0", "00", "93", "99", "D2")
+      #   # NOTE: these districts have insufficient data for one race
+      #   & !(beat %in% c("19") & subject_race == "hispanic"),
+      #   T
+      # ),
+      if_else(
+        state == "MA",
+        # NOTE: old OPP says contraband info is too messy; seems reasonable to me
+        # NOTE: remove non-discretionary searches (32% of searches)
+        # NOTE: keeps searches for which search basis is not given (~9%)
+        (is.na(search_basis) | search_basis != "other")
+        # NOTE: these counties have insufficient data for 2 or all 3 races
+        & !county_name %in% c("Dukes", "Nantucket")
+        & !is.na(county_name),
+        T
+      ),
+      if_else(
+        state == "NC",
+        # NOTE: use just state patrol stops
+        department_name == "NC State Highway Patrol"
+        # NOTE: remove non-discretionary searches (68% of searches)
+        & (is.na(search_basis) | search_basis != "other")
+        # NOTE: these counties have insufficient data for 2 or all 3 races
+        & !county_name %in% c(
+          "Ashe County", "Chowan County", "Clay County", "Dare County", "Graham County",
+          "Hyde County", "Jackson County", "Lincoln County", "Macon County",
+          "Madison County", "Mitchell County", "Moore County", "Perquimans County",
+          "Polk County", "Rutherford County", "Stanly County", "Swain County",
+          "Transylvania County", "Vance County", "Warren County", "Watauga County",
+          "Wilkes County", "Yancey County"
+        )
+        & !is.na(county_name)
+        # NOTE: these counties have insufficient data for one race
+        & !(county_name %in% c("Avery County", "Yadkin County") & subject_race == "black")
+        & !(county_name %in% c(
+            "Granville County", "Hertford County", "Iredell County", "New Hanover County",
+            "Northampton County", "Orange County", "Pamlico County", "Pasquotank County",
+            "Pender County", "Person County", "Scotland County", "Tyrell County",
+            "Union County", "Washington County"
+          ) & subject_race == "hispanic"),
+        T
+      ),
+      if_else(
+        state == "OH",
+        # NOTE: old opp excludes because only search reasons listed are k9 and consent,
+        # which they say makes them skeptical of the recording scheme;
+        # however, 87% of searches are not labeled -- we call default them to probable cause,
+        # but regardless, it seems reasonable to assume that all searches are indeed
+        # being tallied up, but i would not trust the search_basis categorization itself.
+        # Thus we _do_ use OH in our analysis
+        # NOTE: if not listed as k9 or consent search, we deem the search probable cause
+        # i.e., we don't know if a search is incident to arrest or not.
+        # NOTE: these counties have insufficient data for 2 or all 3 races
+        !county_name %in% c(
+          "Adams County", "Carroll County", "Coshocton County", "Darke County",
+          "Holmes County", "Mercer County", "Monroe County", "Morgan County",
+          "Putnam County", "Vinton County"
+        )
+        & !is.na(county_name)
+        # NOTE: these counties have insufficient data for one race
+        & !(county_name %in% c("Henry County") & subject_race == "black")
+        & !(county_name %in% c(
+            "Athens County", "Belmont County", "Champaign County", "Columbiana County",
+            "Crawford County", "Fayette County", "Gallia County", "Hardin County",
+            "Harrison County", "Highland County", "Hocking County", "Jefferson County",
+            "Lawrence County", "Logan County", "Marion County", "Meigs County",
+            "Noble County"
+          ) & subject_race == "hispanic"),
+        T
+        # NOTE: when contraband wasn't found after a search it was labeled NA
+        # we fix this after the mega filter statement
+      ),
+      if_else(
+        state == "RI",
+        # NOTE: remove non-discretionary searches (49% of searches)
+        (is.na(search_basis) | search_basis != "other"),
+        # NOTE: use zone (no county info) -- 6 zones, all ok
+        T
+      ),
+      if_else(
+        state == "SC",
+        # NOTE: all counties ok
+        !is.na(county_name),
+        T
+      ),
+      if_else(
+        state == "TX",
+        # NOTE: remove non-discretionary searches (28% of searches)
+        # NOTE: keep searches for which search basis is not given (<<<1%)
+        (is.na(search_basis) | search_basis != "other")
+        # NOTE: these counties have insufficient data for 2 or all 3 races
+        & !county_name %in% c(
+          "Borden", "Foard", "Hansford", "Kent", "King", "Lipscomb", "Loving",
+          "Sabine"
+        )
+        & !is.na(county_name)
+        # NOTE: these counties have insufficient data for one race
+        & !(county_name %in% c(
+            "Bandera", "Briscoe", "Castro", "Cochran", "Coke", "Concho", "Edwards",
+            "Glasscock", "Hemphill", "Irion", "Jeff Davis", "Jim Hogg", "McMullen",
+            "Menard", "Ochiltree", "Presidio", "Reagan", "Real", "Roberts", "San Saba",
+            "Schleicher", "Shackelford", "Somervell", "Stephens", "Stonewall", "Terrell",
+            "Throckmorton", "Upton", "Zapata"
+          ) & subject_race == "black"),
+        T
+      ),
+      if_else(
+        state == "WA",
+        # NOTE: remove non-discretionary searches (95%?!?!?)
+        (is.na(search_basis) | search_basis != "other")
+        # NOTE: these counties have insufficient data for 2 or all 3 races
+        & !county_name %in% c(
+          "Asotin", "Columbia", "Ferry", "Garfield", "Pend Oreille", "Skamania",
+          "Stevens", "Wahkiakum"
+        )
+        & !is.na(county_name)
+        # NOTE: these counties have insufficient data for one race
+        & !(county_name %in% c(
+          "Douglas", "Klickitat", "Pacific", "Walla Walla"
+        ) & subject_race == "black"),
+        T
+      ),
+      if_else(
+        state == "WI",
+        # NOTE: 2010 is too sparse to trust
+        year(date) != 2010
+        # NOTE: remove non-discretionary searches (33%)
+        # NOTE: keep searches for which search basis is not given (<<<1%)
+        & (is.na(search_basis) | search_basis != "other")
+        # NOTE: these counties have insufficient data for 2 or all 3 races
+        & !county_name %in% c(
+          "ADAMS", "ASHLAND", "BARRON", "BAYFIELD", "BUFFALO", "BURNETT", "CALUMET",
+          "CHIPPEWA", "CLARK", "CRAWFORD", "DOOR", "DOUGLAS", "FOREST", "GREEN LAKE",
+          "IOWA", "IRON", "JUNEAU", "KEWAUNEE", "LAFAYETTE", "LANGLADE", "LINCOLN",
+          "MARINETTE", "MARQUETTE", "OCONTO", "ONEIDA", "OZAUKEE", "PEPIN", "PIERCE",
+          "POLK", "PRICE", "RICHLAND", "RUSK", "SAWYER", "SHAWANO", "TAYLOR", "VERNON",
+          "VILAS", "WASHBURN", "WASHINGTON", "WAUPACA", "WAUSHARA"
+        )
+        & !is.na(county_name)
+        # NOTE: these counties have insufficient data for one race
+        & !(county_name %in% c(
+          "DODGE", "EAU CLAIRE", "FOND DU LAC", "GRANT", "MANITOWOC", "MARATHON",
+          "MONROE", "TREMPEALEAU", "WINNEBAGO", "WOOD"
+        ) & subject_race == "hispanic")
+        & !(county_name %in% c(
+          "WALWORTH"
+        ) & subject_race == "black"),
+        T
+      ),
+      # NOTE: compare only blacks/hispanics with whites
+      subject_race %in% c("black", "white", "hispanic"),
+      type == "vehicular"
+    ) %>%
+    mutate(
+      # If a search was conducted and we don't have contraband info,
+      # assume no contraband was found
+      contraband_found = if_else(
+        search_conducted,
+        replace_na(contraband_found, FALSE),
+        contraband_found
+      ),
+      sg = NA_character_,
+      sg = if_else(state == "AZ", county_name, sg),
+      sg = if_else(state == "CO", county_name, sg),
+      sg = if_else(state == "CT", county_name, sg),
+      # sg = if_else(state == "IL", beat, sg),
+      sg = if_else(state == "MA", county_name, sg),
+      sg = if_else(state == "NC", county_name, sg),
+      sg = if_else(state == "OH", county_name, sg),
+      sg = if_else(state == "RI", zone, sg),
+      sg = if_else(state == "SC", county_name, sg),
+      sg = if_else(city == "TX", county_name, sg),
+      sg = if_else(state == "WA", county_name, sg),
+      sg = if_else(state == "WI", county_name, sg)
+    ) %>%
+    rename(
+      sub_geography = sg
+    )
+}
 
 outcome_tests <- function(d) {
   d %>%
@@ -143,7 +421,12 @@ plt_all <- function(tbl, prefix) {
     title <- str_c(prefix, ": ", create_title(grp$state[1], grp$city[1]))
     fpath <- path(output_dir, str_c(title, ".pdf"))
     if (str_detect(prefix, "outcome")) {
-      p <- disparity_plot(grp, state, city, sub_geography)
+      str_city <- unique(grp$city)
+      str_state <- unique(grp$state)
+      p <- disparity_plot(
+        grp, state, city, sub_geography, 
+        title = str_c(str_city, " ", str_state, " Contraband recovery rates by sub-geography")
+      )
     } else {
       p <- disparity_plot(
         grp,
@@ -183,3 +466,4 @@ plt <- function(d, prefix) {
   print(str_c("saved: ", fpath))
   p
 }
+
