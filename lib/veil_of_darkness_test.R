@@ -58,18 +58,17 @@ veil_of_darkness_test <- function(
       !!lngq
     )
 
-  tz <- infer_tz(pull(tbl, !!latq), pull(tbl, !!lngq))
-  minutes_per_hour <- 60
-  tbl <- tbl %>%
-    # NOTE: prefilter since calculate sunset times takes a while
+  tbl <-
+    d$data %>%
+    # NOTE: prefilter since calculating sunset times takes a while
     filter(
       hour(hms(time)) > 16, # 4 PM
       hour(hms(time)) < 23, # 11 PM
     ) %>%
     mutate(
       sunset = calculate_sunset_times(date, lat, lng, tz),
-      minute = hour(hms(time)) * minutes_per_hour + minute(hms(time)),
-      sunset_minute = hour(hms(sunset)) * minutes_per_hour + minute(hms(sunset)),
+      minute = hour(hms(time)) * 60 + minute(hms(time)),
+      sunset_minute = hour(hms(sunset)) * 60 + minute(hms(sunset)),
       is_dark = minute > sunset_minute,
       min_sunset_minute = min(sunset_minute),
       max_sunset_minute = max(sunset_minute)
@@ -118,6 +117,8 @@ infer_tz <- function(lats, lngs) {
 
 
 calculate_sunset_times <- function(dates, lats, lngs, tz) {
+  tz <- infer_tz(pull(tbl, !!latq), pull(tbl, !!lngq))
+
   format(
     getSunlightTimes(
       data = tibble(date = dates, lat = lats, lon = lngs),
@@ -126,17 +127,4 @@ calculate_sunset_times <- function(dates, lats, lngs, tz) {
     )$sunset,
     "%H:%M:%S"
   )
-}
-
-
-veil_of_darkness_daylight_savings_test <- function(
-  tbl,
-  demographic_col = subject_race,
-  date_col = date,
-  time_col = time,
-  latitude_col = lat,
-  longitude_col = lng,
-  window_size_in_days = 7
-) {
-  # TODO: filter to window around daylight savings, call veil_of_darkness_test
 }
