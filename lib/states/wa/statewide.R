@@ -203,12 +203,12 @@ clean <- function(d, helpers) {
         # search.
         search_type_orig %in% c("P1", "P2")
       ),
+      search_basis = fast_tr(search_type_orig, tr_search_basis),
       search_conducted = if_else(
-        search_type_orig %in% names(tr_search_basis),
+        !is.na(search_basis),
         TRUE,
         if_else(search_type_orig == "N", FALSE, NA)
-      ),
-      search_basis = fast_tr(search_type_orig, tr_search_basis)
+      )
     ) %>%
     standardize(d$metadata)
 }
