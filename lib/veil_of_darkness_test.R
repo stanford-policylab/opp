@@ -60,13 +60,20 @@ veil_of_darkness_test <- function(
 
   tbl <-
     d$data %>%
-    # NOTE: prefilter since calculating sunset times takes a while
+    # NOTE: prefilter since calculating sunset times can take a while
     filter(
       hour(hms(time)) > 16, # 4 PM
       hour(hms(time)) < 23, # 11 PM
+    )
+
+  sunset_times <- calculate_sunset_times(tbl, !!dateq, !!latq, !!lngq)
+
+  tbl <-
+    tbl %>%
+    left_join(
+      sunset_times
     ) %>%
     mutate(
-      sunset = calculate_sunset_times(date, lat, lng, tz),
       minute = hour(hms(time)) * 60 + minute(hms(time)),
       sunset_minute = hour(hms(sunset)) * 60 + minute(hms(sunset)),
       is_dark = minute > sunset_minute,
@@ -84,19 +91,17 @@ veil_of_darkness_test <- function(
       is_minority_demographic = !!demographicq == minority_demographic
     )
 
-  twilight_minute_poly_degree <- 6
-  model = glm(
-    is_minority_demographic 
-      ~ is_dark + poly(twilight_minute, twilight_minute_poly_degree),
+  model <- glm(
+    is_minority_demographic ~ is_dark + poly(twilight_minute, 6),
     data = tbl,
     family = binomial
   )
+
   list(
-    metadata = list(
-      data = tbl,
-      model = model
-    ),
+    metadata = d$metadata,
     results = list(
+      data = tbl,
+      model = model,
       coefficients = list(
         is_dark = coef(model)[2]
       )
@@ -105,26 +110,34 @@ veil_of_darkness_test <- function(
 }
 
 
-infer_tz <- function(lats, lngs) {
-  sample_idx <- sample.int(length(lats), 10)
-  # NOTE: uses 'fast' by default, 'accurate' requires a lot more dependencies,
-  # and it doesn't seem to be necessary to be more accurate
-  tzs <- suppressWarnings(tz_lookup_coords(lats[sample_idx], lngs[sample_idx]))
-  tz <- unique(tzs)
-  stopifnot(length(tz) == 1)
-  tz
-}
+calculate_sunset_times <- function(
+  tbl,
+  date_col = date,
+  lat_col = lat,
+  lng_col = lng
+) {
 
+  dateq <- enquo(date_col)
+  latq <- enquo(lat_col)
+  lngq <- enquo(lng_col)
 
-calculate_sunset_times <- function(dates, lats, lngs, tz) {
-  tz <- infer_tz(pull(tbl, !!latq), pull(tbl, !!lngq))
+  tzs <-
+    tbl %>%
+    select(!!latq, !!lngq) %>%
+    distinct() %>%
+    # NOTE: Warning is about using 'fast' by default; 'accurate' requires
+    # more dependencies and it doesn't seem necessary
+    mutate(tz = tz_lookup_coords(pull(., !!latq), pull(., !!lngq)))
 
-  format(
-    getSunlightTimes(
-      data = tibble(date = dates, lat = lats, lon = lngs),
-      keep = c("sunset"),
-      tz = tz
-    )$sunset,
-    "%H:%M:%S"
+  tbl %>%
+  select(!!dateq, !!latq, !!lngq) %>%
+  distinct() %>%
+  left_join(tzs) %>%
+  mutate(lon = !!lngq) %>%
+  mutate(
+    sunset = format(
+      getSunlightTimes(data = ., keep = c("sunset"), tz = tz)$sunset,
+      "%H:%M:%S"
+    )
   )
 }
