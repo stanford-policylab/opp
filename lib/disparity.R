@@ -202,18 +202,18 @@ load_state_data <- function() {
         & !is.na(county_name),
         T
       ),
-      # if_else(
-      #   state == "IL",
-      #   # NOTE: we're missing state patrol stops from 2013
-      #   # NOTE: we don't have information on non-discretionary searches
-      #   # NOTE: use just state patrol stops
-      #   department_name == "ILLINOIS STATE POLICE"
-      #   # NOTE: these police districts have insufficient data for 2 or all 3 races
-      #   & !beat %in% c("0", "00", "93", "99", "D2")
-      #   # NOTE: these districts have insufficient data for one race
-      #   & !(beat %in% c("19") & subject_race == "hispanic"),
-      #   T
-      # ),
+      if_else(
+        state == "IL",
+        # NOTE: we're missing state patrol stops from 2013
+        # NOTE: we don't have information on non-discretionary searches
+        # NOTE: use just state patrol stops
+        department_name == "ILLINOIS STATE POLICE"
+        # NOTE: these police districts have insufficient data for 2 or all 3 races
+        & !beat %in% c("0", "00", "93", "99", "D2")
+        # NOTE: these districts have insufficient data for one race
+        & !(beat %in% c("19") & subject_race == "hispanic"),
+        T
+      ),
       if_else(
         state == "MA",
         # NOTE: old OPP says contraband info is too messy; seems reasonable to me
@@ -374,13 +374,13 @@ load_state_data <- function() {
       sg = if_else(state == "AZ", county_name, sg),
       sg = if_else(state == "CO", county_name, sg),
       sg = if_else(state == "CT", county_name, sg),
-      # sg = if_else(state == "IL", beat, sg),
+      sg = if_else(state == "IL", beat, sg),
       sg = if_else(state == "MA", county_name, sg),
       sg = if_else(state == "NC", county_name, sg),
       sg = if_else(state == "OH", county_name, sg),
       sg = if_else(state == "RI", zone, sg),
       sg = if_else(state == "SC", county_name, sg),
-      sg = if_else(city == "TX", county_name, sg),
+      sg = if_else(state == "TX", county_name, sg),
       sg = if_else(state == "WA", county_name, sg),
       sg = if_else(state == "WI", county_name, sg)
     ) %>%
