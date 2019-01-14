@@ -1,6 +1,5 @@
 library(here)
 library(parallel)
-library(rstan)
 library(tidyverse)
 library(stringr)
 

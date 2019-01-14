@@ -3,12 +3,6 @@ source("veil_of_darkness_test.R")
 
 
 veil_of_darkness <- function() {
-  # TODO(danj): how was the eligibility determined here?
-  tbl <- load_data()
-}
-
-
-load_data <- function() {
   tbl <- tribble(
     ~state, ~city, ~center_lat, ~center_lng,
     "AZ", "Mesa", 33.4151843, -111.8314724,
@@ -34,5 +28,6 @@ load_data <- function() {
   opp_load_all_data() %>%
   # TODO(danj): why is this bad?
   filter(!(city == "Madison" & year(date) %in% c(2007, 2008))) %>%
-  left_join(tbl)
+  left_join(tbl) %>%
+  veil_of_darkness_test(lat_col=center_lat, lng_col=center_lng)
 }

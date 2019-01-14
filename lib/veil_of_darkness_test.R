@@ -3,14 +3,20 @@ library(lubridate)
 library(suncalc)
 library(lutz)
 
+source("analysis_common.R")
+
 
 #' Veil of Darkness Test
 #'
 #' @param tbl a tibble containing the following data
-#' @param ... additional attributes to control for when conducting test
-#'            i.e. county, precinct, police department, etc...
 #' @param demographic_col contains a population division of interest, i.e. race,
 #'        age group, sex, etc...
+#' @param date_col contains date of event
+#' @param time_col contains time of event
+#' @param lat_col contains latitude of event
+#' @param lng_col contains longitude of event
+#' @param minority_demographic contains the minority class in demographic_col
+#' @param majority_demographic contains the majority class in demographic_col
 #' 
 #' @return list with \code{results} and \code{metadata} keys
 #'
@@ -24,13 +30,13 @@ library(lutz)
 #' )
 veil_of_darkness_test <- function(
   tbl,
-  minority_demographic = "black",
-  majority_demographic = "white",
   demographic_col = subject_race,
   date_col = date,
   time_col = time,
   lat_col = lat,
-  lng_col = lng
+  lng_col = lng,
+  minority_demographic = "black",
+  majority_demographic = "white"
 ) {
 
   demographicq <- enquo(demographic_col)
@@ -39,17 +45,18 @@ veil_of_darkness_test <- function(
   latq = enquo(lat_col)
   lngq = enquo(lng_col)
 
-  metadata <- list()
-
-  tbl <- clean(
-    tbl,
-    !!demographicq,
-    !!dateq,
-    !!timeq,
-    !!latq,
-    !!lngq,
-    metadata
-  )
+  d <-
+    list(
+      data = tbl,
+      metadata = list()
+    ) %>%
+    select_and_filter_missing(
+      !!demographicq,
+      !!dateq,
+      !!timeq,
+      !!latq,
+      !!lngq
+    )
 
   tz <- infer_tz(pull(tbl, !!latq), pull(tbl, !!lngq))
   minutes_per_hour <- 60
@@ -95,46 +102,6 @@ veil_of_darkness_test <- function(
         is_dark = coef(model)[2]
       )
     )
-  )
-}
-
-
-clean <- function(
-  tbl,
-  demographic_col,
-  date_col,
-  time_col,
-  lat_col,
-  lng_col,
-  metadata
-) {
-  demographicq <- enquo(demographic_col)
-  dateq <- enquo(date_col)
-  timeq <- enquo(time_col)
-  latq = enquo(lat_col)
-  lngq = enquo(lng_col)
-
-  tbl <- select(tbl, !!demographicq, !!dateq, !!timeq, !!latq, !!lngq)
-  n_before_drop_na <- nrow(tbl)
-  tbl <- drop_na(tbl)
-  n_after_drop_na <- nrow(tbl)
-  metadata["null_rate"] <-
-    (n_before_drop_na - n_after_drop_na) / n_before_drop_na
-  if (metadata[["null_rate"]] > 0) {
-    rate_warning(metadata[["null_rate"]], "dropped due to missing values")
-  }
-  tbl
-}
-
-
-rate_warning <- function(rate, message) {
-  warning(
-    str_c(
-      formatC(100 * rate, format = "f", digits = 2), 
-      "% of the data ",
-      message
-    ),
-    call. = FALSE
   )
 }
 
