@@ -12,30 +12,34 @@ disparity <- function(state_or_city = c("state", "city")) {
 
 generate_disparity_report <- function(state_or_city) {
   print(sprintf("Generating %s disparity reports.",  state_or_city))
+  # d <- read_rds(here::here("cache", str_c("disparity_data_loaded_", state_or_city, ".rds")))
   d <- load_data(state_or_city)
   print("Data loaded.")
-  write_rds(d, here::here("cache/test_data_load_states.rds"))
-  print("Starting outcome test...")
-  ot <- outcome_test(d, state, city, sub_geography)
-  write_rds(ot, here::here("cache", str_c("disparity_", state_or_city, "outcome.rds")))
+  write_rds(d, here::here("cache", str_c("disparity_data_loaded_", state_or_city, ".rds")))
+  
+  # print("Starting outcome test...")
+  # ot <- outcome_test(d, state, city, sub_geography)
+  # write_rds(ot, here::here("cache", str_c("disparity_", state_or_city, "outcome.rds")))
+  # print(sprintf(
+  #   "Results saved to: %s", 
+  #   here::here("cache", str_c("disparity_", state_or_city, "outcome.rds"))
+  # ))
+  # print("Starting local outcome test plots...")
+  # plt_all(ot$results, "outcome")
+  # print("Starting aggregate outcome test plot...")
+  # plt(ot$results, str_c("outcome aggregate: ", state_or_city))
+  
+  print("Starting threshold test...")
+  tt <- threshold_test(d, state, city, sub_geography)
+  write_rds(tt, here::here("cache", str_c("disparity_", state_or_city, "threshold.rds")))
   print(sprintf(
     "Results saved to: %s", 
-    here::here("cache", str_c("disparity_", state_or_city, "outcome.rds"))
+    here::here("cache", str_c("disparity_", state_or_city, "threshold.rds"))
   ))
-  print("Starting local outcome plots...")
-  plt_all(ot$results, "outcome")
-  print("Starting aggregate outcome plot...")
-  plt(ot$results, "outcome aggregate")
-  # cat("\nStarting threshold tests")
-  # tts <- threshold_tests(d)
-  # cat("\nStarting threshold plots\n")
-  # plt_all(tts, "threshold (filtered)")
-  # # plt(tts, "thresholds (filtered: all cities)")
-  # cat("\nStarting threshold test aggregate\n")
-  # tt <- threshold_test(d, state, sub_geography)
-  # write_rds("~/opp/cache/aggregate_city_threshold_fit.rds")
-  # cat("\nStarting threshold plot aggregate\n")
-  # plt(tt$results$thresholds, "thresholds (filtered: aggregate, with hier)")
+  print("Starting local threshold test plots...")
+  plt_all(tt$results$thresholds, "threshold")
+  print("Starting aggregate threshold test plot...")
+  plt(tt$results$thresholds, str_c("threshold aggregate: ", state_or_city))
 }
 
 load_data <- function(state_or_city) {
@@ -400,6 +404,9 @@ outcome_tests <- function(d) {
 
 
 threshold_tests <- function(d) {
+  # NOTE: Runs threshold test on each location individually
+  # for the multi-location hierarchical threshold test, call
+  # threshold_test(...) on the data, directly. 
   d %>%
     group_by(state, city) %>%
     do(

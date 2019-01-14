@@ -5,7 +5,7 @@ source("analysis_common.R")
 
 marijuana_legalization_analysis <- function() {
   tbl <- load()
-  list(
+  output <- list(
     data = tbl,
     tables = list(
       # TODO(danj): directionally, the coefficients are the same, but they
@@ -32,6 +32,7 @@ marijuana_legalization_analysis <- function() {
       #   compose_inferred_threshold_changes_plot(tbl)
     )
   )
+  write_rds(output, here::here("cache", "marijuana_results.rds"))
 }
 
 

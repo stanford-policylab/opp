@@ -1,4 +1,5 @@
 source("analysis_common.R")
+library("rstan")
 
 #' Threshold Test
 #'
