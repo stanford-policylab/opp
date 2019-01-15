@@ -33,7 +33,7 @@ veil_of_darkness_cities <- function() {
   left_join(tbl) # %>%
   # NOTE: use city centers instead of stop lat/lng since sunset times
   # don't vary that much within a city and it speeds things up
-  # veil_of_darkness_test(lat_col=center_lat, lng_col=center_lng)
+  # veil_of_darkness_test(city, lat_col=center_lat, lng_col=center_lng)
 
 }
 

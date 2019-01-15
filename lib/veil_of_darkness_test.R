@@ -30,6 +30,7 @@ source("analysis_common.R")
 #' )
 veil_of_darkness_test <- function(
   tbl,
+  ...
   demographic_col = subject_race,
   date_col = date,
   time_col = time,
@@ -39,6 +40,7 @@ veil_of_darkness_test <- function(
   majority_demographic = "white"
 ) {
 
+  controlqs <- enquos(...)
   demographicq <- enquo(demographic_col)
   dateq <- enquo(date_col)
   timeq <- enquo(time_col)
@@ -51,6 +53,7 @@ veil_of_darkness_test <- function(
       metadata = list()
     ) %>%
     select_and_filter_missing(
+      !!!controlqs,
       !!demographicq,
       !!dateq,
       !!timeq,
@@ -91,11 +94,17 @@ veil_of_darkness_test <- function(
       is_minority_demographic = !!demographicq == minority_demographic
     )
 
-  model <- glm(
-    is_minority_demographic ~ is_dark + poly(twilight_minute, 6),
-    data = tbl,
-    family = binomial
+  # TODO(danj): natural spline or polynomial?
+  fmla <- as.formula(
+    str_c(
+      c(
+        "is_minority_demographic ~ is_dark + ns(twilight_minute, df = 6)",
+        quos_names(controlqs)
+      )
+      collapse = " + "
+    )
   )
+  model <- glm(fmla, data = tbl, family = binomial)
 
   list(
     metadata = d$metadata,
