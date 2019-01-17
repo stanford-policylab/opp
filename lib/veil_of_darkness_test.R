@@ -1,5 +1,6 @@
 library(tidyverse)
 library(lubridate)
+library(splines)
 library(suncalc)
 library(lutz)
 
@@ -30,7 +31,7 @@ source("analysis_common.R")
 #' )
 veil_of_darkness_test <- function(
   tbl,
-  ...
+  ...,
   demographic_col = subject_race,
   date_col = date,
   time_col = time,
@@ -47,6 +48,7 @@ veil_of_darkness_test <- function(
   latq = enquo(lat_col)
   lngq = enquo(lng_col)
 
+  print("cleaning data...")
   d <-
     list(
       data = tbl,
@@ -61,6 +63,7 @@ veil_of_darkness_test <- function(
       !!lngq
     )
 
+  print("filtering data...")
   tbl <-
     d$data %>%
     # NOTE: prefilter since calculating sunset times can take a while
@@ -69,8 +72,10 @@ veil_of_darkness_test <- function(
       hour(hms(time)) < 23, # 11 PM
     )
 
+  print("calculating sunset times for data...")
   sunset_times <- calculate_sunset_times(tbl, !!dateq, !!latq, !!lngq)
 
+  print("formatting data for modeling...")
   tbl <-
     tbl %>%
     left_join(
@@ -94,18 +99,20 @@ veil_of_darkness_test <- function(
       is_minority_demographic = !!demographicq == minority_demographic
     )
 
+  print("training model...")
   # TODO(danj): natural spline or polynomial?
   fmla <- as.formula(
     str_c(
       c(
         "is_minority_demographic ~ is_dark + ns(twilight_minute, df = 6)",
         quos_names(controlqs)
-      )
+      ),
       collapse = " + "
     )
   )
   model <- glm(fmla, data = tbl, family = binomial)
 
+  print("done")
   list(
     metadata = d$metadata,
     results = list(
@@ -125,7 +132,6 @@ calculate_sunset_times <- function(
   lat_col = lat,
   lng_col = lng
 ) {
-
   dateq <- enquo(date_col)
   latq <- enquo(lat_col)
   lngq <- enquo(lng_col)
@@ -136,17 +142,23 @@ calculate_sunset_times <- function(
     distinct() %>%
     # NOTE: Warning is about using 'fast' by default; 'accurate' requires
     # more dependencies and it doesn't seem necessary
-    mutate(tz = tz_lookup_coords(pull(., !!latq), pull(., !!lngq)))
+    mutate(tz = tz_lookup_coords(pull(., !!latq), pull(., !!lngq), warn = F))
 
-  tbl %>%
-  select(!!dateq, !!latq, !!lngq) %>%
-  distinct() %>%
-  left_join(tzs) %>%
-  mutate(lon = !!lngq) %>%
-  mutate(
-    sunset = format(
-      getSunlightTimes(data = ., keep = c("sunset"), tz = tz)$sunset,
-      "%H:%M:%S"
+  tbl <- 
+    tbl %>%
+    select(!!dateq, !!latq, !!lngq) %>%
+    distinct() %>%
+    left_join(tzs) %>%
+    mutate(lat = !!latq, lon = !!lngq) %>%
+    mutate(
+      sunset_utc = getSunlightTimes(data = ., keep = c("sunset"))$sunset
     )
-  )
+
+  to_local_time <- function(sunset_utc, tz) {
+    format(sunset_utc, "%H:%M:%S", tz = tz)
+  }
+
+  tbl$sunset <- unlist(par_pmap(select(tbl, sunset_utc, tz), to_local_time))
+
+  select(tbl, !!dateq, !!latq, !!lngq, sunset)
 }
