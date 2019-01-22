@@ -3,7 +3,6 @@ source("veil_of_darkness_test.R")
 
 
 veil_of_darkness_cities <- function() {
-
   # TODO(amyshoe): what were the decision criteria to select these?
   tbl <- tribble(
     ~state, ~city, ~center_lat, ~center_lng,
@@ -25,6 +24,7 @@ veil_of_darkness_cities <- function() {
     "VT", "Burlington", 44.4758825, -73.21207199999999,
     "WI", "Madison", 43.0730517, -89.4012302
   )
+  saveRDS(tbl, "~/vod.rds")
 
   select(tbl, state, city) %>%
   opp_load_all_data() %>%
@@ -33,8 +33,8 @@ veil_of_darkness_cities <- function() {
   left_join(tbl) %>%
   # NOTE: use city centers instead of stop lat/lng since sunset times
   # don't vary that much within a city and it speeds things up
-  veil_of_darkness_test(lat_col=center_lat, lng_col=center_lng)
-
+  mutate(city_state = str_c(city, state, sep = ", ")) %>%
+  veil_of_darkness_test(city_state, lat_col=center_lat, lng_col=center_lng)
 }
 
 
