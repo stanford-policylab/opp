@@ -21,8 +21,10 @@ main <- function() {
     opp_prima_facie_stats()
   if (not_null(args$disparity))
     disparity(args$disparity)
-  if (not_null(args$everything))
-    opp_everything()
+  if (not_null(args$process_all))
+    opp_process_all()
+  if (not_null(args$report_all))
+    opp_report_all()
   print("Finished!")
   q(status = 0)
 }
@@ -41,7 +43,8 @@ get_args <- function() {
                  "--state <state_code>",
                  "--city <city_name>",
                  "[--coverage]",
-                 "[--everything]",
+                 "[--process_all]",
+                 "[--report_all]"
                  sep = " ")
   spec <- tribble(
     ~long_name,   ~short_name,  ~argument_type, ~data_type,
@@ -56,7 +59,8 @@ get_args <- function() {
     "state",       "s",         "none",         "character",
     "city",        "c",         "none",         "character",
     "coverage",    "v",         "none",         "logical",
-    "everything",  "e",         "none",         "logical"
+    "process_all", "a",         "none",         "logical"
+    "report_all",  "b",         "none",         "logical"
   )
   args <- parse_args(spec)
 

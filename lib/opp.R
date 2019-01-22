@@ -31,15 +31,11 @@ opp_available <- function() {
 
 
 opp_run_for_all <- function(func) {
-  paths <- opp_data_paths()
-  cvg <- tibble(
-      state = sapply(paths, opp_extract_state_from_path),
-      city = sapply(paths, opp_extract_city_from_path)
-    ) %>%
-    select(state, city) %>%
-    pmap(func) %>%
-    bind_rows() %>%
-    arrange(state, city)
+  opp_available() %>%
+  select(state, city) %>%
+  pmap(func) %>%
+  bind_rows() %>%
+  arrange(state, city)
 }
 
 
@@ -268,18 +264,13 @@ opp_tbl_from_eligible_subset <- function(eligible_subset_tbl) {
 }
 
 
-opp_everything <- function() {
-  paths <- opp_processor_paths()
-  tbl <- tibble(
-    state = simple_map(paths, opp_extract_state_from_path),
-    # NOTE: city could be 'statewide' too 
-    city = simple_map(paths, opp_extract_city_from_path)
-  )
-  par_pmap(tbl, opp_process)
-  par_pmap(tbl, opp_report)
-  opp_coverage()
-  opp_prima_facie_stats()
-  # TODO(danj): add outcome, threshold, maps, bunching, and vod
+opp_process_all <- function() {
+  par_pmap(opp_available(), opp_process)
+}
+
+
+opp_report_all <- function() {
+  par_pmap(opp_available(), opp_report)
 }
 
 
