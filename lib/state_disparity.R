@@ -33,7 +33,7 @@ load_data <- function() {
     "WA", "Statewide",
     "WI", "Statewide"
   )
-  opp_load_all_data(only=eligible_states) %>%
+  opp_load_all_clean_data(only=eligible_states) %>%
     filter(
       # NOTE: CO is taken to be entirely state patrol; nothing to filter
       ifelse(

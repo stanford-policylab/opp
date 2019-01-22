@@ -32,6 +32,7 @@ timeseries_policy_change_plots <- function(
       compute_diff_in_diff(mutate(d$data, date date_diff_in_diff_func)
   )
 }
+
 policy_change_test <- function(
   test_tbl,
   control_tbl,
@@ -39,7 +40,7 @@ policy_change_test <- function(
 ) {
   tbl <-
     bind_rows(select(test_tbl, state, city), control_tbl) %>%
-    opp_load_all_data() %>%
+    opp_load_all_clean_data() %>%
     filter(!is.na(subject_race), !is.na(date), !is.na(violation)) %>%
     add_violation_indicator(test_tbl) %>%
     mutate(search_is_eligible = search_basis %in% eligible_search_bases) %>%

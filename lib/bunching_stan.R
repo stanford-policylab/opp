@@ -15,7 +15,7 @@ bunching_analysis <- function(
     data <- haven::read_dta(here::here("data", "bunching", "Cite_05_15_Use.dta"))
     data_summary <- summarise_fl_for_stan(data)
   } else { 
-    data <- opp_load_data(state, city)
+    data <- opp_load_clean_data(state, city)
     data_summary <- summarise_for_stan(data)
   }
   stan_data <- format_for_stan(data_summary)
@@ -32,7 +32,7 @@ agg_bunching_analysis <- function(
     data <- haven::read_dta(here::here("data", "bunching", "Cite_05_15_Use.dta"))
     data_summary <- agg_fl_for_stan(data)
   } else { 
-    data <- opp_load_data(state, city)
+    data <- opp_load_clean_data(state, city)
     data_summary <- agg_for_stan(data)
   }
   stan_data <- format_for_stan(data_summary, agg = TRUE)

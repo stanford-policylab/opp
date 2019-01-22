@@ -20,6 +20,16 @@ clear <- function() {
 cl <- clear
 
 
+opp_available <- function() {
+  paths <- opp_data_paths()
+  tibble(
+    state = simple_map(paths, opp_extract_state_from_path),
+    # NOTE: city could be 'statewide' too 
+    city = simple_map(paths, opp_extract_city_from_path)
+  )
+}
+
+
 opp_run_for_all <- function(func) {
   paths <- opp_data_paths()
   cvg <- tibble(
@@ -39,22 +49,25 @@ opp_data_paths <- function() {
 }
 
 
-opp_load_all_data <- function(only=NULL) {
-  paths <- opp_data_paths()
-  tbl <- tibble(
-    state = simple_map(paths, opp_extract_state_from_path),
-    # NOTE: city could be 'statewide' too 
-    city = simple_map(paths, opp_extract_city_from_path)
-  )
+opp_load_all_clean_data <- function(only = NULL) {
+  opp_load_all_data(only, include_raw = F)
+}
+
+
+opp_load_all_data <- function(only = NULL, include_raw = T) {
+  load_func <- if_else(include_raw, opp_load_data, opp_load_clean_data)
+
+  tbl <- opp_available()
   if (!is.null(only)) {
     tbl <- inner_join(tbl, only)
   }
+
   bind_rows(
     par_pmap(
       tbl,
       function(state, city) {
         mutate(
-          opp_load_data(state, city),
+          load_func(state, city),
           state = state,
           city = city
         )
@@ -62,6 +75,8 @@ opp_load_all_data <- function(only=NULL) {
     )
   )
 }
+
+
 
 
 opp_eligibility <- function(tbl) {
@@ -152,15 +167,6 @@ opp_simplify_eligibility <- function(tbl) {
 }
 
 
-opp_load_for_disparity <- function(state, city = "statewide") {
-  filter(
-    opp_load_data(state, city),
-    search_conducted,
-    !is.na(contraband_found)
-  )
-}
-
-
 opp_plot_distribution <- function(
   state,
   city,
@@ -168,7 +174,7 @@ opp_plot_distribution <- function(
 ) {
   subgq <- enquo(sub_geography)
   subgq_name <- quo_name(subgq)
-  tbl <- opp_load_data(state, city) %>%
+  tbl <- opp_load_clean_data(state, city) %>%
     filter(
       search_conducted,
       !is.na(contraband_found),
@@ -209,7 +215,7 @@ opp_tbl_from_eligible_subset <- function(eligible_subset_tbl) {
 
   prepare_city <- function(state, city, years) {
 
-    tbl <- opp_load_data(state, city) %>%
+    tbl <- opp_load_clean_data(state, city) %>%
       filter(
         year(date) %in% years[[1]]
       ) %>%
@@ -301,13 +307,45 @@ opp_extract_city_from_path <- function(path) {
 }
 
 
-opp_load <- function(state, city = "statewide") {
+opp_load_data <- function(state, city) {
+  opp_load(state, city)$data
+}
+
+
+opp_load <- function(state, city) {
+  raw_data <- opp_load_raw_data(state, city)
+  colnames(raw_data) <- add_prefix(
+    colnames(raw_data),
+    prefix = "raw_",
+    skip = c("raw_row_number")
+  )
+
+  d <- opp_load_clean(state, city)
+
+  d$data <- left_join(
+    raw_data,
+    mutate(
+      d$data,
+      raw_row_number = str_split(raw_row_number, "\\|")
+    ) %>%
+    unnest(
+    ) %>%
+    mutate(
+      raw_row_number = as.integer(raw_row_number)
+    )
+  )
+
+  d
+}
+
+
+opp_load_clean <- function(state, city = "statewide") {
   readRDS(opp_clean_data_path(state, city))
 }
 
 
-opp_load_data <- function(state, city = "statewide") {
-  opp_load(state, city)$data
+opp_load_clean_data <- function(state, city = "statewide") {
+  opp_load_clean(state, city)$data
 }
 
 
@@ -665,7 +703,7 @@ opp_plot <- function(state, city = "statewide") {
   output_dir = here::here("plots")
   dir_create(output_dir)
   plot_cols(
-    opp_load(state, city),
+    opp_load_clean_data(state, city),
     file.path(output_dir, pdf_filename(state, city))
   )
 }

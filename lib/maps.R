@@ -14,7 +14,7 @@ stop_maps <- function(
     api_key <- load_default_api_key()
   }
   register_google(api_key)
-  tbl <- opp_load_data(state, city) 
+  tbl <- opp_load_clean_data(state, city) 
   bounding_box <- calculate_bounding_box(tbl, pad)
   population_samples <- sample_block_groups(state, bounding_box, n_samples)
   stop_samples <- sample_stops(tbl, bounding_box, n_samples)

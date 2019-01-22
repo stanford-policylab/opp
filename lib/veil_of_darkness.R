@@ -27,7 +27,7 @@ veil_of_darkness_cities <- function() {
   saveRDS(tbl, "~/vod.rds")
 
   select(tbl, state, city) %>%
-  opp_load_all_data() %>%
+  opp_load_all_clean_data() %>%
   # TODO(danj): why was this marked as bad?
   filter(!(city == "Madison" & year(date) %in% c(2007, 2008))) %>%
   left_join(tbl) %>%

@@ -16,7 +16,7 @@ prima_facie_stats_aggregated <- function(use_cache = TRUE) {
 
 
 prima_facie_stats <- function(state, city) {
-  tbl <- opp_load_data(state, city)
+  tbl <- opp_load_clean_data(state, city)
   dem_tbl <- opp_demographics(state, city)
   list(
     state = state,

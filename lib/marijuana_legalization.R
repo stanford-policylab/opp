@@ -60,7 +60,7 @@ load <- function() {
     "VT", "Statewide",
     "WI", "Statewide"
   ) %>%
-  opp_load_all_data() %>%
+  opp_load_all_clean_data() %>%
   # TODO(danj): should these be updated with new data?
   filter(year(date) >= 2011 & year(date) <= 2015) %>%
   add_legalization_info()

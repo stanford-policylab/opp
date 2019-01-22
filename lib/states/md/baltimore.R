@@ -19,8 +19,15 @@ clean <- function(d, helpers) {
   # TODO(phoebe): can we get subject race?
   # https://app.asana.com/0/456927885748233/672314799705086
   d$data %>%
+    # NOTE: For some reason, the primary key seems to be a combination of
+    # Ticket and Citation Number; when Ticket is null, Citation Number isn't
+    # and vice versa; both are duplicated across rows, so we deduplicate on
+    # those two IDs coalesced
+    mutate(
+      tmp_id = coalesce(`Citation Number`, Ticket)
+    ) %>%
     merge_rows(
-      `Citation Number`
+      tmp_id
     ) %>%
     rename(
       officer_id = `Officer ID`,
@@ -36,6 +43,7 @@ clean <- function(d, helpers) {
       ),
       date = as.Date(datetime),
       time = format(datetime, "%H:%M:%S"),
+      time = if_else(time == parse_time("00:00:00"), NA, time),
       # TODO(phoebe): can we get `Ordinance Code` translations?
       # https://app.asana.com/0/456927885748233/672314799705088
       # TODO(phoebe): what are the `Enforcement Type` translations? And why are

@@ -1010,3 +1010,10 @@ bool_to_pct <- function(data, lgl, ...) {
     select(-`TRUE`, -`FALSE`) %>% 
     ungroup()
 }
+
+
+add_prefix <- function(v, prefix, skip = c()) {
+  idx <- !(v %in% skip)
+  v[idx] <- str_replace(v[idx], "^", prefix)
+  v
+}
