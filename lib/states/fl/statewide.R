@@ -1,3 +1,4 @@
+# NOTE: 
 source("common.R")
 
 
@@ -8,7 +9,7 @@ load_raw <- function(raw_data_dir, n_max) {
   new_loaded <- load_regex(raw_data_dir, "^SRIS", n_max = n_max)
   new_loaded$data$schema_type = "SRIS"
   new_loaded$data <- rename(new_loaded$data, Ethnicity = ethnicity)
-
+  
   data <- bind_rows(old_loaded$data, new_loaded$data)
   loading_problems <- c(
     old_loaded$loading_problems,
@@ -58,11 +59,10 @@ clean <- function(d, helpers) {
       Comments = combine_multiple(Comments)
     ) %>%
     ungroup(
-    ) %>%
-    mutate(
-      ReportDateTime = str_replace_all(ReportDateTime, "/", "-")
-    )
-
+    ) 
+  
+  print("Old data processed.")
+  
   # NOTE: We do a similar deduplication as above for old_data.
   new_data <-
     d$data %>%
@@ -99,12 +99,21 @@ clean <- function(d, helpers) {
         )),
         Comments = combine_multiple(Comments)
       ) %>%
-      ungroup()
-
+      ungroup(
+      )
+  
+  print("New data processed.")
+  
   # NOTE: We join the data because some stops are in both old_data and new_data.
   joined_data <- full_join(
-    old_data,
-    new_data,
+    old_data %>% 
+      mutate(
+        ReportDateTime = str_replace_all(ReportDateTime, "/", "-")
+      ),
+    new_data %>% 
+      mutate(
+        ReportDateTime = str_sub(ReportDateTime, 1, 19)
+      ),
     by = c(
       "ReportDateTime",
       "City",
@@ -116,6 +125,8 @@ clean <- function(d, helpers) {
     suffix = c("_old", "_new")
   )
 
+  print("Old and new data joined.")
+  
   joined_data %>%
     rename(
       location = City,
@@ -140,7 +151,7 @@ clean <- function(d, helpers) {
         parse_time(ReportDateTime, "%Y-%m-%d")
       ),
       subject_race = if_else(
-        str_detect(Ethnicity, "H"),
+        !is.na(Ethnicity) & str_detect(Ethnicity, "H"),
         "hispanic",
         fast_tr(Race, tr_race)
       ),
