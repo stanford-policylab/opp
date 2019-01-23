@@ -43,7 +43,7 @@ clean <- function(d, helpers) {
       ),
       date = as.Date(datetime),
       time = format(datetime, "%H:%M:%S"),
-      time = if_else(time == parse_time("00:00:00"), NA, time),
+      time = ifelse(time == parse_time("00:00:00"), NA, time),
       # TODO(phoebe): can we get `Ordinance Code` translations?
       # https://app.asana.com/0/456927885748233/672314799705088
       # TODO(phoebe): what are the `Enforcement Type` translations? And why are

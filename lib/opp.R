@@ -324,6 +324,11 @@ opp_load <- function(state, city) {
     mutate(
       raw_row_number = as.integer(raw_row_number)
     )
+  ) %>%
+  # NOTE: moves all raw columns to the end of the tibble
+  select(
+    -matches("^raw_"),
+    everything()
   )
 
   d

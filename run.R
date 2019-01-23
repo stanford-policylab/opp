@@ -44,7 +44,7 @@ get_args <- function() {
                  "--city <city_name>",
                  "[--coverage]",
                  "[--process_all]",
-                 "[--report_all]"
+                 "[--report_all]",
                  sep = " ")
   spec <- tribble(
     ~long_name,   ~short_name,  ~argument_type, ~data_type,
@@ -59,8 +59,8 @@ get_args <- function() {
     "state",       "s",         "none",         "character",
     "city",        "c",         "none",         "character",
     "coverage",    "v",         "none",         "logical",
-    "process_all", "a",         "none",         "logical"
-    "report_all",  "b",         "none",         "logical"
+    "process_all", "pa",        "none",         "logical",
+    "report_all",  "ra",        "none",         "logical"
   )
   args <- parse_args(spec)
 
