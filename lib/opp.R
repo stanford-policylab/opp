@@ -12,6 +12,16 @@ source(here::here("lib", "utils.R"))
 source(here::here("lib", "standards.R"))
 
 
+opp_all_raw_column_names <- function() {
+  opp_run_for_all(opp_raw_column_names)
+}
+
+
+opp_raw_column_names <- function(state, city) {
+  colnames(opp_load_raw_data(state, city))
+}
+
+
 clear <- function() {
   env = globalenv()
   rm(list=ls(envir = env), envir = env)
@@ -32,7 +42,6 @@ opp_available <- function() {
 
 opp_run_for_all <- function(func) {
   opp_available() %>%
-  select(state, city) %>%
   pmap(func) %>%
   bind_rows() %>%
   arrange(state, city)
@@ -445,7 +454,6 @@ opp_add_lat_lng_func <- function(state, city = "statewide") {
       col_types = "cdd"
     )
   }
-
 }
 
 
