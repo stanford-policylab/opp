@@ -12,13 +12,17 @@ source(here::here("lib", "utils.R"))
 source(here::here("lib", "standards.R"))
 
 
-opp_all_raw_column_names <- function() {
-  opp_run_for_all(opp_raw_column_names)
+opp_all_raw_column_names <- function(only = NULL) {
+  opp_run_for_all(opp_raw_column_names, only)
 }
 
 
 opp_raw_column_names <- function(state, city) {
-  colnames(opp_load_raw_data(state, city))
+  tibble(
+    state = state,
+    city = city,
+    column = colnames(opp_load_raw_data(state, city, n_max = 10))
+  )
 }
 
 
@@ -40,8 +44,9 @@ opp_available <- function() {
 }
 
 
-opp_run_for_all <- function(func) {
-  opp_available() %>%
+opp_run_for_all <- function(func, only = NULL) {
+  if (is.null(only)) { only <- opp_available() }
+  only %>%
   pmap(func) %>%
   bind_rows() %>%
   arrange(state, city)
@@ -61,15 +66,10 @@ opp_load_all_clean_data <- function(only = NULL) {
 
 opp_load_all_data <- function(only = NULL, include_raw = T) {
   load_func <- if_else(include_raw, opp_load_data, opp_load_clean_data)
-
-  tbl <- opp_available()
-  if (!is.null(only)) {
-    tbl <- inner_join(tbl, only)
-  }
-
+  if (is.null(only)) { only <- opp_available() }
   bind_rows(
     par_pmap(
-      tbl,
+      only,
       function(state, city) {
         mutate(
           load_func(state, city),
