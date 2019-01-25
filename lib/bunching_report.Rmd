@@ -87,7 +87,7 @@ Speeding Fine Schedule:
 https://www.okc.gov/departments/municipal-court/fines-fees 
 
 ```{r ok, fig.height=3.75, fig.width=7}
-tbl <- opp_load_data("ok", "oklahoma city")
+tbl <- opp_load_clean_data("ok", "oklahoma city")
 tbl <-
   tbl %>%
   mutate(
@@ -123,7 +123,7 @@ Speeding Fine Schedule:
 https://dallascityhall.com/departments/courtdetentionservices/DCH%20Documents/OffenseCode_FinesFees_20180705.pdf 
 
 ```{r dallas, fig.height=3.75, fig.width=7}
-tbl <- opp_load_data("tx", "dallas")
+tbl <- opp_load_clean_data("tx", "dallas")
 tbl <- mutate(tbl, hour_of_day = hour(hms(time)))
 bt <- bunching_test(
   tbl,
@@ -153,7 +153,7 @@ https://www.plano.gov/364/Fine-Payment-Information
 Used bunching value of 10 MPH over 
 
 ```{r plano, fig.height=3.75, fig.width=7}
-tbl <- opp_load_data("tx", "plano")
+tbl <- opp_load_clean_data("tx", "plano")
 tbl <- mutate(tbl, hour_of_day = hour(hms(time)))
 # NOTE: location is null 99.97% of the time where speed is defined
 bt <- bunching_test(

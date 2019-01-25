@@ -131,7 +131,7 @@ load_city_data <- function() {
     "TX", "El Paso",
     "TX", "San Antonio"
   )
-  opp_load_all_data(only=eligible_cities) %>%
+  opp_load_all_clean_data(only=eligible_cities) %>%
     filter(
       ifelse(
         city == "San Diego",
@@ -217,7 +217,7 @@ load_state_data <- function() {
     "WI", "Statewide"
   )
   print("Loading eligible states...")
-  opp_load_all_data(only=eligible_states) %>% 
+  opp_load_all_clean_data(only=eligible_states) %>% 
     filter(
       if_else(
         # NOTE: old OPP doesn't use AZ because the contraband data is too messy

@@ -32,7 +32,7 @@ calculate_coverage <- function(state, city) {
 
 
 load_coverage_data <- function(state, city) {
-  tbl <- opp_load_data(state, city)
+  tbl <- opp_load_clean_data(state, city)
 
   coverage <- select_or_add_as_na(
     tbl,
