@@ -6,7 +6,7 @@ library(zoo)
 source("opp.R")
 
 # SOURCE
-d <- opp_load(state, city)
+d <- opp_load_clean(state, city)
 data <- d$data
 metadata <- d$metadata
 
