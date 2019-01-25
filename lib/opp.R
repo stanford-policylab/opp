@@ -816,3 +816,18 @@ opp_prima_facie_stats <- function() {
     file.path(output_dir, "prima_facie_stats.pdf")
   )
 }
+
+
+opp_zip_all_for_ap <- function(only = NULL) {
+  if (is.null(only)) { only <- opp_available() }
+  par_pmap(only, opp_zip_for_ap)
+}
+
+
+opp_zip_for_ap <- function(state, city) {
+  base <- str_c("/share/data/opp-for-ap/", tolower(state), "_", normalize_city(city))
+  output_csv <- str_c(base, ".csv")
+  output_zip <- str_c(base, ".zip")
+  write_csv(opp_load_data(state, city), output_csv)
+  zip(output_zip, output_csv)
+}
