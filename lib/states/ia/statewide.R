@@ -102,25 +102,6 @@ clean <- function(d, helpers) {
     # (except for violation) are the same. In 0.1% of stops, the max span between timestamps 
     # is more than 60 minutes. In those cases it looks like the same officer stopped the same 
     # individual more than once in the same day.
-    group_by(INDIVKEY, date) %>%
-    summarize(
-      time                       = min(time, na.rm=T),
-      department_name            = paste(na.omit(unique(department_name           )), collapse=','),
-      location                   = paste(na.omit(unique(location                  )), collapse=','),
-      subject_race               = paste(na.omit(unique(subject_race              )), collapse=','),
-      officer_id                 = paste(na.omit(unique(officer_id                )), collapse=','),
-      county_name                = paste(na.omit(unique(county_name               )), collapse=','),
-      subject_sex                = paste(na.omit(unique(subject_sex               )), collapse=','),
-      type                       = paste(na.omit(unique(type                      )), collapse=','),
-      violation                  = paste(na.omit(unique(violation                 )), collapse=','),
-      vehicle_model              = paste(na.omit(unique(vehicle_model             )), collapse=','),
-      vehicle_year               = paste(na.omit(unique(vehicle_year              )), collapse=','),
-      vehicle_color              = paste(na.omit(unique(vehicle_color             )), collapse=','),
-      vehicle_registration_state = paste(na.omit(unique(vehicle_registration_state)), collapse=','),
-      citation_issued            = paste(na.omit(unique(citation_issued           )), collapse=','),
-      warning_issued             = paste(na.omit(unique(warning_issued            )), collapse=','),
-      outcome                    = paste(na.omit(unique(outcome                   )), collapse=',')
-    ) %>% 
-    ungroup() %>% 
+    merge_rows(INDIVKEY, date) %>% 
     standardize(d$metadata)
 }

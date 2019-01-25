@@ -29,15 +29,16 @@ clean <- function(d, helpers) {
     # separate date and time
     separate(X4, c("date","time"), " ") %>% 
     # Group same stop rows to account for multiple violations
-    group_by(date,time,X9,X11,X13,X29,X30,X31,X33,X39,X48,X49,X52,X53,X56) %>%
-    summarize(
-      dob  = unique_value(X14),
-      sex  = unique_value(X17),
-      race = unique_value(X15),
-      loc  = paste(na.omit(unique(X42)), collapse=', '),
-      violation = str_to_lower(paste(X103, collapse = '|'))
-    ) %>%
-    ungroup() %>% 
+    merge_rows(date,time,X9,X11,X13,X29,X30,X31,X33,X39,X48,X49,X52,X53,X56) %>% 
+    # group_by(date,time,X9,X11,X13,X29,X30,X31,X33,X39,X48,X49,X52,X53,X56) %>%
+    # summarize(
+    #   dob  = unique_value(X14),
+    #   sex  = unique_value(X17),
+    #   race = unique_value(X15),
+    #   loc  = paste(na.omit(unique(X42)), collapse=', '),
+    #   violation = str_to_lower(paste(X103, collapse = '|'))
+    # ) %>%
+    # ungroup() %>% 
     mutate(
       # NOTE: loc is usually highway numbers or main roads, X11 is usually city
       location = str_c(loc, ", ", X11), 
