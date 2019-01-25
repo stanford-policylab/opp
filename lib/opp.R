@@ -827,7 +827,11 @@ opp_zip_all_for_ap <- function(only = NULL) {
 opp_zip_for_ap <- function(state, city) {
   base <- str_c("/share/data/opp-for-ap/", tolower(state), "_", normalize_city(city))
   output_csv <- str_c(base, ".csv")
+  output_clean_csv <- str_c(base, "_clean.csv")
   output_zip <- str_c(base, ".zip")
+  output_clean_zip <- str_c(base, "_clean.zip")
   write_csv(opp_load_data(state, city), output_csv)
   zip(output_zip, output_csv)
+  write_csv(opp_load_clean_data(state, city), output_clean_csv)
+  zip(output_clean_zip, output_clean_csv)
 }
