@@ -2,6 +2,9 @@ source(here::here("lib", "opp.R"))
 source(here::here("lib", "outcome_test.R"))
 source(here::here("lib", "threshold_test.R"))
 source(here::here("lib", "disparity_plot.R"))
+###
+source(here::here("lib", "state_validation.R"))
+###
 
 disparity <- function(state_or_city = c("state", "city")) {
   if(state_or_city == "TRUE") 
@@ -12,16 +15,58 @@ disparity <- function(state_or_city = c("state", "city")) {
 
 generate_disparity_report <- function(state_or_city) {
   print(sprintf("Generating %s disparity reports.",  state_or_city))
+  ###
+  # old_d <- bind_rows(
+  #   load_old("AZ") %>% select(-driver_age_raw),
+  #   load_old("CO") %>% select(-driver_age_raw),
+  #   load_old("CT") %>% select(-driver_age_raw),
+  #   load_old("IL") %>% select(-driver_age_raw),
+  #   load_old("MA") %>% select(-driver_age_raw),
+  #   load_old("NC") %>% select(-driver_age_raw),
+  #   load_old("OH") %>% select(-driver_age_raw),
+  #   load_old("RI") %>% select(-driver_age_raw),
+  #   load_old("SC") %>% select(-driver_age_raw),
+  #   load_old("TX") %>% select(-driver_age_raw),
+  #   load_old("WA") %>% select(-driver_age_raw),
+  #   load_old("WI") %>% select(-driver_age_raw)
+  # ) %>% 
+  #   filter(driver_race %in% c("Black", "White", "Hispanic")) %>% 
+  # mutate(
+  #   subject_race = str_to_lower(driver_race),
+  #   sg = NA_character_,
+  #   sg = if_else(state == "AZ", county_name, sg),
+  #   sg = if_else(state == "CO", county_name, sg),
+  #   sg = if_else(state == "CT", county_name, sg),
+  #   sg = if_else(state == "IL", location_raw, sg),
+  #   sg = if_else(state == "MA", county_name, sg),
+  #   sg = if_else(state == "NC", county_name, sg),
+  #   sg = if_else(state == "OH", county_name, sg),
+  #   sg = if_else(state == "RI", location_raw, sg),
+  #   sg = if_else(state == "SC", county_name, sg),
+  #   sg = if_else(state == "TX", county_name, sg),
+  #   sg = if_else(state == "WA", county_name, sg),
+  #   sg = if_else(state == "WI", county_name, sg)
+  # ) %>%
+  # rename(
+  #   sub_geography = sg
+  # )
+  d_tx_old <- load_old("TX") %>% 
+    mutate(sub_geography = county_name) %>% 
+    filter(driver_race %in% c("Black", "White", "Hispanic"))
+  d_tx_new <- opp_load_data("TX") %>% 
+    mutate(sub_geography = county_name, state = "TX") %>% 
+    filter(subject_race %in% c("black", "white", "hispanic"))
+  ###
   # d <- read_rds(here::here("cache", str_c("disparity_data_loaded_", state_or_city, ".rds")))
-  d <- load_data(state_or_city)
-  print("Data loaded.")
-  write_rds(d, here::here("cache", str_c("disparity_data_loaded_", state_or_city, ".rds")))
+  # d <- load_data(state_or_city)
+  # print("Data loaded.")
+  # write_rds(d, here::here("cache", str_c("disparity_unfiltered_data_loaded_", state_or_city, ".rds")))
   
   # print("Starting outcome test...")
   # ot <- outcome_test(d, state, city, sub_geography)
   # write_rds(ot, here::here("cache", str_c("disparity_", state_or_city, "outcome.rds")))
   # print(sprintf(
-  #   "Results saved to: %s", 
+  #   "Results saved to: %s",
   #   here::here("cache", str_c("disparity_", state_or_city, "outcome.rds"))
   # ))
   # print("Starting local outcome test plots...")
@@ -29,17 +74,42 @@ generate_disparity_report <- function(state_or_city) {
   # print("Starting aggregate outcome test plot...")
   # plt(ot$results, str_c("outcome aggregate: ", state_or_city))
   
-  print("Starting threshold test...")
-  tt <- threshold_test(d, state, city, sub_geography)
-  write_rds(tt, here::here("cache", str_c("disparity_", state_or_city, "threshold.rds")))
-  print(sprintf(
-    "Results saved to: %s", 
-    here::here("cache", str_c("disparity_", state_or_city, "threshold.rds"))
-  ))
-  print("Starting local threshold test plots...")
-  plt_all(tt$results$thresholds, "threshold")
-  print("Starting aggregate threshold test plot...")
-  plt(tt$results$thresholds, str_c("threshold aggregate: ", state_or_city))
+  print("Starting threshold tests...")
+  # tts <- threshold_tests(d)
+  ###
+  tt_tx_old <- threshold_test(
+    d_tx_old, state, sub_geography,
+    geography_col = state,
+    demographic_col = driver_race,
+    action_col = search_conducted,
+    outcome_col = contraband_found,
+    majority_demographic = "White"
+  )
+  write_rds(tt_tx_old, here::here("cache", "tt_tx_old.rds"))
+  tt_tx_new <- threshold_test(
+    d_tx_new, state, sub_geography,
+    geography_col = state,
+    demographic_col = subject_race,
+    action_col = search_conducted,
+    outcome_col = contraband_found
+  )
+  write_rds(tt_tx_old, here::here("cache", "tt_tx_new.rds"))
+  # print("Starting local threshold test plots...")
+  # plt_all(tt_tx_old$results$thresholds, "threshold OLD (unfiltered)")
+  # plt_all(tt_tx_new$results$thresholds, "threshold NEW (unfiltered)")
+  # write_rds(tts_old, here::here("cache", str_c("disparity_threshold_old_data_by_", state_or_city, ".rds")))
+  ###
+  # write_rds(tts, here::here("cache", str_c("disparity_threshold_by_", state_or_city, ".rds")))
+  # tt <- threshold_test(d, state, city, sub_geography)
+  # write_rds(tt, here::here("cache", str_c("disparity_unfiltered", state_or_city, "threshold.rds")))
+  # print(sprintf(
+  #   "Results saved to: %s", 
+  #   here::here("cache", str_c("disparity_", state_or_city, "threshold.rds"))
+  # ))
+  # print("Starting local threshold test plots...")
+  # plt_all(tt$results$thresholds, "threshold (unfiltered)")
+  # print("Starting aggregate threshold test plot...")
+  # plt(tt$results$thresholds, str_c("threshold (unfiltered) aggregate: ", state_or_city))
 }
 
 load_data <- function(state_or_city) {
@@ -156,7 +226,7 @@ load_state_data <- function() {
         # NOTE: 2009 and 2010 have insufficient data
         year(date) >= 2011
         # NOTE: remove non-discretionary searches
-        & (is.na(search_basis) | search_basis != "other")
+        # & (is.na(search_basis) | search_basis != "other")
         # NOTE: don't use NA county (15 non-NA counties, account for ~90%)
         & !is.na(county_name)
         # NOTE: these counties have insufficient data for all races
@@ -169,10 +239,10 @@ load_state_data <- function() {
       if_else(
         state == "CO",
         # NOTE: remove non-discretionary searches
-        (is.na(search_basis) | search_basis != "other")
+        # (is.na(search_basis) | search_basis != "other")
         # NOTE: remove the stops for which a search was conducted but we don't have
         # contraband recovery info
-        & !(search_conducted & is.na(contraband_found))
+         !(search_conducted & is.na(contraband_found))
         # NOTE: these counties have insufficient data for 2 or all 3 races
         & !county_name %in% c(
           "Archuleta County", "Baca County", "Bent County", "Broomfield County",
@@ -201,7 +271,7 @@ load_state_data <- function() {
         department_name == "State Police"
         # NOTE: remove non-discretionary searches (5% of searches)
         # NOTE: keeps searches for which search basis is not given (~7%)
-        & (is.na(search_basis) | search_basis != "other")
+        # & (is.na(search_basis) | search_basis != "other")
         # NOTE: all counties are fine; just filter the 1 NA entry
         & !is.na(county_name),
         T
@@ -223,9 +293,9 @@ load_state_data <- function() {
         # NOTE: old OPP says contraband info is too messy; seems reasonable to me
         # NOTE: remove non-discretionary searches (32% of searches)
         # NOTE: keeps searches for which search basis is not given (~9%)
-        (is.na(search_basis) | search_basis != "other")
+        # (is.na(search_basis) | search_basis != "other")
         # NOTE: these counties have insufficient data for 2 or all 3 races
-        & !county_name %in% c("Dukes", "Nantucket")
+         !county_name %in% c("Dukes", "Nantucket")
         & !is.na(county_name),
         T
       ),
@@ -234,7 +304,7 @@ load_state_data <- function() {
         # NOTE: use just state patrol stops
         department_name == "NC State Highway Patrol"
         # NOTE: remove non-discretionary searches (68% of searches)
-        & (is.na(search_basis) | search_basis != "other")
+        # & (is.na(search_basis) | search_basis != "other")
         # NOTE: these counties have insufficient data for 2 or all 3 races
         & !county_name %in% c(
           "Ashe County", "Chowan County", "Clay County", "Dare County", "Graham County",
@@ -288,8 +358,9 @@ load_state_data <- function() {
       if_else(
         state == "RI",
         # NOTE: remove non-discretionary searches (49% of searches)
-        (is.na(search_basis) | search_basis != "other"),
+        # (is.na(search_basis) | search_basis != "other"),
         # NOTE: use zone (no county info) -- 6 zones, all ok
+        !is.na(zone),
         T
       ),
       if_else(
@@ -302,9 +373,9 @@ load_state_data <- function() {
         state == "TX",
         # NOTE: remove non-discretionary searches (28% of searches)
         # NOTE: keep searches for which search basis is not given (<<<1%)
-        (is.na(search_basis) | search_basis != "other")
+        # (is.na(search_basis) | search_basis != "other")
         # NOTE: these counties have insufficient data for 2 or all 3 races
-        & !county_name %in% c(
+         !county_name %in% c(
           "Borden", "Foard", "Hansford", "Kent", "King", "Lipscomb", "Loving",
           "Sabine"
         )
@@ -322,9 +393,9 @@ load_state_data <- function() {
       if_else(
         state == "WA",
         # NOTE: remove non-discretionary searches (95%?!?!?)
-        (is.na(search_basis) | search_basis != "other")
+        # (is.na(search_basis) | search_basis != "other")
         # NOTE: these counties have insufficient data for 2 or all 3 races
-        & !county_name %in% c(
+         !county_name %in% c(
           "Asotin", "Columbia", "Ferry", "Garfield", "Pend Oreille", "Skamania",
           "Stevens", "Wahkiakum"
         )
@@ -338,10 +409,10 @@ load_state_data <- function() {
       if_else(
         state == "WI",
         # NOTE: 2010 is too sparse to trust
-        year(date) != 2010
+        year(date) > 2010
         # NOTE: remove non-discretionary searches (33%)
         # NOTE: keep searches for which search basis is not given (<<<1%)
-        & (is.na(search_basis) | search_basis != "other")
+        # & (is.na(search_basis) | search_basis != "other")
         # NOTE: these counties have insufficient data for 2 or all 3 races
         & !county_name %in% c(
           "ADAMS", "ASHLAND", "BARRON", "BAYFIELD", "BUFFALO", "BURNETT", "CALUMET",
@@ -404,8 +475,8 @@ outcome_tests <- function(d) {
 
 
 threshold_tests <- function(d) {
-  # NOTE: Runs threshold test on each location individually
-  # for the multi-location hierarchical threshold test, call
+  # NOTE: Runs threshold test on each location individually.
+  # For the multi-location hierarchical threshold test, call
   # threshold_test(...) on the data, directly. 
   d %>%
     group_by(state, city) %>%
