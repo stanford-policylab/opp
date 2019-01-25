@@ -46,8 +46,7 @@ opp_available <- function() {
 
 opp_run_for_all <- function(func, only = NULL) {
   if (is.null(only)) { only <- opp_available() }
-  only %>%
-  pmap(func) %>%
+  par_pmap(only, func) %>%
   bind_rows() %>%
   arrange(state, city)
 }
