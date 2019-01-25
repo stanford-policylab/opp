@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
-source("opp.R")
-source("analysis_common.R")
+source(here::here("lib", "opp.R"))
+source(here::here("lib", "analysis_common.R"))
 
 
 marijuana_legalization_analysis <- function() {
