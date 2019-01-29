@@ -1,4 +1,4 @@
-source("common.R")
+source(here::here("lib", "common.R"))
 
 
 load_raw <- function(raw_data_dir, n_max) {
@@ -61,7 +61,7 @@ clean <- function(d, helpers) {
     # NOTE: Some rows belong to the same stop.  We dedup below with a group_by
     # and aggregate to potentially have multiple violations and multiple
     # reasons for stop.  For the outcome, we take the most severe outcome.
-    group_by(
+    merge_rows(
       contraband_found,
       county_name,
       CustodialArrestIndicator,
@@ -79,14 +79,12 @@ clean <- function(d, helpers) {
       subject_sex,
       time
     ) %>%
-    summarize(
+    rename(
       # NOTE: There is also StatutatoryCitationPostStop which is the violation
       # the individual was cited for.
-      violation = str_c_sort_uniq(StatuteCodeIdentificationID),
-      reason_for_stop = str_c_sort_uniq(StatutoryReasonForStop),
-      multi_outcome = str_c_sort_uniq(InterventionDispositionCode)
-    ) %>%
-    ungroup(
+      violation = StatuteCodeIdentificationID,
+      reason_for_stop = StatutoryReasonForStop,
+      multi_outcome = InterventionDispositionCode
     ) %>%
     mutate(
       arrest_made = CustodialArrestIndicator == "True"
