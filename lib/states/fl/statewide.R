@@ -1,5 +1,5 @@
 # NOTE: 
-source("common.R")
+source(here::here("lib", "common.R"))
 
 
 load_raw <- function(raw_data_dir, n_max) {
@@ -40,26 +40,30 @@ clean <- function(d, helpers) {
   # Some pertain to different passengers, and hence we sometimes cannot uniquely
   # identify the race of the driver.
   old_data <- old_data %>%
-    group_by(
-      ReportDateTime,
-      County,
-      OfficerIDNo
-    ) %>%
-    summarize(
-      City = unique_value(City),
-      Race = unique_value(Race),
-      Ethnicity = unique_value(Ethnicity),
-      Sex = unique_value(Sex),
-      Age = unique_value(Age),
-      VehicleTagNo = unique_value(VehicleTagNo),
-      VehicleTagNoState = unique_value(VehicleTagNoState),
-      OfficerOrgUnit = unique_value(OfficerOrgUnit),
-      OfficerAgency = unique_value(OfficerAgency),
-      OfficerName = unique_value(OfficerName),
-      Comments = combine_multiple(Comments)
-    ) %>%
-    ungroup(
-    ) 
+    merge_rows(ReportDateTime, County, OfficerIDNo) %>% 
+    select(raw_row_number, ReportDateTime, County, OfficerIDNo, City, Race, Ethnicity,
+           Sex, Age, VehicleTagNo, VehicleTagNoState, OfficerOrgUnit, OfficerAgency,
+           OfficerName, Comments)
+    # group_by(
+    #   ReportDateTime,
+    #   County,
+    #   OfficerIDNo
+    # ) %>%
+    # summarize(
+    #   City = unique_value(City),
+    #   Race = unique_value(Race),
+    #   Ethnicity = unique_value(Ethnicity),
+    #   Sex = unique_value(Sex),
+    #   Age = unique_value(Age),
+    #   VehicleTagNo = unique_value(VehicleTagNo),
+    #   VehicleTagNoState = unique_value(VehicleTagNoState),
+    #   OfficerOrgUnit = unique_value(OfficerOrgUnit),
+    #   OfficerAgency = unique_value(OfficerAgency),
+    #   OfficerName = unique_value(OfficerName),
+    #   Comments = combine_multiple(Comments)
+    # ) %>%
+    # ungroup(
+    # ) 
   
   print("Old data processed.")
   
@@ -70,37 +74,59 @@ clean <- function(d, helpers) {
         schema_type == "SRIS",
         !is.na(ReportDateTime)
       ) %>%
-      group_by(
-        ReportDateTime,
-        County,
-        OfficerIDNo
-      ) %>%
-      summarize(
-        City = unique_value(City),
-        Race = unique_value(Race),
-        Ethnicity = unique_value(Ethnicity),
-        Off_Age_At_Stop = unique_value(Off_Age_At_Stop),
-        Off_YrsExp_At_Stop = unique_value(Off_YrsExp_At_Stop),
-        Off_Sex = unique_value(Off_Sex),
-        Off_Race = unique_value(Off_Race),
-        OfficerOrgUnit = unique_value(OfficerOrgUnit),
-        ReasonForStop = combine_multiple(ReasonForStop),
+      merge_rows(ReportDateTime, County, OfficerIDNo) %>% 
+      select(raw_row_number, ReportDateTime, County, OfficerIDNo, City, Race, Ethnicity, 
+             Off_Age_At_Stop, Off_YrsExp_At_Stop, Off_Sex, Off_Race, OfficerOrgUnit, 
+             ReasonForStop, starts_with("EnforcementAction"), starts_with("Violation"), 
+             SearchType, starts_with("SearchRationale"), Comments) %>% 
+      mutate(
         EnforcementAction = combine_multiple(c(
           EnforcementAction1,
           EnforcementAction2,
           EnforcementAction3
         )),
-        Violation = combine_multiple(c(Violation1, Violation2, Violation3)),
-        SearchType = combine_multiple(SearchType),
+        Violation = combine_multiple(c(
+          Violation1, 
+          Violation2, 
+          Violation3
+        )),
         SearchRationale = combine_multiple(c(
           SearchRationale1,
           SearchRationale2,
           SearchRationale3
-        )),
-        Comments = combine_multiple(Comments)
-      ) %>%
-      ungroup(
+        ))
       )
+      # group_by(
+      #   ReportDateTime,
+      #   County,
+      #   OfficerIDNo
+      # ) %>%
+      # summarize(
+      #   City = unique_value(City),
+      #   Race = unique_value(Race),
+      #   Ethnicity = unique_value(Ethnicity),
+      #   Off_Age_At_Stop = unique_value(Off_Age_At_Stop),
+      #   Off_YrsExp_At_Stop = unique_value(Off_YrsExp_At_Stop),
+      #   Off_Sex = unique_value(Off_Sex),
+      #   Off_Race = unique_value(Off_Race),
+      #   OfficerOrgUnit = unique_value(OfficerOrgUnit),
+      #   ReasonForStop = combine_multiple(ReasonForStop),
+      #   EnforcementAction = combine_multiple(c(
+      #     EnforcementAction1,
+      #     EnforcementAction2,
+      #     EnforcementAction3
+      #   )),
+      #   Violation = combine_multiple(c(Violation1, Violation2, Violation3)),
+      #   SearchType = combine_multiple(SearchType),
+      #   SearchRationale = combine_multiple(c(
+      #     SearchRationale1,
+      #     SearchRationale2,
+      #     SearchRationale3
+      #   )),
+      #   Comments = combine_multiple(Comments)
+      # ) %>%
+      # ungroup(
+      # )
   
   print("New data processed.")
   
@@ -142,6 +168,7 @@ clean <- function(d, helpers) {
       vehicle_registration_state = VehicleTagNoState
     ) %>%
     mutate(
+      raw_row_number = str_c_na(raw_row_number_old, raw_row_number_new, sep = "|"),
       date = coalesce(
         parse_date(ReportDateTime, "%Y-%m-%d %H:%M:%S"),
         parse_date(ReportDateTime, "%Y-%m-%d")

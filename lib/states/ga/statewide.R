@@ -30,6 +30,7 @@ clean <- function(d, helpers) {
     separate(X4, c("date","time"), " ") %>% 
     # Group same stop rows to account for multiple violations
     merge_rows(date,time,X9,X11,X13,X29,X30,X31,X33,X39,X48,X49,X52,X53,X56) %>% 
+    rename(dob = X14, sex = X17, race = X15, loc = X42, violation = X103) %>% 
     # group_by(date,time,X9,X11,X13,X29,X30,X31,X33,X39,X48,X49,X52,X53,X56) %>%
     # summarize(
     #   dob  = unique_value(X14),

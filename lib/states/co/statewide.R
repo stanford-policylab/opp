@@ -104,7 +104,8 @@ clean <- function(d, helpers) {
   # create a single row for a stop. For search_conducted and contraband_found
   # fields, >99.9% all stops in group have same value. 
   d$data %>%
-    group_by(
+    # group_by(
+    merge_rows(
       officer_id,
       officer_first_name,
       officer_last_name,
@@ -120,30 +121,30 @@ clean <- function(d, helpers) {
       LocationRoad,
       LocationMilePost
     ) %>%
-    summarize(
-      violation = str_c(StatuteDesc, collapse = "|"),
-      SearchBase = first(SearchBase),
-      department_id = first(TroopID),
-      driver_gender = first(driver_gender),
-      Ethnicity = first(Ethnicity),
-      officer_gender = first(officer_gender),
-      vehicle_make = first(Make),
-      vehicle_model = first(Model),
-      vehicle_year = first(Year),
-      PlateState = first(PlateState),
-      department_name = first(`Office Location`),
-      # NOTE: For the remainder of the columns we take the unique value in the
-      # group of rows, or return NA if there are multiple distinct values.
-      # We use NA because we don't know what the right value should be.
-      Arrest = unique_value(Arrest),
-      Citation = unique_value(Citation),
-      Search = unique_value(Search),
-      SearchContraband = unique_value(SearchContraband),
-      WrittenWarning = unique_value(WrittenWarning),
-      OralWarning = unique_value(OralWarning)
-    ) %>%
-    ungroup(
-    ) %>%
+    # summarize(
+    #   violation = str_c(StatuteDesc, collapse = "|"),
+    #   SearchBase = first(SearchBase),
+    #   department_id = first(TroopID),
+    #   driver_gender = first(driver_gender),
+    #   Ethnicity = first(Ethnicity),
+    #   officer_gender = first(officer_gender),
+    #   vehicle_make = first(Make),
+    #   vehicle_model = first(Model),
+    #   vehicle_year = first(Year),
+    #   PlateState = first(PlateState),
+    #   department_name = first(`Office Location`),
+    #   # NOTE: For the remainder of the columns we take the unique value in the
+    #   # group of rows, or return NA if there are multiple distinct values.
+    #   # We use NA because we don't know what the right value should be.
+    #   Arrest = unique_value(Arrest),
+    #   Citation = unique_value(Citation),
+    #   Search = unique_value(Search),
+    #   SearchContraband = unique_value(SearchContraband),
+    #   WrittenWarning = unique_value(WrittenWarning),
+    #   OralWarning = unique_value(OralWarning)
+    # ) %>%
+    # ungroup(
+    # ) %>%
     mutate(
       # NOTE: Source data all describe state police traffic stops.
       type = "vehicular",
