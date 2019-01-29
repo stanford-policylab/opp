@@ -1,4 +1,4 @@
-source("common.R")
+source(here::here("lib", "common.R"))
 
 load_raw <- function(raw_data_dir, n_max) {
   d_cad <- load_regex(raw_data_dir, "cad20\\d{2}.csv", n_max = n_max)

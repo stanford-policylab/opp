@@ -1,4 +1,4 @@
-source("common.R")
+source(here::here("lib", "common.R"))
 
 load_raw <- function(raw_data_dir, n_max) {
   #  Vehicle dictionaries

@@ -1,4 +1,4 @@
-source("common.R")
+source(here::here("lib", "common.R"))
 
 
 load_raw <- function(raw_data_dir, n_max) {
@@ -20,7 +20,7 @@ clean <- function(d, helpers) {
   # NOTE: Each row in the dataset corresponds to a citation. We dedup to have
   # one row per stop.
   d$data %>%
-    group_by(
+    merge_rows(
       Age,
       county_name,
       desc_of_area,
@@ -32,13 +32,9 @@ clean <- function(d, helpers) {
       street_cnty_rd_location,
       violation_date_time
     ) %>% 
-    summarize(
-      violation = str_c_sort_uniq(century_code_viol),
-      reason_for_stop = str_c_sort_uniq(description_50)
-    ) %>%
-    ungroup(
-    ) %>%
     rename(
+      violation = century_code_viol,
+      reason_for_stop = description_50,
       subject_age = Age
     ) %>%
     mutate(

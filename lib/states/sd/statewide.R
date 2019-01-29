@@ -1,4 +1,4 @@
-source("common.R")
+source(here::here("lib", "common.R"))
 # NOTE: there still appear to be slight count differences between old opp and our 
 # cleaned data. However, it appears that our data formats have changed since the last
 # pull/process (of old opp), which may account for some of the differences. Furthermore,

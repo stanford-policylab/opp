@@ -1,4 +1,4 @@
-source("common.R")
+source(here::here("lib", "common.R"))
 
 load_raw <- function(raw_data_dir, n_max) {
   # NOTE: 2014 data come from three sheets of a spreadsheet. Only the first

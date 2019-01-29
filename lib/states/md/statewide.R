@@ -10,7 +10,7 @@
 # they line up identically, so i can't see that helping.
 # TODO(amyshoe): figure out what is causing discrepancies between old and new opp data in by-month 
 # 2013 counts 
-source("common.R")
+source(here::here("lib", "common.R"))
 
 load_raw <- function(raw_data_dir, n_max) {
   d13_1 <- load_single_file(

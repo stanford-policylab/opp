@@ -1,4 +1,4 @@
-source("common.R")
+source(here::here("lib", "common.R"))
 # TODO(amyshoe): old opp ran StopCity through google geocoder to get county;
 # at some point we should do the same
 
