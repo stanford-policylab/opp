@@ -24,6 +24,10 @@ clean <- function(d, helpers) {
   # TODO(phoebe): can we get reason_for_stop/search/contraband fields?
   # https://app.asana.com/0/456927885748233/595493946182532
   d$data %>%
+    # TODO(phoebe): are citation numbers unique? sometimes it looks like the
+    # represent the same stop, other times, there are two separate locations
+    # for the same citation number, i.e. "07M000645"?
+    # https://app.asana.com/0/456927885748233/1106093271701480
     merge_rows(
       citation_number
     ) %>%
