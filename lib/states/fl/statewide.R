@@ -19,21 +19,11 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
-  # Sorts, uniques, and collapses a list removing certain NA related values.
-  combine_multiple <- function(x) {
-    str_c_sort_uniq(
-      x[!(x == "NOT INDICATED" | x == "NOT APPLICABLE")],
-      collapse = "|"
-    )
-  }
 
   # NOTE: Replacing "NULL" with NA everywhere.
   d$data[d$data == "NULL"] <- NA
 
-  old_data <- filter(d$data, schema_type == "TSDR")
-
-  # NOTE: Remove completely duplicate rows.
-  old_data <- distinct(old_data)
+  old_data <- filter(d$data, schema_type == "TSDR") 
 
   # NOTE: There are also duplicate rows due to multiple violations per stop.
   # Some pertain to different passengers, and hence we sometimes cannot uniquely
@@ -43,26 +33,6 @@ clean <- function(d, helpers) {
     select(raw_row_number, ReportDateTime, County, OfficerIDNo, City, Race, Ethnicity,
            Sex, Age, VehicleTagNo, VehicleTagNoState, OfficerOrgUnit, OfficerAgency,
            OfficerName, Comments)
-    # group_by(
-    #   ReportDateTime,
-    #   County,
-    #   OfficerIDNo
-    # ) %>%
-    # summarize(
-    #   City = unique_value(City),
-    #   Race = unique_value(Race),
-    #   Ethnicity = unique_value(Ethnicity),
-    #   Sex = unique_value(Sex),
-    #   Age = unique_value(Age),
-    #   VehicleTagNo = unique_value(VehicleTagNo),
-    #   VehicleTagNoState = unique_value(VehicleTagNoState),
-    #   OfficerOrgUnit = unique_value(OfficerOrgUnit),
-    #   OfficerAgency = unique_value(OfficerAgency),
-    #   OfficerName = unique_value(OfficerName),
-    #   Comments = combine_multiple(Comments)
-    # ) %>%
-    # ungroup(
-    # ) 
   
   print("Old data processed.")
   
@@ -79,53 +49,43 @@ clean <- function(d, helpers) {
              ReasonForStop, starts_with("EnforcementAction"), starts_with("Violation"), 
              SearchType, starts_with("SearchRationale"), Comments) %>% 
       mutate(
-        EnforcementAction = combine_multiple(c(
-          EnforcementAction1,
+        EnforcementAction1 = str_replace_all(EnforcementAction1, "NOT INDICATED", NA_character_),
+        EnforcementAction1 = str_replace_all(EnforcementAction1, "NOT APPLICABLE", NA_character_),
+        EnforcementAction2 = str_replace_all(EnforcementAction2, "NOT INDICATED", NA_character_),
+        EnforcementAction2 = str_replace_all(EnforcementAction2, "NOT APPLICABLE", NA_character_),
+        EnforcementAction3 = str_replace_all(EnforcementAction3, "NOT INDICATED", NA_character_),
+        EnforcementAction3 = str_replace_all(EnforcementAction3, "NOT APPLICABLE", NA_character_),
+        Violation1 = str_replace_all(Violation1, "NOT INDICATED", NA_character_),
+        Violation1 = str_replace_all(Violation1, "NOT APPLICABLE", NA_character_),
+        Violation2 = str_replace_all(Violation2, "NOT INDICATED", NA_character_),
+        Violation2 = str_replace_all(Violation2, "NOT APPLICABLE", NA_character_),
+        Violation3 = str_replace_all(Violation3, "NOT INDICATED", NA_character_),
+        Violation3 = str_replace_all(Violation3, "NOT APPLICABLE", NA_character_),
+        SearchRationale1 = str_replace_all(SearchRationale1, "NOT INDICATED", NA_character_),
+        SearchRationale1 = str_replace_all(SearchRationale1, "NOT APPLICABLE", NA_character_),
+        SearchRationale2 = str_replace_all(SearchRationale2, "NOT INDICATED", NA_character_),
+        SearchRationale2 = str_replace_all(SearchRationale2, "NOT APPLICABLE", NA_character_),
+        SearchRationale3 = str_replace_all(SearchRationale3, "NOT INDICATED", NA_character_),
+        SearchRationale3 = str_replace_all(SearchRationale3, "NOT APPLICABLE", NA_character_),
+        EnforcementAction = str_c_na(
+          EnforcementAction1, 
           EnforcementAction2,
-          EnforcementAction3
-        )),
-        Violation = combine_multiple(c(
+          EnforcementAction3,
+          sep = "|"
+        ),
+        Violation = str_c_na(
           Violation1, 
           Violation2, 
-          Violation3
-        )),
-        SearchRationale = combine_multiple(c(
+          Violation3,
+          sep = "|"
+        ),
+        SearchRationale = str_c_na(
           SearchRationale1,
           SearchRationale2,
-          SearchRationale3
-        ))
+          SearchRationale3,
+          sep = "|"
+        )
       )
-      # group_by(
-      #   ReportDateTime,
-      #   County,
-      #   OfficerIDNo
-      # ) %>%
-      # summarize(
-      #   City = unique_value(City),
-      #   Race = unique_value(Race),
-      #   Ethnicity = unique_value(Ethnicity),
-      #   Off_Age_At_Stop = unique_value(Off_Age_At_Stop),
-      #   Off_YrsExp_At_Stop = unique_value(Off_YrsExp_At_Stop),
-      #   Off_Sex = unique_value(Off_Sex),
-      #   Off_Race = unique_value(Off_Race),
-      #   OfficerOrgUnit = unique_value(OfficerOrgUnit),
-      #   ReasonForStop = combine_multiple(ReasonForStop),
-      #   EnforcementAction = combine_multiple(c(
-      #     EnforcementAction1,
-      #     EnforcementAction2,
-      #     EnforcementAction3
-      #   )),
-      #   Violation = combine_multiple(c(Violation1, Violation2, Violation3)),
-      #   SearchType = combine_multiple(SearchType),
-      #   SearchRationale = combine_multiple(c(
-      #     SearchRationale1,
-      #     SearchRationale2,
-      #     SearchRationale3
-      #   )),
-      #   Comments = combine_multiple(Comments)
-      # ) %>%
-      # ungroup(
-      # )
   
   print("New data processed.")
   
