@@ -24,9 +24,9 @@ clean <- function(d, helpers) {
   # NOTE: Deduping because each row corresponds to a violation, not to a stop.
   d$data %>%
     mutate(
-      Warning = parse_number(Warning)
+      Warning = parse_logical(Warning)
     ) %>%
-    group_by(
+    merge_rows(
       ArrestNum,
       CountyCode,
       Department,
@@ -38,16 +38,11 @@ clean <- function(d, helpers) {
       UponStreet,
       VehicleID
     ) %>% 
-    summarise(
+    rename(
       # NOTE: We also have Felony, Misdemeanor, CivilInfraction and several
       # court related columns to help refine the outcome.
-      max_warning = max(Warning),
-      violation = str_c_sort_uniq(ViolationCode),
-      reason_for_stop = str_c_sort_uniq(Description)
-    ) %>%
-    ungroup(
-    ) %>%
-    rename(
+      violation = ViolationCode,
+      reason_for_stop = Description,
       officer_id = PrimaryOfficerID,
       department_id = DepartmentNum,
       department_name = Department
@@ -70,7 +65,7 @@ clean <- function(d, helpers) {
       # a non-zero VehicleImpounded code.
       type = "vehicular",
       arrest_made = !is.na(ArrestNum),
-      warning_issued = max_warning == 1,
+      warning_issued = str_detect("TRUE", Warning),
       # NOTE: All rows have a TicketNum. Here we assume that if any ticket is
       # not a warning, then it is a citation.  But then potentially for outcome,
       # anything that is not an arrest or warning could have a court summons.
