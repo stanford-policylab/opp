@@ -1,5 +1,6 @@
 source(here::here("lib", "common.R"))
-
+# NOTE: don't trust first half of 2010; looks like there was a ramp-up period
+# as they begun to collect data. Things look fine starting in June 2010
 
 load_raw <- function(raw_data_dir, n_max) {
   old_loaded <- load_regex(raw_data_dir, "^TSDR", n_max = n_max)
