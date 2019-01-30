@@ -1,4 +1,11 @@
-source("common.R")
+source(here::here("lib", "common.R"))
+# NOTE: Data is too sparse in 2009, 2010, and part of 2011; don't trust it until mid 2011. 
+# NOTE: Weird abberations: missing chunks in 2012, 2013, with similar length spikes in 2012 
+# and 2015, possibly indicated mis-dated? 
+# NOTE from old opp: "Some contraband information is available and so we define a 
+# contraband_found column in case it is useful to other researchers. But the data is 
+# messy and there are multiple ways contraband_found might be defined, and so we do 
+# not include Arizona in our contraband analysis."
 
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_years(raw_data_dir, n_max)
