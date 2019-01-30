@@ -1,5 +1,9 @@
 source(here::here("lib", "common.R"))
 
+# NOTE: don't trust data until 2013 (2012 still seems a bit low, but 
+# definitely don't use the data before 2012.)
+# NOTE: there are some spike abberations 4x/year
+# NOTE: race data seems shoddy.
 
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_single_file(raw_data_dir, "data.csv", n_max = n_max)
