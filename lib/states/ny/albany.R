@@ -5,7 +5,7 @@ source("common.R")
 # Policing Initiative" nor the 2018 Prospectus seem to collect statistics on
 # traffic stops, although the Prospectus has some figures on crime. That said,
 # the counts seem reasonable for a city of its size, with the exception of a
-# few days in 2015; see TODOs for outstanding tasks.
+# few days in 2015
 
 # TODO(phoebe): What happened on 2015-04-29, 2015-05-02, and 2015-05-23; there
 # are massive spikes in stops
@@ -26,7 +26,7 @@ clean <- function(d, helpers) {
 
   # TODO(phoebe): can we get reason_for_stop/search/contraband fields?
   # https://app.asana.com/0/456927885748233/758649899422594
-  # TODO(phoebe) can we get outcomes (warning/citation/arrest)?
+  # TODO(phoebe): can we get outcomes (warning/citation/arrest)?
   # https://app.asana.com/0/456927885748233/758649899422595
   d$data %>%
     rename(

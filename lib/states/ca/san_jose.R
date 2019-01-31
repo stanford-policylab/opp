@@ -3,8 +3,7 @@ source("common.R")
 # VALIDATION: [GREEN] While the numbers seem to be on the right order of
 # magnitude, they don't clearly line up with the city report put out by the San
 # Jose government; however, the racial breakdown does closely match that in
-# "San Jose Police Department Traffic and Pedestrian Stop Study"; see TODOs for
-# outstanding issues
+# "San Jose Police Department Traffic and Pedestrian Stop Study"
 # TODO(phoebe): arrests for years 2014-2016 in our data are between 1.5k and 4k,
 # but the "City of San Jose -- Annual Report on City Services 2016-17" says
 # there were around 17k arrests for each of those year; is this not the

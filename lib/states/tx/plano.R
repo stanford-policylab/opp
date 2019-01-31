@@ -5,7 +5,6 @@ source("common.R")
 # report from 2017 reports that there were ~85k and ~89k traffic stops in 2016
 # and 2017, respectively (the two years after this data ends). This would
 # represent a huge increase from 62k and 59k for 2014 and 2015 in this data.
-# See TODOs for outstanding tasks
 # TODO(phoebe): can we get updated data, i.e. 2016-2018? Also, if the Annual
 # Report is correct, stops went up by more than 30% from 2015 to 2016/7 -- why
 # is this?

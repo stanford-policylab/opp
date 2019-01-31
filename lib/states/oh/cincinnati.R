@@ -5,7 +5,7 @@ source("common.R")
 # 2018 only has partial data. The Cincinnati PD doesn't seem to put out Annual
 # Reports but does have crime statistics ("STARS" reports). Despite the lack of
 # validation, the data seems relatively reasonable. However, there is a notable
-# downward trend in stops from 2009 to 2017. See TODOs for outstanding tasks.
+# downward trend in stops from 2009 to 2017
 
 # TODO(phoebe): Why do the number of stops drop so precipitously from 2009 to
 # 2017?

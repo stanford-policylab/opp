@@ -23,7 +23,7 @@ load_raw <- function(raw_data_dir, n_max) {
     dept$data %>% 
       select(AgencyID, PoliceDepartment, WorkCity) %>% 
       # NOTE: to standardize city spellings; 
-      # TODO(amyshoe) needs more standardization if it's to be trust
+      # TODO(amyshoe): needs more standardization if it's to be trust
       mutate(WorkCity = str_to_title(str_replace_all(WorkCity, "'", ""))) %>%
       distinct(),
     by = 'AgencyID'

@@ -4,8 +4,7 @@ source("common.R")
 # VALIDATION: [RED] For the year of 2016, the only year received, there were
 # 1.8M rows after deduping on the primary key HA_ARREST_KEY. This number is too
 # high, given that the population is only 1.2M as of the 2010 census, as this
-# would suggest everyone in Dallas was stopped on average once in 2016; see
-# TODOs for outstanding tasks
+# would suggest everyone in Dallas was stopped on average once in 2016
 load_raw <- function(raw_data_dir, n_max) {
   # NOTE: commercial vehicle inspections is not currently processed but exists
   # in the raw_data_dir; same with some of their lookup tables:

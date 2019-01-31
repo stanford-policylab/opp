@@ -5,7 +5,7 @@ source("common.R")
 # report for 2016 only has one statistic that can really be used for evaluating
 # the likelihood that this data is valid: the number of total calls for
 # service, which was 992k. 2016 had 127k stops in this dataset, which is
-# probably reasonable. See TODOs for oustanding tasks
+# probably reasonable.
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_years(raw_data_dir, n_max = n_max)
   bundle_raw(d$data, d$loading_problems)

@@ -13,7 +13,7 @@ source("common.R")
 # statewide.R will have all ids
 
 # VALIDATION: [RED] 2000 and 2001 are missing most data; there are also several
-# missing months in 2014 and 2015 (see TODOs). And while the 2015 Annual Report
+# missing months in 2014 and 2015. And while the 2015 Annual Report
 # has a lot of statistics, they don't clearly align with the data here (likely
 # due in part to the missing data).
 

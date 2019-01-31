@@ -4,8 +4,7 @@ source("common.R")
 # crime stats, and the county sheriff's 2017 Annual Report also lists detailed
 # crime, but there doesn't appear to be any easily accessible public reference
 # for vehicular/pedestrian stops; however, the number of stops seems
-# relatively appropriate given a population of ~200k; see TODOs for outstanding
-# issues
+# relatively appropriate given a population of ~200k
 # NOTE: in 2011 we only have partial data
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_single_file(raw_data_dir, "stop_data.csv", n_max)

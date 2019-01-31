@@ -3,7 +3,7 @@ source("common.R")
 
 # VALIDATION: [RED] There is only the first 7 months of 2010 here and there
 # doesn't seem to be an annual report that goes back that far (as of 2018-12-13
-# there is only the Annual Report for 2017); see TODOs for outstanding issues
+# there is only the Annual Report for 2017).
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_single_file(raw_data_dir, "kean_for_traffic_stop_data.csv", n_max)
   bundle_raw(d$data, d$loading_problems)

@@ -3,8 +3,7 @@ source("common.R")
 
 # VALIDATION: [YELLOW] The Tacoma PD hosts a crime map on their website, but
 # doesn't appear to produce annual reports or traffic statistics. 2007 and 2017
-# only have partial data. That said, that data looks relatively reasonable,
-# there are a few outstanding questions, see TODOs
+# only have partial data. That said, that data looks relatively reasonable.
 # TODO(phoebe): Why does the number of stops decrease so dramatically from 2009
 # to 2017?
 # https://app.asana.com/0/456927885748233/955159586009898

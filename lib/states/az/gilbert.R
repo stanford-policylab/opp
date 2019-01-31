@@ -4,7 +4,7 @@ source("common.R")
 # a section on call volume for traffic stops, which seems to be about 10-20%
 # higher than the number of recorded stops in our data; this may be because
 # only certain outcomes are recorded; unfortunately, we don't get a lot of data
-# here, including stop outcome; see the ensuing TODOs for outstanding asks
+# here, including stop outcome.
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_single_file(raw_data_dir, "ts_and_ss_2008_2018_ytd.csv", n_max)
   colnames(d$data) <- make_ergonomic(colnames(d$data))

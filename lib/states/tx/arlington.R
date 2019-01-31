@@ -3,8 +3,7 @@ source("common.R")
 
 # VALIDATION: [GREEN] There is only 2016 data and there are a lot of missing
 # data dictionary mappings from features to descriptions, but the 2016 Annual
-# Report's total number of traffic stops very closely matches this data. See
-# TODOs for outstanding tasks
+# Report's total number of traffic stops very closely matches this data.
 
 # TODO(phoebe): can we get more than just 2016?
 # https://app.asana.com/0/456927885748233/661685466505378 

@@ -17,6 +17,7 @@ def lookup(
     state,
     city,
     n_lines_after,
+    md,
     update_repo,
 ):
 
@@ -31,6 +32,7 @@ def lookup(
     if state == 'all':
         states = os.listdir(states_dir)
 
+    results = []
     for state in states:
         state = state.lower()
         cities = [normalize(city) + '.R']
@@ -43,12 +45,16 @@ def lookup(
             if not os.path.exists(city_path):
                 continue
             matches = find(pattern, city_path, n_lines_after)
-            matches_formatted = syntax_highlight(matches)
             state_name = state.upper()
             city_name = make_proper_noun(
                 city_filename.split('.')[0].replace('_', ' ')
             )
-            display(state_name, city_name, matches_formatted)
+            d = {'state': state_name, 'city': city_name, 'matches': matches}
+            results.append(d)
+    if md:
+        write_md(results)
+    else:
+        [display(**d) for d in results]
     return
 
 
@@ -60,6 +66,12 @@ def find(pattern, path, n_lines_after):
     pattern_rx = re.compile(pattern, re.IGNORECASE)
     with open(path) as f:
         code = f.read()
+    if pattern_rx.match('all?'):
+        return (
+            find_all(special_regex()['validation'], code, n_lines_after)
+            + find_all(special_regex()['note'], code, n_lines_after)
+            + find_all(special_regex()['todo'], code, n_lines_after)
+        )
     if pattern_rx.match('notes?'):
         return find_all(special_regex()['note'], code, n_lines_after)
     # TODO(danj): add possible assignee here
@@ -78,9 +90,9 @@ def find(pattern, path, n_lines_after):
 
 def special_regex():
     return {
-        'note': '.*#\s*NOTE.*',
-        'todo': '.*#\s*TODO.*',
-        'validation': '.*#\s*VALIDATION.*',
+        'note': '^\s*#\s*NOTE:.*',
+        'todo': '^\s*#\s*TODO:.*',
+        'validation': '^\s*#\s*VALIDATION:.*',
     }
 
 
@@ -118,13 +130,54 @@ def display(state, city, matches):
     colmax = 80
     header += '-' * (colmax - len(header))
     print(header)
-    for match in matches:
+    for match in syntax_highlight(matches):
         print(match + '-------------')
     return
 
 
 def make_proper_noun(name):
     return name.title()
+
+
+def write_md(results):
+    with open('results.md', 'w') as f:
+        for r in results:
+            f.write('## %s, %s\n' % (r['city'], r['state']))
+            d = {'validation': [], 'note': [], 'todo': []}
+            for match in r['matches']:
+                comment, code = split_comment_code(match)
+                comment_type, text = comment.split(':', 1)
+                # NOTE: remove person assigned task if exists
+                comment_type = re.sub('\(\w+\)', '', comment_type)
+                d[comment_type.lower()].append({
+                    'comment': text.strip(),
+                    'code': code,
+                })
+            write_list(f, 'Validation', d['validation'])
+            write_list(f, 'Notes', d['note'])
+            write_list(f, 'TODOs', d['todo'])
+            f.write('\n\n')
+    return
+
+
+def write_list(f, name, lst):
+    f.write('\n### %s:\n' % name)
+    for d in lst:
+        f.write('- %s\n' % d['comment'])
+        if d['code']:
+            f.write('```r%s```\n' % d['code'])
+    return
+
+
+def split_comment_code(s):
+    comments = []
+    codes = []
+    for line in s.split('\n'):
+        if re.match('^\s*#', line):
+            comments.append(re.sub('^\s*#\s*', '', line))
+        else:
+            codes.append(line)
+    return ' '.join(comments), '\n'.join(codes)
 
 
 def parse_args(argv):
@@ -137,7 +190,8 @@ def parse_args(argv):
         help=(
             'special tokens: "file" will return entire file contents '
             '"note" will return all NOTEs, and "todo" will return all '
-            'TODOs and "valid(ation)" will return all VALIDATIONs'
+            'TODOs, "valid(ation)" will return all VALIDATIONs, and "all" '
+            'will return VALIDATIONs, NOTEs, and TODOs'
         )
     )
     parser.add_argument(
@@ -156,6 +210,11 @@ def parse_args(argv):
         help='returns n lines of context after regex pattern match',
     )
     parser.add_argument(
+        '-md',
+        action='store_true',
+        help='output as md file'
+    )
+    parser.add_argument(
         '-u',
         '--update_repo',
         action='store_true',
@@ -171,5 +230,6 @@ if __name__ == '__main__':
         args.state,
         args.city,
         args.n_lines_after,
+        args.md,
         args.update_repo,
     )

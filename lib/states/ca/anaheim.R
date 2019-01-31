@@ -1,7 +1,7 @@
 source("common.R")
 
 # VALIDATION: [RED] We have very little data here and the police department's
-# website doesn't seem to issue any annual report; see outstanding TODOs
+# website doesn't seem to issue any annual report
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_single_file(
     raw_data_dir,

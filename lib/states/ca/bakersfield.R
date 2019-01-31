@@ -3,8 +3,7 @@ source("common.R")
 # VALIDATION: [YELLOW] Bakersfield Police Department provides crime mapping
 # here: https://www.crimemapping.com/map/ca/bakersfield, but doesn't appear to
 # offer any annual report; however, the top figures look reasonable given a
-# population of roughly 350k; 2008 and 2018 appear to only have partial data;
-# see TODOs for outstanding issues
+# population of roughly 350k; 2008 and 2018 appear to only have partial data
 # TODO(phoebe): why do we see a dip in stops in 2013? See report
 # https://app.asana.com/0/456927885748233/944841731070584
 load_raw <- function(raw_data_dir, n_max) {

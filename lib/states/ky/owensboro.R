@@ -6,7 +6,7 @@ source("common.R")
 # instance, there were 308 "Street Crimes Unit" arrests; we have 429 arrests
 # from traffic violations, which is in the same neighborhood. The Annual
 # Report doesn't give any traffic statistics but the data here seems to be on
-# the same magnitude as that in the report; see TODOs for outstanding issues
+# the same magnitude as that in the report.
 # NOTE: There are some aggregate statistics in excel files for 2016/early 2017
 # on citations and drugs in the data directory
 load_raw <- function(raw_data_dir, n_max) {
