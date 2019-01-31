@@ -30,7 +30,7 @@ def lookup(
 
     states = [state]
     if state == 'all':
-        states = os.listdir(states_dir)
+        states = sorted(os.listdir(states_dir))
 
     results = []
     for state in states:
@@ -38,6 +38,7 @@ def lookup(
         cities = [normalize(city) + '.R']
         if city == 'all':
             cities = os.listdir(os.path.join(states_dir, state))
+            cities = [city for city in cities if city.endswith('.R')]
         for city_filename in cities:
             city_path = os.path.join(states_dir, state, city_filename)
             # NOTE: catches degenerate case when 'all' specified for state
@@ -91,7 +92,7 @@ def find(pattern, path, n_lines_after):
 def special_regex():
     return {
         'note': '^\s*#\s*NOTE:.*',
-        'todo': '^\s*#\s*TODO:.*',
+        'todo': '^\s*#\s*TODO\(\w+\):.*',
         'validation': '^\s*#\s*VALIDATION:.*',
     }
 
@@ -155,7 +156,7 @@ def write_md(results):
                 })
             write_list(f, 'Validation', d['validation'])
             write_list(f, 'Notes', d['note'])
-            write_list(f, 'TODOs', d['todo'])
+            write_list(f, 'Todos', d['todo'])
             f.write('\n\n')
     return
 
@@ -165,7 +166,7 @@ def write_list(f, name, lst):
     for d in lst:
         f.write('- %s\n' % d['comment'])
         if d['code']:
-            f.write('```r%s```\n' % d['code'])
+            f.write('```r\n%s```\n' % d['code'])
     return
 
 

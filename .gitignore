@@ -4,6 +4,7 @@
 *.nfs*
 *.Rproj
 *.key
+*.md
 .RData
 */__pycache__/*
 lib/report.*.md
