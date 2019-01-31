@@ -3,7 +3,7 @@ source(here::here("lib", "outcome_test.R"))
 source(here::here("lib", "threshold_test.R"))
 source(here::here("lib", "disparity_plot.R"))
 ###
-source(here::here("lib", "state_validation.R"))
+# source(here::here("lib", "state_validation.R"))
 ###
 
 disparity <- function(state_or_city = c("state", "city")) {
