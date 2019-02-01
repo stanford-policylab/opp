@@ -1,26 +1,27 @@
 #!/usr/bin/env python3
 
 import argparse
+import glob
 import os
 import re
 import sys
 
+from lookup import lookup
 from utils import (
-    chdir_to_opp_root,
+    opp_root_dir,
     git_pull_rebase_if_online,
 )
 
 
 def make():
-    git_pull_rebase_if_online('.')
-    chdir_to_opp_root()
-    states_dir = os.path.join('lib', 'states')
-    paths = []
-    for state in sorted(os.listdir(states_dir)):
-        for filename in os.listdir(os.path.join(states_dir, state)):
-            if filename.endswith('.R'):
-                paths.append(os.path.join(states_dir, state, filename))
-    return paths
+    paths = get_data_paths()
+    results = lookup('all', 'all', 'all', n_lines_after=0, update_repo=False)
+    return paths, results
+
+
+def get_data_paths():
+    pattern = os.path.join(opp_root_dir(), 'data', 'states', '**', '*.rds')
+    return [p for p in glob.iglob(pattern, recursive=True)]
 
 
 def write_md(results):

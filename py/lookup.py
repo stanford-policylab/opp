@@ -6,7 +6,7 @@ import re
 import sys
 
 from utils import (
-    chdir_to_opp_root,
+    opp_root_dir,
     git_pull_rebase_if_online,
     syntax_highlight_code,
 )
@@ -20,12 +20,11 @@ def lookup(
     update_repo,
 ):
 
+    # NOTE: assumes you are in the repo
     if update_repo:
         git_pull_rebase_if_online('.')
 
-    chdir_to_opp_root()
-
-    states_dir = os.path.join('lib', 'states')
+    states_dir = os.path.join(opp_root_dir(), 'lib', 'states')
 
     states = [state]
     if state == 'all':
@@ -132,47 +131,6 @@ def display(state, city, matches):
 
 def make_proper_noun(name):
     return name.title()
-
-
-def write_md(results):
-    with open('results.md', 'w') as f:
-        for r in results:
-            f.write('## %s, %s\n' % (r['city'], r['state']))
-            d = {'validation': [], 'note': [], 'todo': []}
-            for match in r['matches']:
-                comment, code = split_comment_code(match)
-                comment_type, text = comment.split(':', 1)
-                # NOTE: remove person assigned task if exists
-                comment_type = re.sub('\(\w+\)', '', comment_type)
-                d[comment_type.lower()].append({
-                    'comment': text.strip(),
-                    'code': code,
-                })
-            write_list(f, 'Validation', d['validation'])
-            write_list(f, 'Notes', d['note'])
-            write_list(f, 'Todos', d['todo'])
-            f.write('\n\n')
-    return
-
-
-def write_list(f, name, lst):
-    f.write('\n### %s:\n' % name)
-    for d in lst:
-        f.write('- %s\n' % d['comment'])
-        if d['code']:
-            f.write('```r\n%s```\n' % d['code'])
-    return
-
-
-def split_comment_code(s):
-    comments = []
-    codes = []
-    for line in s.split('\n'):
-        if re.match('^\s*#', line):
-            comments.append(re.sub('^\s*#\s*', '', line))
-        else:
-            codes.append(line)
-    return ' '.join(comments), '\n'.join(codes)
 
 
 def parse_args(argv):

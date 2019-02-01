@@ -4,11 +4,15 @@ import sys
 
 
 def chdir_to_opp_root():
+    d = opp_root_dir()
+    os.chdir(d)
+    return d
+
+
+def opp_root_dir():
     this_dir = os.path.dirname(os.path.realpath(__file__))
-    # NOTE: this assumes opp-city root is parent directory of this file
-    opp_root_dir = os.path.abspath(os.path.join(this_dir, os.pardir))
-    os.chdir(opp_root_dir)
-    return opp_root_dir
+    # NOTE: this assumes opp root is parent directory of this file
+    return os.path.abspath(os.path.join(this_dir, os.pardir))
 
 
 def is_online():
@@ -19,11 +23,6 @@ def is_online():
     except OSError:
         pass
     return False
-
-
-def load_rds(path):
-    import rpy2.robjects as robjects
-    return robjects.r['readRDS'](path)
 
 
 def syntax_highlight_code(code, language):
