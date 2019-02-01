@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
 import argparse
-import glob
+import pandas as pd
 import os
 import re
+import subprocess as sub
 import sys
 
 from lookup import lookup
@@ -14,29 +15,31 @@ from utils import (
 
 
 def make():
-    paths = get_data_paths()
+    r_markdown = os.path.join(opp_root_dir(), 'lib', 'markdown.R')
+    sub.run(['Rscript', r_markdown])
+    tables = pd.read_csv('/tmp/markdown.csv')
     results = lookup('all', 'all', 'all', n_lines_after=0, update_repo=False)
-    return paths, results
-
-
-def get_data_paths():
-    pattern = os.path.join(opp_root_dir(), 'data', 'states', '**', '*.rds')
-    return [p for p in glob.iglob(pattern, recursive=True)]
+    for r in results:
+        idx = (tables.city == r['city']) & (tables.state == r['state'])
+        r['table'] = tables.loc[idx, 'predicated_null_rates'].tolist()[0]
+    write_md(results)
+    return results
 
 
 def write_md(results):
     with open('results.md', 'w') as f:
         for r in results:
             f.write('## %s, %s\n' % (r['city'], r['state']))
+            f.write(r['table'] + '\n')
             d = {'validation': [], 'note': [], 'todo': []}
-            for match in r['matches']:
-                comment, code = split_comment_code(match)
-                comment_type, text = comment.split(':', 1)
+            for m in r['matches']:
+                p = m['match'].replace('\n', ' ')
+                ctype, text = re.sub('^\s*#\s*', '', p).split(':', 1)
                 # NOTE: remove person assigned task if exists
-                comment_type = re.sub('\(\w+\)', '', comment_type)
-                d[comment_type.lower()].append({
+                ctype = re.sub('\(\w+\)', '', ctype)
+                d[ctype.lower()].append({
                     'comment': text.strip(),
-                    'code': code,
+                    'code': m['after'] if 'after' in m else '',
                 })
             write_list(f, 'Validation', d['validation'])
             write_list(f, 'Notes', d['note'])
