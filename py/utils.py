@@ -21,7 +21,12 @@ def is_online():
     return False
 
 
-def syntax_higlight_code(code, language):
+def load_rds(path):
+    import rpy2.robjects as robjects
+    return robjects.r['readRDS'](path)
+
+
+def syntax_highlight_code(code, language):
     from pygments import highlight
     from pygments.lexers import get_lexer_by_name
     from pygments.formatters import Terminal256Formatter
@@ -32,7 +37,7 @@ def syntax_higlight_code(code, language):
     )
 
 
-def syntax_higlight_path(path):
+def syntax_highlight_path(path):
     from pygments import highlight
     from pygments.lexers import get_lexer_for_filename
     from pygments.formatters import Terminal256Formatter

@@ -33,16 +33,12 @@ clean <- function(d, helpers) {
   # https://app.asana.com/0/456927885748233/583463577237761 
   # NOTE: this includes multiple Tampa-area police departments
   d$data %>%
-    merge_rows(
-      `Uniform Case Number`
-    ) %>%
     rename(
       violation = `Statute Description`,
       vehicle_registration_state = `Tag State`,
       department_name = `Law Enf Agency Name`
     ) %>%
-    separate_cols(
-      `Law Enf Officer Name` = c("officer_last_name", "officer_first_name"),
+    separate_cols( `Law Enf Officer Name` = c("officer_last_name", "officer_first_name"),
       sep = " |, "
     ) %>%
     mutate(
@@ -84,5 +80,13 @@ clean <- function(d, helpers) {
     #   sector = TPD_SECTOR.x,
     #   zone = TPD_ZONE
     # ) %>%
+    merge_rows(
+      date,
+      subject_race,
+      subject_dob,
+      officer_last_name,
+      officer_first_name,
+      `Driver License Number`
+    ) %>%
     standardize(d$metadata)
 }

@@ -8,7 +8,7 @@ import sys
 from utils import (
     chdir_to_opp_root,
     git_pull_rebase_if_online,
-    syntax_higlight_code,
+    syntax_highlight_code,
 )
 
 
@@ -17,7 +17,6 @@ def lookup(
     state,
     city,
     n_lines_after,
-    md,
     update_repo,
 ):
 
@@ -52,11 +51,7 @@ def lookup(
             )
             d = {'state': state_name, 'city': city_name, 'matches': matches}
             results.append(d)
-    if md:
-        write_md(results)
-    else:
-        [display(**d) for d in results]
-    return
+    return results
 
 
 def normalize(name):
@@ -107,7 +102,7 @@ def find_all(pattern, code, n_lines_after):
     n = len(lines)
     for i, line in enumerate(lines):
         if pattern_rx.match(line):
-            matches.append(line)
+            matches.append({'match': line})
             if comment_rx.match(line):
                 last_was_comment = True
         elif (
@@ -115,15 +110,11 @@ def find_all(pattern, code, n_lines_after):
             and comment_rx.match(line)
             and not special_rx.match(line)
         ):
-            matches[-1] += '\n' + line
+            matches[-1]['match'] += '\n' + line
         elif last_was_comment:
             last_was_comment = False
-            matches[-1] += '\n' + '\n'.join(lines[i:min(i + n_lines_after, n)])
+            matches[-1]['after'] = '\n'.join(lines[i:min(i + n_lines_after, n)])
     return matches
-
-
-def syntax_highlight(matches):
-    return [syntax_higlight_code(match, 'R') for match in matches]
 
 
 def display(state, city, matches):
@@ -131,8 +122,11 @@ def display(state, city, matches):
     colmax = 80
     header += '-' * (colmax - len(header))
     print(header)
-    for match in syntax_highlight(matches):
-        print(match + '-------------')
+    for match in matches:
+        s = match['match']
+        if 'after' in match:
+            s += '\n' + match['after']
+        print(syntax_highlight_code(s, 'R') + '-------------')
     return
 
 
@@ -211,11 +205,6 @@ def parse_args(argv):
         help='returns n lines of context after regex pattern match',
     )
     parser.add_argument(
-        '-md',
-        action='store_true',
-        help='output as md file'
-    )
-    parser.add_argument(
         '-u',
         '--update_repo',
         action='store_true',
@@ -226,11 +215,11 @@ def parse_args(argv):
 
 if __name__ == '__main__':
     args = parse_args(sys.argv) 
-    lookup(
+    results = lookup(
         args.pattern,
         args.state,
         args.city,
         args.n_lines_after,
-        args.md,
         args.update_repo,
     )
+    [display(**d) for d in results]
