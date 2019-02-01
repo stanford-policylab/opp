@@ -33,10 +33,14 @@ def write_md(results):
             f.write(r['table'] + '\n')
             d = {'validation': [], 'note': [], 'todo': []}
             for m in r['matches']:
-                p = m['match'].replace('\n', ' ')
-                ctype, text = re.sub('^\s*#\s*', '', p).split(':', 1)
+                p = remove_leading_hashes(m['match']).replace('\n', ' ')
+                ctype, text = p.split(':', 1)
                 # NOTE: remove person assigned task if exists
                 ctype = re.sub('\(\w+\)', '', ctype)
+                # NOTE: remove [RED|YELLOW|GREEN] rating if exists
+                text = re.sub('\[\w+\]', '', text)
+                # NOTE: remove asana task links
+                text = re.sub(r'https://app.asana\S+', '', text)
                 d[ctype.lower()].append({
                     'comment': text.strip(),
                     'code': m['after'] if 'after' in m else '',
@@ -46,6 +50,10 @@ def write_md(results):
             write_list(f, 'Todos', d['todo'])
             f.write('\n\n')
     return
+
+
+def remove_leading_hashes(s):
+    return re.sub(re.compile('^\s*#\s*', re.MULTILINE), '', s)
 
 
 def write_list(f, name, lst):

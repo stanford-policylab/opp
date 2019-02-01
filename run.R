@@ -69,10 +69,12 @@ get_args <- function() {
     q(status = 0)
   }
 
+  print(args)
   if (
     (not_null(args$process) || not_null(args$report) || not_null(args$plot))
     &&
     (is.null(args$state) || is.null(args$city))
+    && is_null(args$process_all)
   ) {
     print(usage)
     q(status = 1)
