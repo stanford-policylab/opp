@@ -7,7 +7,7 @@ suppressMessages(source("disparity.R"))
 
 main <- function() {
   args <- get_args()
-  if (not_null(args$process))
+  if (not_null(args$process) & is_null(args$process_all))
     opp_process(args$state, args$city, args$n_max)
   if (not_null(args$report))
     opp_report(args$state, args$city)
@@ -22,9 +22,11 @@ main <- function() {
   if (not_null(args$disparity))
     disparity(args$disparity)
   if (not_null(args$process_all))
-    opp_process_all()
+    v <- opp_process_all()
+    print(v)
   if (not_null(args$report_all))
-    opp_report_all()
+    v <- opp_report_all()
+    print(v)
   print("Finished!")
   q(status = 0)
 }
