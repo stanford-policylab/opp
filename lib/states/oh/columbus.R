@@ -3,8 +3,7 @@ source("common.R")
 
 # VALIDATION: [YELLOW] It appears as though the Annual Reports only include
 # Violent and Property crime statistics (in addition to complaints). That said,
-# the number of stops and consistency year over year appear reasonable. See
-# TODOs for outstanding tasks.
+# the number of stops and consistency year over year appear reasonable.
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_single_file(raw_data_dir, "columbus_oh_data.csv")
   bundle_raw(d$data, d$loading_problems)

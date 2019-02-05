@@ -5,8 +5,7 @@ source("common.R")
 # 16) of the 2016 Idaho Falls Police Department's Annual Report, but we have
 # not yet received translations for the 'reptspec' column, so we can't
 # translate these into typical outcomes (warning, citation, arrest); there is
-# also only partial data for 2008 and 2016 (see NOTE for details on 2016); see
-# TODOs for outstanding issues
+# also only partial data for 2008 and 2016 (see NOTE for details on 2016).
 load_raw <- function(raw_data_dir, n_max) {
 	# NOTE: there are 6 months of new data that weren't processed here because
   # they were in a completely different format and a small fraction of the data

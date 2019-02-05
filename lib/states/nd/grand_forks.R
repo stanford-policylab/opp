@@ -5,8 +5,7 @@ source("common.R")
 # that don't totally correspond to our classification here, but are not far
 # off. It's not clear what is considered a traffic stop by the PD (i.e. a
 # pedestrian stop but as it relates to traffic law?). There are also some
-# peculiar spikes, usually at least 1 day a year, that is a clear outlier. See
-# TODOs for outstanding tasks.
+# peculiar spikes, usually at least 1 day a year, that is a clear outlier.
 
 # TODO(phoebe): why are there always spikes around may/june? The following days
 # have massive spikes, relatively speaking:

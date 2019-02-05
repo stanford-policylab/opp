@@ -4,7 +4,7 @@ source("common.R")
 # VALIDATION: [YELLOW] Tulsa's 2016 Annual Report doesn't list traffic
 # statistics, but does list calls for service and arrests; these figures seem
 # to be on the right order of magnitude relative to the number of calls for
-# service. See TODOs for outstanding tasks.
+# service.
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_years(raw_data_dir, n_max = n_max)
   bundle_raw(d$data, d$loading_problems)

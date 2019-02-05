@@ -4,7 +4,7 @@ source("common.R")
 # VALIDATION: [YELLOW] There is only partial data for 2018, and it looks like
 # the first month or two of 2014 are missing. According to the 2017 Annual
 # Report, recorded pedestrian stops are 20-30k higher than that reported here
-# each year. See TODOs for outstanding tasks, including this one
+# each year.
 
 # TODO(phoebe): why are pedestrian stops 20-30k higher each year according to
 # the 2017 Annual Report than in this data?

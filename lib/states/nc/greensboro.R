@@ -16,8 +16,7 @@ source("common.R")
 # Standards Report 2015 has few traffic statistics but lists figures for calls
 # for service: 243k in 2014 and 224k in 2015. This data has 39k stops in 2014
 # and 28k in 2015, which seems reasonable by comparison. 2000 and 2001 only
-# have partial data. There are also some random months with missing data; see
-# TODOs for details
+# have partial data. There are also some random months with missing data.
 
 # TODO(phoebe): missing data 8/2015, 11/2015, 11/2016, and 3/2014
 # https://app.asana.com/0/456927885748233/950796405221403 

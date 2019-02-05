@@ -10,7 +10,7 @@ source("common.R")
 # elected to use the data delivered directly from our city-level FOIA request
 # here. The 2017 annual report has arrests by race for 2016 (pg. 83). The total
 # number of arrests is stated as 85,752; we have 37,817 associated with traffic
-# stops which seems reasonable. See TODOs for outstanding issues
+# stops which seems reasonable.
 load_raw <- function(raw_data_dir, n_max) {
 
   arrests <- load_single_file(raw_data_dir, "arrests.csv", n_max)

@@ -4,7 +4,7 @@ source("common.R")
 # mostly budgeting and high level aggregate figures, but it does say there were
 # 567k calls responded to in 2016, and we have 15k tickets issued, which seems
 # reasonable; it appears as though this data is ticket/citation related, so we
-# don't have other types of outcomes; see TODOs for outstanding issues
+# don't have other types of outcomes
 # TODO(phoebe): why are the stops going down so fast yoy from 2009 to 2016?
 # https://app.asana.com/0/456927885748233/944841731070585
 load_raw <- function(raw_data_dir, n_max) {

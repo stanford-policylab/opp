@@ -4,11 +4,15 @@ import sys
 
 
 def chdir_to_opp_root():
+    d = opp_root_dir()
+    os.chdir(d)
+    return d
+
+
+def opp_root_dir():
     this_dir = os.path.dirname(os.path.realpath(__file__))
-    # NOTE: this assumes opp-city root is parent directory of this file
-    opp_root_dir = os.path.abspath(os.path.join(this_dir, os.pardir))
-    os.chdir(opp_root_dir)
-    return opp_root_dir
+    # NOTE: this assumes opp root is parent directory of this file
+    return os.path.abspath(os.path.join(this_dir, os.pardir))
 
 
 def is_online():
@@ -21,7 +25,7 @@ def is_online():
     return False
 
 
-def syntax_higlight_code(code, language):
+def syntax_highlight_code(code, language):
     from pygments import highlight
     from pygments.lexers import get_lexer_by_name
     from pygments.formatters import Terminal256Formatter
@@ -32,7 +36,7 @@ def syntax_higlight_code(code, language):
     )
 
 
-def syntax_higlight_path(path):
+def syntax_highlight_path(path):
     from pygments import highlight
     from pygments.lexers import get_lexer_for_filename
     from pygments.formatters import Terminal256Formatter

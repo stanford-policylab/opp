@@ -5,7 +5,7 @@ source("common.R")
 # out an annual report, they do have a very well documented open data portal
 # from which this data is taken. Given the transparency of their government
 # data portal, it seems unlikely the PD would report numbers in opposition to
-# those available here; see TODOs for outstanding requests/clarifications
+# those available here.
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_single_file(
     raw_data_dir,

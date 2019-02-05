@@ -5,7 +5,7 @@ source("common.R")
 # data. The Camden PD doesn't appear to have released any annual report
 # recently, so it's hard to validate these numbers. They are a little high some
 # years relative to the population, but crime in Camden has also been high, so
-# these may be reasonable figures. See TODOs for oustanding tasks.
+# these may be reasonable figures
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_years(raw_data_dir, n_max)
   mutate(

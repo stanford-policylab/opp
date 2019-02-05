@@ -4,7 +4,7 @@ source("common.R")
 # VALIDATION: [YELLOW] The Seattle PD doesn't appear to put out Annual Reports
 # or statistics on all traffic stops, but the numbers seem reasonable given the
 # population. Unfortunately, a lot of relevant demographic data appears to be
-# missing. See NOTEs and TODOs for outstanding tasks
+# missing.
 
 # NOTE: The Seattle PD has a smaller dataset focused only on Terry stops here:
 # https://www.seattle.gov/police/information-and-data/terry-stops

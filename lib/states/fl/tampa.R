@@ -6,8 +6,7 @@ source("common.R")
 # https://publicrec.hillsclerk.com/Traffic/Criminal_Traffic_Name_Index_files/
 # we assume these are all citations since one of the primary keys is Citation
 # Number; the reports don't seem to include traffic stop figures either; data
-# appears to be incomplete for 200-2004 as well as 2018; there are quite a few
-# oustanding tasks -- see TODOs
+# appears to be incomplete for 200-2004 as well as 2018
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_years(raw_data_dir, n_max)
   bundle_raw(d$data, d$loading_problems)
@@ -34,16 +33,12 @@ clean <- function(d, helpers) {
   # https://app.asana.com/0/456927885748233/583463577237761 
   # NOTE: this includes multiple Tampa-area police departments
   d$data %>%
-    merge_rows(
-      `Uniform Case Number`
-    ) %>%
     rename(
       violation = `Statute Description`,
       vehicle_registration_state = `Tag State`,
       department_name = `Law Enf Agency Name`
     ) %>%
-    separate_cols(
-      `Law Enf Officer Name` = c("officer_last_name", "officer_first_name"),
+    separate_cols( `Law Enf Officer Name` = c("officer_last_name", "officer_first_name"),
       sep = " |, "
     ) %>%
     mutate(
@@ -74,6 +69,7 @@ clean <- function(d, helpers) {
     ) %>%
     # TODO(danj): add lat/lng/ back in if the location is actually offense
     # location
+    # https://app.asana.com/0/456927885748233/583463577237766
     # helpers$add_lat_lng(
     # ) %>%
     # helpers$add_shapefiles_data(
@@ -84,6 +80,13 @@ clean <- function(d, helpers) {
     #   sector = TPD_SECTOR.x,
     #   zone = TPD_ZONE
     # ) %>%
-    # https://app.asana.com/0/456927885748233/583463577237766
+    merge_rows(
+      date,
+      subject_race,
+      subject_dob,
+      officer_last_name,
+      officer_first_name,
+      `Driver License Number`
+    ) %>%
     standardize(d$metadata)
 }
