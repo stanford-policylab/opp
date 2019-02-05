@@ -1,4 +1,4 @@
-source("analysis_common.R")
+source(here::here("lib", "analysis_common.R"))
 library("rstan")
 
 #' Threshold Test
