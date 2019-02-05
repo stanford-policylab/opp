@@ -7,7 +7,7 @@ suppressMessages(source("disparity.R"))
 
 main <- function() {
   args <- get_args()
-  if (not_null(args$process) & is_null(args$process_all))
+  if (not_null(args$process) & is.null(args$process_all))
     opp_process(args$state, args$city, args$n_max)
   if (not_null(args$report))
     opp_report(args$state, args$city)
@@ -21,12 +21,14 @@ main <- function() {
     opp_prima_facie_stats()
   if (not_null(args$disparity))
     disparity(args$disparity)
-  if (not_null(args$process_all))
+  if (not_null(args$process_all)) {
     v <- opp_process_all()
     print(v)
-  if (not_null(args$report_all))
+  }
+  if (not_null(args$report_all)) {
     v <- opp_report_all()
     print(v)
+  }
   print("Finished!")
   q(status = 0)
 }
@@ -71,12 +73,14 @@ get_args <- function() {
     q(status = 0)
   }
 
-  print(args)
   if (
-    (not_null(args$process) || not_null(args$report) || not_null(args$plot))
-    &&
+    (
+      not_null(args$process) & is.null(args$process_all)
+      || not_null(args$report)
+      || not_null(args$plot)
+    )
+    &
     (is.null(args$state) || is.null(args$city))
-    && is_null(args$process_all)
   ) {
     print(usage)
     q(status = 1)
