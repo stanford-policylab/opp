@@ -1,5 +1,4 @@
 #!/usr/bin/env Rscript
-
 source(here::here("lib", "opp.R"))
 source(here::here("lib", "outcome_test.R"))
 source(here::here("lib", "threshold_test.R"))
@@ -10,20 +9,21 @@ main <- function() {
   datasets <- list()
   if (not_null(args$state))
     datasets$state <- load_eligible_state_disparity_data()
-    write_rds(datasets$state, "~/opp/cache/STATE_DISPARITY_FILTER.rds")
+  write_rds(datasets$state, "~/opp/cache/STATE_DISPARITY_FILTER.rds")
   if (not_null(args$city))
     datasets$city <- load_eligible_city_disparity_data()
   results <- list()
   for (dataset_name in names(datasets)) {
     v = list()
     if (not_null(args$outcome))
-      # v$outcome <- outcome_test(datasets[[dataset_name]])
-      ##plot calls
+      v$outcome <- outcome_test(datasets[[dataset_name]])
+    plt(v$outcome$results, str_c("outcome aggregate: ", dataset_name))
     if (not_null(args$threshold))
-      # v$threshold <- threshold_test(datasets[[dataset_name]])
-      ##plot calls
+      v$threshold <- threshold_test(datasets[[dataset_name]])
+    plt(v$thresholdresults$thresholds, str_c("threshold aggregate: ", dataset_name))
     results[[dataset_name]] <- v
   }
+  write_rds(results, here::here("cache/disparity_results.rds"))
   results  
   print("Finished!")
   q(status = 0)
@@ -197,9 +197,9 @@ load_eligible_state_disparity_data <- function() {
       # MASSACHUSETTS
       # NOTE: old OPP says contraband info is too messy; i want to check this further
       # For now, we include MA, and no filters needed, except:
-        # NOTE: remove non-discretionary searches (32% of searches)
-        # NOTE: keeps searches for which search basis is not given (~9%)
-        # (is.na(search_basis) | search_basis != "other")
+      # NOTE: remove non-discretionary searches (32% of searches)
+      # NOTE: keeps searches for which search basis is not given (~9%)
+      # (is.na(search_basis) | search_basis != "other")
       
       if_else(
         state == "NC",
@@ -218,29 +218,29 @@ load_eligible_state_disparity_data <- function() {
       # being tallied up, but i would not trust the search_basis categorization itself.
       # Thus we _do_ use OH in our analysis
       # No filters needed, but some further notes:
-        # NOTE: if not listed as k9 or consent search, we deem the search probable cause
-        # i.e., we don't know if a search is incident to arrest or not.
-        # NOTE: when contraband wasn't found after a search it was labeled NA
-        # we fix this after the mega filter statement
+      # NOTE: if not listed as k9 or consent search, we deem the search probable cause
+      # i.e., we don't know if a search is incident to arrest or not.
+      # NOTE: when contraband wasn't found after a search it was labeled NA
+      # we fix this after the mega filter statement
       
       # RHODE ISLAND
       # No filters needed, except maybe:
-        # NOTE: remove non-discretionary searches (49% of searches)
-        # (is.na(search_basis) | search_basis != "other"),
+      # NOTE: remove non-discretionary searches (49% of searches)
+      # (is.na(search_basis) | search_basis != "other"),
       
       # SOUTH CAROLINA
       # No filters needed
       
       # TEXAS
       # No filters needed, except maybe:
-        # NOTE: remove non-discretionary searches (28% of searches)
-        # NOTE: keep searches for which search basis is not given (<<<1%)
-        # (is.na(search_basis) | search_basis != "other")
-       
+      # NOTE: remove non-discretionary searches (28% of searches)
+      # NOTE: keep searches for which search basis is not given (<<<1%)
+      # (is.na(search_basis) | search_basis != "other")
+      
       # WASHINGTON
       # No filters needed, except maybe:
-        # NOTE: remove non-discretionary searches (95%?!?!?)
-        # (is.na(search_basis) | search_basis != "other")
+      # NOTE: remove non-discretionary searches (95%?!?!?)
+      # (is.na(search_basis) | search_basis != "other")
       
       if_else(
         state == "WI",
@@ -279,6 +279,10 @@ load_eligible_state_disparity_data <- function() {
       sg = if_else(state == "WI", county_name, sg)
     ) %>%
     filter(
+      # VALID DATE RANGE: 2012-2017
+      # NOTE: any anomalies within 2012-2017 are dealt with state by
+      # state in the state-by-state filters above
+      year(date) >= 2012, year(date) <= 2017,
       !is.na(sg),
       if_else(state == "AZ", sg %in% eligible_sgs(., "AZ"), T),
       if_else(state == "CO", sg %in% eligible_sgs(., "CO"), T),
@@ -404,24 +408,35 @@ plt <- function(d, prefix) {
   output_dir <- dir_create(here::here("plots"))
   fpath <- path(output_dir, str_c(prefix, ".pdf"))
   if (str_detect(prefix, "outcome")) {
-    p <- disparity_plot(d, state, city, sub_geography)
+    if (str_detect(prefix, "city")) {
+      p <- disparity_plot(d, state, city, sub_geography)
+    } else {
+      p <- disparity_plot(d, state, sub_geography)
+    }
   } else {
-    p <- disparity_plot(
-      d,
-      state, city, sub_geography,
-      demographic_col = subject_race,
-      rate_col = threshold,
-      size_col = n_action,
-      title = prefix,
-      axis_title = "threshold"
-    )
+    if (str_detect(prefix, "city")) {
+      p <- disparity_plot(
+        d, state, city, sub_geography,
+        rate_col = threshold,
+        size_col = n_action,
+        title = prefix,
+        axis_title = "threshold"
+      )
+    } else {
+      p <- disparity_plot(
+        d, state, sub_geography,
+        rate_col = threshold,
+        size_col = n_action,
+        title = prefix,
+        axis_title = "threshold"
+      )
+    }
   }
   ggsave(fpath, p, width=12, height=6, units="in")
   print(str_c("saved: ", fpath))
   p
 }
-
+  
 if (!interactive()) {
-  main()
+   main()
 }
-
