@@ -2,8 +2,6 @@
 
 setwd("lib")
 suppressMessages(source("opp.R"))
-suppressMessages(source("disparity.R"))
-
 
 main <- function() {
   args <- get_args()
@@ -19,8 +17,6 @@ main <- function() {
     opp_coverage()
   if (not_null(args$prima_facie))
     opp_prima_facie_stats()
-  if (not_null(args$disparity))
-    disparity(args$disparity)
   if (not_null(args$process_all))
     v <- opp_process_all()
     print(v)
@@ -40,7 +36,6 @@ get_args <- function() {
                  "[--report]",
                  "[--prima_facie]",
                  "[--bunching]",
-                 "[--disparity [state_or_city]]",
                  "[--plot]",
                  "--state <state_code>",
                  "--city <city_name>",
@@ -56,7 +51,6 @@ get_args <- function() {
     "report",      "r",         "none",         "logical",
     "prima_facie", "f",         "none",         "logical",
     "bunching",    "b",         "none",         "logical",
-    "disparity",   "d",         "none",         "character",
     "plot",        "p",         "none",         "logical",
     "state",       "s",         "none",         "character",
     "city",        "c",         "none",         "character",
