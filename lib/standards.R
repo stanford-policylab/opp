@@ -241,6 +241,10 @@ predicated_columns <- list(
     predicate = "arrest_made",
     if_not = NA_character_
   ),
+  contraband_found = list(
+    predicate = "search_conducted",
+    if_not = NA
+  ),
   contraband_drugs = list(
     predicate = "contraband_found",
     if_not = FALSE

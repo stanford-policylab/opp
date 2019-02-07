@@ -40,7 +40,6 @@ veil_of_darkness_test <- function(
   minority_demographic = "black",
   majority_demographic = "white"
 ) {
-
   controlqs <- enquos(...)
   demographicq <- enquo(demographic_col)
   dateq <- enquo(date_col)
@@ -75,7 +74,7 @@ veil_of_darkness_test <- function(
   print("calculating sunset times for data...")
   sunset_times <- calculate_sunset_times(tbl, !!dateq, !!latq, !!lngq)
 
-  print("formatting data for modeling...")
+  print("calculating features for modeling...")
   tbl <-
     tbl %>%
     left_join(
@@ -100,7 +99,23 @@ veil_of_darkness_test <- function(
     )
 
   print("training model...")
+  model <- train_vod_model(tbl, !!!controlqs)
+
+  print("calculating confidence intervals on coefficients...")
+  list(
+    metadata = d$metadata,
+    results = list(
+      data = tbl,
+      model = model,
+      coefficients = cbind(coef(model), confint(model))
+    )
+  )
+}
+
+
+train_vod_model <- function(tbl, ...) {
   # TODO(danj): natural spline or polynomial?
+  controlqs <- enquos(...)
   fmla <- as.formula(
     str_c(
       c(
@@ -110,19 +125,7 @@ veil_of_darkness_test <- function(
       collapse = " + "
     )
   )
-  model <- glm(fmla, data = tbl, family = binomial)
-
-  print("done")
-  list(
-    metadata = d$metadata,
-    results = list(
-      data = tbl,
-      model = model,
-      coefficients = list(
-        is_dark = coef(model)[2]
-      )
-    )
-  )
+  glm(fmla, data = tbl, family = binomial)
 }
 
 
