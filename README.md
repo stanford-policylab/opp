@@ -21,6 +21,7 @@ Open Policing Project -- City Data
 * lutz
   
 ## TODO
+* Philly district 77 has lots of searches but 0% hit rate and 0% threshold -- is this for real?
 * lat/lng checks?
 * change all contraband_found to include all types of contraband
 * create function to join raw data to clean data
@@ -34,8 +35,6 @@ Open Policing Project -- City Data
 * lutz - get TZ --> get sunset time --> get darkness --> make controls
 * tz_lookup_coords(37.77, -122.43)
 * getSunlightTimes(as.Date("2018-09-28"), 37.77, -122.43, tz="America/Los_Angeles", keep="sunset")$sunset 
-* VA - Statewide is broken
-* test --everything after VA fixed and other 6 pushed, then revert to parallel 
 * eligibility reports: stats, outcome, threshold, rar, veil of darkness
 * write script to get block group containment by police geographic division
 * write script to assign block group populations to police divisions
