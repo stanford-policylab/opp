@@ -2,15 +2,6 @@ library(here)
 source(here::here("lib", "opp.R"))
 
 
-# TODO(danj): get IPUMS updated 2017 population data
-prima_facie_stats_aggregated <- function() {
-  prima_facie_stats() %>%
-    group_by(state, city, subject_race) %>%
-    summarize(
-    )
-}
-
-
 prima_facie_stats_cities <- function() {
   f <- function(state, city) {
     prima_facie_stats(state, city) %>% mutate(state = state, city = city)
@@ -101,3 +92,37 @@ add_columns_if_not_present <- function(tbl, ...) {
 sum_if_not_all_na <- function(v) {
   if_else(all(is.na(v)), NA_integer_, sum(v, na.rm = T))
 }
+
+
+# TODO(danj): get IPUMS updated 2017 population data
+# TODO: average stop rate by year then over latest population
+aggregate_prima_facie_stats <- function(
+  stats,
+  start_year = 2012,
+  end_year = 2016
+) {
+  stats %>%
+    # TODO(danj): filter to years? population for those years?
+    # TODO(danj): by subject_race as well?
+    group_by(state, city) %>%
+    # TODO(danj): how to handle stop rate?
+    # TODO(danj): what happens when these have NA for a year?
+    summarize(
+      stop_total = sum(stop_count),
+      search_total = sum(search_count),
+      frisk_total = sum(frisk_count),
+      warning_total = sum(warning_count),
+      citation_total = sum(citation_count),
+      arrest_total = sum(arrest_count)
+    ) %>%
+    mutate(
+      search_rate = search_total / stop_total,
+      frisk_rate = frisk_total / stop_total,
+      warning_rate = warning_total / stop_total,
+      citation_rate = citation_total / stop_total,
+      arrest_rate = arrest_total / stop_total
+    ) %>%
+    select(state, city, matches("rate"), everything())
+}
+
+

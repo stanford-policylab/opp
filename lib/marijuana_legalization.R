@@ -47,7 +47,7 @@ load <- function() {
     "CA", "Statewide",
     # TODO(amyshoe): something is off in Florida, almost no eligible black and white
     # searches
-    # "FL", "Statewide",
+    "FL", "Statewide",
     "MA", "Statewide",
     # TODO(amyshoe): something wrong here, the coefficient is a large negative
     "MT", "Statewide",
@@ -195,7 +195,6 @@ compose_search_rate_plots <- function(tbl) {
 
 
 to_rates_by_quarter <- function(tbl, numerator_col, denominator_col) {
-
   nq <- enquo(numerator_col)
   dq <- enquo(denominator_col)
   n_name <- quo_name(nq)
@@ -219,7 +218,6 @@ to_rates_by_quarter <- function(tbl, numerator_col, denominator_col) {
     group_by(.dots = group_by_colnames) %>%
     summarize(rate = sum(!!nq) / sum(!!dq)) %>%
     ungroup()
-
 }
 
 
@@ -266,7 +264,6 @@ compute_search_trendline <- function(tbl) {
 
 
 compose_timeseries_rate_plot <- function(tbl, y_axis_label) {
-
   ggplot(
     tbl,
     aes(
@@ -308,7 +305,6 @@ compose_timeseries_rate_plot <- function(tbl, y_axis_label) {
 
 
 compose_test_misdemeanor_plots <- function(tbl) {
-
   tbl <-
     tbl %>%
     filter(
@@ -332,6 +328,7 @@ compose_test_misdemeanor_plots <- function(tbl) {
         str_detect(violation, "marijuana"),
         is_marijuana_violation
       ),
+      # TODO(danj): is this a merited assumption?
       is_marijuana_violation = if_else(
         state == "WA",
         str_detect(violation, "drugs - misdemeanor"),
@@ -360,7 +357,6 @@ compose_test_misdemeanor_plots <- function(tbl) {
     filter(
       quarter != as.Date("2012-11-15")
     )
-
 }
 
 
