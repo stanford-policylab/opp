@@ -93,12 +93,10 @@ pretty_percent <- function(v) {
 
 
 select_and_filter_missing <- function(d, ...) {
-
   colqs <- enquos(...)
   before_drop_na <- nrow(d$data)
   d$data <- select(d$data, !!!colqs) %>% drop_na
   after_drop_na <- nrow(d$data)
-
   null_percent <- (before_drop_na - after_drop_na) / before_drop_na
   d$metadata["null_rate"] <- null_percent
   if (null_percent > 0) {
