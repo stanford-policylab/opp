@@ -21,6 +21,8 @@ Open Policing Project -- City Data
 * lutz
   
 ## TODO
+* cities with change in enforcement over time (maybe threshold test over years for philly) 
+* Camden and OK City seem to not have hispanic stops relative to what we'd expect from the pop -- i sthis for real?
 * Philly district 77 has lots of searches but 0% hit rate and 0% threshold -- is this for real?
 * vod - daylight savings? states?
 * prima facie stats? what year for stop rates? population redraw from nhgis,
