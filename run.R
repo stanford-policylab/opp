@@ -17,10 +17,11 @@ main <- function() {
     opp_coverage()
   if (not_null(args$prima_facie))
     opp_prima_facie_stats()
-  if (not_null(args$process_all))
+  if (not_null(args$process_all)) {
     v <- opp_process_all()
     print(v)
   }
+  
   if (not_null(args$report_all)) {
     v <- opp_report_all()
     print(v)
