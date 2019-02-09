@@ -156,7 +156,9 @@ summarize_for_stan <- function(
     # NOTE: keep original column values to map stan output to values
     mutate(
       race = !!demographic_colq,
-      geography = !!geography_colq
+      geography = !!geography_colq,
+      sub_geography_raw = sub_geography,
+      geography_raw = !!geography_colq
     ) %>% 
     mutate_at(
       .vars = c("race", "sub_geography", "geography", "geography_race"),

@@ -7,20 +7,38 @@ source(here::here("lib", "disparity_plot.R"))
 main <- function() {
   args <- get_args()
   datasets <- list()
-  if (not_null(args$state))
+  if (not_null(args$state)) {
     datasets$state <- load_eligible_state_disparity_data()
-  write_rds(datasets$state, "~/opp/cache/STATE_DISPARITY_FILTER.rds")
-  if (not_null(args$city))
+    write_rds(datasets$state, "~/opp/cache/STATE_DISPARITY_FILTER.rds")
+  }
+  if (not_null(args$city)) {
     datasets$city <- load_eligible_city_disparity_data()
+    write_rds(datasets$city, "~/opp/cache/CITY_DISPARITY_FILTER.rds")
+  }
+  print("Data loaded.")
   results <- list()
   for (dataset_name in names(datasets)) {
     v = list()
-    if (not_null(args$outcome))
-      v$outcome <- outcome_test(datasets[[dataset_name]])
-    plt(v$outcome$results, str_c("outcome aggregate: ", dataset_name))
-    if (not_null(args$threshold))
-      v$threshold <- threshold_test(datasets[[dataset_name]])
-    plt(v$thresholdresults$thresholds, str_c("threshold aggregate: ", dataset_name))
+    if (not_null(args$outcome)) {
+      print("Starting outcome...")
+      v$outcome <- outcome_test(
+        datasets[[dataset_name]],
+        geography, sub_geography
+      )
+      plt(v$outcome$results, str_c("outcome aggregate: ", dataset_name))
+      print("Outcome finished.")
+    }
+    if (not_null(args$threshold)) {
+      print("Starting threshold...")
+      v$threshold <- threshold_test(
+        datasets[[dataset_name]],
+        sub_geography,
+        geography_col = geography
+      )
+      write_rds(v$threshold, str_c("~/opp/cache/THRESHOLD_", dataset_name, ".rds"))
+      plt(v$threshold$results$thresholds, str_c("threshold aggregate: ", dataset_name))
+      print("Threshold finished.")
+    }
     results[[dataset_name]] <- v
   }
   write_rds(results, here::here("cache/disparity_results.rds"))
@@ -73,8 +91,6 @@ load_eligible_city_disparity_data <- function() {
     "LA", "New Orleans",
     "PA", "Philadelphia",
     "TN", "Nashville",
-    "TX", "Dallas",
-    "TX", "El Paso",
     "TX", "San Antonio"
   )
   opp_load_all_clean_data(only=eligible_cities) %>%
@@ -110,13 +126,6 @@ load_eligible_city_disparity_data <- function() {
         precinct != "U",
         T
       ),
-      ifelse(
-        city == "Dallas",
-        # NOTE: district T has insufficent data
-        district != "T",
-        T
-      ),
-      # NOTE: El Paso is good, possiblly filter region 0 (insufficent data)
       # NOTE: San Antonio looks good
       # NOTE: remove these to compare only blacks/hispanics with whites
       !(subject_race %in% c("asian/pacific islander", "other/unknown")),
@@ -129,10 +138,13 @@ load_eligible_city_disparity_data <- function() {
       sg = if_else(city == "New Orleans", district, sg),
       sg = if_else(city == "Philadelphia", district, sg),
       sg = if_else(city == "Nashville", precinct, sg),
-      sg = if_else(city == "Dallas", district, sg),
-      sg = if_else(city == "El Paso", region, sg),
       sg = if_else(city == "San Antonio", substation, sg)
     ) %>%
+    unite(
+      col = geography, 
+      state, city, 
+      remove = FALSE
+    ) %>% 
     rename(
       sub_geography = sg
     )
@@ -298,7 +310,8 @@ load_eligible_state_disparity_data <- function() {
       if_else(state == "WI", sg %in% eligible_sgs(., "WI"), T)
     ) %>% 
     rename(
-      sub_geography = sg
+      sub_geography = sg,
+      geography = state
     ) 
 }
 
@@ -408,29 +421,15 @@ plt <- function(d, prefix) {
   output_dir <- dir_create(here::here("plots"))
   fpath <- path(output_dir, str_c(prefix, ".pdf"))
   if (str_detect(prefix, "outcome")) {
-    if (str_detect(prefix, "city")) {
-      p <- disparity_plot(d, state, city, sub_geography)
-    } else {
-      p <- disparity_plot(d, state, sub_geography)
-    }
+    p <- disparity_plot(d, geography, sub_geography)
   } else {
-    if (str_detect(prefix, "city")) {
-      p <- disparity_plot(
-        d, state, city, sub_geography,
-        rate_col = threshold,
-        size_col = n_action,
-        title = prefix,
-        axis_title = "threshold"
-      )
-    } else {
-      p <- disparity_plot(
-        d, state, sub_geography,
-        rate_col = threshold,
-        size_col = n_action,
-        title = prefix,
-        axis_title = "threshold"
-      )
-    }
+    p <- disparity_plot(
+      d, geography, sub_geography,
+      rate_col = threshold,
+      size_col = n_action,
+      title = prefix,
+      axis_title = "threshold"
+    )
   }
   ggsave(fpath, p, width=12, height=6, units="in")
   print(str_c("saved: ", fpath))
