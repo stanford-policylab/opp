@@ -147,7 +147,7 @@ add_legalization_info <- function(tbl) {
       legalization_date
     ),
     is_before_legalization = date < legalization_date,
-    is_test = state %in% c("CA", "CO"),
+    is_test = state %in% c("WA", "CO"),
     is_treatment = is_test & !is_before_legalization
   )
 }
