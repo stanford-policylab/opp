@@ -59,13 +59,14 @@ load <- function() {
   ) %>%
   opp_load_all_clean_data() %>%
   filter(
-      if_else(
-        state == "CO",
-        # NOTE: remove the stops for which a search was conducted but we don't have
-        # contraband recovery info
-        !(search_conducted & is.na(contraband_found)),
-        T
-      ),
+      # CO is fine
+        # NOTE: for threshold test we remove the stops for which a search was 
+        # conducted but we don't have contraband recovery info
+        # For now, let's leave them in for the search rate parts, but just
+        # something worth noting.
+        # !(search_conducted & is.na(contraband_found))
+     # WA is fine
+    
       if_else(
         state == "AZ",
         # NOTE: 2009 and 2010 have insufficient data
@@ -79,18 +80,14 @@ load <- function() {
         department_name != "FLORIDA DEPARTMENT OF AGRICULTURE",
         T
       ),
-      
       # MA is fine
-      
       # MT is fine
-      
       if_else(
         state == "NC",
         # NOTE: use just state patrol stops
         department_name == "NC State Highway Patrol",
         T
       ),
-      
       # OH is fine
       # NOTE: old opp excludes because only search reasons listed are k9 and consent,
       # which they say makes them skeptical of the recording scheme;
@@ -116,8 +113,6 @@ load <- function() {
       ),
       
       # TX is fine
-      
-      # WA is fine
       
       if_else(
         state == "WI",
