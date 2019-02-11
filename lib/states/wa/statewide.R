@@ -94,8 +94,8 @@ clean <- function(d, helpers) {
     "I2" = "other", # Impound Search
     "K1" = "k9",
     "K2" = "k9",
-    "P1" = "probable cause", # Frisk (technically RAS)
-    "P2" = "probable cause", # Frisk (technically RAS)
+    "P1" = "frisk", # pat down (technically RAS)
+    "P2" = "frisk", # pat down (technically RAS)
     "W1" = "other", # Warrant Search
     "W2" = "other",  # Warrant Search
     "-" = NA_character_,

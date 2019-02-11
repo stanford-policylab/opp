@@ -26,6 +26,7 @@ valid_search_bases <- c(
   "k9",
   "plain view",
   "consent",
+  "frisk",
   "probable cause",
   "other"  # NOTE: arrest/warrant, probation/parole, inventory
 )
