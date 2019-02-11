@@ -147,6 +147,7 @@ clean <- function(d, helpers) {
         citation = citation_issued,
         arrest = arrest_made
       ),
+      violation = StatuteDesc,
       # NOTE: missing specific contraband type column.
       contraband_found = SearchContraband == "1",
       search_conducted = !is.na(SearchBase) | coalesce(Search == "1", FALSE),
