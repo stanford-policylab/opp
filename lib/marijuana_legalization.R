@@ -61,8 +61,80 @@ load <- function() {
     "WI", "Statewide"
   ) %>%
   opp_load_all_clean_data() %>%
-  # TODO(danj): should these be updated with new data?
-  filter(year(date) >= 2011 & year(date) <= 2015) %>%
+  filter(
+      if_else(
+        state == "CO",
+        # NOTE: remove the stops for which a search was conducted but we don't have
+        # contraband recovery info
+        !(search_conducted & is.na(contraband_found)),
+        T
+      ),
+      if_else(
+        state == "AZ",
+        # NOTE: 2009 and 2010 have insufficient data
+        year(date) >= 2011,
+        T
+      ),
+      # CA is fine
+      if_else(
+        state == "FL",
+        # NOTE: remove dept of agg stops
+        department_name != "FLORIDA DEPARTMENT OF AGRICULTURE",
+        T
+      ),
+      
+      # MA is fine
+      
+      # MT is fine
+      
+      if_else(
+        state == "NC",
+        # NOTE: use just state patrol stops
+        department_name == "NC State Highway Patrol",
+        T
+      ),
+      
+      # OH is fine
+      # NOTE: old opp excludes because only search reasons listed are k9 and consent,
+      # which they say makes them skeptical of the recording scheme;
+      # however, 87% of searches are not labeled -- we call default them to probable cause,
+      # but regardless, it seems reasonable to assume that all searches are indeed
+      # being tallied up, but i would not trust the search_basis categorization itself.
+      # NOTE: if not listed as k9 or consent search, we deem the search probable cause
+      # i.e., we don't know if a search is incident to arrest or not.
+      # NOTE: when contraband wasn't found after a search it was labeled NA
+      # we fix this after the mega filter statement
+      
+      # RI is fine
+      
+      if_else(
+        state == "SC",
+        # NOTE: old opp removed collision stops altogether; we left them in the data for
+        # other possible analyses, but for post-stop outcomes, collision stops seem 
+        # qualitatively different. (They also have a 3x search rate and lower hit rate, too,
+        # and a larger white and hispanic demographic, so including these could lead
+        # to misleading results.)
+        reason_for_stop != "Collision",
+        T
+      ),
+      
+      # TX is fine
+      
+      # WA is fine
+      
+      if_else(
+        state == "WI",
+        # NOTE: 2010 is too sparse to trust
+        year(date) > 2010,
+        T
+      ),
+      
+      # NOTE: compare only blacks/hispanics with whites; remove pedestrian stops
+      subject_race %in% c("black", "white", "hispanic"),
+      type == "vehicular",
+      # TODO(danj): should these be updated with new data?
+      year(date) >= 2011 & year(date) <= 2015
+  ) %>%
   add_legalization_info()
 }
 
@@ -78,7 +150,7 @@ add_legalization_info <- function(tbl) {
         legalization_date
       ),
       is_before_legalization = date < legalization_date,
-      is_test = state %in% c("CA", "CO"),
+      is_test = state %in% c("WA", "CO"),
       is_treatment = is_test & !is_before_legalization
     )
 }
