@@ -352,6 +352,10 @@ add_thresholds <- function(
         posteriors$threshold, 
         posteriors$phi, 
         posteriors$delta
-      ))
+      )),
+      geography_code = geography,
+      geography = geography_raw,
+      sub_geography_code = sub_geography,
+      sub_geography = sub_geography_raw
     )
 }

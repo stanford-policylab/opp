@@ -5,28 +5,39 @@ source(here::here("lib", "threshold_test.R"))
 source(here::here("lib", "disparity_plot.R"))
 
 main <- function() {
-  args <- get_args()
+  args <- get_disparity_args()
   datasets <- list()
   if (not_null(args$state)) {
-    datasets$state <- load_eligible_state_disparity_data()
-    write_rds(datasets$state, "~/opp/cache/STATE_DISPARITY_FILTER.rds")
+    if (not_null(args$from_cache))
+      datasets$state <- read_rds("~/opp/cache/STATE_DISPARITY_FILTER.rds")
+    else {
+      datasets$state <- load_eligible_state_disparity_data()
+      write_rds(datasets$state, "~/opp/cache/STATE_DISPARITY_FILTER.rds")
+    }
   }
   if (not_null(args$city)) {
-    datasets$city <- load_eligible_city_disparity_data()
-    write_rds(datasets$city, "~/opp/cache/CITY_DISPARITY_FILTER.rds")
+    if (not_null(args$from_cache))
+      datasets$city <- read_rds("~/opp/cache/CITY_DISPARITY_FILTER.rds")
+    else {
+      datasets$city <- load_eligible_city_disparity_data()
+      write_rds(datasets$city, "~/opp/cache/CITY_DISPARITY_FILTER.rds")
+    }
   }
   print("Data loaded.")
   results <- list()
   for (dataset_name in names(datasets)) {
     v = list()
     if (not_null(args$outcome)) {
-      print("Starting outcome...")
+      print("Starting outcome test...")
       v$outcome <- outcome_test(
         datasets[[dataset_name]],
         geography, sub_geography
       )
+      print("Plotting aggregate hit rates...")
       plt(v$outcome$results, str_c("outcome aggregate: ", dataset_name))
-      print("Outcome finished.")
+      print("Plotting indivual hit rates...")
+      plt_all(v$outcome$results, "outcome")
+      print("Outcome test and plots finished.")
     }
     if (not_null(args$threshold)) {
       print("Starting threshold...")
@@ -35,23 +46,27 @@ main <- function() {
         sub_geography,
         geography_col = geography
       )
-      write_rds(v$threshold, str_c("~/opp/cache/THRESHOLD_", dataset_name, ".rds"))
+      write_rds(v$threshold, here::here("cache", str_c("THRESHOLD_", dataset_name, ".rds")))
+      print("Plotting aggregate thresholds...")
       plt(v$threshold$results$thresholds, str_c("threshold aggregate: ", dataset_name))
+      print("Plotting indivual thresholds...")
+      plt_all(v$threshold$results$thresholds, "threshold")
       print("Threshold finished.")
     }
     results[[dataset_name]] <- v
   }
-  write_rds(results, here::here("cache/disparity_results.rds"))
+  write_rds(results, here::here("cache", "disparity_results.rds"))
   results  
   print("Finished!")
   q(status = 0)
 }
 
-get_args <- function() {
+get_disparity_args <- function() {
   usage <- str_c("./disparity.R",
                  "[--help]",
                  "[--state]",
                  "[--city]",
+                 "[--from_cache]",
                  "[--outcome]",
                  "[--threshold]",
                  sep = " ")
@@ -60,6 +75,7 @@ get_args <- function() {
     "help",        "h",         "none",         "logical",
     "state",       "s",         "none",         "logical",
     "city",        "c",         "none",         "logical",
+    "from_cache",  "cc",        "none",         "logical",
     "outcome",     "o",         "none",         "logical",
     "threshold",   "t",         "none",         "logical"
   )
@@ -101,7 +117,8 @@ load_eligible_city_disparity_data <- function() {
         # 2014 has over 70%
         year(date) != 2015
         # NOTE: these service areas have insufficient data
-        & !(service_area %in% c("530", "630", "840", "Unknown")),
+        # NOTE: 130 just is insufficient for whites, but makes results misleading
+        & !(service_area %in% c("130", "530", "630", "840", "Unknown")),
         T
       ),
       ifelse(
@@ -119,7 +136,13 @@ load_eligible_city_disparity_data <- function() {
         & as.yearmon(date) <= as.yearmon("2018-06"),
         T
       ),
-      # NOTE: nothing to filter in Philadelphia
+      ifelse(
+        city == "Philadelphia",
+        # NOTE: this districts have insufficient data for hispanics
+        # We remove so results are over-interpreted
+        !(district == "05" & subject_race == "hispanic"),
+        T
+      ),
       ifelse(
         city == "Nashville",
         # NOTE: U stands for Unknown, remove these
@@ -389,23 +412,22 @@ threshold_tests <- function(d) {
 plt_all <- function(tbl, prefix) {
   output_dir <- dir_create(here::here("plots"))
   f <- function(grp) {
-    title <- str_c(prefix, ": ", create_title(grp$state[1], grp$city[1]))
+    str_geo <- unique(grp$geography)
+    title <- str_c(prefix, ": ", str_geo)
     fpath <- path(output_dir, str_c(title, ".pdf"))
     if (str_detect(prefix, "outcome")) {
-      str_city <- unique(grp$city)
-      str_state <- unique(grp$state)
       p <- disparity_plot(
-        grp, state, city, sub_geography, 
-        title = str_c(str_city, " ", str_state, " Contraband recovery rates by sub-geography")
+        grp, geography, sub_geography, 
+        title = str_c(str_geo, " hit rates")
       )
     } else {
       p <- disparity_plot(
         grp,
-        state, city, sub_geography,
+        geography, sub_geography,
         demographic_col = subject_race,
         rate_col = threshold,
         size_col = n_action,
-        title = title,
+        title = str_c(str_geo, " thresholds"),
         axis_title = "threshold"
       )
     }
@@ -413,7 +435,7 @@ plt_all <- function(tbl, prefix) {
     print(str_c("saved: ", fpath))
     grp
   }
-  group_by(tbl, state, city) %>% do(f(.)) %>% ungroup()
+  group_by(tbl, geography) %>% do(f(.)) %>% ungroup()
 }
 
 
@@ -421,7 +443,7 @@ plt <- function(d, prefix) {
   output_dir <- dir_create(here::here("plots"))
   fpath <- path(output_dir, str_c(prefix, ".pdf"))
   if (str_detect(prefix, "outcome")) {
-    p <- disparity_plot(d, geography, sub_geography)
+    p <- disparity_plot(d, geography, sub_geography, title = prefix)
   } else {
     p <- disparity_plot(
       d, geography, sub_geography,
