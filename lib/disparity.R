@@ -57,7 +57,6 @@ main <- function() {
   }
   write_rds(results, here::here("cache", "disparity_results.rds"))
   results  
-  print("Finished!")
   q(status = 0)
 }
 
@@ -176,13 +175,13 @@ load_eligible_city_disparity_data <- function() {
 load_eligible_state_disparity_data <- function() {
   eligible_states <- tribble(
     ~state, ~city,
-    "AZ", "Statewide",
+    # "AZ", "Statewide",
     "CO", "Statewide",
     "CT", "Statewide",
     "IL", "Statewide",
-    "MA", "Statewide",
+    # "MA", "Statewide",
     "NC", "Statewide",
-    "OH", "Statewide",
+    # "OH", "Statewide",
     "RI", "Statewide",
     "SC", "Statewide",
     "TX", "Statewide",
@@ -192,16 +191,16 @@ load_eligible_state_disparity_data <- function() {
   print("Loading eligible states...")
   opp_load_all_clean_data(only=eligible_states) %>% 
     filter(
-      if_else(
-        # NOTE: old OPP doesn't use AZ because the contraband data is too messy
-        # Our contraband data, while indeed a little messy, seems reasonable.
-        state == "AZ",
-        # NOTE: remove non-discretionary searches
-        # & (is.na(search_basis) | search_basis != "other")
-        # NOTE: 2009 and 2010 have insufficient data
-        year(date) >= 2011,
-        T
-      ),
+      # if_else(
+      #   # NOTE: old OPP doesn't use AZ because the contraband data is too messy
+      #   # Our contraband data, while indeed a little messy, seems reasonable.
+      #   state == "AZ",
+      #   # NOTE: remove non-discretionary searches
+      #   # & (is.na(search_basis) | search_basis != "other")
+      #   # NOTE: 2009 and 2010 have insufficient data
+      #   year(date) >= 2011,
+      #   T
+      # ),
       if_else(
         state == "CO",
         # NOTE: remove non-discretionary searches
@@ -264,7 +263,16 @@ load_eligible_state_disparity_data <- function() {
       # (is.na(search_basis) | search_basis != "other"),
       
       # SOUTH CAROLINA
-      # No filters needed
+      if_else(
+        state == "SC",
+        # NOTE: old opp removed collision stops altogether; we left them in the data for
+        # other possible analyses, but for post-stop outcomes, collision stops seem 
+        # qualitatively different. (They also have a 3x search rate and lower hit rate, too,
+        # and a larger white and hispanic demographic, so including these could lead
+        # to misleading results.)
+        reason_for_stop != "Collision",
+        T
+      ),
       
       # TEXAS
       # No filters needed, except maybe:
@@ -300,13 +308,13 @@ load_eligible_state_disparity_data <- function() {
         contraband_found
       ),
       sg = NA_character_,
-      sg = if_else(state == "AZ", county_name, sg),
+      # sg = if_else(state == "AZ", county_name, sg),
       sg = if_else(state == "CO", county_name, sg),
       sg = if_else(state == "CT", county_name, sg),
       sg = if_else(state == "IL", beat, sg),
-      sg = if_else(state == "MA", county_name, sg),
+      # sg = if_else(state == "MA", county_name, sg),
       sg = if_else(state == "NC", county_name, sg),
-      sg = if_else(state == "OH", county_name, sg),
+      # sg = if_else(state == "OH", county_name, sg),
       sg = if_else(state == "RI", zone, sg),
       sg = if_else(state == "SC", county_name, sg),
       sg = if_else(state == "TX", county_name, sg),
@@ -318,14 +326,16 @@ load_eligible_state_disparity_data <- function() {
       # NOTE: any anomalies within 2012-2017 are dealt with state by
       # state in the state-by-state filters above
       year(date) >= 2012, year(date) <= 2017,
-      !is.na(sg),
-      if_else(state == "AZ", sg %in% eligible_sgs(., "AZ"), T),
+      !is.na(sg)
+    ) %>% 
+    filter(
+      # if_else(state == "AZ", sg %in% eligible_sgs(., "AZ"), T),
       if_else(state == "CO", sg %in% eligible_sgs(., "CO"), T),
       if_else(state == "CT", sg %in% eligible_sgs(., "CT"), T),
       if_else(state == "IL", sg %in% eligible_sgs(., "IL"), T),
-      if_else(state == "MA", sg %in% eligible_sgs(., "MA"), T),
+      # if_else(state == "MA", sg %in% eligible_sgs(., "MA"), T),
       if_else(state == "NC", sg %in% eligible_sgs(., "NC"), T),
-      if_else(state == "OH", sg %in% eligible_sgs(., "OH"), T),
+      # if_else(state == "OH", sg %in% eligible_sgs(., "OH"), T),
       if_else(state == "RI", sg %in% eligible_sgs(., "RI"), T),
       if_else(state == "SC", sg %in% eligible_sgs(., "SC"), T),
       if_else(state == "TX", sg %in% eligible_sgs(., "TX"), T),
@@ -338,6 +348,8 @@ load_eligible_state_disparity_data <- function() {
     ) 
 }
 
+# selects the top `max_sub_geographies` number of sub geographies with at 
+# least `min_stops` number of stops per demographic in `eligible demographics`
 eligible_sgs <- function(
   tbl,
   state_abbr,
@@ -345,7 +357,7 @@ eligible_sgs <- function(
   demographic_col = subject_race,
   eligible_demographics = c("white", "black", "hispanic"),
   action_col = search_conducted,
-  min_stops = 1000,
+  min_stops = 500,
   min_actions = 0,
   max_sub_geographies = 100
 ) {
