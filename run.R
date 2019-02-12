@@ -2,10 +2,6 @@
 
 setwd("lib")
 suppressMessages(source("opp.R"))
-<<<<<<< 51593e0af6788ea957a8da2ad5d3171aa6a5e71c
-=======
-
->>>>>>> progress
 
 main <- function() {
   args <- get_args()
@@ -36,7 +32,6 @@ main <- function() {
 
 
 get_args <- function() {
-<<<<<<< 51593e0af6788ea957a8da2ad5d3171aa6a5e71c
   usage <- str_c("./run.R",
                  "[--help]",
                  "[--process]",
@@ -51,27 +46,7 @@ get_args <- function() {
                  "[--process_all]",
                  "[--report_all]",
                  sep = " ")
-=======
 
-  usage <- str_c(
-    "./run.R",
-    "[--help]",
-    "[--process]",
-    "[--n_max]",
-    "[--report]",
-    "[--prima_facie]",
-    "[--bunching]",
-    "[--disparity [state_or_city]]",
-    "[--plot]",
-    "--state <state_code>",
-    "--city <city_name>",
-    "[--coverage]",
-    "[--process_all]",
-    "[--report_all]",
-    sep = " "
-  )
-
->>>>>>> progress
   spec <- tribble(
     ~long_name,   ~short_name,  ~argument_type, ~data_type,
     "help",        "h",         "none",         "logical",
