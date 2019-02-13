@@ -81,8 +81,8 @@ veil_of_darkness_test <- function(
       sunset_times
     ) %>%
     mutate(
-      minute = hour(hms(time)) * 60 + minute(hms(time)),
-      sunset_minute = hour(hms(sunset)) * 60 + minute(hms(sunset)),
+      minute = time_to_minute(time),
+      sunset_minute = time_to_minute(sunset),
       is_dark = minute > sunset_minute,
       min_sunset_minute = min(sunset_minute),
       max_sunset_minute = max(sunset_minute)
@@ -102,30 +102,20 @@ veil_of_darkness_test <- function(
   model <- train_vod_model(tbl, !!!controlqs)
 
   print("calculating confidence intervals on coefficients...")
+  coefficients = cbind(coef(model), confint(model))
+
+  print("composing plots...")
+  plots = compose_vod_plots(tbl)
+
   list(
     metadata = d$metadata,
     results = list(
       data = tbl,
       model = model,
-      coefficients = cbind(coef(model), confint(model))
+      coefficients = coefficients,
+      plots = plots
     )
   )
-}
-
-
-train_vod_model <- function(tbl, ...) {
-  # TODO(danj): natural spline or polynomial?
-  controlqs <- enquos(...)
-  fmla <- as.formula(
-    str_c(
-      c(
-        "is_minority_demographic ~ is_dark + ns(twilight_minute, df = 6)",
-        quos_names(controlqs)
-      ),
-      collapse = " + "
-    )
-  )
-  glm(fmla, data = tbl, family = binomial)
 }
 
 
@@ -164,4 +154,104 @@ calculate_sunset_times <- function(
   tbl$sunset <- unlist(par_pmap(select(tbl, sunset_utc, tz), to_local_time))
 
   select(tbl, !!dateq, !!latq, !!lngq, sunset)
+}
+
+
+time_to_minute <- function(time) {
+  hour(hms(time)) * 60 + minute(hms(time))
+}
+
+
+train_vod_model <- function(tbl, ...) {
+  # TODO(danj): natural spline or polynomial?
+  controlqs <- enquos(...)
+  fmla <- as.formula(
+    str_c(
+      c(
+        "is_minority_demographic ~ is_dark + ns(twilight_minute, df = 6)",
+        quos_names(controlqs)
+      ),
+      collapse = " + "
+    )
+  )
+  glm(fmla, data = tbl, family = binomial)
+}
+
+
+compose_vod_plots <- function(tbl) {
+  # NOTE: limit time to 5:45 PM to 7:15 PM since data is sparse outside this
+  # window; i.e. for a 5:45 PM sunset, there are relatively fewer data points
+  # for days when the sunsets before 5:45 PM relative to after 5:45 PM; the
+  # reverse is true for a 7:15 PM sunset. So, limit the times to between these
+  # values; in fact, 7 minutes before and 7 minutes after since each 15-minute
+  # group is composed of 7 minutes before + midpoint (15-minute mark) + 7
+  # minutes after
+  tbl <- filter(tbl, time >= hm("17:38"), time <= hm("19:22"))
+  # TODO(danj): remove
+  tbl <- filter(tbl, city_state == "Arlington, TX")
+  bind_rows(
+    # NOTE: controlling for time every 15 minutes
+    mutate(
+      tbl,
+      quarter_hour = to_quarter_hour(date, time),
+      quarter_hour_minute = time_to_minute(quarter_hour),
+      quarter_hour_minute_since_sunset = quarter_hour_minute - sunset_minute,
+      quarter_hour_readable = str_c(
+          hour(hms(quarter_hour)) - 12,
+          ':',
+          str_pad(minute(hms(quarter_hour)), 2, side = "right", pad = "0"),
+          " PM"
+      )
+    ),
+    # NOTE: aggregate for comparison
+    mutate(
+      tbl,
+      quarter_hour_minute_since_sunset = minute - sunset_minute,
+      quarter_hour_readable = "aggregated"
+    )
+  ) %>%
+  group_by(
+    city_state,
+    quarter_hour_readable,
+    quarter_hour_minute_since_sunset
+  ) %>%
+  summarize(
+    minority_total = sum(is_minority_demographic),
+    majority_total = sum(!is_minority_demographic),
+    proportion_minority = minority_total / (minority_total + majority_total),
+  ) %>%
+  group_by(city_state) %>%
+  do(
+    plot = 
+      ggplot(
+        .,
+        aes(
+          x = quarter_hour_minute_since_sunset,
+          y = proportion_minority,
+          # NOTE: color and linetype need to be mapped to quarter_hour_readable
+          # in order to set scale_linetype_manual later
+          color = quarter_hour_readable,
+          linetype = quarter_hour_readable
+        )
+      ) +
+      geom_smooth(method = "lm", se = F) +
+      scale_linetype_manual(values = c(rep("solid", 7), "dashed")) +
+      xlab("Minutes Since Sunset") +
+      ylab("Proportion Minority") +
+      coord_cartesian(xlim = c(-60, 60)) +
+      theme(legend.title = element_blank()) +
+      ggtitle(unique(.$city_state))
+  ) %>%
+  translator_from_tbl(
+    "city_state",
+    "plot"
+  )
+}
+
+
+to_quarter_hour <- function(date, time) {
+  format(
+    round_date(ymd_hms(str_c(date, time, sep = " ")), "15 min"),
+    "%H:%M:%S"
+  )
 }
