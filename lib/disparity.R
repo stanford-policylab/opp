@@ -5,22 +5,23 @@ source(here::here("lib", "threshold_test.R"))
 source(here::here("lib", "disparity_plot.R"))
 
 main <- function() {
+  dir_create(here::here("cache"))
   args <- get_disparity_args()
   datasets <- list()
   if (not_null(args$state)) {
     if (not_null(args$from_cache))
-      datasets$state <- read_rds("~/opp/cache/STATE_DISPARITY_FILTER.rds")
+      datasets$state <- read_rds(here::here("cache", "state_disparity_data.rds"))
     else {
       datasets$state <- load_eligible_state_disparity_data()
-      write_rds(datasets$state, "~/opp/cache/STATE_DISPARITY_FILTER.rds")
+      write_rds(datasets$state, here::here("cache", "state_disparity_data.rds"))
     }
   }
   if (not_null(args$city)) {
     if (not_null(args$from_cache))
-      datasets$city <- read_rds("~/opp/cache/CITY_DISPARITY_FILTER.rds")
+      datasets$city <- read_rds(here::here("cache", "city_disparity_data.rds"))
     else {
       datasets$city <- load_eligible_city_disparity_data()
-      write_rds(datasets$city, "~/opp/cache/CITY_DISPARITY_FILTER.rds")
+      write_rds(datasets$city, here::here("cache", "city_disparity_data.rds"))
     }
   }
   print("Data loaded.")
@@ -46,7 +47,7 @@ main <- function() {
         sub_geography,
         geography_col = geography
       )
-      write_rds(v$threshold, here::here("cache", str_c("THRESHOLD_", dataset_name, ".rds")))
+      write_rds(v$threshold, here::here("cache", str_c("threshold_results_", dataset_name, ".rds")))
       print("Plotting aggregate thresholds...")
       plt(v$threshold$results$thresholds, str_c("threshold aggregate: ", dataset_name))
       print("Plotting indivual thresholds...")
@@ -322,10 +323,10 @@ load_eligible_state_disparity_data <- function() {
       sg = if_else(state == "WI", county_name, sg)
     ) %>%
     filter(
-      # VALID DATE RANGE: 2012-2017
-      # NOTE: any anomalies within 2012-2017 are dealt with state by
+      # VALID DATE RANGE: 2011-2017
+      # NOTE: any anomalies within 2011-2017 are dealt with state by
       # state in the state-by-state filters above
-      year(date) >= 2012, year(date) <= 2017,
+      year(date) >= 2011, year(date) <= 2017,
       !is.na(sg)
     ) %>% 
     filter(
