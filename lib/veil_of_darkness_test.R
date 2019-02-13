@@ -211,8 +211,7 @@ compose_vod_plots <- function(tbl) {
   group_by(
     city_state,
     quarter_hour_readable,
-    quarter_hour_minute_since_sunset,
-    type
+    quarter_hour_minute_since_sunset
   ) %>%
   summarize(
     minority_total = sum(is_minority_demographic),
@@ -227,16 +226,15 @@ compose_vod_plots <- function(tbl) {
         aes(
           x = quarter_hour_minute_since_sunset,
           y = proportion_minority,
-          color = quarter_hour_readable,
-          group = quarter_hour_readable
+          color = quarter_hour_readable
         )
       ) +
       geom_smooth(method = "lm", se = F) +
-      # scale_linetype_manual(values = c(rep("dashed", 7), "dashed")) +
       xlab("Minutes Since Sunset") +
       ylab("Proportion Minority") +
       coord_cartesian(xlim = c(-60, 60)) +
       theme(legend.title = element_blank()) +
+      scale_linetype_manual(values = c(rep("dashed", 7), "dashed")) +
       ggtitle(unique(.$city_state))
   ) %>%
   translator_from_tbl(
