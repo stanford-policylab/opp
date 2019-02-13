@@ -187,6 +187,8 @@ compose_vod_plots <- function(tbl) {
   # group is composed of 7 minutes before + midpoint (15-minute mark) + 7
   # minutes after
   tbl <- filter(tbl, time >= hm("17:38"), time <= hm("19:22"))
+  # TODO(danj): remove
+  tbl <- filter(tbl, city_state == "Arlington, TX")
   bind_rows(
     # NOTE: controlling for time every 15 minutes
     mutate(
@@ -226,15 +228,18 @@ compose_vod_plots <- function(tbl) {
         aes(
           x = quarter_hour_minute_since_sunset,
           y = proportion_minority,
-          color = quarter_hour_readable
+          # NOTE: color and linetype need to be mapped to quarter_hour_readable
+          # in order to set scale_linetype_manual later
+          color = quarter_hour_readable,
+          linetype = quarter_hour_readable
         )
       ) +
       geom_smooth(method = "lm", se = F) +
+      scale_linetype_manual(values = c(rep("solid", 7), "dashed")) +
       xlab("Minutes Since Sunset") +
       ylab("Proportion Minority") +
       coord_cartesian(xlim = c(-60, 60)) +
       theme(legend.title = element_blank()) +
-      scale_linetype_manual(values = c(rep("dashed", 7), "dashed")) +
       ggtitle(unique(.$city_state))
   ) %>%
   translator_from_tbl(
