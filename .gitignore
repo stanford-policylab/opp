@@ -15,6 +15,7 @@ data/*
 plots
 plots/*
 reports/*
+results/*
 gmaps_api.key
 census_api.key
 .Rhistory
