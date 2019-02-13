@@ -187,8 +187,6 @@ compose_vod_plots <- function(tbl) {
   # group is composed of 7 minutes before + midpoint (15-minute mark) + 7
   # minutes after
   tbl <- filter(tbl, time >= hm("17:38"), time <= hm("19:22"))
-  # TODO(danj): remove
-  tbl <- filter(tbl, city_state == "Arlington, TX")
   bind_rows(
     # NOTE: controlling for time every 15 minutes
     mutate(
