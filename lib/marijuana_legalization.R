@@ -54,18 +54,6 @@ load <- function() {
     # NOTE: collison stops are qualitatively different: they have 3x the search
     # rate and lower hit rates with a larger impact on whites and hispanics
     !(state == "SC" && reason_for_stop == "Collision")
-    # TODO(amyshoe): it was unclear to me which of the above clauses these
-    # notes applied to
-    # NOTE: old opp excludes because only search reasons listed are k9 and
-    # consent, which they say makes them skeptical of the recording scheme;
-    # however, 87% of searches are not labeled; here they default to probable
-    # cause by default, but regardless, it seems reasonable to assume that all
-    # searches are indeed being tallied up, but i would not trust the
-    # search_basis categorization itself.
-    # NOTE: if not listed as k9 or consent search, we deem the search probable
-    # cause i.e., we don't know if a search is incident to arrest or not.
-    # NOTE: when contraband wasn't found after a search it was labeled NA we
-    # fix this after the mega filter statement
   ) %>%
   add_legalization_info()
 }
