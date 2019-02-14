@@ -208,9 +208,7 @@ clean <- function(d, helpers) {
       ),
       search_basis = first_of(
         "consent" = search_type_description == "Consent",
-        "probable cause" = (
-          search_type_description == "Probable Cause"
-          | frisk_performed),
+        "probable cause" = search_type_description == "Probable Cause",
         "other" = str_detect(
           search_type_description,
           "Search Incident to Arrest|Search Warrant"
