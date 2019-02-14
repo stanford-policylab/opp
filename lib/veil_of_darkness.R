@@ -38,56 +38,117 @@ veil_of_darkness_cities <- function() {
     "WI", "Madison", 43.0730517, -89.4012302
   )
 
-  select(tbl, state, city) %>%
-  opp_load_all_clean_data() %>%
-  filter(
-    type == "vehicular",
-    # NOTE: only keep years with complete data
-    (city == "Mesa"             & year(date) %in% 2014:2016)
-    | (city == "Bakersfield"    & year(date) %in% 2010:2017)
-    | (city == "San Diego"      & year(date) %in% 2014:2016)
-    | (city == "San Francisco"  & year(date) %in% 2007:2015)
-    | (city == "San Jose"       & year(date) %in% 2014:2017)
-    | (city == "Aurora"         & year(date) %in% 2012:2016)
-    | (city == "Hartford"       & year(date) %in% 2014:2015)
-    | (city == "Wichita"        & year(date) %in% 2006:2016)
-    | (city == "New Orleans"    & year(date) %in% 2010:2017)
-    | (city == "Saint Paul"     & year(date) %in% 2001:2016)
-    | (city == "Charlotte"      & year(date) %in%
-      setdiff(2002:2015, 2008)
+  tbl <-
+    tbl %>%
+    select(state, city) %>%
+    opp_load_all_clean_data() %>%
+    filter(
+      type == "vehicular",
+      # NOTE: only keep years with complete data
+      (city == "Mesa"             & year(date) %in% 2014:2016)
+      | (city == "Bakersfield"    & year(date) %in% 2010:2017)
+      | (city == "San Diego"      & year(date) %in% 2014:2016)
+      | (city == "San Francisco"  & year(date) %in% 2007:2015)
+      | (city == "San Jose"       & year(date) %in% 2014:2017)
+      | (city == "Aurora"         & year(date) %in% 2012:2016)
+      | (city == "Hartford"       & year(date) %in% 2014:2015)
+      | (city == "Wichita"        & year(date) %in% 2006:2016)
+      | (city == "New Orleans"    & year(date) %in% 2010:2017)
+      | (city == "Saint Paul"     & year(date) %in% 2001:2016)
+      | (city == "Charlotte"      & year(date) %in%
+        setdiff(2002:2015, 2008)
+      )
+      | (city == "Durham"         & year(date) %in%
+        setdiff(2002:2015, c(2008, 2009, 2010, 2013))
+      )
+      | (city == "Fayetteville"   & year(date) %in% setdiff(2002:2015, 2009))
+      | (city == "Greensboro"     & year(date) %in%
+        setdiff(2002:2015, c(2005, 2006, 2010, 2014, 2015))
+      )
+      | (city == "Raleigh"        & year(date) %in% 2010:2011)
+      | (city == "Grand Forks"    & year(date) %in% 2007:2016)
+      | (city == "Camden"         & year(date) %in% 2014:2017)
+      | (city == "Cincinnati"     & year(date) %in% 2009:2017)
+      | (city == "Columbus"       & year(date) %in% 2012:2016)
+      | (city == "Oklahoma City"  & year(date) %in% 2012:2016)
+      | (city == "Tulsa"          & year(date) %in% 2009:2016)
+      | (city == "Philadelphia"   & year(date) %in% 2015:2017)
+      | (city == "Nashville"      & year(date) %in% 2010:2016)
+      | (city == "Arlington"      & year(date) %in% 2016:2016)
+      | (city == "Plano"          & year(date) %in% 2012:2015)
+      | (city == "San Antonio"    & year(date) %in% 2012:2017)
+      | (city == "Burlington"     & year(date) %in% 2012:2017)
+      | (city == "Madison"        & year(date) %in% 2010:2016),
+      # NOTE: the above contains all valid years for each location, but
+      # limiting to 2012-2017 to be less affected by locations with many more
+      # years of data; incidentally, the 95% CI for the is_dark coefficient is
+      # virtually identical using all valid years for all locations vs. only
+      # 2012-2017
+      year(date) >= 2012,
+      year(date) <= 2017
+    ) %>%
+    left_join(tbl) %>%
+    mutate(city_state = str_c(city, state, sep = ", "))
+
+  tbl_subgeography <-
+    tbl %>%
+    filter(
+      !(city == "Nashville" & precinct == "U"),
+      !(city == "Arlington" & !(district %in% c("N", "E", "S", "W"))),
+      !(city == "Plano"     & sector == "9999")
+    ) %>%
+    mutate(
+      subgeography = case_when(
+        city == "Bakersfield"     ~ beat,
+        city == "San Diego"       ~ service_area,
+        city == "San Francisco"   ~ district,
+        city == "Aurora"          ~ district,
+        city == "Hartford"        ~ district,
+        city == "New Orleans"     ~ district,
+        city == "Saint Paul"      ~ police_grid_number,
+        # NOTE: beat is 75% null
+        city == "Cincinnati"      ~ beat,
+        # NOTE: 5 zones and ~9 precincts
+        city == "Columbus"        ~ zone,
+        city == "Philadelphia"    ~ district,
+        # NOTE: 8 precincts, but 50+ reporting areas and zones each
+        city == "Nashville"       ~ precinct,
+        # NOTE: 4 districts, 40 beats
+        city == "Arlington"       ~ district,
+        # NOTE: 4 sectors, 25 beats, both null ~50% of the time
+        city == "Plano"           ~ sector,
+        # NOTE: 1 substations, 50+ districts
+        city == "San Antonio"     ~ substation,
+        # NOTE: district 2 is missing from shapefiles so NA; there are 6
+        # districts and 50+ sectors
+        city == "Madison"         ~ district
+      )
     )
-    | (city == "Durham"         & year(date) %in%
-      setdiff(2002:2015, c(2008, 2009, 2010, 2013))
-    )
-    | (city == "Fayetteville"   & year(date) %in% setdiff(2002:2015, 2009))
-    | (city == "Greensboro"     & year(date) %in%
-      setdiff(2002:2015, c(2005, 2006, 2010, 2014, 2015))
-    )
-    | (city == "Raleigh"        & year(date) %in% 2010:2011)
-    | (city == "Grand Forks"    & year(date) %in% 2007:2016)
-    | (city == "Camden"         & year(date) %in% 2014:2017)
-    | (city == "Cincinnati"     & year(date) %in% 2009:2017)
-    | (city == "Columbus"       & year(date) %in% 2012:2016)
-    | (city == "Oklahoma City"  & year(date) %in% 2012:2016)
-    | (city == "Tulsa"          & year(date) %in% 2009:2016)
-    | (city == "Philadelphia"   & year(date) %in% 2015:2017)
-    | (city == "Nashville"      & year(date) %in% 2010:2016)
-    | (city == "Arlington"      & year(date) %in% 2016:2016)
-    | (city == "Plano"          & year(date) %in% 2012:2015)
-    | (city == "San Antonio"    & year(date) %in% 2012:2017)
-    | (city == "Burlington"     & year(date) %in% 2012:2017)
-    | (city == "Madison"        & year(date) %in% 2010:2016)
-  ) %>%
-  # NOTE: the above contains all valid years for each location, but limiting to 
-  # 2012-2017 to be less affected by locations with many more years of data;
-  # incidentally, the 95% CI for the is_dark coefficient is virtually identical
-  # using all valid years for all locations vs. only 2012-2017
-  filter(year(date) >= 2012, year(date) <= 2017) %>%
-  left_join(tbl) %>%
-  mutate(city_state = str_c(city, state, sep = ", ")) %>%
+
   # NOTE: use city centers instead of stop lat/lng since sunset times
   # don't vary that much within a city and it speeds things up
-  veil_of_darkness_test(city_state, lat_col=center_lat, lng_col=center_lng)
+  par_pmap(
+    tibble(degree = 1:6),
+    function(degree) {
+      list(
+        basic = veil_of_darkness_test(
+          tbl,
+          city_state,
+          lat_col = center_lat,
+          lng_col = center_lng,
+          spline_degree = degree
+        ),
+        subgeography = veil_of_darkness_test(
+          tbl_subgeography,
+          city_state,
+          subgeography,
+          lat_col = center_lat,
+          lng_col = center_lng,
+          spline_degree = degree
+        )
+      )
+    }
+  )
 }
 
 
@@ -97,10 +158,10 @@ veil_of_darkness_cities_daylight_savings <- function() {
 
 
 veil_of_darkness_states <- function() {
-  # TODO(danj)
+  # TODO(amyshoe)
 }
 
 
 veil_of_darkness_states_daylight_savings <- function() {
-  # TODO(danj)
+  # TODO(amyshoe)
 }

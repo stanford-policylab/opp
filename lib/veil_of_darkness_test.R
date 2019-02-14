@@ -38,7 +38,8 @@ veil_of_darkness_test <- function(
   lat_col = lat,
   lng_col = lng,
   minority_demographic = "black",
-  majority_demographic = "white"
+  majority_demographic = "white",
+  spline_degree = 6
 ) {
   controlqs <- enquos(...)
   demographicq <- enquo(demographic_col)
@@ -99,7 +100,7 @@ veil_of_darkness_test <- function(
     )
 
   print("training model...")
-  model <- train_vod_model(tbl, !!!controlqs)
+  model <- train_vod_model(tbl, !!!controlqs, degree = spline_degree)
 
   print("calculating confidence intervals on coefficients...")
   coefficients = cbind(coef(model), confint(model))
@@ -162,13 +163,13 @@ time_to_minute <- function(time) {
 }
 
 
-train_vod_model <- function(tbl, ...) {
-  # TODO(danj): natural spline or polynomial?
+train_vod_model <- function(tbl, ..., degree = 6) {
   controlqs <- enquos(...)
   fmla <- as.formula(
     str_c(
       c(
-        "is_minority_demographic ~ is_dark + ns(twilight_minute, df = 6)",
+        "is_minority_demographic ~ is_dark",
+        str_c("ns(minute, df = ", degree, ")"),
         quos_names(controlqs)
       ),
       collapse = " + "

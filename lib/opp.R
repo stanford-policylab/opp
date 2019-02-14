@@ -5,7 +5,6 @@ library(knitr)
 library(purrr)
 library(rmarkdown)
 library(stringr)
-library(fs)
 library(zoo)
 
 source(here::here("lib", "utils.R"))

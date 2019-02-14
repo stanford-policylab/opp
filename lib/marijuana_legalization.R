@@ -44,7 +44,8 @@ load <- function() {
     "VT", "Statewide",
     "WI", "Statewide"
   ) %>%
-  opp_load_all_clean_data() %>%
+  opp_load_all_clean_data(
+  ) %>%
   filter(
     type == "vehicular",
     subject_race %in% c("black", "white", "hispanic"),
@@ -54,6 +55,9 @@ load <- function() {
     # NOTE: collison stops are qualitatively different: they have 3x the search
     # rate and lower hit rates with a larger impact on whites and hispanics
     !(state == "SC" && reason_for_stop == "Collision")
+  ) %>%
+  mutate(
+    subject_race = relevel(subject_race, "white")
   ) %>%
   add_legalization_info()
 }

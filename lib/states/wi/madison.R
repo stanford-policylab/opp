@@ -74,6 +74,8 @@ clean <- function(d, helpers) {
     ) %>%
     helpers$add_shapefiles_data(
     ) %>%
+    # NOTE: shapefiles don't appear to include district 2 and accompanying
+    # sectors
     rename(
       sector = Sector,
       district = District
