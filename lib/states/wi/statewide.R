@@ -222,7 +222,9 @@ clean <- function(d, helpers) {
       search_vehicle = tr_yn[vehicleSearchConducted],
       search_conducted = search_person | search_vehicle,
       # NOTE: Search codes come from data dictionary. There is no code for
-      # "plain view."
+      # "plain view." 
+      # the rest of the search basis categories are are Warrant, Incident to 
+      # Arrest, Inventory, and Exigent Circumstances
       search_basis = first_of(
         "consent" = str_detect(individualSearchBasis, "1")
           | str_detect(vehicleSearchBasis, "1"),
