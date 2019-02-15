@@ -175,7 +175,7 @@ train_vod_model <- function(tbl, ..., degree = 6) {
       collapse = " + "
     )
   )
-  glm(fmla, data = tbl, family = binomial)
+  glm(fmla, data = tbl, family = binomial, control = list(maxit = 100))
 }
 
 

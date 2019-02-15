@@ -128,9 +128,10 @@ veil_of_darkness_cities <- function() {
   # NOTE: use city centers instead of stop lat/lng since sunset times
   # don't vary that much within a city and it speeds things up
   par_pmap(
-    tibble(degree = 1:6),
+    tibble(degree = 2:6),
     function(degree) {
       list(
+        degree = degree,
         basic = veil_of_darkness_test(
           tbl,
           city_state,
