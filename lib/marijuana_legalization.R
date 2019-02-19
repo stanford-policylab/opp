@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 source(here::here("lib", "opp.R"))
 source(here::here("lib", "analysis_common.R"))
+library(rstan)
 
 
 marijuana_legalization_analysis <- function() {
@@ -16,9 +17,9 @@ marijuana_legalization_analysis <- function() {
     plots = list(
       test_search_rates = compose_search_rate_plots(test),
       control_search_rates = compose_search_rate_plots(control, is_test = F),
-      test_misdemeanor_rates = compose_misdemeanor_rate_plots(test)
-      # inferred_threshold_changes =
-      #   compose_inferred_threshold_changes_plot(tbl)
+      test_misdemeanor_rates = compose_misdemeanor_rate_plots(test),
+      inferred_threshold_changes =
+        compose_inferred_threshold_changes_plot(test)
     )
   )
 }
@@ -408,6 +409,197 @@ compose_misdemeanor_rate_plots <- function(tbl) {
   compose_timeseries_rate_plot("Drugs Infraction & Misdemeanor Rate")
 }
 
+compose_inferred_threshold_changes_plot <- function(tbl) {
+  bind_rows(
+    collect_aggregate_thresholds_for_state(tbl, "CO"),
+    collect_aggregate_thresholds_for_state(tbl, "WA")
+  ) %>% 
+    plot_threshold_changes()
+  
+}
+
+collect_aggregate_thresholds_for_state <- function(tbl, state) {
+  data_summary <- summarise_for_stan(filter(tbl, state == state)) 
+  stan_data <- format_data_summary_for_stan(data_summary)
+  fit <- stan_marijuana_threshold_test(stan_data)
+  posteriors <- rstan::extract(fit)
+  data_with_thresholds <- add_thresholds(data_summary, posteriors)
+  summary_stats(data_with_thresholds, posteriors, state)
+}
+
+summarise_for_stan <- function(tbl) {
+  tbl%>%
+    filter(
+      !is.na(subject_race), 
+      !is.na(county_name)
+    ) %>% 
+    mutate(
+      # NOTE: excludes consent and other (non-discretionary)
+      eligible_search_conducted = search_conducted & (is.na(search_basis) | 
+        search_basis %in% c("k9", "consent", "plain view", "probable cause")),
+      race_cd = as.integer(fct_drop(subject_race)),
+      county_cd = as.integer(as.factor(county_name)),
+      legal = !is_before_legalization
+    ) %>% 
+    group_by(
+      state, county_name, county_cd,
+      race_cd, subject_race, legal
+    ) %>%
+    summarize(
+      num_stops = n(),
+      num_searches = sum(eligible_search_conducted, na.rm=T),
+      num_hits = sum(eligible_search_conducted & contraband_found, na.rm=T)
+    ) %>% 
+    ungroup()
+}
+
+format_data_summary_for_stan <- function(d) {
+  list(
+    n_groups = nrow(d),
+    n_sub_geographies = n_distinct(pull(d, county_name)),
+    n_races = n_distinct(pull(d, subject_race)),
+    sub_geography = pull(d, county_cd),
+    legal = pull(d, as.integer(legal)),
+    race = pull(d, race_cd),
+    stop_count = pull(d, num_stops),
+    search_count = pull(d, num_searches),
+    hit_count = pull(d, num_hits)
+  )
+}
+
+stan_marijuana_threshold_test <- function(
+  data,
+  n_iter = 5000,
+  n_cores = min(5, parallel::detectCores() / 2)
+) {
+  # NOTE: defaults; may expose more of these in the future
+  allow_adaptive_step_size <- T
+  initialization_method <- "random"
+  min_acceptable_divergence_rate <- 0.05
+  n_iter_per_progress_update <- 50
+  n_iter_warmup <- min(2500, round(n_iter / 2))
+  n_markov_chains <- 5
+  nuts_max_tree_depth <- 12
+  path_to_stan_model <- here::here("stan", "threshold_test_marijuana.stan")
+  
+  rstan::sampling(
+    stan_model(path_to_stan_model),
+    data,
+    chains = n_markov_chains,
+    control = list(
+      adapt_delta = 1 - min_acceptable_divergence_rate,
+      adapt_engaged = allow_adaptive_step_size,
+      max_treedepth = nuts_max_tree_depth
+    ),
+    cores = n_cores,
+    init = initialization_method,
+    iter = n_iter,
+    refresh = n_iter_per_progress_update,
+    warmup = n_iter_warmup
+  )
+}
+
+add_thresholds <- function(
+  data_summary,
+  posteriors
+) {
+  data_summary %>%
+    mutate(
+      threshold = colMeans(signal_to_percent(
+        posteriors$threshold, 
+        posteriors$phi, 
+        posteriors$delta
+      ))
+    )
+}
+
+summary_stats <- function(obs, post, state) {
+  threshold_cis(
+    obs, post,
+    groups = c('legal', 'subject_race'),
+    weights = obs %>% 
+      group_by(county_name, legal) %>%
+      mutate(w=sum(num_stops)) %>%
+      with(w)
+  ) %>% 
+    mutate(state = state)
+}
+
+threshold_cis = function(obs, post,
+                         groups = 'subject_race',
+                         weights = NULL,
+                         probs = c(0.025,0.5,0.975)) {
+  if (is.null(weights)) {
+    weights <- obs %>% 
+      group_by(county_name) %>%
+      mutate(w = sum(num_stops)) %>%
+      with(w)
+  }
+  
+  obs <- obs %>% mutate(idx = 1:nrow(.))
+  
+  t <- t(signal_to_percent(
+    post$threshold,
+    post$phi,
+    post$delta
+  ))
+  
+  
+  obs %>% 
+    group_by_(.dots = groups) %>%
+    do(
+      as.data.frame(t(quantile(
+        colSums(weights[.$idx] * t[.$idx,])/sum(weights[.$idx]), 
+        probs = probs
+      )))
+    ) %>% 
+    left_join(
+      obs %>% 
+        group_by_(.dots = groups) %>% 
+        summarize(mean = mean(threshold)),
+      by = groups
+    )
+  
+}
+
+# converts the threshold signal into a percent value (0, 1)
+signal_to_percent <- function(x, phi, delta){
+  phi * dnorm(x, delta, 1) / 
+    (phi * dnorm(x, delta, 1) + (1 - phi) * dnorm(x, 0, 1))
+}
+
+plot_threshold_changes <- function(tbl) {
+  tbl %>% 
+    ungroup() %>% 
+    mutate(
+      legal = factor(
+        if_else(legal, "Post", "Pre"), 
+        levels = c("Pre", "Post")
+      ),
+      subject_race = factor(
+        subject_race, 
+        levels = c("white", "black", "hispanic")
+      )
+    ) %>%
+    ggplot(aes(legal, `50%`, color = subject_race)) +
+    geom_line(aes(group = subject_race)) +
+    geom_segment(aes(xend = legal, y = `2.5%`, yend = `97.5%`)) +
+    scale_colour_manual(
+      values=c("blue", "black", "red"), 
+      labels=c("White","Black","Hispanic")
+    ) +
+    scale_y_continuous("Inferred Threshold", 
+                       limits = c(.25, .75), 
+                       labels=scales::percent, 
+                       expand=c(0,0)
+    ) +
+    theme_bw() +
+    facet_grid(cols = vars(state)) +
+    labs(
+      color = "",
+      x = "Legalization Period"
+    )
+}
 
 if (!interactive()) {
   marijuana_legalization_analysis()
