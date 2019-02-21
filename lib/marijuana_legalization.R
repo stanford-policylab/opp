@@ -309,7 +309,7 @@ compose_timeseries_rate_plot <- function(
     ) +
     theme(
       # NOTE: ifelse and if_else can't return vectors
-      legend.position = if (is_test) c(0.96, 0.95) else c(0.88, 0.88),
+      legend.position = if (is_test) c(0.88, 0.88) else c(0.96, 0.95),
       axis.title.x = element_blank(),
       panel.spacing = unit(0.5, "lines"),
       plot.margin = unit(c(0.1, 0.2, 0.1, 0.1), "in")

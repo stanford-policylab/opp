@@ -157,7 +157,12 @@ veil_of_darkness_cities <- function() {
           std_error = `Std. Error`
         ) %>%
         mutate(
-          type = c("without", "with"),
+          data = c("all", "subgeography", "subgeography"),
+          controls = c(
+            "time + city",
+            "time + city + subgeography",
+            "time + city + subgeography"
+          )
           spline_degree = degree
         )
       }

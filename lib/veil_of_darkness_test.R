@@ -102,16 +102,9 @@ veil_of_darkness_test <- function(
   print("training model...")
   model <- train_vod_model(tbl, !!!controlqs, degree = spline_degree)
 
-  print("composing plots...")
-  plots = compose_vod_plots(tbl)
-
   list(
     metadata = d$metadata,
-    results = list(
-      data = tbl,
-      model = model,
-      plots = plots
-    )
+    results = list(data = tbl, model = model)
   )
 }
 
