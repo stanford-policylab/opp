@@ -162,7 +162,7 @@ veil_of_darkness_cities <- function() {
             "time + city",
             "time + city + subgeography",
             "time + city + subgeography"
-          )
+          ),
           spline_degree = degree
         )
       }
@@ -184,7 +184,7 @@ veil_of_darkness_states <- function() {
   tbl <- read_rds(here::here("data", "state_county_geocodes.rds"))
   
   tbl <-
-    tbl %>%
+    tbl %>% #filter(state %in% c("CT", "AZ", "ND", "MT", "NY")) %>% 
     select(state, city) %>%
     opp_load_all_clean_data() %>%
     filter(
@@ -193,13 +193,13 @@ veil_of_darkness_states <- function() {
       # runs through nov 2015 (keep dec 2011 to be able to keep 2015)
       (state == "AZ"      & ((year(date) == 2011 & month(date) == 12)
                           | (year(date) %in% 2012:2014)
-                          | (year(date == 2015 & month(date) <= 11))))
+                          | (year(date) == 2015 & month(date) <= 11)))
       # runs oct 2013 to sept 2015
       | (state == "CT"    & !(year(date) == 2015 & month(date) > 9))
       # runs through oct 2016 (keep nov/dec 2011 to be able to keep 2016)
-      | (state == "FL"      & ((year(date) == 2011 & month(date) >= 11)
+      | (state == "FL"    & ((year(date) == 2011 & month(date) >= 11)
                              | (year(date) %in% 2012:2015)
-                             | (year(date == 2016 & month(date) <= 10))))
+                             | (year(date) == 2016 & month(date) <= 10)))
       # | (state == "IL"    & year(date) %in% setdiff(2012:2017, 2013))
       | (state == "MI"    & year(date) %in% 2013:2015)
       | (state == "MT"    & year(date) %in% 2012:2016)
@@ -208,7 +208,7 @@ veil_of_darkness_states <- function() {
       # runs through nov 2017 (keep dec 2011 to be able to keep 2017)
       | (state == "NY"      & ((year(date) == 2011 & month(date) >= 12)
                                | (year(date) %in% 2012:2016)
-                               | (year(date == 2017 & month(date) <= 11))))
+                               | (year(date) == 2017 & month(date) <= 11)))
       | (state == "OH"    & year(date) %in% 2012:2015)
       # | (state == "RI"    & year(date) %in% 2012:2015)
       | (state == "TN"    & year(date) %in% 2012:2015)
@@ -222,30 +222,49 @@ veil_of_darkness_states <- function() {
       by = c("state", "city", "county_name")
     )
   
-  # NOTE: use county centers instead of stop lat/lng since sunset times
-  # don't vary that much within a county and it speeds things up
-  par_pmap(
-    tibble(degree = 2:6),
-    function(degree) {
-      list(
-        degree = degree,
-        basic = veil_of_darkness_test(
+  bind_rows(
+    par_pmap(
+      tibble(degree = 1:6),
+      function(degree) {
+        
+        without <- summary(veil_of_darkness_test(
           tbl,
           state,
+          # NOTE: use county centers instead of stop lat/lng since sunset times
+          # don't vary that much within a county and it speeds things up
           lat_col = center_lat,
           lng_col = center_lng,
           spline_degree = degree
-        ),
-        subgeography = veil_of_darkness_test(
+        )$results$model)$coefficients[2, 1:2]
+        
+        with <- summary(veil_of_darkness_test(
           tbl,
           state,
-          county_name,
+          subgeography,
           lat_col = center_lat,
           lng_col = center_lng,
           spline_degree = degree
-        )
-      )
-    }
+        )$results$model)$coefficients[2, 1:2]
+        
+        bind_rows(
+          without,
+          with
+        ) %>%
+          rename(
+            is_dark = Estimate,
+            std_error = `Std. Error`
+          ) %>%
+          mutate(
+            data = c("all", "subgeography", "subgeography"),
+            controls = c(
+              "time + state",
+              "time + state + subgeography",
+              "time + state + subgeography"
+            ),
+            spline_degree = degree
+          )
+      }
+    )
   )
 }
 
