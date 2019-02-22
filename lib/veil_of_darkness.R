@@ -159,7 +159,76 @@ veil_of_darkness_cities_daylight_savings <- function() {
 
 
 veil_of_darkness_states <- function() {
-  # TODO(amyshoe)
+  # NOTE: all of these places have date and time at least 95% of the time and
+  # subject_race at least 80% of the time
+  # NOTE: IL, NJ, RI, VT are elligible too, but geocoding is nontrivial, 
+  # because county isn't present
+  tbl <- read_rds(here::here("data", "state_county_geocodes.rds"))
+  
+  tbl <-
+    tbl %>%
+    select(state, city) %>%
+    opp_load_all_clean_data() %>%
+    filter(
+      type == "vehicular",
+      # NOTE: only keep years with complete data between 2012 and 2017
+      # runs through nov 2015 (keep dec 2011 to be able to keep 2015)
+      (state == "AZ"      & ((year(date) == 2011 & month(date) == 12)
+                          | (year(date) %in% 2012:2014)
+                          | (year(date == 2015 & month(date) <= 11))))
+      # runs oct 2013 to sept 2015
+      | (state == "CT"    & !(year(date) == 2015 & month(date) > 9))
+      # runs through oct 2016 (keep nov/dec 2011 to be able to keep 2016)
+      | (state == "FL"      & ((year(date) == 2011 & month(date) >= 11)
+                             | (year(date) %in% 2012:2015)
+                             | (year(date == 2016 & month(date) <= 10))))
+      # | (state == "IL"    & year(date) %in% setdiff(2012:2017, 2013))
+      | (state == "MI"    & year(date) %in% 2013:2015)
+      | (state == "MT"    & year(date) %in% 2012:2016)
+      | (state == "ND"    & year(date) %in% 2012:2014)
+      # | (state == "NJ"    & year(date) %in% 2012:2016)
+      # runs through nov 2017 (keep dec 2011 to be able to keep 2017)
+      | (state == "NY"      & ((year(date) == 2011 & month(date) >= 12)
+                               | (year(date) %in% 2012:2016)
+                               | (year(date == 2017 & month(date) <= 11))))
+      | (state == "OH"    & year(date) %in% 2012:2015)
+      # | (state == "RI"    & year(date) %in% 2012:2015)
+      | (state == "TN"    & year(date) %in% 2012:2015)
+      | (state == "TX"    & year(date) %in% 2012:2017)
+      # | (state == "VT"    & year(date) %in% 2012:2015)
+      | (state == "WI"    & year(date) %in% 2012:2015)
+      | (state == "WY"    & year(date) == 2012)
+    ) %>%
+    left_join(
+      tbl, 
+      by = c("state", "city", "county_name")
+    )
+  
+  # NOTE: use county centers instead of stop lat/lng since sunset times
+  # don't vary that much within a county and it speeds things up
+  par_pmap(
+    tibble(degree = 2:6),
+    function(degree) {
+      list(
+        degree = degree,
+        basic = veil_of_darkness_test(
+          tbl,
+          state,
+          lat_col = center_lat,
+          lng_col = center_lng,
+          spline_degree = degree
+        ),
+        subgeography = veil_of_darkness_test(
+          tbl,
+          state,
+          county_name,
+          lat_col = center_lat,
+          lng_col = center_lng,
+          spline_degree = degree
+        )
+      )
+    }
+  )
 }
 
 
