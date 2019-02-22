@@ -39,8 +39,7 @@ veil_of_darkness_cities <- function() {
   )
 
   tbl <-
-    tbl %>%
-    select(state, city) %>%
+    select(tbl, state, city) %>%
     opp_load_all_clean_data() %>%
     filter(
       type == "vehicular",
@@ -125,30 +124,49 @@ veil_of_darkness_cities <- function() {
       )
     )
 
-  # NOTE: use city centers instead of stop lat/lng since sunset times
-  # don't vary that much within a city and it speeds things up
-  par_pmap(
-    tibble(degree = 2:6),
-    function(degree) {
-      list(
-        degree = degree,
-        basic = veil_of_darkness_test(
+  bind_rows(
+    par_pmap(
+      tibble(degree = 1:6),
+      function(degree) {
+
+        without <- summary(veil_of_darkness_test(
           tbl,
           city_state,
+          # NOTE: use city centers instead of stop lat/lng since sunset times
+          # don't vary that much within a city and it speeds things up
           lat_col = center_lat,
           lng_col = center_lng,
           spline_degree = degree
-        ),
-        subgeography = veil_of_darkness_test(
+        )$results$model)$coefficients[2, 1:2]
+
+        with <- summary(veil_of_darkness_test(
           tbl_subgeography,
           city_state,
           subgeography,
           lat_col = center_lat,
           lng_col = center_lng,
           spline_degree = degree
+        )$results$model)$coefficients[2, 1:2]
+
+        bind_rows(
+          without,
+          with
+        ) %>%
+        rename(
+          is_dark = Estimate,
+          std_error = `Std. Error`
+        ) %>%
+        mutate(
+          data = c("all", "subgeography", "subgeography"),
+          controls = c(
+            "time + city",
+            "time + city + subgeography",
+            "time + city + subgeography"
+          )
+          spline_degree = degree
         )
-      )
-    }
+      }
+    )
   )
 }
 

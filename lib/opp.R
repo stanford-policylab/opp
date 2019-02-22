@@ -6,6 +6,7 @@ library(purrr)
 library(rmarkdown)
 library(stringr)
 library(zoo)
+library(utils)
 
 source(here::here("lib", "utils.R"))
 source(here::here("lib", "standards.R"))
@@ -696,7 +697,12 @@ opp_bunching_report <- function() {
 
 
 pdf_filename <- function(state, city) {
-  str_c(normalize_state(state), "_", normalize_city(city), ".pdf")
+  str_c(for_filename(state, city), ".pdf")
+}
+
+
+for_filename <- function(state, city) {
+  str_c(normalize_state(state), "_", normalize_city(city))
 }
 
 
@@ -816,14 +822,20 @@ opp_prima_facie_stats <- function() {
 }
 
 
-opp_zip_all_for_ap <- function(only = NULL) {
+opp_package <- function(only = NULL, dest = "archive") {
   if (is.null(only)) { only <- opp_available() }
-  par_pmap(only, opp_zip_for_ap)
+  par_pmap(
+    only,
+    c(
+      "archive" = opp_package_for_archive,
+      "ap" = opp_package_for_ap
+    )[[dest]]
+  )
 }
 
 
-opp_zip_for_ap <- function(state, city) {
-  base <- str_c("/share/data/opp-for-ap/", tolower(state), "_", normalize_city(city))
+opp_package_for_ap <- function(state, city) {
+  base <- str_c("/share/data/opp-for-ap/", for_filename(state, city))
   output_csv <- str_c(base, ".csv")
   output_clean_csv <- str_c(base, "_clean.csv")
   output_zip <- str_c(base, ".zip")
@@ -832,4 +844,19 @@ opp_zip_for_ap <- function(state, city) {
   zip(output_zip, output_csv)
   write_csv(opp_load_clean_data(state, city), output_clean_csv)
   zip(output_clean_zip, output_clean_csv)
+}
+
+
+opp_package_for_archive <- function(state, city) {
+  base <- str_c("/share/data/opp-for-archive/", for_filename(state, city))
+  csv <- str_c(base, ".csv")
+  rds <- str_c(base, ".rds")
+  tgz <- str_c(base, ".tgz")
+  d <- opp_load_clean_data(state, city)
+  write_csv(d, csv) 
+  zip(str_c(csv, ".zip"), csv)
+  file.remove(csv)
+  saveRDS(d, rds)
+  setwd(opp_data_dir(state, city))
+  tar(tgz, compression = "gzip")
 }
