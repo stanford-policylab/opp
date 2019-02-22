@@ -6,7 +6,6 @@ library(purrr)
 library(rmarkdown)
 library(stringr)
 library(zoo)
-library(utils)
 
 source(here::here("lib", "utils.R"))
 source(here::here("lib", "standards.R"))
@@ -40,6 +39,20 @@ opp_available <- function() {
     state = simple_map(paths, opp_extract_state_from_path),
     # NOTE: city could be 'statewide' too 
     city = simple_map(paths, opp_extract_city_from_path)
+  ) %>%
+  anti_join(
+    opp_bad_data()
+  )
+}
+
+
+opp_bad_data <- function() {
+  tribble(
+    ~state, ~city,
+    "TX", "El Paso", # numbers too high, don't align with external reports
+    "TX", "Fort Worth", # precipitous decline yoy
+    "TX", "Dallas", # too many stop
+    "WI", "Green Bay", # only a sample
   )
 }
 
@@ -848,15 +861,43 @@ opp_package_for_ap <- function(state, city) {
 
 
 opp_package_for_archive <- function(state, city) {
-  base <- str_c("/share/data/opp-for-archive/", for_filename(state, city))
-  csv <- str_c(base, ".csv")
-  rds <- str_c(base, ".rds")
-  tgz <- str_c(base, ".tgz")
+  fn <- for_filename(state, city)
+  base <- str_c("/share/data/opp-for-archive/", fn)
+  dt <- str_c("_", str_replace_all(Sys.Date(), "-", "_"))
+  csv <- str_c(base, dt, ".csv")
+  rds <- str_c(base, dt, ".rds")
+  tgz <- str_c(base, dt, ".tgz")
+  shp <- str_c(base, "_shapefiles", dt, ".tgz")
   d <- opp_load_clean_data(state, city)
   write_csv(d, csv) 
   zip(str_c(csv, ".zip"), csv)
   file.remove(csv)
   saveRDS(d, rds)
-  setwd(opp_data_dir(state, city))
-  tar(tgz, compression = "gzip")
+  tar(opp_data_dir(state, city), tgz, fn)
+  shp_dir <- opp_shapefiles_dir(state, city)
+  if (has_files(shp_dir))
+    tar(shp_dir, shp, str_c(fn, "_shapefiles"))
+}
+
+
+# NOTE: R's tar doesn't allow many of the arguments, like transform, which
+# allow nicer packaging and unpackaging of the tarball
+tar <- function(from, to, name) {
+  tar_cmd <- str_c(
+    "cd",
+    from,
+    "&&",
+    "tar chvzf", 
+    to,
+    ".",
+    "--transform",
+    str_c("'s/./", name, "/'"),
+    sep = " "
+  )
+  system(tar_cmd, ignore.stdout = T)
+}
+
+
+has_files <- function(dir) {
+  dir.exists(dir) & length(list.files(dir)) > 0
 }

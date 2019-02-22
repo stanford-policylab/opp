@@ -21,7 +21,7 @@ marijuana_legalization_analysis <- function() {
       inferred_threshold_changes =
         compose_inferred_threshold_changes_plot(test)
     )
-  ) %>% saveRDS("~/opp/results/mj.rds")
+  ) %>% saveRDS("~/results/mj.rds")
 }
 
 
@@ -294,12 +294,12 @@ compose_timeseries_rate_plot <- function(
       scales = "free_y"
     ) +
     scale_color_manual(
-      values = c("black", "red", "blue"),
-      labels = c("Black", "Hispanic", "White")
+      values = c("blue", "black", "red"),
+      labels = c("White", "Black", "Hispanic")
     ) +
     scale_y_continuous(
       y_axis_label,
-      labels = scales::percent,
+      labels = function(x) scales::percent(x, accuracy = 0.01),
       expand = c(0, 0)
     ) +
     expand_limits(
@@ -365,7 +365,6 @@ compose_misdemeanor_rate_plots <- function(tbl) {
           "possession of 1 oz or less of marijuana",
           # NOTE: these spike after legalization
           # "open marijuana container",
-          # "influence of drugs",
           sep = "|"
         )
       ),

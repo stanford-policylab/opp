@@ -46,7 +46,7 @@ aggregate_acs_population_samples <- function(
       # persons in the population; this figure is in hundredths of a person, so
       # we divide by 100 to get "whole people"
       race = tr_race[ifelse(is_hispanic(hispanic_origin), "hispanic", race)],
-      count = as.integer(weight) / 100
+      count = as.integer(as.integer(weight) / 100)
     ) %>%
     group_by(
       city,

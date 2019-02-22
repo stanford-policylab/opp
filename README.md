@@ -21,6 +21,7 @@ Open Policing Project -- City Data
 * lutz
   
 ## TODO
+* remove DOB from standards and reprocess
 * subgeography VOD cities
 * change baseline in diff-in-diff
 * WI/NC control search rates

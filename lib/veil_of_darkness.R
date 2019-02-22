@@ -129,7 +129,7 @@ veil_of_darkness_cities <- function() {
       tibble(degree = 1:6),
       function(degree) {
 
-        without <- summary(veil_of_darkness_test(
+        all <- summary(veil_of_darkness_test(
           tbl,
           city_state,
           # NOTE: use city centers instead of stop lat/lng since sunset times
@@ -139,7 +139,15 @@ veil_of_darkness_cities <- function() {
           spline_degree = degree
         )$results$model)$coefficients[2, 1:2]
 
-        with <- summary(veil_of_darkness_test(
+        sub_without <- summary(veil_of_darkness_test(
+          tbl_subgeography,
+          city_state,
+          lat_col = center_lat,
+          lng_col = center_lng,
+          spline_degree = degree
+        )$results$model)$coefficients[2, 1:2]
+
+        sub_with <- summary(veil_of_darkness_test(
           tbl_subgeography,
           city_state,
           subgeography,
@@ -149,18 +157,23 @@ veil_of_darkness_cities <- function() {
         )$results$model)$coefficients[2, 1:2]
 
         bind_rows(
-          without,
-          with
+          all,
+          sub_without,
+          sub_with
         ) %>%
         rename(
           is_dark = Estimate,
           std_error = `Std. Error`
         ) %>%
         mutate(
-          data = c("all", "subgeography", "subgeography"),
+          data = c(
+            "all",
+            "subgeography",
+            "subgeography"
+          ),
           controls = c(
             "time + city",
-            "time + city + subgeography",
+            "time + city",
             "time + city + subgeography"
           ),
           spline_degree = degree

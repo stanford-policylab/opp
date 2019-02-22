@@ -43,15 +43,15 @@ clean <- function(d, helpers) {
       citation_issued = tr_yn[`CITATION ISSUED?`],
       # TODO(phoebe): if a citation wasn't issued, was it a warning?
       # https://app.asana.com/0/456927885748233/950796405221402 
-      warning_issued = !citation_issued,
+      # warning_issued = !citation_issued,
       frisk_performed = tr_yn[`DRIVER FRISKED?`],
       search_vehicle = tr_yn[`VEHICLE SEARCHED?`],
       search_conducted = search_vehicle,
       # TODO(phoebe): can we get other outcomes?
       # https://app.asana.com/0/456927885748233/573247093484092
       outcome = first_of(
-        "citation" = citation_issued,
-        "warning" = warning_issued
+        "citation" = citation_issued
+        # "warning" = warning_issued
       ),
       # TODO(phoebe): can we get contraband?
       # https://app.asana.com/0/456927885748233/573247093484095
