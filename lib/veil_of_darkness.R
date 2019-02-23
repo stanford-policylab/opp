@@ -180,9 +180,6 @@ veil_of_darkness_cities <- function() {
           all,
           sub_without,
           sub_with
-          all_no_interact,
-          sub_without_no_interact,
-          sub_with_no_interact
         ) %>%
         rename(
           is_dark = Estimate,
