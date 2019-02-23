@@ -1,4 +1,5 @@
 library(getopt)
+library(digest)
 library(lubridate)
 library(parallel)
 library(tidyverse)
@@ -853,7 +854,13 @@ parse_coord <- Vectorize(function(coord) {
 # NOTE: age returned as floating point and will differ slightly from birthday
 # age due to leap years.
 age_at_date <- function(birth_date, date) {
-  as.numeric(difftime(date, birth_date), units="days") / 365.242
+  as.numeric(
+    difftime(
+      as.Date(date),
+      as.Date(birth_date),
+      units = "days"
+    )
+  ) / 365.242
 }
 
 

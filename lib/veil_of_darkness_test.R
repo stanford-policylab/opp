@@ -39,7 +39,8 @@ veil_of_darkness_test <- function(
   lng_col = lng,
   minority_demographic = "black",
   majority_demographic = "white",
-  spline_degree = 6
+  spline_degree = 6,
+  interact = T
 ) {
   controlqs <- enquos(...)
   demographicq <- enquo(demographic_col)
@@ -100,10 +101,16 @@ veil_of_darkness_test <- function(
     )
 
   print("training model...")
-  model <- train_vod_model(tbl, !!!controlqs, degree = spline_degree)
+  model <- train_vod_model(
+    tbl,
+    !!!controlqs,
+    degree = spline_degree,
+    interact = interact
+  )
 
   print("composing plots...")
-  plots <- compose_vod_plots(tbl)
+  # plots <- compose_vod_plots(tbl)
+  plots <- list()
 
   list(
     metadata = d$metadata,
@@ -156,16 +163,16 @@ time_to_minute <- function(time) {
 }
 
 
-train_vod_model <- function(tbl, ..., degree = 6) {
+train_vod_model <- function(tbl, ..., degree = 6, interact = T) {
   controlqs <- enquos(...)
   fmla <- as.formula(
     str_c(
-      c(
-        "is_minority_demographic ~ is_dark",
+      "is_minority_demographic ~ is_dark + ",
+      str_c(
         str_c("ns(minute, df = ", degree, ")"),
-        quos_names(controlqs)
-      ),
-      collapse = " + "
+        quos_names(controlqs),
+        sep = if (interact) "*" else " + "
+      )
     )
   )
   glm(fmla, data = tbl, family = binomial, control = list(maxit = 100))

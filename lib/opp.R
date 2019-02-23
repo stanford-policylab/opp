@@ -801,13 +801,13 @@ opp_population <- function(state, city) {
 
 opp_demographics <- function(state, city) {
   city_query <- str_c(format_proper_noun(city), toupper(state), sep = ", ")
-  read_csv(
-    here::here("data", "acs_agg.csv")
-  ) %>%
-  filter(
-    str_detect(city, city_query)
-  ) %>%
-  select(-city)
+  tbl <-
+    read_csv(here::here("data", "acs_agg.csv")) %>%
+    filter(str_detect(city, city_query)) %>%
+    select(-city)
+  if (nrow(tbl) == 0)
+    stop(str_c("Demographics query for ", city_query, " failed!"))
+  tbl
 }
 
 
@@ -868,7 +868,8 @@ opp_package_for_archive <- function(state, city) {
   rds <- str_c(base, dt, ".rds")
   tgz <- str_c(base, dt, ".tgz")
   shp <- str_c(base, "_shapefiles", dt, ".tgz")
-  d <- opp_load_clean_data(state, city)
+  d <- opp_load_clean_data(state, city) %>%
+    select(-one_of(redact_for_public_release))
   write_csv(d, csv) 
   zip(str_c(csv, ".zip"), csv)
   file.remove(csv)
