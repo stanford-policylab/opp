@@ -83,7 +83,6 @@ clean <- function(d, helpers) {
       subject_race = tr_race[subject_race],
       subject_sex = tr_sex[subject_sex],
       subject_dob = parse_date(subj_dob, "%Y%m%d"),
-      subject_age = age_at_date(subject_dob, date),
       arrest_made = str_sub(disposition_description, 1, 1) == "A",
       # NOTE: includes criminal and non-criminal citations
       citation_issued = str_detect(disposition_description, "CITATION"),

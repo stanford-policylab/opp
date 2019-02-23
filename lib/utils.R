@@ -856,8 +856,8 @@ parse_coord <- Vectorize(function(coord) {
 age_at_date <- function(birth_date, date) {
   as.numeric(
     difftime(
-      as.Date(date),
-      as.Date(birth_date),
+      parse_date(date),
+      parse_date(birth_date),
       units = "days"
     )
   ) / 365.242
