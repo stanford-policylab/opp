@@ -172,6 +172,7 @@ schema <- c(
   subject_race                  = Curry(factor, levels = valid_races),
   subject_sex                   = Curry(factor, levels = valid_sexes),
   officer_id                    = as.character,
+  officer_id_hash               = as.character,
   officer_age                   = as.numeric,
   officer_dob                   = as.Date,
   officer_race                  = Curry(factor, levels = valid_races),
@@ -265,4 +266,14 @@ reporting_predicated_columns <- c(
   contraband_found = "search_conducted",
   contraband_weapons = "contraband_found",
   contraband_drugs = "contraband_found"
+)
+
+
+redact_for_public_release <- c(
+  "subject_dob",
+  "subject_yob",
+  "officer_id",
+  "officer_dob",
+  "officer_first_name",
+  "officer_last_name"
 )

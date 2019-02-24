@@ -21,10 +21,10 @@ Open Policing Project -- City Data
 * lutz
   
 ## TODO
-* subgeography VOD cities
-* change baseline in diff-in-diff
-* WI/NC control search rates
-* prima facie stats
+* run VOD for cities
+* finalize prima facie stats
+* rewrite script to get demographic populations
+* package files for archive 
 * state-county vod
 * cities with change in enforcement over time (maybe threshold test over years for philly) 
 * Camden and OK City seem to not have hispanic stops relative to what we'd expect from the pop -- i sthis for real?

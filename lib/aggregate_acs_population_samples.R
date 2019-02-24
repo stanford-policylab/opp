@@ -7,6 +7,8 @@ library(here)
 # to_csv.py in py-utils uses the *.sas file to convert the fixed-width
 # dat file to a csv; this script converts that file into aggregate data,
 # which is faster to load and process for the city-level analyses
+# also note, ACS doesn't sample all cities:
+# https://usa.ipums.org/usa-action/variables/CITY#codes_section
 
 aggregate_acs_population_samples <- function(
     acs_csv = here::here("data", "acs.csv"),
@@ -46,7 +48,7 @@ aggregate_acs_population_samples <- function(
       # persons in the population; this figure is in hundredths of a person, so
       # we divide by 100 to get "whole people"
       race = tr_race[ifelse(is_hispanic(hispanic_origin), "hispanic", race)],
-      count = as.integer(weight) / 100
+      count = as.integer(as.integer(weight) / 100)
     ) %>%
     group_by(
       city,

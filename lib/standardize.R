@@ -1,4 +1,5 @@
 library(dplyr)
+library(digest)
 
 source(here::here("lib", "sanitizers.R"))
 source(here::here("lib", "standards.R"))
@@ -18,6 +19,7 @@ standardize <- function(data, metadata) {
       # collect metadata local to standardize here
       metadata = list()
     ) %>%
+    add_calculated_columns %>%
     select_only_schema_cols %>%
     enforce_types %>%
     correct_predicates %>%
@@ -29,6 +31,22 @@ standardize <- function(data, metadata) {
     data = d$data,
     metadata = metadata
   )
+}
+
+
+add_calculated_columns <- function(d) {
+  print("adding calculated columns...")
+  for(col in colnames(d$data)) {
+    if (endsWith(col, "_dob")) {
+      new_colname <- str_c(prefix(col), "_", "age")
+      d$data[[new_colname]] <- age_at_date(d$data[[col]], d$data[["date"]])
+    }
+    if (col == "officer_id") {
+      h <- function(s) if (is.na(s)) NA_character_ else substr(digest(s), 1, 10)
+      d$data[["officer_id_hash"]] <- simple_map(d$data[[col]], h)
+    }
+  }
+  d
 }
 
 
@@ -62,6 +80,11 @@ enforce_types <- function(d) {
   d$data <- res$data
   d$metadata[["enforce_types"]] <- res$null_rates
   d
+}
+
+
+prefix <- function(s) {
+  str_split(s, "_")[[1]][1]
 }
 
 

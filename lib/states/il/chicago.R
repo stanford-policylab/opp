@@ -20,8 +20,8 @@ load_raw <- function(raw_data_dir, n_max) {
   colnames(citations$data) <- make_ergonomic(colnames(citations$data))
 
   full_join(
-    arrests$data,
-    citations$data,
+    mutate(arrests$data, arrest_made = T),
+    mutate(citations$data, citation_issued = T),
     by = c(
       "arrest_date" = "contact_date",
       "arrest_hour" = "time_of_day",
@@ -81,8 +81,6 @@ clean <- function(d, helpers) {
       subject_sex = fast_tr(coalesce(gender, driver_gender), tr_sex),
       officer_race = fast_tr(officer_race, tr_race),
       officer_sex = fast_tr(officer_gender, tr_sex),
-      arrest_made = !is.na(arrest_id),
-      citation_issued = citation_i == "1",
       outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued

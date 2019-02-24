@@ -121,49 +121,83 @@ veil_of_darkness_cities <- function() {
         # NOTE: district 2 is missing from shapefiles so NA; there are 6
         # districts and 50+ sectors
         city == "Madison"         ~ district
-      )
+      ),
+      city_state_subgeography = str_c(city_state, ": ", subgeography)
     )
+
+  eligible_subeography_locations <-
+    tbl_subgeography %>%
+    group_by(city_state) %>%
+    summarize(
+      subgeography_coverage = sum(!is.na(city_state_subgeography)) / n()
+    ) %>%
+    # TODO(danj): does 80% make sense?
+    filter(subgeography_coverage > 0.80) %>%
+    pull(city_state)
+
+  print("Eligible subgeography locations: ")
+  print(eligible_subeography_locations)
+
+  tbl_subgeography <-
+    tbl_subgeography %>%
+    filter(city_state %in% eligible_subeography_locations)
 
   bind_rows(
     par_pmap(
-      tibble(degree = 1:6),
-      function(degree) {
+      tibble(degree = rep(1:6, 2), interact = c(rep(T, 6), rep(F, 6))),
+      function(degree, interact) {
 
-        without <- summary(veil_of_darkness_test(
+        all <- summary(veil_of_darkness_test(
           tbl,
           city_state,
           # NOTE: use city centers instead of stop lat/lng since sunset times
           # don't vary that much within a city and it speeds things up
           lat_col = center_lat,
           lng_col = center_lng,
-          spline_degree = degree
+          spline_degree = degree,
+          interact = interact
         )$results$model)$coefficients[2, 1:2]
 
-        with <- summary(veil_of_darkness_test(
+        sub_without <- summary(veil_of_darkness_test(
           tbl_subgeography,
           city_state,
-          subgeography,
           lat_col = center_lat,
           lng_col = center_lng,
-          spline_degree = degree
+          spline_degree = degree,
+          interact = interact
+        )$results$model)$coefficients[2, 1:2]
+
+        sub_with <- summary(veil_of_darkness_test(
+          tbl_subgeography,
+          city_state_subgeography,
+          lat_col = center_lat,
+          lng_col = center_lng,
+          spline_degree = degree,
+          interact = interact
         )$results$model)$coefficients[2, 1:2]
 
         bind_rows(
-          without,
-          with
+          all,
+          sub_without,
+          sub_with
         ) %>%
         rename(
           is_dark = Estimate,
           std_error = `Std. Error`
         ) %>%
         mutate(
-          data = c("all", "subgeography", "subgeography"),
-          controls = c(
-            "time + city",
-            "time + city + subgeography",
-            "time + city + subgeography"
+          data = c(
+            "all",
+            "subgeography",
+            "subgeography"
           ),
-          spline_degree = degree
+          controls = c(
+            "time, city_state",
+            "time, city_state",
+            "time, city_state_subgeography"
+          ),
+          spline_degree = degree,
+          interact = interact
         )
       }
     )
