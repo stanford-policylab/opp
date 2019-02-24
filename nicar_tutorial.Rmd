@@ -1,0 +1,736 @@
+---
+title: "Open Policing Project Tutorial"
+output: html_document
+---
+NOTES: We don't really have enough data in Jan 2014 to trust. Not sure whether
+to mention this or if it just complicates things too much, since eventually
+we just filter to 2017. But it is a little bit relavent for the by-year plot...
+we'd probably expect to see about 15,000 or so more stops (which, spread across
+races is a drop in the bucket) -- honestly wouldn't change the plot much; it's
+just a matter of thoroughness/integrity.
+
+Things that i use but don't explain:
+
+* assignment operator ( <- )
+* pipe ( %>% )
+* filter
+* mutate
+* group_by/summarize
+* select
+* left_join
+* super basic ggplot (i.e., aes(), geom_point(), geom_line())
+
+## Setup
+
+```{r setup, message=FALSE,  warning=FALSE}
+## Libraries to include
+library(tidyverse)
+library(lubridate)
+# For Veil of Darkness
+library(lutz)
+library(suncalc)
+library(splines)
+
+## NOTE(eric, justin): These next few lines will change a bit once we pin down 
+## the ubs/data format situation.
+
+## Load the data
+# Replace the path below with the path to where your data lives
+data_path <- "~/opp/data/states/pa/philadelphia/clean/philadelphia.rds"
+stops <- read_rds(data_path)$data
+
+# Additional data and fixed values we'll be using
+population_2017 <- tibble(
+  subject_race = c(
+    "asian/pacific islander", "black", "hispanic", "other/unknown","white"
+  ),
+  num_people = c(110864, 648846, 221777, 39858, 548312)
+) %>% 
+  mutate(subject_race = as.factor(subject_race))
+
+center_lat <- 39.9525839
+center_lng <- -75.1652215
+```
+
+## Covering the basics
+
+First, let's take a look at what columns exist in our `stops` dataframe. 
+
+```{r}
+### Remove for tutorial, replace with:
+# YOUR CODE HERE
+colnames(stops)
+```
+
+How many stops do we have in our dataset?
+
+```{r}
+### Remove for tutorial, replace with:
+# YOUR CODE HERE
+nrow(stops)
+```
+
+What date range does our data cover?
+
+```{r}
+### Remove for tutorial, replace with:
+# YOUR CODE HERE
+min(stops$date)
+max(stops$date)
+```
+
+Since we only have four and a half months of data for 2018, let's filter it out.
+Note that there are ways to deal with partial years in analysis, but to make 
+things easier for ourselves, let's focus on 2014-2017. 
+
+```{r}
+### Remove for tutorial, replace with:
+# YOUR CODE HERE
+stops <- stops %>% filter(year(date) < 2018)
+```
+
+How many stops do we have now?
+
+```{r}
+### Remove for tutorial, replace with:
+# YOUR CODE HERE
+stops %>% nrow()
+```
+
+Now, you may have noticed that there was a column called `type`. Let's take a
+closer look to see what that means.
+
+```{r}
+### Remove for tutorial, replace with:
+# YOUR CODE HERE
+stops %>% 
+  head(10) %>% # this allows us to look at just the first 10 rows
+  select(type)
+```
+
+Ah! Some of our stops are vehicular (i.e., traffic) stops, but some are 
+pedestrian stops. Many of the larger cities in our database provided us with
+both pedestrian and vehicular data. We've provided it all for you so that you
+can dive in and uncover stories relating to pedestrian stops too! Many of the
+analysis techniques we'll be covering today can be applied to the pedestrian
+data as well. And we encourage you to spend some time on your own replicating the
+relevant analyses on the pedestrian data. But for now, let's filter to just
+vehicular stops, since one of our analyses is only relevant for traffic stops, 
+and since this matches what the majority of the data in our database looks like.
+
+```{r}
+### Remove for tutorial, replace with:
+# YOUR CODE HERE
+stops <- stops %>% filter(type == "vehicular")
+```
+
+How many stops do we have now?
+
+```{r}
+### Remove for tutorial, replace with:
+# YOUR CODE HERE
+stops %>% nrow()
+```
+
+It'd be nice to see if the 1.1 million stops were evenly distributed across 
+years, or if stop counts have changed. To find stop counts per year, we need to
+define a notion of `year` (our data only has `date`). Luckily, with the 
+`lubridate` package, it's as easy as `year(date)`!
+
+The `count()` function gives us an easy way to tally up observations over any
+number of groupings we desire. In this case, let's count over year.
+
+```{r}
+### Remove for tutorial, replace with:
+# YOUR CODE HERE
+stops %>%
+  mutate(year = year(date)) %>% 
+  count(year)
+```
+
+How about counts over race?
+
+```{r}
+### Remove for tutorial, replace with:
+# YOUR CODE HERE
+stops %>% 
+  count(subject_race)
+```
+
+Let's make another table that gives us the proprtion of stops by race.
+(There are a few equivalent ways to do this -- choose the method that feels
+most natural to you.)
+
+```{r}
+### Remove for tutorial, replace with:
+# YOUR CODE HERE
+
+# This method builds off of using `count` as above
+stops %>% 
+  count(subject_race) %>% 
+  mutate(prop = n / sum(n))
+
+# This method uses the group_by/summarize paradigm
+stops %>% 
+  group_by(subject_race) %>% 
+  summarize(
+    n = n(),
+    prop = n / nrow(.)
+  )
+```
+
+At first glance, we see there are for more stops of black drivers than any other
+race. About two-thirds of stops in our dataset were of black drivers! This 
+stat on is own, though, doesn't actually say much. We'll return to this more
+rigorously later on.
+
+How about counting how many stops by year _and_ race?
+
+```{r}
+### Remove for tutorial, replace with:
+# YOUR CODE HERE
+
+stops %>% 
+  # notice that you can also mutate `date` *within* the count funciton
+  count(year = year(date), subject_race)
+```
+
+Now we've gotten to the point where we have too many rows to interpret in a 
+single table. A simple visualization could really help us out here.
+
+```{r}
+stops %>% 
+  count(year = year(date), subject_race) %>% 
+  ggplot(aes(x = year, y = n, color = subject_race)) +
+  geom_point() +
+  geom_line() 
+```
+
+There are many tweaks we could make to this plot to make it nicer, but in the 
+phase of exploring the data, it's enough just to get a coarse visual like this.
+
+From this plot we see that, at least for black and white drivers (it's hard to
+tell from this plot for drivers of other races because the counts are 
+comparatively so much smaller), the annual trends are very different by race.
+All races experienced a spike in enforcement in 2015, but thereafter, there
+were fewer white drivers stopped (in 2016 and 2017), whereas there continued to
+be an _increase_ in number of black drivers stopped over those two years. 
+
+This is already a potential lead! We'd have to investigate further to see what 
+the trend looks like when adjusting for population changes over time, etc. But 
+it's often simple explorations like this that can uncover the path to stories.
+
+*Fun fact:* This same trend does _not_ hold true for pedestrian stops. In fact,
+if we hadn't filtered to only vehicular stops, we wouldn't have noticed this,
+because this same plot over the combined pedestrian + vehicular data looks
+unremarkable. The takeaway is that looking at trends by sub-categories can often
+be very helpful. (e.g., In Nashville, looking at the different listed stop 
+reasons uncovers the extent of the disparities.)
+
+To give us time to dive into a variety of analysis methods, we'll let you 
+investigate Philly's annual traffic stop patterns on your own time. But because
+it seems like the disparities could be changing over time, we'll filter to
+only 2017 and focus on that data for the rest of our analysis.
+
+```{r}
+### Remove for tutorial, replace with:
+# YOUR CODE HERE
+
+stops <- stops %>% filter(year(date) == 2017)
+```
+
+## Benchmark test
+
+We saw before that over two-thirds of stops were of black drivers. The by-race
+stop counts are only meaningful, though, when compared to some baseline. If
+the Philadelphia population was about two-thirds black, then two-thirds of stops
+being of black drivers wouldn't be at all surprising. 
+
+### Stop rates
+
+In order to do this baseline comparison, we need to understand the racial
+demographics in our Philly population data. Using the `population_2017` data 
+we've given you, compute the proportions by race.
+
+```{r}
+### Remove for tutorial, replace with:
+# YOUR CODE HERE
+
+population_2017 %>% 
+  mutate(prop = num_people / sum(num_people))
+```
+
+As an eyeball comparison leads us to see that blacks are being stopped
+disproportionately, relative to the city's population. But let's be a bit more
+rigorous about this. If we join the two tables together, we can compute stop 
+rates by race (i.e., number of stops per person). Remember to take into acount
+how many years are in your stop data, in order to get a true value of stops per
+capita; we're using only 2017 for stops and for population, so we're in good 
+shape. 
+
+```{r}
+### Remove for tutorial, replace with:
+# YOUR CODE HERE
+
+stops %>% 
+  count(subject_race) %>% 
+  left_join(
+    population_2017,
+    by = "subject_race"
+  ) %>% 
+  mutate(stop_rate = n / num_people)
+```
+
+Good! Now this has allows us to make the quantitative claim that blacks are
+stopped at a rate 3.4 times higher than whites are, and Hispanics are stopped at
+a rate 1.5 times higher than whites are.
+
+### Search rates
+
+Let's do the same sort of benchmark comparison for search and frisk rates. These
+are easier than the last one since we don't need an external population benchmark.
+We can use the stopped population as our baseline, defining search rate
+to be proportion of stopped people who were subsequently searched, and frisk rate
+as proportion of stopped people who were subsequently frisked. Let's get
+these values by race.
+
+```{r}
+### Remove for tutorial, replace with:
+# YOUR CODE HERE
+
+stops %>% 
+  group_by(subject_race) %>% 
+  summarize(
+    search_rate = mean(search_conducted),
+    frisk_rate = mean(frisk_performed)
+  )
+```
+
+Here we see that among drivers who were stopped, blacks were searched at a rate
+1.5 times higher than whites were, and Hispanics were searched at a rate 1.2
+times higher than whites were. Black drivers were frisked at a rate 2.1 times
+higher than white drivers were, and Hispanic drivers were frisked at a rate
+1.5 times higher than white drivers were.
+
+### Caveats about the benchmark test
+
+While these baseline stats give us a sense that there are racial disparities in
+policing practices is Philadelphia, they are not evidence discrimination. The
+argument against the banchmark test is that we haven't identified the correct
+baseline to compare to. 
+
+For the stop rate benchmark, what we really want to know is what the true 
+distribution is for individuals breaking traffic laws and/or exhibiting other 
+criminal behavior in their vehicles. If blacks and Hispanics are disproportionately 
+stopped relative to their rates of offending, that would be stronger evidence.
+Some people then proposed to use benchmarks that approximate those offending
+rates, like arrests, for example. However, we know arrests to themselves be 
+racially skewed (especially for low-level drug offenses, for example), so it 
+wouldn't give us the true offending population's racial distribution. Furthermore,
+only `stops %>% summarize(p = round(100 * mean(arrest_made), 1)) %>% pull(p)`%
+of stops result in an arrest, so the arrested population will naturally not
+match the stopped population. 
+
+Search and frisk rates are slightly less suspect, since among the stopped 
+population, it's more reasonable to believe that people of different races
+offend at equal rates. In the context of searches, this means assuming that
+all races exhibit probable cause of possessing contraband at equal rates. And
+in the case of frisks, this means assuming that all race exhibit reasonable
+articulable suspicion of possessing a weapon at equal rates. Of course, these
+assumptions can also be argued against. One could claim that the stopped population
+isn't a good measure of the true racial distribution of probable cause.
+
+This is all to say that while benchmark stats are a good place to start, more
+investigation is required before we can draw any conclusions.
+
+## Outcome test
+
+To circumvent the benchmarking problem, it's common to turn to the search 
+decision, rather than the stop decision. This is because we have a notion of
+what a "successful" search is. The legal justification for performing a search
+is probable cause that the driver possesses contraband. So a successful search
+is one which uncovers contraband.
+
+We thus turn to rates of successful searches. That is, what proportion of
+searches, by race, were successful? This proportion is known as the contraband
+recovery rate, or the "hit rate". If racial groups have different hit rates, it
+can imply that racial groups are being subjected to different standards.
+
+As a caricatured example, suppose among white drivers who were searched, 
+officers found contraband 99% of the time, while among black drivers who were
+searched, officers found contraband only 1% of the time. This would lead us to
+believe that officers made sure they were _certain_ white individuals had
+contraband before deciding to search, but that they were searching black 
+individuals on a whif of evidence.
+
+Let's investigate hit rates by race in Philly in 2017.
+
+```{r}
+### Remove for tutorial, replace with:
+# YOUR CODE HERE
+
+stops %>% 
+  filter(search_conducted) %>% 
+  group_by(subject_race) %>% 
+  summarize(
+    hit_rate = mean(contraband_found)
+  )
+```
+
+We see that hit rates are slightly lower for blacks and Hispanics than for
+whites.
+
+However, what if hit rates vary by police district?
+If the bar for stopping people, irrespective of race, is lower in certain 
+police districts, and black individuals are more likely to live in neighborhoods
+in those districts, then the observed disparities may not reflect bias.
+
+### Adjusting for location
+
+Now let's compute hit rates by race _and_ district. Name your result `hit_rates`.
+
+```{r}
+### Remove for tutorial, replace with:
+# YOUR CODE HERE
+
+hit_rates <- 
+  stops %>% 
+  filter(search_conducted) %>% 
+  group_by(subject_race, district) %>% 
+  summarize(hit_rate = mean(contraband_found, na.rm = T))
+```
+
+Again, this is too many hit rates to compare in one table. To plot the hit rates
+of blacks vs whites and of Hispanics vs whites, we need to reshape our table
+to have each row containing a district, a minority race, minority hit rate in
+that district, and white hit rate in that district. We'll walk you through the 
+code below that reshapes the data for us.
+
+```{r}
+# Reshape table to show hit rates of minorities vs whites
+hit_rates <-
+  hit_rates %>% 
+  filter(subject_race %in% c("black", "white", "hispanic")) %>% 
+  spread(subject_race, hit_rate, fill = 0) %>% 
+  rename(white_hit_rate = white) %>% 
+  gather(minority_race, minority_hit_rate, c(black, hispanic))
+
+hit_rates
+```
+
+Now let's plot it!
+
+```{r}
+# We'll use this just to make our axes' limits nice and even
+max_hit_rate <-
+  hit_rates %>% 
+  select(ends_with("hit_rate")) %>% 
+  max()
+
+hit_rates %>% 
+  ggplot(aes(
+    x = white_hit_rate,
+    y = minority_hit_rate
+  )) +
+  geom_point() +
+  # This sets a diagonal reference line (line of equal hit rates)
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+  # These next few lines just make the axes pretty and even
+  scale_x_continuous("White hit rate", 
+    limits = c(0, max_hit_rate + 0.01),
+    labels = scales::percent
+  ) +
+  scale_y_continuous("Minority hit rate", 
+    limits = c(0, max_hit_rate + 0.01),
+    labels = scales::percent
+  ) +
+  # This makes sure that 1% on the x-axis is the same as 1% on the y-axis
+  coord_fixed() +
+  # This allows us to compare black v. white and Hispanic v. white side by
+  # side, in panels
+  facet_grid(cols = vars(minority_race))
+```
+
+This is a good start. However, it's hard to tell where the mass is. That is, 
+maybe the points above the dotted line (i.e., the points where minority hit
+rates are _higher_ than white hit rates), maybe those districts have all of 
+Philadelphia's popualtion, and the districts below the line only represent 
+a few people. While this is unlikely, it's still good to have a marker of how 
+much weight or emphasis to give each of the points on our plot. 
+
+Let's therefore size each of the points by number of searches.
+
+```{r}
+# Get corresponding number of searches (to size points).
+# Again, for each district we want to know the number of white+black searches
+# and white+Hispanic searches. This requires the same spreading and gathering
+# as our previous data-munging.
+search_counts <-
+  stops %>% 
+  filter(
+    search_conducted, 
+    subject_race %in% c("black", "white", "hispanic")
+  ) %>%  
+  count(district, subject_race) %>% 
+  spread(subject_race, n, fill = 0) %>% 
+  rename(num_white_searches = white) %>% 
+  gather(minority_race, num_minority_searches, c(black, hispanic)) %>% 
+  mutate(num_searches = num_minority_searches + num_white_searches) %>% 
+  select(district, minority_race, num_searches)
+
+hit_rates %>% 
+  left_join(
+    search_counts, 
+    by = c("district", "minority_race")
+  ) %>% 
+  ggplot(aes(
+    x = white_hit_rate,
+    y = minority_hit_rate
+  )) +
+  geom_point(aes(size = num_searches), pch = 21) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+  scale_x_continuous("White hit rate", 
+    limits = c(0, max_hit_rate + 0.01),
+    labels = scales::percent
+  ) +
+  scale_y_continuous("Minority hit rate", 
+    limits = c(0, max_hit_rate + 0.01),
+    labels = scales::percent
+  ) +
+  coord_fixed() +
+  facet_grid(cols = vars(minority_race))
+```
+
+It seems like we can now say with confidence that even looking within location,
+nearly every police district has lower hit rates for minorities than whites.
+
+Note that we can also run a simple model (logistic regression) to quantify how 
+much lower the odds are of recovering contraband from searching a black or 
+Hispanic driver versus from searching a white driver, adjusting for location. 
+
+### Investigating anomalies
+
+One thing that we should always keep an eye out for, both as journalists and as
+data scientists, are anomalies in the data that could be changing the meaning of
+our results. 
+
+In the plot above, you may have noticed a rather larger point (i.e., a district
+with a lot of searches) that has a hit rate of essentially zero for both 
+white and minority drivers. That's a red flag that something's up.
+
+Let's figure out what district that is by filtering our `hit_rates` table 
+to the smallest white hit rate.
+
+```{r}
+### Remove for tutorial, replace with:
+# YOUR CODE HERE
+
+hit_rates %>% 
+  filter(white_hit_rate == min(white_hit_rate))
+```
+
+Next, let's take a look at what addresses are usually written in for stops in
+this district.
+
+```{r}
+### Remove for tutorial, replace with:
+# YOUR CODE HERE
+
+stops %>% 
+  filter(district == "77") %>% 
+  count(location, sort = T)
+```
+
+Depending on how you investigated the `location`, you might have found that the
+majority of the stops happen at the airport, or have location listed as NA or
+unavailable. Indeed, if we check the Philadelphia Police's website, we'll find
+that there is no District 77, and that the airport does not fall within the 
+jurisdiction of any particular police district. Between this information and the
+fact that hit rates are essentially zero for this district, we can conclude that
+the types of searches happening in this location are qualitatively different
+from searches in our other locations.
+
+Without knowing more about stops and searches in this district, it makes sense
+to remove them from our hit rate analysis. Try computing citywide hit rates
+again, this time filtering out district 77. 
+
+```{r}
+### Remove for tutorial, replace with:
+# YOUR CODE HERE
+# Hint: Note that districts in our dataset are encoded as characters, 
+# so 77 is actually "77"
+
+stops %>% 
+  filter(search_conducted, district != "77") %>% 
+  group_by(subject_race) %>% 
+  summarize(
+    hit_rate = mean(contraband_found)
+  )
+```
+
+Wow! A sizeable share of searches of white individuals must have been taking place
+at the airport with zero hit rates, deflating the white hit rate we were 
+calculating before. But this didn't influence hit rates of blacks or Hispanics
+as much. Our aggregate hit rate analysis now shows stronger evidence of bias,
+similar to our by-location plot. (Note, thought, that aggregate and by-location 
+hit rates do not necessarily always tell the same story -- a phenomenon known as
+Simpson's Paradox -- which is why it's important to check both to get the full 
+picture.) 
+
+
+### Caveats about the outcome test
+
+While the outcome test is a very simple and intuitively appealing test, it doesn't
+allow us to observe the actual threshold for searching someone, it only allows
+us to observe outcomes. There is a subtle statistical flaw with the outcome
+test, known as _infra-marginality_, which in certain cases can lead to the outcome
+test indicating discrimination when equal thresholds are actually being applied,
+and in other cases can lead to the outcome test indicating equal hit rates when
+different thresholds are actually being applied. We thus often use the threshold
+test (a more complex test that uses both search and hit rates to infer thresholds),
+in order to validate the outcome test.
+
+(*Fun fact:* The threshold test confirms the results we see in Philadelphia.
+Officers are indeed applying lower thresholds when deciding to search black and 
+Hispanic drivers than when deciding to search white drivers.)
+
+We don't have time to go into the threshold test now. The important takeaway, 
+though, is that every statistical test has its flaws. So when reporting on
+data, we have to make sure not overstate our findings.
+
+
+## Veil of Darkness test
+
+TODO(amyshoe): Discuss setup of vod test, walk through first code chunk.
+
+```{r}
+# Get timezone for Philly
+tz <- lutz::tz_lookup_coords(center_lat, center_lng, warn = F)
+
+# Helper function
+time_to_minute <- function(time) {
+  hour(hms(time)) * 60 + minute(hms(time))
+}
+
+# Compute sunset time for each date in our dataset
+sunset_times <- 
+  stops %>%
+  mutate(
+    lat = center_lat,
+    lon = center_lng
+  ) %>% 
+  select(date, lat, lon) %>%
+  distinct() %>%
+  mutate(
+    sunset = format(
+      getSunlightTimes(data = ., keep = c("sunset"), tz = tz)$sunset,
+      "%H:%M:%S"
+    ), 
+    sunset_minute = time_to_minute(sunset)
+  ) %>% 
+  select(date, sunset, sunset_minute)
+
+vod_stops <- 
+  stops %>% 
+  left_join(
+    sunset_times,
+    by = "date"
+  ) %>% 
+  mutate(
+    minute = time_to_minute(time),
+    minutes_after_sunset = minute - sunset_minute,
+    is_dark = minute > sunset_minute,
+    min_sunset_minute = min(sunset_minute),
+    max_sunset_minute = max(sunset_minute),
+    is_black = subject_race == "black"
+  ) %>% 
+  filter(
+    # NOTE: filter to get only the intertwilight period
+    minute >= min_sunset_minute,
+    minute <= max_sunset_minute,
+    subject_race %in% c("black", "white")
+  )
+```
+
+TODO(amyshoe): Talk about controlling for time, and the plot as intuition.
+Walk through second code chunk.
+
+```{r}
+to_quarter_hour <- function(date, time) {
+  format(
+    round_date(ymd_hms(str_c(date, time, sep = " ")), "15 min"),
+    "%H:%M:%S"
+  )
+}
+vod_stops %>%
+  # This time range contains stops that occur in the (-1hr, 1hr) range around
+  # sunset (allowing us to compare stops that occurred at the same time but
+  # in darkness vs in light)
+  filter(time >= hm("17:38"), time <= hm("19:22")) %>% 
+    # NOTE: controlling for time every 15 minutes
+    mutate(
+      quarter_hour = to_quarter_hour(date, time),
+      quarter_hour_minute = time_to_minute(quarter_hour),
+      quarter_hour_minute_since_sunset = quarter_hour_minute - sunset_minute,
+      quarter_hour_readable = str_c(
+          hour(hms(quarter_hour)) - 12,
+          ':',
+          str_pad(minute(hms(quarter_hour)), 2, side = "right", pad = "0"),
+          " PM"
+      )
+    ) %>%
+  group_by(
+    quarter_hour_readable,
+    quarter_hour_minute_since_sunset
+  ) %>%
+  summarize(
+    minority_total = sum(is_black),
+    majority_total = sum(!is_black),
+    proportion_minority = minority_total / (minority_total + majority_total)
+  ) %>%
+  ggplot(aes(
+    x = quarter_hour_minute_since_sunset,
+    y = proportion_minority,
+    color = quarter_hour_readable
+  )) +
+  geom_smooth(method = "lm", se = F) +
+  xlab("Minutes Since Sunset") +
+  ylab("Proportion Minority") +
+  coord_cartesian(xlim = c(-60, 60)) +
+  theme(legend.title = element_blank())
+```
+
+TODO(amyshoe): Provide plot interpretation.
+Discuss how to go from this intuition to a more rigorous model.
+Walk through third code chunk.
+
+```{r}
+mod <- glm(
+  is_black ~ is_dark + splines::ns(minute, df = 6),
+  family = binomial,
+  data = vod_stops
+)
+
+summary(mod)$coefficients["is_darkTRUE", c("Estimate", "Std. Error")]
+exp(summary(mod)$coefficients["is_darkTRUE", "Estimate"])
+exp(confint(mod, parm = "is_darkTRUE"))
+```
+
+TODO(amyshoe): Interpret model results
+Talk about robustness checks (adjust for sub-geogrphy, vary spline degree etc)
+
+```{r}
+mod <- glm(
+  is_black ~ is_dark + splines::ns(minute, df = 6) + as.factor(district),
+  family = binomial,
+  data = vod_stops
+)
+
+summary(mod)$coefficients["is_darkTRUE", c("Estimate", "Std. Error")]
+# confint(mod, parm = "is_darkTRUE")
+```
+
+### Caveats on the Veil of Darkness test
+
+TODO(amyshoe)
+
