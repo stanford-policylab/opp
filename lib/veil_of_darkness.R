@@ -184,7 +184,7 @@ veil_of_darkness_states <- function() {
   tbl <- read_rds(here::here("data", "state_county_geocodes.rds"))
   
   tbl <-
-    tbl %>% #filter(state %in% c("CT", "AZ", "ND", "MT", "NY")) %>% 
+    tbl %>% #filter(state %in% c("CT", "NY")) %>% 
     select(state, city) %>%
     opp_load_all_clean_data() %>%
     filter(
@@ -240,7 +240,7 @@ veil_of_darkness_states <- function() {
         with <- summary(veil_of_darkness_test(
           tbl,
           state,
-          subgeography,
+          county_name,
           lat_col = center_lat,
           lng_col = center_lng,
           spline_degree = degree
@@ -255,11 +255,11 @@ veil_of_darkness_states <- function() {
             std_error = `Std. Error`
           ) %>%
           mutate(
-            data = c("all", "subgeography", "subgeography"),
+            data = c("all", "county", "county"),
             controls = c(
               "time + state",
-              "time + state + subgeography",
-              "time + state + subgeography"
+              "time + state + county",
+              "time + state + county"
             ),
             spline_degree = degree
           )
