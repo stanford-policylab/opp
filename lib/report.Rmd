@@ -22,7 +22,7 @@ title: `r title`
 ---
 
 \begin{center}
-2010 Census population: `r comma_num(population)`
+2017 5 year ACS population estimate: `r comma_num(population)`
 
 `r comma_num(total_rows)` rows from `r date_range[1]` to `r date_range[2]`
 \end{center}

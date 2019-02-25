@@ -14,7 +14,10 @@ markdown <- function() {
       ))
     )
   }
-  opp_run_for_all(f) %>% write_csv("/tmp/markdown.csv")
+  opp_apply(f) %>%
+  bind_rows() %>%
+  arrange(state, city) %>%
+  write_csv("/tmp/markdown.csv")
 }
 
 if (!interactive()) {

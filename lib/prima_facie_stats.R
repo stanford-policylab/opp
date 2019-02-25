@@ -28,10 +28,11 @@ prima_facie_stats <- function() {
 
 
 calculate_stop_rates <- function() {
-  # TODO(danj): finish -- write new opp_demographics
   # 1. factfinder.census.gov -> Advanced Search
-  # 2. Race and Ethnic Groups (side button) -> close pop up
-  # 3. HISPANIC OR LATINO ORIGIN BY RACE
+  # 2. Topics -> Datasets -> ACS 5 year estimate 2017
+  # 3. Geographies -> Place -> All places in United States
+  # 4. Race and Ethnic groups -> Hispanic or Latino 
+  # 5. HISPANIC OR LATINO ORIGIN BY RACE
 }
 
 
