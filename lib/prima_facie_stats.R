@@ -124,9 +124,14 @@ calculate_rates <- function(
     max_null_rate_per_location,
     predicate
   ) %>%
-  group_by(subject_race) %>%
+  group_by(subject_race, state, city) %>%
   summarize(
-    !!rate_name := sum(get(count_name), na.rm = T) / sum(n, na.rm = T)
+    !!rate_name := sum(get(count_name), na.rm = T) / sum(n, na.rm = T),
+    annual_n = annual_n
+  ) %>% 
+  group_by(subject_race) %>% 
+  summarize(
+    weighted_rate = weighted.mean(get(rate_name), w = annual_n)
   ) %>%
   drop_na()
 }
@@ -189,7 +194,13 @@ counts_for <- function(
   name <- str_c(col, "_count")
 
   tbl %>%
-  group_by(subject_race) %>%
-  summarize(!!name := sum(get(col)), n = n()) %>%
+  group_by(subject_race, year) %>%
+  summarize(!!name := sum(get(col)), by_yr_n = n()) %>%
+  group_by(subject_race) %>% 
+  summarize(
+    !!name := sum(get(name)), 
+    annual_n = mean(by_yr_n), 
+    n = sum(by_yr_n)
+  ) %>% 
   mutate(state = state, city = city)
 }
