@@ -144,8 +144,7 @@ veil_of_darkness_cities <- function() {
 
   bind_rows(
     par_pmap(
-      tibble(degree = 6, interact = F),
-      # tibble(degree = rep(1:6, 2), interact = c(rep(T, 6), rep(F, 6))),
+      tibble(degree = rep(1:6, 2), interact = c(rep(T, 6), rep(F, 6))),
       function(degree, interact) {
 
         all <- summary(veil_of_darkness_test(
@@ -258,72 +257,50 @@ veil_of_darkness_states <- function() {
       by = c("state", "city", "county_name")
     )
     
-  # bind_rows(
-  #   par_pmap(
-  #     tibble(degree = 1:6),
-  #     function(degree) {
-  #       
-  #       without <- summary(veil_of_darkness_test(
-  #         tbl,
-  #         state,
-  #         # NOTE: use county centers instead of stop lat/lng since sunset times
-  #         # don't vary that much within a county and it speeds things up
-  #         lat_col = center_lat,
-  #         lng_col = center_lng,
-  #         spline_degree = degree
-  #       )$results$model)$coefficients[2, 1:2]
-  #       
-  #       with <- summary(veil_of_darkness_test(
-  #         tbl,
-  #         state,
-  #         county_name,
-  #         lat_col = center_lat,
-  #         lng_col = center_lng,
-  #         spline_degree = degree
-  #       )$results$model)$coefficients[2, 1:2]
-  #       
-  #       bind_rows(
-  #         without,
-  #         with
-  #       ) %>%
-  #         rename(
-  #           is_dark = Estimate,
-  #           std_error = `Std. Error`
-  #         ) %>%
-  #         mutate(
-  #           data = c("all", "county", "county"),
-  #           controls = c(
-  #             "time + state",
-  #             "time + state + county",
-  #             "time + state + county"
-  #           ),
-  #           spline_degree = degree
-  #         )
-  #     }
-  #   )
-  # )
-  
-        
-  without <- summary(veil_of_darkness_test(
+  bind_rows(
+    par_pmap(
+      tibble(degree = 1:6),
+      function(degree) {
+
+        without <- summary(veil_of_darkness_test(
           tbl,
           state,
           # NOTE: use county centers instead of stop lat/lng since sunset times
           # don't vary that much within a county and it speeds things up
           lat_col = center_lat,
           lng_col = center_lng,
-          spline_degree = 6
+          spline_degree = degree
         )$results$model)$coefficients[2, 1:2]
-        
-  with <- summary(veil_of_darkness_test(
+
+        with <- summary(veil_of_darkness_test(
           tbl,
           state,
           county_name,
           lat_col = center_lat,
           lng_col = center_lng,
-          spline_degree = 6
+          spline_degree = degree
         )$results$model)$coefficients[2, 1:2]
-  
-  list(state = without, county = with)
+
+        bind_rows(
+          without,
+          with
+        ) %>%
+          rename(
+            is_dark = Estimate,
+            std_error = `Std. Error`
+          ) %>%
+          mutate(
+            data = c("all", "county", "county"),
+            controls = c(
+              "time + state",
+              "time + state + county",
+              "time + state + county"
+            ),
+            spline_degree = degree
+          )
+      }
+    )
+  )
 }
 
 
