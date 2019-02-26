@@ -36,7 +36,8 @@ disparity_plot <- function(
   title = "Contraband recovery rates by sub-geography",
   axis_title = "hit rate",
   size_title = "Num searches\nconducted",
-  epsilon_rate = 0.05
+  epsilon_rate = 0.05,
+  axis_max = NULL
 ) {
   
   control_colqs <- enquos(...)
@@ -80,22 +81,35 @@ disparity_plot <- function(
     majority_and_minority_rates,
     majority_plus_minority_sizes,
     by = c(control_colnames, "minority_demographic")
-  )
+  ) %>% 
+    mutate(minority_demographic = 
+             str_c(str_to_title(minority_demographic), " drivers")
+    )
   
-  axis_limits <- c(
-    max(min(pull(tbl, !!rate_colq)) - epsilon_rate, 0),
-    max(pull(tbl, !!rate_colq)) + epsilon_rate
-  )
+  if(is.null(axis_max)) {
+    axis_limits <- c(
+      max(min(pull(tbl, !!rate_colq)) - epsilon_rate, 0),
+      max(pull(tbl, !!rate_colq)) + epsilon_rate
+    )
+  } else {
+    axis_limits <- c(0, axis_max)
+  }
 
   data %>%
     ggplot(aes_string("majority_rate", "minority_rate")) +
     geom_point(aes_string(size = size_colname), shape = 1, alpha = 0.5) +
     geom_abline(linetype = "dashed") +
     facet_grid(cols = vars(minority_demographic)) +
-    theme_bw() +
-    theme(panel.spacing = unit(1.0, "lines")) +
-    scale_x_continuous(labels = scales::percent, limits = axis_limits) +
-    scale_y_continuous(labels = scales::percent, limits = axis_limits) +
+    scale_x_continuous(
+      labels = scales::percent, 
+      limits = axis_limits, 
+      expand = c(0,0)
+    ) +
+    scale_y_continuous(
+      labels = scales::percent, 
+      limits = axis_limits,
+      expand = c(0,0)
+    ) +
     scale_size_area(labels = scales::comma) +
     coord_fixed() +
     labs(
@@ -103,7 +117,27 @@ disparity_plot <- function(
       y = str_c("Minority ", axis_title),
       size = size_title,
       title = title
+    ) +
+    theme_bw(base_size=15) +
+    theme(
+      # Make the background white
+      panel.background=element_rect(fill='white', colour='white'),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      # Minimize margins
+      plot.margin=unit(c(0.2, 0.2, 0.2, 0.2), "cm"),
+      # panel.margin=unit(0.25, "lines"),
+      panel.spacing = unit(1.0, "lines"),
+      # Tiny space between axis labels and tick labels
+      axis.title.x=element_text(margin=ggplot2::margin(t=6.0)),
+      axis.title.y=element_text(margin=ggplot2::margin(r=6.0)),
+      axis.text = element_text(color = "black"),
+      # Simplify the legend
+      legend.key=element_blank(),
+      legend.background=element_rect(fill='transparent')
+      # legend.title=element_blank()
     )
+    
 }
 
 
