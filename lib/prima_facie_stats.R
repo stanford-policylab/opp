@@ -40,8 +40,7 @@ aggregate_city_stop_stats_all_combined <- function(
   group_by(subject_race) %>%
   # NOTE: weighted average rate for each race where the weighting is average
   # number of stops per year for that race and city
-  summarize(stop_rate = weighted.mean(stop_rate, w = stop_average)) %>%
-  drop_na()
+  summarize(stop_rate = weighted.mean(stop_rate, w = population_average))
 }
 
 

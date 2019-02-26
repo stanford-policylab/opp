@@ -60,8 +60,11 @@ clean <- function(d, helpers) {
       date = as.Date(datetime),
       time = format(datetime, "%H:%M:%S"),
       subject_sex = tr_sex[SubjectGender],
+      # NOTE: it appears as though Camden police often classify hispanics as
+      # white, since the stop rate for whites is extremely high and there are
+      # no stops for hispanics
       subject_race = tr_race[if_else_na(
-        Ethnicity == "Hispanic or Latino",
+        Ethnicity == "Hispanic Or Latino",
         "hispanic",
         tolower(Race)
       )],
