@@ -253,54 +253,58 @@ veil_of_darkness_states <- function() {
       | (state == "WY"    & year(date) == 2012)
     ) %>%
     left_join(
-      tbl, 
+      tbl %>% rename(county_state = loc), 
       by = c("state", "city", "county_name")
     )
-    
+  
   bind_rows(
     par_pmap(
-      tibble(degree = 1:6),
-      function(degree) {
-
-        without <- summary(veil_of_darkness_test(
+      tibble(interact = c(T, F)),
+      function(interact) {
+        
+        without_subgeo <- summary(veil_of_darkness_test(
           tbl,
           state,
           # NOTE: use county centers instead of stop lat/lng since sunset times
           # don't vary that much within a county and it speeds things up
           lat_col = center_lat,
           lng_col = center_lng,
-          spline_degree = degree
+          spline_degree = 6,
+          interact = interact
         )$results$model)$coefficients[2, 1:2]
-
-        with <- summary(veil_of_darkness_test(
+        
+        with_subgeo <- summary(veil_of_darkness_test(
           tbl,
-          state,
-          county_name,
+          county_state,
           lat_col = center_lat,
           lng_col = center_lng,
-          spline_degree = degree
+          spline_degree = 6,
+          interact = interact
         )$results$model)$coefficients[2, 1:2]
-
+        
         bind_rows(
-          without,
-          with
+          without_subgeo,
+          with_subgeo
         ) %>%
           rename(
             is_dark = Estimate,
             std_error = `Std. Error`
           ) %>%
           mutate(
-            data = c("all", "county", "county"),
-            controls = c(
-              "time + state",
-              "time + state + county",
-              "time + state + county"
+            data = c(
+              "county",
+              "county"
             ),
-            spline_degree = degree
+            controls = c(
+              "time, state",
+              "time, county_state"
+            ),
+            spline_degree = 6,
+            interact = interact
           )
       }
     )
-  )
+  ) 
 }
 
 
