@@ -4,12 +4,11 @@ source(here::here("lib", "analysis_common.R"))
 library(rstan)
 
 
-marijuana_legalization_analysis <- function(output_dir) {
+marijuana_legalization_analysis <- function(output_dir = NULL) {
   tbl <- load()
   test <- filter(tbl, state %in% c("CO", "WA"))
   control <- filter(tbl, !(state %in% c("CO", "WA")))
-  list(
-    data = tbl,
+  results <- list(
     tables = list(
       search_rate_difference_in_difference_coefficients =
         calculate_search_rate_difference_in_difference_coefficients(tbl)
@@ -21,7 +20,12 @@ marijuana_legalization_analysis <- function(output_dir) {
       inferred_threshold_changes =
         compose_inferred_threshold_changes_plot(test)
     )
-  ) %>% saveRDS(file.path(output_dir, "mj.rds"))
+  )
+
+  if (!is.null(output_dir))
+    saveRDS(results, file.path(output_dir, "mj.rds"))
+
+  results
 }
 
 
