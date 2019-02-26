@@ -97,7 +97,18 @@ veil_of_darkness_test <- function(
     ) %>%
     mutate(
       twilight_minute = minute - min_sunset_minute,
-      is_minority_demographic = !!demographicq == minority_demographic
+      is_minority_demographic = !!demographicq == minority_demographic,
+      rounded_minute = plyr::round_any(minute, 5)
+    ) %>%
+    group_by(
+      is_dark,
+      rounded_minute,
+      !!!controlqs
+    ) %>%
+    summarize(
+      n = n(),
+      n_minority = sum(!!demographicq == minority_demographic),
+      n_majority = n - n_minority
     )
 
   print("training model...")
@@ -163,13 +174,20 @@ time_to_minute <- function(time) {
 }
 
 
-train_vod_model <- function(tbl, ..., degree = 6, interact = T) {
+train_vod_model <- function(
+  tbl,
+  ...,
+  time = rounded_minute,
+  degree = 6,
+  interact = T
+) {
+  timeq <- enquo(time)
   controlqs <- enquos(...)
   fmla <- as.formula(
     str_c(
-      "is_minority_demographic ~ is_dark + ",
+      "cbind(n_minority, n_majority) ~ is_dark + ",
       str_c(
-        str_c("ns(minute, df = ", degree, ")"),
+        str_c("ns(", quo_name(timeq), ", df = ", degree, ")"),
         quos_names(controlqs),
         sep = if (interact) "*" else " + "
       )

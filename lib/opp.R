@@ -807,11 +807,12 @@ opp_load_2017_5_year_acs_race_data <- function() {
     non_hispanic = `Estimate; Not Hispanic or Latino:`,
     white = `White alone`,
     black = `Black or African American alone`,
-    `asian/pacific islander` =
-      `Native Hawaiian and Other Pacific Islander alone`,
+    asian = `Asian alone`,
+    pacific_islander = `Native Hawaiian and Other Pacific Islander alone`,
     hispanic = `Estimate; Hispanic or Latino:`
   ) %>%
   mutate(
+    `asian/pacific islander` = asian + pacific_islander,
     `other/unknown` = non_hispanic - white - black - `asian/pacific islander`
   ) %>%
   select(

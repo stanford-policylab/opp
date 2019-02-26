@@ -5,8 +5,8 @@ source(here::here("lib", "opp.R"))
 
 prima_facie_stats <- function() {
   list(
-    stop_rates = calculate_stop_rates(),
-    search_rates = calculate_rates("search_conducted"),
+    stop_rates = aggregate_city_stop_stats_all_combined(),
+    search_rates = aggregate_city_stats_all_combined("search_conducted"),
     # NOTE: example steps for
     # calculate_rates("contraband_found", predicate = "search_conducted"):
     # For each location
@@ -16,60 +16,137 @@ prima_facie_stats <- function() {
     # 4. return empty tibble if the drop rate is above the maximum null rate
     # 5. calculate counts by subject_race
     # Finally, aggregate and calculate rates
-    contraband_rates = calculate_rates(
+    contraband_rates = aggregate_city_stats_all_combined(
       "contraband_found",
       predicate = "search_conducted"
     ),
-    arrest_rate = calculate_rates("arrest_made"),
-    citation_rate = calculate_rates("citation_issued"),
-    warning_rate = calculate_rates("warning_issued")
+    arrest_rates = aggregate_city_stats_all_combined("arrest_made"),
+    citation_rates = aggregate_city_stats_all_combined("citation_issued"),
+    warning_rates = aggregate_city_stats_all_combined("warning_issued")
   )
 }
 
 
-calculate_stop_rates <- function() {
-  # 1. factfinder.census.gov -> Advanced Search
-  # 2. Topics -> Datasets -> ACS 5 year estimate 2017
-  # 3. Geographies -> Place -> All places in United States
-  # 4. Race and Ethnic groups -> Hispanic or Latino 
-  # 5. HISPANIC OR LATINO ORIGIN BY RACE
+aggregate_city_stop_stats_all_combined <- function(
+  start_year = 2012,
+  end_year = 2017,
+  max_null_rate = 0.1
+) {
+  aggregate_city_stop_stats_all(
+    start_year,
+    end_year,
+    max_null_rate
+  ) %>%
+  group_by(subject_race) %>%
+  # NOTE: weighted average rate for each race where the weighting is average
+  # number of stops per year for that race and city
+  summarize(stop_rate = weighted.mean(stop_rate, w = stop_average)) %>%
+  drop_na()
 }
 
 
-stop_and_population_counts <- function(
+aggregate_city_stop_stats_all <- function(
+  start_year = 2012,
+  end_year = 2017,
+  max_null_rate = 0.1
+) {
+  par_pmap(
+    opp_available() %>% filter(city != "Statewide"),
+    function(state, city) {
+      aggregate_city_stop_stats(
+        state,
+        city,
+        start_year,
+        end_year,
+        max_null_rate
+      )
+    }
+  ) %>%
+  bind_rows()
+}
+
+
+aggregate_city_stop_stats <- function(
   state,
   city,
   start_year = 2012,
   end_year = 2017,
   max_null_rate = 0.1
 ) {
+  tbl <- city_stop_stats(
+    state,
+    city,
+    start_year,
+    end_year,
+    max_null_rate
+  )
+
+  if (nrow(tbl) <= 1)
+    return(tbl)
+
+  tbl %>%
+  group_by(state, city, subject_race) %>% 
+  summarize(
+    stop_total = sum(stop_count), 
+    stop_average = mean(stop_count), 
+    population_total = sum(population),
+    population_average = mean(population),
+    stop_rate = stop_total / population_total
+  )
+}
+
+
+city_stop_stats_all <- function(
+  start_year = 2012,
+  end_year = 2017,
+  max_null_rate = 0.1
+) {
+  opp_available() %>%
+  filter(city != "Statewide") %>%
+  par_pmap(function(state, city) {
+    city_stop_stats(
+      state,
+      city,
+      start_year,
+      end_year,
+      max_null_rate
+    )
+  }) %>%
+  bind_rows()
+}
+
+
+city_stop_stats <- function(
+  state,
+  city,
+  start_year = 2012,
+  end_year = 2017,
+  max_null_rate = 0.1
+) {
+  empty <- tibble(state = state, city = city)
   tbl <-
     opp_load_clean_data(state, city) %>%
-    mutate(year = year(date)) %>%
+    mutate(state = state, city = city, year = year(date)) %>%
     filter(year >= start_year, year <= end_year) %>%
     filter_to_complete_years()
 
+  if (nrow(tbl) == 0 | !("subject_race" %in% colnames(tbl)))
+    return(empty)
+
   before <- nrow(tbl)
-  tbl <- filter(tbl, !is.na(subject_race))
+  tbl <- drop_na(tbl, subject_race)
   after <- nrow(tbl)
   null_rate <- (before - after) / before
   if (null_rate > max_null_rate)
-    return(tibble(state = state, city = city))
+    return(empty)
 
   tbl %>%
-  group_by(year, subject_race) %>%
+  group_by(state, city, year, subject_race) %>%
   summarize(stop_count = n()) %>%
   left_join(
-    opp_demographics(state, city),
-    by = c("year" = "year", "subject_race" = "race")
-  ) %>%
-  rename(population = total) %>%
-  group_by(subject_race) %>%
-  summarize(
-    stop_count = sum(stop_count),
-    population = sum(population)
-  ) %>%
-  mutate(state = state, city = city)
+    opp_demographics(state, city) %>% select(-state),
+    c("subject_race" = "race")
+  )
 }
 
 
@@ -109,7 +186,32 @@ filter_to_complete_years <- function(tbl, min_monthly_stops = 100) {
 }
 
 
-calculate_rates <- function(
+aggregate_city_stats_all_combined <- function(
+  col = "search_conducted",
+  start_year = 2012,
+  end_year = 2017,
+  max_null_rate_per_location = 0.1,
+  predicate = NA_character_
+) {
+  rate_name = str_c(col, "_rate")
+  aggregate_city_stats_all(
+    col,
+    start_year,
+    end_year,
+    max_null_rate_per_location,
+    predicate
+  ) %>%
+  group_by(subject_race) %>%
+  # NOTE: weighted average rate for each race where the weighting is average
+  # eligible number of stops per year for that race and city
+  summarize(
+    !!rate_name := weighted.mean(get(rate_name), w = average_eligible)
+  ) %>%
+  drop_na()
+}
+
+
+aggregate_city_stats_all <- function(
   col = "search_conducted",
   start_year = 2012,
   end_year = 2017,
@@ -117,28 +219,62 @@ calculate_rates <- function(
   predicate = NA_character_
 ) {
   rate_name <- str_c(col, "_rate")
-  count_name <- str_c(col, "_count")
-  city_counts(
+  par_pmap(
+    opp_available() %>% filter(city != "Statewide"),
+    function(state, city) {
+      aggregate_city_stats(
+        state,
+        city,
+        col,
+        start_year,
+        end_year,
+        max_null_rate_per_location,
+        predicate
+      )
+    }
+  ) %>%
+  bind_rows()
+}
+
+
+aggregate_city_stats <- function(
+  state,
+  city,
+  col = "search_conducted",
+  start_year = 2012,
+  end_year = 2017,
+  max_null_rate_per_location = 0.1,
+  predicate = NA_character_
+) {
+  tbl <- city_stats(
+    state,
+    city,
     col,
     start_year,
     end_year,
     max_null_rate_per_location,
     predicate
-  ) %>%
-  group_by(subject_race, state, city) %>%
+  )
+
+  if (nrow(tbl) <= 1)
+    return(tbl)
+
+  rate_name <- str_c(col, "_rate")
+  count_name <- str_c(col, "_count")
+  total_name <- str_c(col, "_total")
+
+  tbl %>%
+  group_by(state, city, subject_race) %>% 
   summarize(
-    !!rate_name := sum(get(count_name), na.rm = T) / sum(n, na.rm = T),
-    annual_n = annual_n
-  ) %>% 
-  group_by(subject_race) %>% 
-  summarize(
-    weighted_rate = weighted.mean(get(rate_name), w = annual_n)
-  ) %>%
-  drop_na()
+    !!total_name := sum(get(count_name)), 
+    average_eligible = mean(eligible_count), 
+    total_eligible = sum(eligible_count),
+    !!rate_name := get(total_name) / total_eligible 
+  )
 }
 
 
-city_counts <- function(
+city_stats_all <- function(
   col = "search_conducted",
   start_year = 2012,
   end_year = 2017,
@@ -147,20 +283,22 @@ city_counts <- function(
 ) {
   opp_available() %>%
   filter(city != "Statewide") %>%
-  mutate(
-    col = col,
-    start_year = start_year,
-    end_year = end_year,
-    max_null_rate = max_null_rate,
-    predicate = predicate
-  ) %>%
-  par_pmap(counts_for) %>%
-  bind_rows() %>%
-  select(state, city, everything())
+  par_pmap(function(state, city) {
+    city_stats(
+      state,
+      city,
+      col,
+      start_year,
+      end_year,
+      max_null_rate,
+      predicate
+    )
+  }) %>%
+  bind_rows()
 }
 
 
-counts_for <- function(
+city_stats <- function(
   state,
   city,
   col = "search_conducted",
@@ -192,16 +330,14 @@ counts_for <- function(
   null_rate <- (before - after) / before
   if (null_rate > max_null_rate)
     return(empty)
-  name <- str_c(col, "_count")
 
+  count_name <- str_c(col, "_count")
+  rate_name <- str_c(col, "_rate")
   tbl %>%
-  group_by(subject_race, year) %>%
-  summarize(!!name := sum(get(col)), by_yr_n = n()) %>%
-  group_by(subject_race) %>% 
+  group_by(state, city, year, subject_race) %>%
   summarize(
-    !!name := sum(get(name)), 
-    annual_n = mean(by_yr_n), 
-    n = sum(by_yr_n)
-  ) %>% 
-  mutate(state = state, city = city)
+    !!count_name := sum(get(col)),
+    eligible_count = n(),
+    !!rate_name := get(count_name) / eligible_count
+  )
 }
