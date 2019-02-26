@@ -40,44 +40,102 @@ veil_of_darkness_test <- function(
   minority_demographic = "black",
   majority_demographic = "white",
   spline_degree = 6,
-  interact = T
+  interact = T,
+  plot = F
 ) {
-  controlqs <- enquos(...)
-  demographicq <- enquo(demographic_col)
-  dateq <- enquo(date_col)
-  timeq <- enquo(time_col)
-  latq = enquo(lat_col)
-  lngq = enquo(lng_col)
+  control_colqs <- enquos(...)
+  demographic_colq <- enquo(demographic_col)
+  date_colq <- enquo(date_col)
+  time_colq <- enquo(time_col)
+  lat_colq = enquo(lat_col)
+  lng_colq = enquo(lng_col)
 
-  print("cleaning data...")
+  print("preparing data...")
+  d <- prepare_vod_data(
+    tbl,
+    !!!control_colqs,
+    demographic_col = !!demographic_colq,
+    date_col = !!date_colq,
+    time_col = !!time_colq,
+    lat_col = !!lat_colq,
+    lng_col = !!lng_colq,
+    minority_demographic = minority_demographic,
+    majority_demographic = majority_demographic
+  )
+
+  print("training model...")
+  model <- train_vod_model(
+    d$data,
+    !!!control_colqs,
+    demographic_indicator_col = is_minority_demographic,
+    darkness_indicator_col = is_dark,
+    time_col = rounded_minute,
+    degree = spline_degree,
+    interact = interact
+  )
+
+  plots <- list()
+  if (plot) {
+    print("composing plots...")
+    plots <- compose_vod_plots(d$data)
+  }
+
+  list(
+    metadata = d$metadata,
+    results = list(data = d$data, model = model),
+    plots = plots
+  )
+}
+
+
+prepare_vod_data <- function(
+  tbl,
+  ...,
+  demographic_col = subject_race,
+  date_col = date,
+  time_col = time,
+  lat_col = lat,
+  lng_col = lng,
+  minority_demographic = "black",
+  majority_demographic = "white"
+) {
+  control_colqs <- enquos(...)
+  demographic_colq <- enquo(demographic_col)
+  date_colq <- enquo(date_col)
+  time_colq <- enquo(time_col)
+  lat_colq = enquo(lat_col)
+  lng_colq = enquo(lng_col)
+
   d <-
     list(
       data = tbl,
       metadata = list()
     ) %>%
     select_and_filter_missing(
-      !!!controlqs,
-      !!demographicq,
-      !!dateq,
-      !!timeq,
-      !!latq,
-      !!lngq
+      !!!control_colqs,
+      !!demographic_colq,
+      !!date_colq,
+      !!time_colq,
+      !!lat_colq,
+      !!lng_colq
     )
 
-  print("filtering data...")
+  # NOTE: prefilter since calculating sunset times can take a while
   tbl <-
     d$data %>%
-    # NOTE: prefilter since calculating sunset times can take a while
     filter(
       hour(hms(time)) > 16, # 4 PM
       hour(hms(time)) < 23, # 11 PM
     )
 
-  print("calculating sunset times for data...")
-  sunset_times <- calculate_sunset_times(tbl, !!dateq, !!latq, !!lngq)
+  sunset_times <- calculate_sunset_times(
+    tbl,
+    !!date_colq,
+    !!lat_colq,
+    !!lng_colq
+  )
 
-  print("calculating features for modeling...")
-  tbl <-
+  d$data <-
     tbl %>%
     left_join(
       sunset_times
@@ -93,42 +151,13 @@ veil_of_darkness_test <- function(
       # NOTE: filter to get only the intertwilight period
       minute >= min_sunset_minute,
       minute <= max_sunset_minute,
-      !!demographicq %in% c(minority_demographic, majority_demographic)
+      !!demographic_colq %in% c(minority_demographic, majority_demographic)
     ) %>%
     mutate(
-      twilight_minute = minute - min_sunset_minute,
-      is_minority_demographic = !!demographicq == minority_demographic,
+      is_minority_demographic = !!demographic_colq == minority_demographic,
       rounded_minute = plyr::round_any(minute, 5)
-    ) %>%
-    group_by(
-      is_dark,
-      rounded_minute,
-      !!!controlqs
-    ) %>%
-    summarize(
-      n = n(),
-      n_minority = sum(!!demographicq == minority_demographic),
-      n_majority = n - n_minority
     )
-
-  print("training model...")
-  model <- train_vod_model(
-    tbl,
-    !!!controlqs,
-    degree = spline_degree,
-    interact = interact
-  )
-
-  print("composing plots...")
-  # TODO(danj): reenable when finished running in parallel
-  # plots <- compose_vod_plots(tbl)
-  plots <- list()
-
-  list(
-    metadata = d$metadata,
-    results = list(data = tbl, model = model),
-    plots = plots
-  )
+  d 
 }
 
 
@@ -178,23 +207,43 @@ time_to_minute <- function(time) {
 train_vod_model <- function(
   tbl,
   ...,
-  time = rounded_minute,
+  demographic_indicator_col = is_minority_demographic,
+  darkness_indicator_col = is_dark,
+  time_col = rounded_minute,
   degree = 6,
   interact = T
 ) {
-  timeq <- enquo(time)
-  controlqs <- enquos(...)
+  control_colqs <- enquos(...)
+  darkness_indicator_colq <- enquo(darkness_indicator_col)
+  demographic_indicator_colq <- enquo(demographic_indicator_col)
+  time_colq <- enquo(time_col)
+
+  agg <-
+    tbl %>%
+    group_by(
+      !!darkness_indicator_colq,
+      !!time_colq,
+      !!!control_colqs,
+    ) %>%
+    summarize(
+      n = n(),
+      n_minority = sum(!!demographic_indicator_colq),
+      n_majority = n - n_minority
+    )
+
   fmla <- as.formula(
     str_c(
-      "cbind(n_minority, n_majority) ~ is_dark + ",
+      "cbind(n_minority, n_majority) ~ ",
+      quo_name(darkness_indicator_colq),
+      " + ",
       str_c(
-        str_c("ns(", quo_name(timeq), ", df = ", degree, ")"),
-        quos_names(controlqs),
+        str_c("ns(", quo_name(time_colq), ", df = ", degree, ")"),
+        quos_names(control_colqs),
         sep = if (interact) "*" else " + "
       )
     )
   )
-  glm(fmla, data = tbl, family = binomial, control = list(maxit = 100))
+  glm(fmla, data = agg, family = binomial, control = list(maxit = 100))
 }
 
 

@@ -2,7 +2,7 @@ source("opp.R")
 source("veil_of_darkness_test.R")
 
 
-veil_of_darkness_cities <- function() {
+veil_of_darkness_cities <- function(output_dir = NULL) {
   # NOTE: all of these places have date and time at least 95% of the time and
   # subject_race at least 80% of the time
   tbl <- tribble(
@@ -142,45 +142,15 @@ veil_of_darkness_cities <- function() {
     tbl_subgeography %>%
     filter(city_state %in% eligible_subeography_locations)
 
-  bind_rows(
+  coefficients <- bind_rows(
     par_pmap(
       mc.cores = 3,
       tibble(degree = rep(1:6, 2), interact = c(rep(T, 6), rep(F, 6))),
       function(degree, interact) {
-
-        all <- summary(veil_of_darkness_test(
-          tbl,
-          city_state,
-          # NOTE: use city centers instead of stop lat/lng since sunset times
-          # don't vary that much within a city and it speeds things up
-          lat_col = center_lat,
-          lng_col = center_lng,
-          spline_degree = degree,
-          interact = interact
-        )$results$model)$coefficients[2, 1:2]
-
-        sub_without <- summary(veil_of_darkness_test(
-          tbl_subgeography,
-          city_state,
-          lat_col = center_lat,
-          lng_col = center_lng,
-          spline_degree = degree,
-          interact = interact
-        )$results$model)$coefficients[2, 1:2]
-
-        sub_with <- summary(veil_of_darkness_test(
-          tbl_subgeography,
-          city_state_subgeography,
-          lat_col = center_lat,
-          lng_col = center_lng,
-          spline_degree = degree,
-          interact = interact
-        )$results$model)$coefficients[2, 1:2]
-
         bind_rows(
-          all,
-          sub_without,
-          sub_with
+          vod_coef(tbl, city_state, degree, interact),
+          vod_coef(tbl_subgeography, city_state, degree, interact),
+          vod_coef(tbl_subgeography, city_state_subgeography, degree, interact)
         ) %>%
         rename(
           is_dark = Estimate,
@@ -203,6 +173,40 @@ veil_of_darkness_cities <- function() {
       }
     )
   )
+
+  plots <-
+    prepare_vod_data(
+      tbl,
+      city_state,
+      lat_col = center_lat,
+      lng_col = center_lng
+    )$data %>%
+    compose_vod_plots()
+
+  results <- list(
+    coefficients = coefficients,
+    plots = plots
+  )
+
+  if (!is.null(output_dir))
+    saveRDS(results, file.path(output_dir, "vod.rds"))
+
+  results
+}
+
+
+vod_coef <- function(tbl, control_col, degree, interact) {
+  control_colq <- enquo(control_col)
+  summary(veil_of_darkness_test(
+    tbl,
+    !!control_colq,
+    # NOTE: use city centers instead of stop lat/lng since sunset times
+    # don't vary that much within a city and it speeds things up
+    lat_col = center_lat,
+    lng_col = center_lng,
+    spline_degree = degree,
+    interact = interact
+  )$results$model)$coefficients[2, 1:2]
 }
 
 
