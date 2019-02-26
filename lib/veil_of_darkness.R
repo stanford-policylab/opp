@@ -220,7 +220,6 @@ veil_of_darkness_states <- function() {
   tbl <-
     tbl %>% #filter(state %in% c("CT", "NY")) %>% 
     select(state, city) %>%
-    unique() %>% 
     opp_load_all_clean_data() %>%
     filter(
       type == "vehicular",
@@ -256,12 +255,12 @@ veil_of_darkness_states <- function() {
       tbl, 
       by = c("state", "city", "county_name")
     )
-    
+  
   bind_rows(
     par_pmap(
       tibble(degree = 1:6),
       function(degree) {
-
+        
         without <- summary(veil_of_darkness_test(
           tbl,
           state,
@@ -271,7 +270,7 @@ veil_of_darkness_states <- function() {
           lng_col = center_lng,
           spline_degree = degree
         )$results$model)$coefficients[2, 1:2]
-
+        
         with <- summary(veil_of_darkness_test(
           tbl,
           state,
@@ -280,7 +279,7 @@ veil_of_darkness_states <- function() {
           lng_col = center_lng,
           spline_degree = degree
         )$results$model)$coefficients[2, 1:2]
-
+        
         bind_rows(
           without,
           with

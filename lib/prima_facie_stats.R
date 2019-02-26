@@ -20,9 +20,9 @@ prima_facie_stats <- function() {
       "contraband_found",
       predicate = "search_conducted"
     ),
-    arrest_rates = aggregate_city_stats_all_combined("arrest_made"),
-    citation_rates = aggregate_city_stats_all_combined("citation_issued"),
-    warning_rates = aggregate_city_stats_all_combined("warning_issued")
+    arrest_rates = aggregate_stats_all_combined("arrest_made"),
+    citation_rates = aggregate_stats_all_combined("citation_issued"),
+    warning_rates = aggregate_stats_all_combined("warning_issued")
   )
 }
 
@@ -186,7 +186,7 @@ filter_to_complete_years <- function(tbl, min_monthly_stops = 100) {
 }
 
 
-aggregate_city_stats_all_combined <- function(
+aggregate_stats_all_combined <- function(
   col = "search_conducted",
   start_year = 2012,
   end_year = 2017,
@@ -201,7 +201,10 @@ aggregate_city_stats_all_combined <- function(
     max_null_rate_per_location,
     predicate
   ) %>%
-  group_by(subject_race) %>%
+  mutate(
+    is_state = city == "Statewide"
+  ) %>%
+  group_by(is_state, subject_race) %>%
   # NOTE: weighted average rate for each race where the weighting is average
   # eligible number of stops per year for that race and city
   summarize(
@@ -211,7 +214,7 @@ aggregate_city_stats_all_combined <- function(
 }
 
 
-aggregate_city_stats_all <- function(
+aggregate_stats_all <- function(
   col = "search_conducted",
   start_year = 2012,
   end_year = 2017,
@@ -220,7 +223,7 @@ aggregate_city_stats_all <- function(
 ) {
   rate_name <- str_c(col, "_rate")
   par_pmap(
-    opp_available() %>% filter(city != "Statewide"),
+    opp_available() %>%
     function(state, city) {
       aggregate_city_stats(
         state,
@@ -237,7 +240,7 @@ aggregate_city_stats_all <- function(
 }
 
 
-aggregate_city_stats <- function(
+aggregate_stats <- function(
   state,
   city,
   col = "search_conducted",
@@ -274,7 +277,7 @@ aggregate_city_stats <- function(
 }
 
 
-city_stats_all <- function(
+stats_all <- function(
   col = "search_conducted",
   start_year = 2012,
   end_year = 2017,
@@ -282,7 +285,6 @@ city_stats_all <- function(
   predicate = NA_character_
 ) {
   opp_available() %>%
-  filter(city != "Statewide") %>%
   par_pmap(function(state, city) {
     city_stats(
       state,
@@ -298,7 +300,7 @@ city_stats_all <- function(
 }
 
 
-city_stats <- function(
+stats <- function(
   state,
   city,
   col = "search_conducted",
