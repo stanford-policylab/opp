@@ -6,7 +6,7 @@ source(here::here("lib", "opp.R"))
 prima_facie_stats <- function() {
   list(
     stop_rates = aggregate_city_stop_stats_all_combined(),
-    search_rates = aggregate_city_stats_all_combined("search_conducted"),
+    search_rates = aggregate_stats_all_combined("search_conducted"),
     # NOTE: example steps for
     # calculate_rates("contraband_found", predicate = "search_conducted"):
     # For each location
@@ -16,13 +16,13 @@ prima_facie_stats <- function() {
     # 4. return empty tibble if the drop rate is above the maximum null rate
     # 5. calculate counts by subject_race
     # Finally, aggregate and calculate rates
-    contraband_rates = aggregate_city_stats_all_combined(
+    contraband_rates = aggregate_stats_all_combined(
       "contraband_found",
       predicate = "search_conducted"
     ),
-    arrest_rates = aggregate_city_stats_all_combined("arrest_made"),
-    citation_rates = aggregate_city_stats_all_combined("citation_issued"),
-    warning_rates = aggregate_city_stats_all_combined("warning_issued")
+    arrest_rates = aggregate_stats_all_combined("arrest_made"),
+    citation_rates = aggregate_stats_all_combined("citation_issued"),
+    warning_rates = aggregate_stats_all_combined("warning_issued")
   )
 }
 
@@ -40,8 +40,7 @@ aggregate_city_stop_stats_all_combined <- function(
   group_by(subject_race) %>%
   # NOTE: weighted average rate for each race where the weighting is average
   # number of stops per year for that race and city
-  summarize(stop_rate = weighted.mean(stop_rate, w = stop_average)) %>%
-  drop_na()
+  summarize(stop_rate = weighted.mean(stop_rate, w = population_average))
 }
 
 
@@ -186,7 +185,7 @@ filter_to_complete_years <- function(tbl, min_monthly_stops = 100) {
 }
 
 
-aggregate_city_stats_all_combined <- function(
+aggregate_stats_all_combined <- function(
   col = "search_conducted",
   start_year = 2012,
   end_year = 2017,
@@ -194,14 +193,17 @@ aggregate_city_stats_all_combined <- function(
   predicate = NA_character_
 ) {
   rate_name = str_c(col, "_rate")
-  aggregate_city_stats_all(
+  aggregate_stats_all(
     col,
     start_year,
     end_year,
     max_null_rate_per_location,
     predicate
   ) %>%
-  group_by(subject_race) %>%
+  mutate(
+    is_state = city == "Statewide"
+  ) %>%
+  group_by(is_state, subject_race) %>%
   # NOTE: weighted average rate for each race where the weighting is average
   # eligible number of stops per year for that race and city
   summarize(
@@ -211,7 +213,7 @@ aggregate_city_stats_all_combined <- function(
 }
 
 
-aggregate_city_stats_all <- function(
+aggregate_stats_all <- function(
   col = "search_conducted",
   start_year = 2012,
   end_year = 2017,
@@ -220,9 +222,9 @@ aggregate_city_stats_all <- function(
 ) {
   rate_name <- str_c(col, "_rate")
   par_pmap(
-    opp_available() %>% filter(city != "Statewide"),
+    opp_available(),
     function(state, city) {
-      aggregate_city_stats(
+      aggregate_stats(
         state,
         city,
         col,
@@ -237,7 +239,7 @@ aggregate_city_stats_all <- function(
 }
 
 
-aggregate_city_stats <- function(
+aggregate_stats <- function(
   state,
   city,
   col = "search_conducted",
@@ -246,7 +248,7 @@ aggregate_city_stats <- function(
   max_null_rate_per_location = 0.1,
   predicate = NA_character_
 ) {
-  tbl <- city_stats(
+  tbl <- stats(
     state,
     city,
     col,
@@ -274,7 +276,7 @@ aggregate_city_stats <- function(
 }
 
 
-city_stats_all <- function(
+stats_all <- function(
   col = "search_conducted",
   start_year = 2012,
   end_year = 2017,
@@ -282,9 +284,8 @@ city_stats_all <- function(
   predicate = NA_character_
 ) {
   opp_available() %>%
-  filter(city != "Statewide") %>%
   par_pmap(function(state, city) {
-    city_stats(
+    stats(
       state,
       city,
       col,
@@ -298,7 +299,7 @@ city_stats_all <- function(
 }
 
 
-city_stats <- function(
+stats <- function(
   state,
   city,
   col = "search_conducted",

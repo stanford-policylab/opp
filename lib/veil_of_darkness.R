@@ -144,6 +144,7 @@ veil_of_darkness_cities <- function() {
 
   bind_rows(
     par_pmap(
+      mc.cores = 3,
       tibble(degree = rep(1:6, 2), interact = c(rep(T, 6), rep(F, 6))),
       function(degree, interact) {
 
@@ -220,7 +221,6 @@ veil_of_darkness_states <- function() {
   tbl <-
     tbl %>% #filter(state %in% c("CT", "NY")) %>% 
     select(state, city) %>%
-    unique() %>% 
     opp_load_all_clean_data() %>%
     filter(
       type == "vehicular",
