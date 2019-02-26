@@ -40,7 +40,8 @@ veil_of_darkness_test <- function(
   minority_demographic = "black",
   majority_demographic = "white",
   spline_degree = 6,
-  interact = T
+  interact = T,
+  plot = F
 ) {
   controlqs <- enquos(...)
   demographicq <- enquo(demographic_col)
@@ -119,10 +120,11 @@ veil_of_darkness_test <- function(
     interact = interact
   )
 
-  print("composing plots...")
-  # TODO(danj): reenable when finished running in parallel
-  # plots <- compose_vod_plots(tbl)
   plots <- list()
+  if (plot) {
+    print("composing plots...")
+    plots <- compose_vod_plots(tbl)
+  }
 
   list(
     metadata = d$metadata,

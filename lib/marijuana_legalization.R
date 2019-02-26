@@ -4,7 +4,7 @@ source(here::here("lib", "analysis_common.R"))
 library(rstan)
 
 
-marijuana_legalization_analysis <- function() {
+marijuana_legalization_analysis <- function(output_dir) {
   tbl <- load()
   test <- filter(tbl, state %in% c("CO", "WA"))
   control <- filter(tbl, !(state %in% c("CO", "WA")))
@@ -21,7 +21,7 @@ marijuana_legalization_analysis <- function() {
       inferred_threshold_changes =
         compose_inferred_threshold_changes_plot(test)
     )
-  ) %>% saveRDS("~/results/mj.rds")
+  ) %>% saveRDS(file.path(output_dir, "mj.rds"))
 }
 
 
