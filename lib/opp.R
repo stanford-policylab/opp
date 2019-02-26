@@ -12,7 +12,9 @@ source(here::here("lib", "standards.R"))
 
 
 opp_all_raw_column_names <- function(only = NULL) {
-  opp_run_for_all(opp_raw_column_names, only)
+  opp_apply(opp_raw_column_names, only) %>%
+  bind_rows() %>%
+  arrange(state, city)
 }
 
 
@@ -57,11 +59,9 @@ opp_bad_data <- function() {
 }
 
 
-opp_run_for_all <- function(func, only = NULL) {
+opp_apply <- function(func, only = NULL) {
   if (is.null(only)) { only <- opp_available() }
-  par_pmap(only, func) %>%
-  bind_rows() %>%
-  arrange(state, city)
+  par_pmap(only, func)
 }
 
 
@@ -756,20 +756,92 @@ opp_fips_to_county_name_func <- function(state) {
 
 
 opp_population <- function(state, city) {
-  # NOTE: returns 2010 population; using this because
-  # it has more cities than ACS annual samples (< 200)
+  sum(opp_demographics(state, city)$population)
+}
 
-  # NOTE: some rows have 'A' instead of integer populations; ignore this
-  p <- suppressWarnings(read_csv(
-    here::here("data", "populations.csv"),
-    col_types = cols_only(
-      STATE = "c",
-      NAME = "c",
-      STNAME = "c",
-      FUNCSTAT = "c",
-      CENSUS2010POP = "i"
-    )
-  ))
+
+
+opp_demographics <- function(state, city) {
+  state_query <- str_to_upper(state)
+  city_fmt <- str_to_title(str_replace(city, "Saint", "St."))
+  city_query <- str_c("^", city_fmt, " (city|town)$")
+  # NOTE: https://en.wikipedia.org/wiki/Nashville-Davidson_(balance),_Tennessee
+  if (city_fmt == "Nashville")
+    city_query <- "Nashville-Davidson metropolitan government"
+  tbl <-
+    opp_load_2017_5_year_acs_race_data() %>%
+    filter(state_abbreviation == state_query, str_detect(place, city_query))
+  if (nrow(tbl) != length(valid_races))
+    stop(str_c("Demographic query for ", city_fmt, ", ", state_fmt, " failed!"))
+  tbl
+}
+
+
+is_valid_demographic_data <- function(tbl) {
+}
+
+
+opp_load_2017_5_year_acs_race_data <- function() {
+  # NOTE: to get the data:
+  # 1. factfinder.census.gov -> Advanced Search
+  # 2. Topics -> Datasets -> ACS 5 year estimate 2017
+  # 3. Geographies -> Place -> All places in United States
+  # 4. Race and Ethnic groups -> Hispanic or Latino 
+  # 5. HISPANIC OR LATINO ORIGIN BY RACE
+  # 6. Add descriptive column names; do not put annotations in same file
+  # 7. Unzip and rename file ACS_17_5YR_<X>.csv
+  # 8. Delete first line of non-descriptive headers
+  read_csv(
+    here::here("data", "acs_2017_5_year_estimates.csv")
+  ) %>%
+  select(
+    -Id,
+    -Id2,
+    -matches("Margin of Error")
+  ) %>%
+  rename_all(
+    funs(str_replace(., "Estimate; Not Hispanic or Latino: - ", ""))
+  ) %>%
+  rename(
+    place = Geography,
+    non_hispanic = `Estimate; Not Hispanic or Latino:`,
+    white = `White alone`,
+    black = `Black or African American alone`,
+    `asian/pacific islander` =
+      `Native Hawaiian and Other Pacific Islander alone`,
+    hispanic = `Estimate; Hispanic or Latino:`
+  ) %>%
+  mutate(
+    `other/unknown` = non_hispanic - white - black - `asian/pacific islander`
+  ) %>%
+  select(
+    place,
+    white,
+    black,
+    hispanic,
+    `asian/pacific islander`,
+    `other/unknown`
+  ) %>%
+  gather(
+    race,
+    population,
+    -place
+  ) %>%
+  separate(
+    place,
+    c("place", "state"),
+    sep = ", "
+  ) %>%
+  left_join(
+    opp_load_state_fips()
+  ) %>%
+  rename(
+    state_abbreviation = abbreviation
+  )
+}
+
+
+opp_load_state_fips <- function() {
   fips <- read_csv(
     here::here("data", "fips_state.csv"),
     col_types = cols_only(
@@ -777,37 +849,17 @@ opp_population <- function(state, city) {
       STUSAB = "c",
       STATE_NAME = "c"
     )
-  )
-  v <- left_join(
-    p,
-    fips,
-    by = c("STATE" = "STATE")
   ) %>%
-  filter(
-    # https://www.census.gov/geo/reference/codes/place.html, only [A]ctive
-    FUNCSTAT == "A",
-    STUSAB == toupper(state),
-    str_detect(NAME, str_replace(format_proper_noun(city), "Saint", "St.")),
-    !str_detect(NAME, "County")
+  rename(
+    fip = STATE,
+    abbreviation = STUSAB,
+    state = STATE_NAME
   ) %>%
-  summarize(
-    population = max(CENSUS2010POP, na.rm = TRUE)
+  select(
+    fip,
+    abbreviation,
+    state
   )
-
-	# return scalar, not tibble
-	as.integer(v)
-}
-
-
-opp_demographics <- function(state, city) {
-  city_query <- str_c(format_proper_noun(city), toupper(state), sep = ", ")
-  tbl <-
-    read_csv(here::here("data", "acs_agg.csv")) %>%
-    filter(str_detect(city, city_query)) %>%
-    select(-city)
-  if (nrow(tbl) == 0)
-    stop(str_c("Demographics query for ", city_query, " failed!"))
-  tbl
 }
 
 

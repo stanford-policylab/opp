@@ -144,7 +144,8 @@ veil_of_darkness_cities <- function() {
 
   bind_rows(
     par_pmap(
-      tibble(degree = rep(1:6, 2), interact = c(rep(T, 6), rep(F, 6))),
+      tibble(degree = 6, interact = F),
+      # tibble(degree = rep(1:6, 2), interact = c(rep(T, 6), rep(F, 6))),
       function(degree, interact) {
 
         all <- summary(veil_of_darkness_test(

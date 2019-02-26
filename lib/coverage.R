@@ -7,7 +7,10 @@ coverage <- function(use_cache = TRUE) {
   if (use_cache & file.exists(cache_path)) {
     cvg <- readRDS(cache_path)
   } else {
-    cvg <- opp_run_for_all(calculate_coverage)
+    cvg <-
+      opp_apply(calculate_coverage) %>%
+      bind_rows() %>%
+      arrange(state, city)
     saveRDS(cvg, here::here("cache", "coverage.rds"))
   }
   cvg
