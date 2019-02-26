@@ -6,7 +6,7 @@ source(here::here("lib", "opp.R"))
 prima_facie_stats <- function() {
   list(
     stop_rates = aggregate_city_stop_stats_all_combined(),
-    search_rates = aggregate_city_stats_all_combined("search_conducted"),
+    search_rates = aggregate_stats_all_combined("search_conducted"),
     # NOTE: example steps for
     # calculate_rates("contraband_found", predicate = "search_conducted"):
     # For each location
@@ -16,7 +16,7 @@ prima_facie_stats <- function() {
     # 4. return empty tibble if the drop rate is above the maximum null rate
     # 5. calculate counts by subject_race
     # Finally, aggregate and calculate rates
-    contraband_rates = aggregate_city_stats_all_combined(
+    contraband_rates = aggregate_stats_all_combined(
       "contraband_found",
       predicate = "search_conducted"
     ),
@@ -194,7 +194,7 @@ aggregate_stats_all_combined <- function(
   predicate = NA_character_
 ) {
   rate_name = str_c(col, "_rate")
-  aggregate_city_stats_all(
+  aggregate_stats_all(
     col,
     start_year,
     end_year,
@@ -223,9 +223,9 @@ aggregate_stats_all <- function(
 ) {
   rate_name <- str_c(col, "_rate")
   par_pmap(
-    opp_available() %>%
+    opp_available(),
     function(state, city) {
-      aggregate_city_stats(
+      aggregate_stats(
         state,
         city,
         col,
@@ -249,7 +249,7 @@ aggregate_stats <- function(
   max_null_rate_per_location = 0.1,
   predicate = NA_character_
 ) {
-  tbl <- city_stats(
+  tbl <- stats(
     state,
     city,
     col,
@@ -286,7 +286,7 @@ stats_all <- function(
 ) {
   opp_available() %>%
   par_pmap(function(state, city) {
-    city_stats(
+    stats(
       state,
       city,
       col,

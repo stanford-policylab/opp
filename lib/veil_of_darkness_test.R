@@ -120,6 +120,7 @@ veil_of_darkness_test <- function(
   )
 
   print("composing plots...")
+  # TODO(danj): reenable when finished running in parallel
   # plots <- compose_vod_plots(tbl)
   plots <- list()
 
