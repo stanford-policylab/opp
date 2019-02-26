@@ -217,7 +217,7 @@ compose_vod_plots <- function(tbl) {
   summarize(
     minority_total = sum(is_minority_demographic),
     majority_total = sum(!is_minority_demographic),
-    proportion_minority = minority_total / (minority_total + majority_total),
+    proportion_minority = minority_total / (minority_total + majority_total)
   ) %>%
   group_by(city_state) %>%
   do(

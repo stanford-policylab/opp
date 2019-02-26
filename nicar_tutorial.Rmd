@@ -713,7 +713,6 @@ mod <- glm(
 
 summary(mod)$coefficients["is_darkTRUE", c("Estimate", "Std. Error")]
 exp(summary(mod)$coefficients["is_darkTRUE", "Estimate"])
-exp(confint(mod, parm = "is_darkTRUE"))
 ```
 
 TODO(amyshoe): Interpret model results
@@ -727,7 +726,7 @@ mod <- glm(
 )
 
 summary(mod)$coefficients["is_darkTRUE", c("Estimate", "Std. Error")]
-# confint(mod, parm = "is_darkTRUE")
+exp(summary(mod)$coefficients["is_darkTRUE", "Estimate"])
 ```
 
 ### Caveats on the Veil of Darkness test

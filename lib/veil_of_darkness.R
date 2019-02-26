@@ -220,6 +220,7 @@ veil_of_darkness_states <- function() {
   tbl <-
     tbl %>% #filter(state %in% c("CT", "NY")) %>% 
     select(state, city) %>%
+    unique() %>% 
     opp_load_all_clean_data() %>%
     filter(
       type == "vehicular",
@@ -255,51 +256,73 @@ veil_of_darkness_states <- function() {
       tbl, 
       by = c("state", "city", "county_name")
     )
+    
+  # bind_rows(
+  #   par_pmap(
+  #     tibble(degree = 1:6),
+  #     function(degree) {
+  #       
+  #       without <- summary(veil_of_darkness_test(
+  #         tbl,
+  #         state,
+  #         # NOTE: use county centers instead of stop lat/lng since sunset times
+  #         # don't vary that much within a county and it speeds things up
+  #         lat_col = center_lat,
+  #         lng_col = center_lng,
+  #         spline_degree = degree
+  #       )$results$model)$coefficients[2, 1:2]
+  #       
+  #       with <- summary(veil_of_darkness_test(
+  #         tbl,
+  #         state,
+  #         county_name,
+  #         lat_col = center_lat,
+  #         lng_col = center_lng,
+  #         spline_degree = degree
+  #       )$results$model)$coefficients[2, 1:2]
+  #       
+  #       bind_rows(
+  #         without,
+  #         with
+  #       ) %>%
+  #         rename(
+  #           is_dark = Estimate,
+  #           std_error = `Std. Error`
+  #         ) %>%
+  #         mutate(
+  #           data = c("all", "county", "county"),
+  #           controls = c(
+  #             "time + state",
+  #             "time + state + county",
+  #             "time + state + county"
+  #           ),
+  #           spline_degree = degree
+  #         )
+  #     }
+  #   )
+  # )
   
-  bind_rows(
-    par_pmap(
-      tibble(degree = 1:6),
-      function(degree) {
         
-        without <- summary(veil_of_darkness_test(
+  without <- summary(veil_of_darkness_test(
           tbl,
           state,
           # NOTE: use county centers instead of stop lat/lng since sunset times
           # don't vary that much within a county and it speeds things up
           lat_col = center_lat,
           lng_col = center_lng,
-          spline_degree = degree
+          spline_degree = 6
         )$results$model)$coefficients[2, 1:2]
         
-        with <- summary(veil_of_darkness_test(
+  with <- summary(veil_of_darkness_test(
           tbl,
           state,
           county_name,
           lat_col = center_lat,
           lng_col = center_lng,
-          spline_degree = degree
+          spline_degree = 6
         )$results$model)$coefficients[2, 1:2]
-        
-        bind_rows(
-          without,
-          with
-        ) %>%
-          rename(
-            is_dark = Estimate,
-            std_error = `Std. Error`
-          ) %>%
-          mutate(
-            data = c("all", "county", "county"),
-            controls = c(
-              "time + state",
-              "time + state + county",
-              "time + state + county"
-            ),
-            spline_degree = degree
-          )
-      }
-    )
-  )
+  
+  list(state = without, county = with)
 }
 
 
