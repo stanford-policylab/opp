@@ -215,16 +215,17 @@ veil_of_darkness_cities_daylight_savings <- function() {
 }
 
 
-veil_of_darkness_states <- function() {
+veil_of_darkness_states <- function(output_dir = NULL) {
   # NOTE: all of these places have date and time at least 95% of the time and
   # subject_race at least 80% of the time
   # NOTE: IL, NJ, RI, VT are elligible too, but geocoding is nontrivial, 
   # because county isn't present
   tbl <- read_rds(here::here("data", "state_county_geocodes.rds"))
   
-  all_data <-
+  data <-
     tbl %>% 
     select(state, city) %>%
+    unique() %>%
     opp_load_all_clean_data() %>% 
     filter(
       type == "vehicular",
@@ -259,70 +260,66 @@ veil_of_darkness_states <- function() {
   
   print("data loaded")
   
-  all_data <-
-    all_data %>% 
+  data <-
+    data %>% 
     left_join(
       tbl %>% rename(county_state = loc), 
       by = c("state", "city", "county_name")
     ) %>% 
-    filter(county_state %in% 
-             eligible_sgs(all_data)#, max_counties_per_state = 20)
+    filter(
+      county_state %in% eligible_counties(
+        ., 
+        min_stops_per_race = 1000,
+        max_counties_per_state = 20
+      )
     )
   
-  # bind_rows(
-  #   par_pmap(
-  #     tibble(interact = c(T, F)),
-  #     function(interact) {
-    print("Starting vod, without subgeo")
-    
-        without_subgeo <- summary(veil_of_darkness_test(
-          d,
-          state,
-          # NOTE: use county centers instead of stop lat/lng since sunset times
-          # don't vary that much within a county and it speeds things up
-          lat_col = center_lat,
-          lng_col = center_lng,
-          spline_degree = 6,
-          interact = F
-        )$results$model)$coefficients[2, 1:2]
-        
-        without_subgeo %>% write_rds(here::here("cache", "vod_1krace_no_int_no_subgeo.rds"))
-        
-      print("Starting vod, with subgeo")
-        
-        with_subgeo <- summary(veil_of_darkness_test(
-          tbl,
-          county_state,
-          lat_col = center_lat,
-          lng_col = center_lng,
-          spline_degree = 6,
-          interact = F
-        )$results$model)$coefficients[2, 1:2]
-        
-        with_subgeo %>% write_rds(here::here("cache", "vod_1krace_no_int_w_subgeo.rds"))
-  #       bind_rows(
-  #         without_subgeo,
-  #         with_subgeo
-  #       ) %>%
-  #         rename(
-  #           is_dark = Estimate,
-  #           std_error = `Std. Error`
-  #         ) %>%
-  #         mutate(
-  #           data = c(
-  #             "county",
-  #             "county"
-  #           ),
-  #           controls = c(
-  #             "time, state",
-  #             "time, county_state"
-  #           ),
-  #           spline_degree = 6,
-  #           interact = interact
-  #         )
-  #     }
-  #   )
-  # ) 
+  write_rds(data, here::here("cache", "vod_state_data.rds"))
+  
+  coefficients <- bind_rows(
+    par_pmap(
+      mc.cores = 3,
+      tibble(interact = c(T, F)),
+      function(interact, degree = 6) {
+        bind_rows(
+          vod_coef(data, state, degree, interact),
+          vod_coef(data, county_state, degree, interact)
+        ) %>%
+          rename(
+            is_dark = Estimate,
+            std_error = `Std. Error`
+          ) %>%
+          mutate(
+            controls = c(
+              "time, state",
+              "time, county_state"
+            ),
+            spline_degree = degree,
+            interact = interact
+          )
+      }
+    )
+  )
+  
+  # plots <-
+  #   prepare_vod_data(
+  #     tbl,
+  #     city_state,
+  #     lat_col = center_lat,
+  #     lng_col = center_lng
+  #   )$data %>%
+  #   compose_vod_plots()
+  plots <- list()
+  
+  results <- list(
+    coefficients = coefficients,
+    plots = plots
+  )
+  
+  if (!is.null(output_dir))
+    saveRDS(results, file.path(output_dir, "vod.rds"))
+  
+  results
 }
 
 # selects the top `max_counties` number of counties with at least `min_stops` 
@@ -330,38 +327,38 @@ veil_of_darkness_states <- function() {
 eligible_counties <- function(
   tbl,
   state_col = state,
-  sub_geography_col = county_name, 
+  county_col = county_name, 
   unique_geo_col = county_state, 
   demographic_col = subject_race,
   eligible_demographics = c("white", "black"),
-  min_stops = 1000,
-  max_counties = 50
+  min_stops_per_race = 1000,
+  max_counties_per_state = 50
 ) {
   state_colq <- enquo(state_col)
-  sub_geography_colq <- enquo(sub_geography_col)
-  unique_geo_colq <- enquo(county_state_col)
+  county_colq <- enquo(county_col)
+  unique_geo_colq <- enquo(unique_geo_col)
   demographic_colq <- enquo(demographic_col)
 
-  sub_geographies_with_sufficient_stops <-
+  counties_with_sufficient_stops <-
     tbl %>%
     filter(!!demographic_colq %in% eligible_demographics) %>% 
-    count(!!county_state_colq, !!demographic_colq) %>% 
+    count(!!unique_geo_colq, !!demographic_colq) %>% 
     spread(!!demographic_colq, n, fill = 0) %>% 
     filter_at(
       vars(2:(length(eligible_demographics) + 1)), 
-      all_vars(. > min_stops)
+      all_vars(. > min_stops_per_race)
     ) %>% 
-    pull(!!county_state_colq)
+    pull(!!unique_geo_colq)
   
   tbl %>%
     filter(
-      !!county_state_colq %in% sub_geographies_with_sufficient_stops
+      !!unique_geo_colq %in% counties_with_sufficient_stops
     ) %>%
-    count(!!state_colq, !!sub_geography_colq, !!county_state_colq) %>%
-    top_n(max_counties, n) %>% 
-    pull(!!county_state_colq)
+    count(!!state_colq, !!county_colq, !!unique_geo_colq) %>%
+    group_by(!!state_colq) %>% 
+    top_n(max_counties_per_state, n) %>% 
+    pull(!!unique_geo_colq)
 }
-
 
 veil_of_darkness_states_daylight_savings <- function() {
   # TODO(amyshoe)
