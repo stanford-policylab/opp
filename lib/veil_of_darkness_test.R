@@ -247,7 +247,9 @@ train_vod_model <- function(
 }
 
 
-compose_vod_plots <- function(tbl) {
+compose_vod_plots <- function(tbl, geo_col = city_state) {
+  geo_colq <- enquo(geo_col)
+  geo_colname <- quo_name(geo_colq)
   # NOTE: limit time to 5:45 PM to 7:15 PM since data is sparse outside this
   # window; i.e. for a 5:45 PM sunset, there are relatively fewer data points
   # for days when the sunsets before 5:45 PM relative to after 5:45 PM; the
@@ -278,7 +280,7 @@ compose_vod_plots <- function(tbl) {
     )
   ) %>%
   group_by(
-    city_state,
+    !!geo_colq,
     quarter_hour_readable,
     quarter_hour_minute_since_sunset
   ) %>%
@@ -287,7 +289,7 @@ compose_vod_plots <- function(tbl) {
     majority_total = sum(!is_minority_demographic),
     proportion_minority = minority_total / (minority_total + majority_total)
   ) %>%
-  group_by(city_state) %>%
+  group_by(!!geo_colq) %>%
   do(
     plot = 
       ggplot(
@@ -307,10 +309,10 @@ compose_vod_plots <- function(tbl) {
       ylab("Proportion Minority") +
       coord_cartesian(xlim = c(-60, 60)) +
       theme(legend.title = element_blank()) +
-      ggtitle(unique(.$city_state))
+      ggtitle(unique(pull(., !!geo_colq)))
   ) %>%
   translator_from_tbl(
-    "city_state",
+    geo_colname,
     "plot"
   )
 }
