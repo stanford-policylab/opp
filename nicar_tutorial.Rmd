@@ -621,14 +621,18 @@ sunset_times <-
   ) %>% 
   select(date, lat, lon) %>%
   distinct() %>%
-  mutate(
-    sunset = format(
-      getSunlightTimes(data = ., keep = c("sunset"), tz = tz)$sunset,
-      "%H:%M:%S"
-    ), 
-    sunset_minute = time_to_minute(sunset)
+  getSunlightTimes(
+    data = ., 
+    keep = c("sunset", "dusk"), 
+    tz = tz
   ) %>% 
-  select(date, sunset, sunset_minute)
+  mutate_at(vars("sunset", "dusk"), ~format(., "%H:%M:%S")) %>% 
+  mutate(
+    sunset_minute = time_to_minute(sunset),
+    dusk_minute = time_to_minute(dusk),
+    date = ymd(str_sub(date, 1, 10))
+  ) %>% 
+  select(date, sunset, dusk, ends_with("minute"))
 
 vod_stops <- 
   stops %>% 
@@ -648,6 +652,7 @@ vod_stops <-
     # NOTE: filter to get only the intertwilight period
     minute >= min_sunset_minute,
     minute <= max_sunset_minute,
+    !(minute > sunset_minute & minute < dusk_minute),
     subject_race %in% c("black", "white")
   )
 ```
