@@ -97,7 +97,7 @@ disparity_plot <- function(
 
   data %>%
     ggplot(aes_string("majority_rate", "minority_rate")) +
-    geom_point(aes_string(size = size_colname), shape = 1, alpha = 0.5) +
+    geom_point(aes_string(size = size_colname), alpha = 0.8, shape = 1) +
     geom_abline(linetype = "dashed") +
     facet_grid(cols = vars(minority_demographic)) +
     scale_x_continuous(
@@ -110,7 +110,7 @@ disparity_plot <- function(
       limits = axis_limits,
       expand = c(0,0)
     ) +
-    scale_size_area(labels = scales::comma) +
+    scale_size_area(labels = scales::comma, max_size = 15) +
     coord_fixed() +
     labs(
       x = str_c(str_to_title(majority_demographic), " ", axis_title),
