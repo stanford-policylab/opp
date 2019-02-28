@@ -35,8 +35,8 @@ veil_of_darkness_test <- function(
   demographic_col = subject_race,
   date_col = date,
   time_col = time,
-  lat_col = lat,
-  lng_col = lng,
+  lat_col = center_lat,
+  lng_col = center_lng,
   minority_demographic = "black",
   majority_demographic = "white",
   spline_degree = 6,
@@ -203,8 +203,8 @@ calculate_sunset_times <- function(
     format(sunset_utc, "%H:%M:%S", tz = tz)
   }
 
-  tbl$pre_sunset <- unlist(map2(t$sunset_utc, t$tz, to_local_time))
-  tbl$sunset <- unlist(map2(t$dusk_utc, t$tz, to_local_time))
+  tbl$pre_sunset <- unlist(map2(tbl$sunset_utc, tbl$tz, to_local_time))
+  tbl$sunset <- unlist(map2(tbl$dusk_utc, tbl$tz, to_local_time))
 
   tbl %>% 
     select(date, !!latq, !!lngq, pre_sunset, sunset)

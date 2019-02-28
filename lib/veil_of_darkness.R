@@ -2,7 +2,7 @@ source("opp.R")
 source("veil_of_darkness_test.R")
 
 
-veil_of_darkness_cities <- function(output_dir = NULL) {
+veil_of_darkness_cities <- function(output_file = NULL) {
   # NOTE: all of these places have date and time at least 95% of the time and
   # subject_race at least 80% of the time
   tbl <- tribble(
@@ -147,7 +147,8 @@ veil_of_darkness_cities <- function(output_dir = NULL) {
   coefficients <- bind_rows(
     par_pmap(
       mc.cores = 3,
-      tibble(degree = rep(1:6, 2), interact = c(rep(T, 6), rep(F, 6))),
+      # tibble(degree = rep(1:6, 2), interact = c(rep(T, 6), rep(F, 6))),
+      tibble(degree = rep(6, 2), interact = c(T,F)),
       function(degree, interact) {
         bind_rows(
           vod_coef(tbl, city_state, degree, interact),
@@ -191,8 +192,8 @@ veil_of_darkness_cities <- function(output_dir = NULL) {
     plots = plots
   )
 
-  if (!is.null(output_dir))
-    saveRDS(results, file.path(output_dir, "vod_cities.rds"))
+  if (!is.null(output_file))
+    write_rds(results, output_file)
 
   results
 }
@@ -218,7 +219,7 @@ veil_of_darkness_cities_daylight_savings <- function() {
 }
 
 
-veil_of_darkness_states <- function(output_dir = NULL, from_cache = T) {
+veil_of_darkness_states <- function(output_file = NULL, from_cache = T) {
   # NOTE: all of these places have date and time at least 95% of the time and
   # subject_race at least 85% of the time
   # NOTE: IL, NJ, RI, VT are elligible too, but geocoding is nontrivial, 
@@ -284,7 +285,8 @@ veil_of_darkness_states <- function(output_dir = NULL, from_cache = T) {
   coefficients <- bind_rows(
     par_pmap(
       mc.cores = 3,
-      tibble(degree = rep(1:6, 2), interact = c(rep(T, 6), rep(F, 6))),
+      # tibble(degree = rep(1:6, 2), interact = c(rep(T, 6), rep(F, 6))),
+      tibble(degree = rep(6, 2), interact = c(T, F)),
       function(interact, degree = 6) {
         bind_rows(
           vod_coef(data, state, degree, interact),
@@ -309,7 +311,7 @@ veil_of_darkness_states <- function(output_dir = NULL, from_cache = T) {
   # plots <-
   #   prepare_vod_data(
   #     tbl,
-  #     city_ state,
+  #     city_state,
   #     lat_col = center_lat,
   #     lng_col = center_lng
   #   )$data %>%
@@ -321,8 +323,8 @@ veil_of_darkness_states <- function(output_dir = NULL, from_cache = T) {
     plots = plots
   )
   
-  if (!is.null(output_dir))
-    saveRDS(results, file.path(output_dir, "vod_states.rds"))
+  if (!is.null(output_file))
+    write_rds(results, output_file)
   
   results
 }
