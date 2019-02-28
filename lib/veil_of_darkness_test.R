@@ -50,29 +50,31 @@ veil_of_darkness_test <- function(
   lat_colq = enquo(lat_col)
   lng_colq = enquo(lng_col)
 
+
   print("preparing data...")
   d <- prepare_vod_data(
-    tbl,
-    !!!control_colqs,
-    demographic_col = !!demographic_colq,
-    date_col = !!date_colq,
-    time_col = !!time_colq,
-    lat_col = !!lat_colq,
-    lng_col = !!lng_colq,
-    minority_demographic = minority_demographic,
-    majority_demographic = majority_demographic
+      tbl,
+      !!!control_colqs,
+      demographic_col = !!demographic_colq,
+      date_col = !!date_colq,
+      time_col = !!time_colq,
+      lat_col = !!lat_colq,
+      lng_col = !!lng_colq,
+      minority_demographic = minority_demographic,
+      majority_demographic = majority_demographic
   )
-
+  
   print("training model...")
   model <- train_vod_model(
-    d$data,
-    !!!control_colqs,
-    demographic_indicator_col = is_minority_demographic,
-    darkness_indicator_col = is_dark,
-    time_col = rounded_minute,
-    degree = spline_degree,
-    interact = interact
+      d$data,
+      !!!control_colqs,
+      demographic_indicator_col = is_minority_demographic,
+      darkness_indicator_col = is_dark,
+      time_col = rounded_minute,
+      degree = spline_degree,
+      interact = interact
   )
+   
 
   plots <- list()
   if (plot) {
@@ -94,8 +96,8 @@ prepare_vod_data <- function(
   demographic_col = subject_race,
   date_col = date,
   time_col = time,
-  lat_col = lat,
-  lng_col = lng,
+  lat_col = center_lat,
+  lng_col = center_lng,
   minority_demographic = "black",
   majority_demographic = "white"
 ) {
@@ -124,8 +126,9 @@ prepare_vod_data <- function(
   tbl <-
     d$data %>%
     filter(
-      hour(hms(time)) > 16, # 4 PM
-      hour(hms(time)) < 23, # 11 PM
+      hour(hms(time)) > 15, # 3 PM
+      hour(hms(time)) < 22, # 10 PM
+      !!demographic_colq %in% c(minority_demographic, majority_demographic)
     )
 
   sunset_times <- calculate_sunset_times(
@@ -142,8 +145,9 @@ prepare_vod_data <- function(
     ) %>%
     mutate(
       minute = time_to_minute(time),
+      pre_sunset_minute = time_to_minute(pre_sunset),
       sunset_minute = time_to_minute(sunset),
-      is_dark = minute > sunset_minute,
+      is_dark = minute >= sunset_minute,
       min_sunset_minute = min(sunset_minute),
       max_sunset_minute = max(sunset_minute)
     ) %>%
@@ -151,7 +155,8 @@ prepare_vod_data <- function(
       # NOTE: filter to get only the intertwilight period
       minute >= min_sunset_minute,
       minute <= max_sunset_minute,
-      !!demographic_colq %in% c(minority_demographic, majority_demographic)
+      # NOTE: remove the ~30min ambiguously lit period between sunset and dusk
+      !(minute > pre_sunset_minute & minute < sunset_minute)
     ) %>%
     mutate(
       is_minority_demographic = !!demographic_colq == minority_demographic,
@@ -164,8 +169,8 @@ prepare_vod_data <- function(
 calculate_sunset_times <- function(
   tbl,
   date_col = date,
-  lat_col = lat,
-  lng_col = lng
+  lat_col = center_lat,
+  lng_col = center_lng
 ) {
   dateq <- enquo(date_col)
   latq <- enquo(lat_col)
@@ -184,18 +189,25 @@ calculate_sunset_times <- function(
     select(!!dateq, !!latq, !!lngq) %>%
     distinct() %>%
     left_join(tzs) %>%
-    mutate(lat = !!latq, lon = !!lngq) %>%
+    mutate(lat = !!latq, lon = !!lngq) %>% 
     mutate(
-      sunset_utc = getSunlightTimes(data = ., keep = c("sunset"))$sunset
+      sunset_utc = getSunlightTimes(data = ., keep = c("sunset"))$sunset,
+      date = ymd(str_sub(!!dateq, 1, 10))
+    ) %>% 
+    mutate(
+      dusk_utc = getSunlightTimes(data = ., keep = c("dusk"))$dusk,
+      date = ymd(str_sub(!!dateq, 1, 10))
     )
-
+  
   to_local_time <- function(sunset_utc, tz) {
     format(sunset_utc, "%H:%M:%S", tz = tz)
   }
 
-  tbl$sunset <- unlist(par_pmap(select(tbl, sunset_utc, tz), to_local_time))
+  tbl$pre_sunset <- unlist(map2(t$sunset_utc, t$tz, to_local_time))
+  tbl$sunset <- unlist(map2(t$dusk_utc, t$tz, to_local_time))
 
-  select(tbl, !!dateq, !!latq, !!lngq, sunset)
+  tbl %>% 
+    select(date, !!latq, !!lngq, pre_sunset, sunset)
 }
 
 
@@ -223,7 +235,7 @@ train_vod_model <- function(
     group_by(
       !!darkness_indicator_colq,
       !!time_colq,
-      !!!control_colqs,
+      !!!control_colqs
     ) %>%
     summarize(
       n = n(),
