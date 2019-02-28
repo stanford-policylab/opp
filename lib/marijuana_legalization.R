@@ -4,6 +4,27 @@ source(here::here("lib", "analysis_common.R"))
 library(rstan)
 
 
+ELIGIBLE_STATES <- tribble(
+  ~state, ~city,
+  # test
+  "CO", "Statewide",
+  "WA", "Statewide",
+  # control
+  "AZ", "Statewide",
+  "CA", "Statewide",
+  "FL", "Statewide",
+  "MA", "Statewide",
+  "MT", "Statewide",
+  "NC", "Statewide",
+  "OH", "Statewide",
+  "RI", "Statewide",
+  "SC", "Statewide",
+  "TX", "Statewide",
+  "VT", "Statewide",
+  "WI", "Statewide"
+)
+
+
 marijuana_legalization_analysis <- function(output_dir = NULL) {
   tbl <- load()
   test <- filter(tbl, state %in% c("CO", "WA"))
@@ -30,27 +51,7 @@ marijuana_legalization_analysis <- function(output_dir = NULL) {
 
 
 load <- function() {
-  tribble(
-    ~state, ~city,
-    # test
-    "CO", "Statewide",
-    "WA", "Statewide",
-    # control
-    "AZ", "Statewide",
-    "CA", "Statewide",
-    "FL", "Statewide",
-    "MA", "Statewide",
-    "MT", "Statewide",
-    "NC", "Statewide",
-    "OH", "Statewide",
-    "RI", "Statewide",
-    "SC", "Statewide",
-    "TX", "Statewide",
-    "VT", "Statewide",
-    "WI", "Statewide"
-  ) %>%
-  opp_load_all_clean_data(
-  ) %>%
+  opp_load_all_clean_data(ELIGIBLE_STATES) %>%
   filter(
     type == "vehicular",
     subject_race %in% c("black", "white", "hispanic"),

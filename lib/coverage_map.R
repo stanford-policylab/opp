@@ -47,7 +47,8 @@ city_coverage <- read_csv(here::here("data", "city_coverage_geocodes.csv"))
 dir_create(here::here("plots"))
 # pdf(here::here("plots", "coverage_map.pdf"))
 png(here::here("plots", "coverage_map.png"), width=1600, height=900)
-map( database = "state",
+map(
+  database = "state",
   col = c("white", "lightblue3")[1 + (state_names %in% state_coverage)],
   fill=T,
   namesonly=T

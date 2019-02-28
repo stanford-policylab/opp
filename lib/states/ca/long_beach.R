@@ -77,7 +77,7 @@ clean <- function(d, helpers) {
       vehicle_year = Year,
       officer_age = `Officer Age`,
       officer_years_of_service = `Years of Service`,
-      department_id = `Officer DID`
+      officer_id = `Officer DID`
     ) %>%
     mutate(
       date = parse_date(Date, "%m/%d/%Y"),
