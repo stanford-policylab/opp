@@ -14,7 +14,7 @@ from utils import (
 )
 
 
-def make():
+def make(add_comments):
     # r_data_readme = os.path.join(opp_root_dir(), 'lib', 'data_readme.R')
     # sub.run(['Rscript', r_data_readme])
     tables = pd.read_csv('/tmp/data_readme.csv')
@@ -26,11 +26,11 @@ def make():
             print('Skipping %s, %s' % (r['city'], r['state']))
             continue
         r['table'] = tables.loc[idx, 'predicated_null_rates'].tolist()[0]
-    write_md(results)
+    write_md(results, add_comments)
     return results
 
 
-def write_md(results):
+def write_md(results, add_comments):
     with open('data_readme.md', 'w') as f:
         for r in results:
             if not 'table' in r:
@@ -51,9 +51,10 @@ def write_md(results):
                     'comment': text.strip(),
                     'code': m['after'] if 'after' in m else '',
                 })
-            write_list(f, 'Validation', d['validation'])
-            write_list(f, 'Notes', d['note'])
-            write_list(f, 'Issues', d['todo'])
+            if add_comments:
+                write_list(f, 'Validation', d['validation'])
+                write_list(f, 'Notes', d['note'])
+                write_list(f, 'Issues', d['todo'])
             f.write('\n\n')
     return
 
@@ -79,9 +80,10 @@ def parse_args(argv):
         prog=argv[0],
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
+    parser.add_argument('-a', '--add_comments')
     return parser.parse_args(argv[1:])
 
 
 if __name__ == '__main__':
     args = parse_args(sys.argv) 
-    make()
+    make(args.add_comments)

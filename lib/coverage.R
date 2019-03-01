@@ -2,12 +2,11 @@ library(here)
 library(lubridate)
 source(here::here("lib", "opp.R"))
 source(here::here("lib", "analysis_common.R"))
-
+source(here::here("lib", "standards.R"))
 
 
 coverage_for_paper <- function(use_cache = T) {
-  coverage(use_cache) %>%
-  inner_join(locations_used_in_analyses()) %>%
+  coverage(use_cache, for_paper = T) %>%
   mutate_if(
     function(v) all(is.numeric(v) & v <= 1.0, na.rm = T), 
     # NOTE: put dot if coverage above 70%
@@ -27,7 +26,7 @@ coverage_for_paper <- function(use_cache = T) {
     years,
     date,
     time,
-    geodivision,
+    subgeography,
     subject_race,
     subject_age,
     subject_sex,
@@ -41,7 +40,7 @@ coverage_for_paper <- function(use_cache = T) {
     `Date Range` = years,
     `Date` = date,
     `Time` = time,
-    `Geographic Division` = geodivision,
+    Subgeography = subgeography,
     `Subject Race` = subject_race,
     `Subject Age` = subject_age,
     `Subject Sex` = subject_sex,
@@ -59,32 +58,33 @@ coverage_for_paper <- function(use_cache = T) {
 }
 
 
-coverage <- function(use_cache = T) {
+coverage <- function(use_cache = T, for_paper = F) {
   cache_path <- here::here("cache", "coverage.rds")
-  if (use_cache & file.exists(cache_path)) {
-    cvg <- readRDS(cache_path)
+  paper_cache_path <- here::here("cache", "paper_coverage.rds")
+  path <- if (for_paper) paper_cache_path else cache_path
+  if (use_cache & file.exists(path)) {
+    cvg <- readRDS(path)
   } else {
     cvg <-
-      opp_apply(calculate_coverage) %>%
+      opp_apply(
+        function(state, city) { calculate_coverage(state, city, for_paper) },
+        locations_used_in_analyses()
+      ) %>%
       bind_rows() %>%
       arrange(state, city)
-    saveRDS(cvg, here::here("cache", "coverage.rds"))
+    saveRDS(cvg, path)
   }
   cvg
 }
 
 
-calculate_coverage <- function(state, city) {
+calculate_coverage <- function(state, city, for_paper = T) {
   # NOTE: for coverage we filter to vehicular stops
   tbl <- load_coverage_data(state, city) %>%
-    filter(
-      # TODO: total
-      veh_or_ped == "vehicular"
-      # NOTE: filter only for paper
-      year(date) >= 2011,
-      year(date) <= 2017
-    )
-
+    filter(veh_or_ped == "vehicular")
+  if (for_paper) {
+    tbl <- filter(tbl, year(date) >= 2011, year(date) <= 2017)
+  }
   date_range = range(tbl$date, na.rm = TRUE)
   c(
     list(
@@ -95,12 +95,8 @@ calculate_coverage <- function(state, city) {
       start_date = date_range[1],
       end_date = date_range[2]
     ),
-    bind_cols(
-      select(tbl, -contraband_found) %>% summarize_all(coverage_rate),
-      select(tbl, search_conducted, contraband_found) %>%
-        filter(search_conducted) %>%
-        summarize(contraband_found = coverage_rate(contraband_found))
-    )
+    predicated_coverage_rates(tbl, reporting_predicated_columns) %>%
+      spread(feature, `coverage rate`)
   )
 }
 
@@ -168,26 +164,14 @@ load_coverage_data <- function(state, city) {
     rename = "violation_desc"
   )
 
-  geodivision <- select_least_na(
+
+  subgeography <- select_least_na(
     tbl,
-    c(
-      "beat",
-      "district",
-      "subdistrict",
-      "division",
-      "subdivision",
-      "police_grid_number",
-      "precinct",
-      "region",
-      "reporting_area",
-      "sector",
-      "subsector",
-      "service_area",
-      "zone",
-      # NOTE: this is the only one that isn't police related
-      "county_name"
-    ),
-    rename = "geodivision"
+    if (city == "Statewide")
+      quos_names(state_subgeographies)
+    else
+      quos_names(city_subgeographies),
+    rename = "subgeography"
   )
 
   bind_cols(
@@ -195,6 +179,6 @@ load_coverage_data <- function(state, city) {
     vehicle_desc,
     subject_age,
     violation_desc,
-    geodivision
+    subgeography
   )
 }

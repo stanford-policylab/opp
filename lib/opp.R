@@ -162,8 +162,8 @@ opp_simplify_eligibility <- function(tbl) {
     tbl,
     race_contra_subg_where_search = if_else(
       city == "Statewide",
-      pmax(!!!state_sub_geographies, na.rm = T),
-      pmax(!!!city_sub_geographies, na.rm = T)
+      pmax(!!!state_subgeographies, na.rm = T),
+      pmax(!!!city_subgeographies, na.rm = T)
     )
   ) %>%
   select(
@@ -242,10 +242,10 @@ opp_tbl_from_eligible_subset <- function(eligible_subset_tbl) {
       )
 
     if (city == "Statewide") {
-      state_regex <- str_c(quos_names(state_sub_geographies), collapse = "|")
+      state_regex <- str_c(quos_names(state_subgeographies), collapse = "|")
       sub_geographies <- select(tbl, matches(state_regex))
     } else {
-      city_regex <- str_c(quos_names(city_sub_geographies), collapse = "|")
+      city_regex <- str_c(quos_names(city_subgeographies), collapse = "|")
       sub_geographies <- select(tbl, matches(city_regex))
     }
     sub_geography <- sub_geographies %>%

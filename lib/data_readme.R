@@ -9,7 +9,8 @@ data_readme <- function() {
     tribble(
       ~state, ~city, ~predicated_null_rates,
       state, city, as.character(kable(
-        predicated_null_rates(tbl, reporting_predicated_columns),
+        predicated_coverage_rates(tbl, reporting_predicated_columns) %>%
+          mutate(`coverage rate` = pretty_percent(`coverage rate`, 0)),
         format='html'
       ))
     )

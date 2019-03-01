@@ -97,7 +97,8 @@ by_type <- group_by(data, type) %>% count
 by_type_table <- kable(by_type)
 
 null_rates_table <- kable(
-  predicated_null_rates(data, reporting_predicated_columns),
+  predicated_null_rates(data, reporting_predicated_columns) %>%
+  mutate(`null rate` = pretty_percent(`null rate`, 2)),
   align = c("l", "r")
 )
 

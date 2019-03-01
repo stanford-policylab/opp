@@ -140,6 +140,13 @@ pct_tbl <- function(v, colnames = c("name", "pct")) {
 }
 
 
+predicated_coverage_rates <- function(tbl, pred_v) {
+  predicated_null_rates(tbl, pred_v) %>%
+  mutate(`coverage rate` = 1 - `null rate`) %>%
+  select(feature, `coverage rate`)
+}
+
+
 predicated_null_rates <- function(tbl, pred_v) {
   # NOTE: pred_v is c(target_colname = predicate_colname, ...)
   pnr <- c()
@@ -158,8 +165,7 @@ predicated_null_rates <- function(tbl, pred_v) {
   }
   transpose_one_line_table(
     pnr,
-    colnames = c("features", "null rate"),
-    f = pretty_percent
+    colnames = c("feature", "null rate")
   )
 }
 
@@ -168,7 +174,7 @@ null_rates <- function(tbl) {
   nulls_tbl <- tbl %>% summarize_all(funs(null_rate))
   transpose_one_line_table(
     nulls_tbl,
-    colnames = c("features", "null rate"),
+    colnames = c("feature", "null rate"),
     f = pretty_percent
   )
 }
@@ -283,8 +289,8 @@ transpose_tbl <- function(tbl) {
 }
 
 
-pretty_percent <- function(v) {
-  str_c(formatC(100 * v, format = "f", digits = 2), "%")
+pretty_percent <- function(v, d = 2) {
+  str_c(formatC(100 * v, format = "f", digits = d), "%")
 }
 
 
