@@ -3,11 +3,16 @@ title: "Open Policing Project: Coverage Rates"
 classoption: landscape
 ---
 
+```{r setup, echo = FALSE}
+opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
 ```{r echo = FALSE, message = FALSE, warning = FALSE}
 library(kableExtra)
 library(here)
 source(here::here("lib", "coverage.R"))
 cvg <- coverage()
+cvg <- mutate_if(function(v) is.numeric(v) & all(v <= 1.0), pretty_percent)
 ct <- filter(cvg, city != "Statewide")
 kable(ct, row.names = TRUE, format = "latex", booktabs = TRUE, align = 'r') %>%
 kable_styling(latex_options = "scale_down")

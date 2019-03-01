@@ -1024,3 +1024,17 @@ add_prefix <- function(v, prefix, skip = c()) {
   v[idx] <- str_replace(v[idx], "^", prefix)
   v
 }
+
+
+source_non_interactive <- function(path) {
+  # NOTE: this is a hack so that when one script is executed and it sources
+  # another executible script to use some functions, it doesn't also run that
+  # second script; this requires all executibles to have a clause like 
+  # if (!interactive() & !exists("driver")) { <do stuff> }
+  driver_exists <- exists("driver")
+  if (!driver_exists)
+    driver <<- "___tmp"
+  source(path)
+  if (!driver_exists)
+    rm(driver, inherits = T)
+}

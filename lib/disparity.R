@@ -4,6 +4,35 @@ source(here::here("lib", "outcome_test.R"))
 source(here::here("lib", "threshold_test.R"))
 source(here::here("lib", "disparity_plot.R"))
 
+
+ELIGIBLE_STATES <- tribble(
+  ~state, ~city,
+  # "AZ", "Statewide",
+  "CO", "Statewide",
+  "CT", "Statewide",
+  "IL", "Statewide",
+  # "MA", "Statewide",
+  "NC", "Statewide",
+  # "OH", "Statewide",
+  "RI", "Statewide",
+  "SC", "Statewide",
+  "TX", "Statewide",
+  "WA", "Statewide",
+  "WI", "Statewide"
+)
+
+
+ELIGIBLE_CITIES <- tribble(
+  ~state, ~city,
+  "CA", "San Diego",
+  "CA", "San Francisco",
+  "LA", "New Orleans",
+  "PA", "Philadelphia",
+  "TN", "Nashville",
+  "TX", "San Antonio"
+)
+
+
 main <- function() {
   dir_create(here::here("cache"))
   args <- get_disparity_args()
@@ -100,16 +129,7 @@ get_disparity_args <- function() {
 }
 
 load_eligible_city_disparity_data <- function() {
-  eligible_cities <- tribble(
-    ~state, ~city,
-    "CA", "San Diego",
-    "CA", "San Francisco",
-    "LA", "New Orleans",
-    "PA", "Philadelphia",
-    "TN", "Nashville",
-    "TX", "San Antonio"
-  )
-  opp_load_all_clean_data(only=eligible_cities) %>%
+  opp_load_all_clean_data(only=ELIGIBLE_CITIES) %>%
     filter(
       ifelse(
         city == "San Diego",
@@ -174,23 +194,8 @@ load_eligible_city_disparity_data <- function() {
 }
 
 load_eligible_state_disparity_data <- function() {
-  eligible_states <- tribble(
-    ~state, ~city,
-    # "AZ", "Statewide",
-    "CO", "Statewide",
-    "CT", "Statewide",
-    "IL", "Statewide",
-    # "MA", "Statewide",
-    "NC", "Statewide",
-    # "OH", "Statewide",
-    "RI", "Statewide",
-    "SC", "Statewide",
-    "TX", "Statewide",
-    "WA", "Statewide",
-    "WI", "Statewide"
-  )
   print("Loading eligible states...")
-  opp_load_all_clean_data(only=eligible_states) %>% 
+  opp_load_all_clean_data(only=ELIGIBLE_STATES) %>% 
     filter(
       # if_else(
       #   # NOTE: old OPP doesn't use AZ because the contraband data is too messy
@@ -471,6 +476,6 @@ plt <- function(d, prefix) {
   p
 }
   
-if (!interactive()) {
+if (!interactive() & !exists("driver")) {
    main()
 }

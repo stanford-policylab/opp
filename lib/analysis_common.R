@@ -2,6 +2,29 @@ library(here)
 library(parallel)
 library(tidyverse)
 library(stringr)
+source(here::here("lib", "utils.R"))
+
+
+locations_used_in_analyses <- function() {
+  bind_rows(
+    locations_in_analysis("veil_of_darkness"),
+    locations_in_analysis("marijuana_legalization"),
+    locations_in_analysis("disparity")
+  ) %>%
+  distinct()
+}
+
+
+locations_in_analysis <- function(analysis_name) {
+  source_non_interactive(here::here("lib", str_c(analysis_name, ".R")))
+  states <- tibble()
+  cities <- tibble()
+  if (exists("ELIGIBLE_STATES"))
+    states <- ELIGIBLE_STATES
+  if (exists("ELIGIBLE_CITIES"))
+    cities <- ELIGIBLE_CITIES
+  bind_rows(states, cities)
+}
 
 
 prepare <- function(

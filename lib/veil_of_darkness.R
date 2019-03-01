@@ -2,45 +2,68 @@ source("opp.R")
 source("veil_of_darkness_test.R")
 
 
+ELIGIBLE_CITIES <- tribble(
+  ~state, ~city,
+  "AZ", "Mesa",
+  "CA", "Bakersfield",
+  "CA", "San Diego",
+  "CA", "San Francisco",
+  "CA", "San Jose",
+  "CO", "Aurora",
+  "CT", "Hartford",
+  "KS", "Wichita",
+  "KY", "Owensboro",
+  "LA", "New Orleans",
+  "MN", "Saint Paul",
+  "NC", "Charlotte",
+  "NC", "Durham",
+  "NC", "Fayetteville",
+  "NC", "Greensboro",
+  "NC", "Raleigh",
+  "ND", "Grand Forks",
+  "NJ", "Camden",
+  "OH", "Cincinnati",
+  "OH", "Columbus",
+  "OK", "Oklahoma City",
+  "OK", "Tulsa",
+  "PA", "Philadelphia",
+  "TN", "Nashville",
+  "TX", "Arlington",
+  "TX", "Plano",
+  "TX", "San Antonio",
+  "VT", "Burlington",
+  "WI", "Madison"
+)
+
+
+ELIGIBLE_STATES <- tribble(
+  ~state, ~city,
+  "AZ", "Statewide",
+  "CT", "Statewide",
+  "FL", "Statewide",
+  "MI", "Statewide",
+  "MT", "Statewide",
+  "ND", "Statewide",
+  "NY", "Statewide",
+  "OH", "Statewide",
+  "TN", "Statewide",
+  "TX", "Statewide",
+  "WI", "Statewide",
+  "WY", "Statewide"
+)
+
+
 veil_of_darkness_cities <- function(output_file = NULL) {
   # NOTE: all of these places have date and time at least 95% of the time and
   # subject_race at least 80% of the time
-  tbl <- tribble(
-    ~state, ~city, ~center_lat, ~center_lng,
-    "AZ", "Mesa", 33.4151843, -111.8314724,
-    "CA", "Bakersfield", 35.393528, -119.043732,
-    "CA", "San Diego", 32.715736, -117.161087,
-    "CA", "San Francisco", 37.7749295, -122.4194155,
-    "CA", "San Jose", 37.3382082, -121.8863286,
-    "CO", "Aurora", 39.7294319, -104.8319195,
-    "CT", "Hartford", 41.763710, -72.685097,
-    "KS", "Wichita", 37.68717609999999, -97.33005299999999,
-    "KY", "Owensboro", 37.7719074, -87.1111676,
-    "LA", "New Orleans", 29.95106579999999, -90.0715323,
-    "MN", "Saint Paul", 44.9537029, -93.0899578,
-    "NC", "Charlotte", 35.2270869, -80.8431267,
-    "NC", "Durham", 35.994034, -78.898621,
-    "NC", "Fayetteville", 35.0526641, -78.87835849999999,
-    "NC", "Greensboro", 36.0726354, -79.7919754,
-    "NC", "Raleigh", 35.7795897, -78.6381787,
-    "ND", "Grand Forks", 47.9252568, -97.0328547,
-    "NJ", "Camden", 39.9259463, -75.1196199,
-    "OH", "Cincinnati", 39.1031182, -84.5120196,
-    "OH", "Columbus", 39.9611755, -82.99879419999999,
-    "OK", "Oklahoma City", 35.4675602, -97.5164276,
-    "OK", "Tulsa", 36.1539816, -95.99277500000001,
-    "PA", "Philadelphia", 39.9525839, -75.1652215,
-    "TN", "Nashville", 36.1626638, -86.7816016,
-    "TX", "Arlington", 32.735687, -97.10806559999999,
-    "TX", "Plano", 33.0198431, -96.6988856,
-    "TX", "San Antonio", 29.4241219, -98.49362819999999,
-    "VT", "Burlington", 44.4758825, -73.21207199999999,
-    "WI", "Madison", 43.0730517, -89.4012302
-  )
+
+  city_geocodes <-
+    read_csv(here::here("data", "city_coverage_geocodes.csv")) %>%
+    separate(loc, c("city", "state"), sep = ",") %>%
+    rename(center_lat = lat, center_lng = lng)
 
   tbl <-
-    select(tbl, state, city) %>%
-    opp_load_all_clean_data() %>%
+    opp_load_all_clean_data(only = ELIGIBLE_CITIES) %>%
     filter(
       type == "vehicular",
       # NOTE: only keep years with complete data
@@ -86,7 +109,7 @@ veil_of_darkness_cities <- function(output_file = NULL) {
       year(date) >= 2012,
       year(date) <= 2017
     ) %>%
-    left_join(tbl) %>%
+    left_join(city_geocodes) %>%
     mutate(city_state = str_c(city, state, sep = ", "))
 
   tbl_subgeography <-
@@ -148,7 +171,7 @@ veil_of_darkness_cities <- function(output_file = NULL) {
     par_pmap(
       mc.cores = 3,
       # tibble(degree = rep(1:6, 2), interact = c(rep(T, 6), rep(F, 6))),
-      tibble(degree = rep(6, 2), interact = c(T,F)),
+      tibble(degree = rep(6, 2), interact = c(T, F)),
       function(degree, interact) {
         bind_rows(
           vod_coef(tbl, city_state, degree, interact),
@@ -229,10 +252,7 @@ veil_of_darkness_states <- function(output_file = NULL, from_cache = T) {
     data <- read_rds(here::here("cache", "vod_state_data.rds"))
   } else {
     data <-
-      tbl %>% 
-      select(state, city) %>%
-      unique() %>%
-      opp_load_all_clean_data() %>% 
+      opp_load_all_clean_data(only = ELIGIBLE_STATES) %>% 
       filter(
         type == "vehicular",
         # NOTE: only keep years with complete data between 2012 and 2017

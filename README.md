@@ -22,6 +22,7 @@ Open Policing Project -- City Data
   
 ## TODO
 * create vod plot with CIs
+* update map with city coverage
 * update coverage report for paper
 * save mj (and open container), vod (philly) plots, mj table
 * state-county vod
