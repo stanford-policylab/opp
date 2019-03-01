@@ -132,6 +132,7 @@ load_eligible_city_disparity_data <- function() {
   opp_load_all_clean_data(only=ELIGIBLE_CITIES) %>%
     filter(
       ifelse(
+        # NOTE: years 2014, 2016
         city == "San Diego",
         # NOTE: 2015 only has 64.4% coverage of variables we care about
         # 2014 has over 70%
@@ -141,6 +142,7 @@ load_eligible_city_disparity_data <- function() {
         & !(service_area %in% c("130", "530", "630", "840", "Unknown")),
         T
       ),
+      # NOTE: 
       ifelse(
         city == "San Francisco",
         # NOTE: 2014 has no sub-geography
@@ -172,6 +174,8 @@ load_eligible_city_disparity_data <- function() {
       # NOTE: San Antonio looks good
       # NOTE: remove these to compare only blacks/hispanics with whites
       !(subject_race %in% c("asian/pacific islander", "other/unknown")),
+      year(date) >= 2011,
+      year(date) <= 2017,
       type == "vehicular"
     ) %>%
     mutate(
