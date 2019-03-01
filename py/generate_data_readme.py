@@ -14,9 +14,10 @@ from utils import (
 )
 
 
-def make(add_comments):
-    r_data_readme = os.path.join(opp_root_dir(), 'lib', 'data_readme.R')
-    sub.run(['Rscript', r_data_readme])
+def make(rerun_r, add_comments, output_dir):
+    if rerun_r:
+        r_data_readme = os.path.join(opp_root_dir(), 'lib', 'data_readme.R')
+        sub.run(['Rscript', r_data_readme])
     tables = pd.read_csv('/tmp/data_readme.csv')
     results = lookup('all', 'all', 'all', n_lines_after=0, update_repo=False)
     for r in results:
@@ -26,16 +27,18 @@ def make(add_comments):
             print('Skipping %s, %s' % (r['city'], r['state']))
             continue
         r['table'] = tables.loc[idx, 'predicated_null_rates'].tolist()[0]
-    write_md(results, add_comments)
+        r['date_range'] = tables.loc[idx, 'date_range'].tolist()[0]
+    write_md(results, add_comments, output_dir)
     return results
 
 
-def write_md(results, add_comments):
-    with open('data_readme.md', 'w') as f:
+def write_md(results, add_comments, output_dir):
+    with open(os.path.join(output_dir, 'data_readme.md'), 'w') as f:
         for r in results:
             if not 'table' in r:
                 continue
             f.write('## %s, %s\n' % (r['city'], r['state']))
+            f.write("### %s\n" % r['date_range'])
             f.write(r['table'] + '\n')
             d = {'validation': [], 'note': [], 'todo': []}
             for m in r['matches']:
@@ -81,9 +84,11 @@ def parse_args(argv):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument('-a', '--add_comments')
+    parser.add_argument('-r', '--rerun_r', action = 'store_true')
+    parser.add_argument('-o', '--output_dir', default='..')
     return parser.parse_args(argv[1:])
 
 
 if __name__ == '__main__':
     args = parse_args(sys.argv) 
-    make(args.add_comments)
+    make(args.rerun_r, args.add_comments, args.output_dir)
