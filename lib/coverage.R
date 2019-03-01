@@ -76,7 +76,15 @@ coverage <- function(use_cache = T) {
 
 calculate_coverage <- function(state, city) {
   # NOTE: for coverage we filter to vehicular stops
-  tbl <- load_coverage_data(state, city) %>% filter(veh_or_ped == "vehicular")
+  tbl <- load_coverage_data(state, city) %>%
+    filter(
+      # TODO: total
+      veh_or_ped == "vehicular"
+      # NOTE: filter only for paper
+      year(date) >= 2011,
+      year(date) <= 2017
+    )
+
   date_range = range(tbl$date, na.rm = TRUE)
   c(
     list(
