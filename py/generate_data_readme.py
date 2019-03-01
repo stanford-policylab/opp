@@ -15,8 +15,8 @@ from utils import (
 
 
 def make(add_comments):
-    # r_data_readme = os.path.join(opp_root_dir(), 'lib', 'data_readme.R')
-    # sub.run(['Rscript', r_data_readme])
+    r_data_readme = os.path.join(opp_root_dir(), 'lib', 'data_readme.R')
+    sub.run(['Rscript', r_data_readme])
     tables = pd.read_csv('/tmp/data_readme.csv')
     results = lookup('all', 'all', 'all', n_lines_after=0, update_repo=False)
     for r in results:

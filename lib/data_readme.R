@@ -4,21 +4,28 @@ source(here::here("lib", "opp.R"))
 
 
 data_readme <- function() {
-  f <- function(state, city) {
-    tbl <- opp_load_clean_data(state, city)
-    tribble(
-      ~state, ~city, ~predicated_null_rates,
-      state, city, as.character(kable(
-        predicated_coverage_rates(tbl, reporting_predicated_columns) %>%
-          mutate(`coverage rate` = pretty_percent(`coverage rate`, 0)),
-        format='html'
-      ))
-    )
-  }
-  opp_apply(f) %>%
+  opp_apply(data_readme_for) %>%
   bind_rows() %>%
   arrange(state, city) %>%
   write_csv("/tmp/data_readme.csv")
+}
+
+
+data_readme_for <- function(state, city) {
+  tbl <- opp_load_clean_data(state, city)
+  # NOTE: mark redacted columns for public release
+  rename_mp <- str_replace(redact_for_public_release, "$", "*")
+  names(rename_mp) <- redact_for_public_release
+  tribble(
+    ~state, ~city, ~predicated_null_rates,
+    state, city, as.character(kable(
+      predicated_coverage_rates(tbl, reporting_predicated_columns) %>%
+        mutate(`coverage rate` = pretty_percent(`coverage rate`, 0)) %>%
+        rename_cols(rename_mp) %>%
+        filter(feature != "raw_row_number"),
+      format='html'
+    ))
+  )
 }
 
 if (!interactive()) {
