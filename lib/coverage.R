@@ -177,7 +177,7 @@ load_coverage_data <- function(state, city) {
       "service_area",
       "zone",
       # NOTE: this is the only one that isn't police related
-      "county"
+      "county_name"
     ),
     rename = "geodivision"
   )

@@ -65,8 +65,10 @@ def remove_leading_hashes(s):
 def write_list(f, name, lst):
     f.write('\n### %s:\n' % name)
     for d in lst:
-        cmt = d['comment'].replace('can we get', 'missing')
-        f.write('- %s\n' % d['comment'])
+        cmt = d['comment']
+        if 'can we get' in cmt:
+            cmt = cmt.replace('can we get', 'missing').replace('?', '')
+        f.write('- %s\n' % cmt)
         if d['code']:
             f.write('```r\n%s```\n' % d['code'])
     return
