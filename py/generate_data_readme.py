@@ -34,12 +34,12 @@ def make(rerun_r, add_comments, output_dir):
 
 def write_md(results, add_comments, output_dir):
     with open('data_readme_template.md') as f:
-        contents = f.readlines()
+        contents = f.read()
     for r in results:
         if not 'table' in r:
             continue
         title = '## %s, %s\n' % (r['city'], r['state'])
-        left, right = contents.split(title)
+        before, after = contents.split(title)
         insert = [title]
         insert.append("### %s\n" % r['date_range'])
         insert.append(r['table'] + '\n')
@@ -61,8 +61,7 @@ def write_md(results, add_comments, output_dir):
             insert.extend(to_list('Validation', d['validation']))
             insert.extend(to_list('Notes', d['note']))
             insert.extend(to_list('Issues', d['todo']))
-        insert.append('\n\n')
-        contents = ''.join(left + insert + right)
+        contents = before + ''.join(insert) + after
     with open(os.path.join(output_dir, 'data_readme.md'), 'w') as f:
         f.write(contents)
     return
