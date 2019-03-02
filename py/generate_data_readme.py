@@ -61,6 +61,7 @@ def write_md(results, add_comments, output_dir):
             insert.extend(to_list('Validation', d['validation']))
             insert.extend(to_list('Notes', d['note']))
             insert.extend(to_list('Issues', d['todo']))
+        insert.append('\n')
         contents = before + ''.join(insert) + after
     with open(os.path.join(output_dir, 'data_readme.md'), 'w') as f:
         f.write(contents)

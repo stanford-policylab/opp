@@ -584,6 +584,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Statewide, AZ
 ### 2009-01-06 to 2015-11-30
 <table>
@@ -692,6 +693,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - Counties were mapped in two ways. First, we determined which counties the
   codes in the County field referred to by using the highways which appeared
@@ -721,6 +723,7 @@ We’re excited to see what you come up with!
   column in case it is useful to other researchers. But the data is messy and
   there are multiple ways contraband_found might be defined, and so we do not
   include Arizona in our contraband analysis. 
+
 ## Gilbert, AZ
 ### 2008-01-01 to 2018-05-23
 <table>
@@ -789,6 +792,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Mesa, AZ
 ### 2014-01-01 to 2017-03-31
 <table>
@@ -869,6 +873,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## San Diego, CA
 ### 2014-01-01 to 2017-03-31
 <table>
@@ -953,6 +958,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## San Bernardino, CA
 ### 2011-12-13 to 2017-09-19
 <table>
@@ -1005,6 +1011,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Anaheim, CA
 ### 2012-01-01 to 2017-03-14
 <table>
@@ -1029,6 +1036,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## San Francisco, CA
 ### 2007-01-01 to 2016-06-30
 <table>
@@ -1117,6 +1125,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Long Beach, CA
 ### 2008-01-01 to 2017-12-31
 <table>
@@ -1225,6 +1234,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Santa Ana, CA
 ### 2014-06-11 to 2018-04-13
 <table>
@@ -1293,6 +1303,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## San Jose, CA
 ### 2013-09-01 to 2018-03-31
 <table>
@@ -1365,6 +1376,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Stockton, CA
 ### 2012-01-01 to 2016-12-31
 <table>
@@ -1437,6 +1449,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Bakersfield, CA
 ### 2008-03-09 to 2018-03-09
 <table>
@@ -1509,6 +1522,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Statewide, CA
 ### 2009-07-01 to 2016-06-30
 <table>
@@ -1597,6 +1611,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - CHP districts roughly map to counties, so we mapped stops to counties using
   the map of CHP districts, which is included in the raw data. Some counties
@@ -1613,6 +1628,7 @@ We’re excited to see what you come up with!
   from our contraband analysis. 
 - Shift time is included, but is not sufficiently granular to yield reliable
   stop time. 
+
 ## Denver, CO
 ### 2010-12-31 to 2018-07-19
 <table>
@@ -1677,6 +1693,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Aurora, CO
 ### 2012-01-01 to 2016-12-31
 <table>
@@ -1745,6 +1762,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Statewide, CO
 ### 2010-01-01 to 2017-12-31
 <table>
@@ -1845,6 +1863,8 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
+
 **Data notes**:
 - The state did not provide us with mappings for every police department code
   to police department name.
@@ -1856,6 +1876,7 @@ We’re excited to see what you come up with!
   state patrol.
 - Rows represent violations, not stops, so we remove duplicates by grouping by
   the other fields.
+
 ## Statewide, CT
 ### 2013-10-01 to 2015-10-01
 <table>
@@ -1960,6 +1981,8 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
+
 **Data notes**:
 - Counties were mapped by running the cities in the `Intervention Location
   Name` field through Google's geocoder.
@@ -1975,6 +1998,7 @@ We’re excited to see what you come up with!
 - The Connecticut state patrol created another website
   ([link](http://ctrp3.ctdata.org/)), where new data will get uploaded going
   forward. We haven't processed this yet.
+
 ## Hartford, CT
 ### 2013-10-13 to 2016-09-29
 <table>
@@ -2075,6 +2099,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Tampa, FL
 ### 2000-03-02 to 2018-03-07
 <table>
@@ -2139,6 +2164,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Saint Petersburg, FL
 ### 2010-01-01 to 2010-07-29
 <table>
@@ -2187,6 +2213,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Statewide, FL
 ### 2010-01-01 to 2016-10-31
 <table>
@@ -2307,6 +2334,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - The raw data is very messy. Two different data sets were supplied, both with
   slightly different schemas. However, they were joined by uniquely identifying
@@ -2324,6 +2352,7 @@ We’re excited to see what you come up with!
 - While there is some data on whether items were seized, it is not clear if
   these are generally seized as a result of a search, and we thus do not define
   a contraband_found column for consistency with other states. 
+
 ## Statewide, GA
 ### 2012-01-01 to 2016-12-31
 <table>
@@ -2408,6 +2437,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - The data represent warnings.
 - The provided `.txt` was comma-separated, but not quoted. Therefor we had to
@@ -2416,6 +2446,7 @@ We’re excited to see what you come up with!
 - Rows represent individual warnings, and thus need to be aggregated to
   represent a single stop.
 - The race field on the warnings form is optional.
+
 ## Statewide, IA
 ### 2006-01-01 to 2016-04-25
 <table>
@@ -2508,6 +2539,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**: 
 - The data separates warnings and citations. They are very different with
   respect to which fields they have available. Both contain duplicates. This
@@ -2592,6 +2624,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Statewide, IL
 ### 2012-01-01 to 2017-12-31
 <table>
@@ -2704,6 +2737,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - The data is very messy. The presence and meaning of fields relating to search
   and contraband vary year by year. Caution should be used when inspecting
@@ -2722,6 +2756,7 @@ We’re excited to see what you come up with!
   search was conducted. This occurs because the search request might be denied
   but a search was conducted anyway. Many searches have missing search type
   data, so we exclude Illinois from our search type analysis. 
+
 ## Chicago, IL
 ### 2012-01-01 to 2016-12-31
 <table>
@@ -2818,6 +2853,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Fort Wayne, IN
 ### 2007-09-01 to 2017-09-30
 <table>
@@ -2882,6 +2918,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Wichita, KS
 ### 2006-01-01 to 2016-12-31
 <table>
@@ -2974,6 +3011,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Owensboro, KY
 ### 2015-09-01 to 2017-09-01
 <table>
@@ -3058,6 +3096,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## New Orleans, LA
 ### 2001-03-03 to 2018-07-18
 <table>
@@ -3186,6 +3225,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Statewide, MA
 ### 2007-01-01 to 2015-12-31
 <table>
@@ -3286,6 +3326,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - The search and outcome fields are inconsistent. We take the most progressive
   interpretation: if one of `SearchYN`, `SearchDescr` or the outcome columns
@@ -3297,6 +3338,7 @@ We’re excited to see what you come up with!
 - Violation data is not very granular.
 - Counties were mapped by running the cities in the `CITY_TOWN_NAME` field
   through Google's geocoder.
+
 ## Baltimore, MD
 ### 2011-01-01 to 2017-12-30
 <table>
@@ -3345,6 +3387,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Statewide, MD
 ### 2007-01-01 to 2014-03-31
 <table>
@@ -3457,6 +3500,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - The data is very messy. It comes from three different time periods: 2007,
   2009-2012, 2013-2014. They all have different column and slightly different
@@ -3471,6 +3515,7 @@ We’re excited to see what you come up with!
 - While there is information on violation, speeding stops constitute a very
   small fraction of stops compared to other states, and we therefore exclude
   Maryland from our speeding analysis. 
+
 ## Statewide, MI
 ### 2001-07-06 to 2016-05-09
 <table>
@@ -3547,6 +3592,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - The original data had some unquoted fields (`VoidReason` and `Description`)
   which had commas in them. We manually fixed these with a python script, which
@@ -3557,6 +3603,7 @@ We’re excited to see what you come up with!
   alphabetically.
 - Rows represent violations, not stops, so we remove duplicates by grouping by
   the other fields.
+
 ## Saint Paul, MN
 ### 2001-01-01 to 2016-12-13
 <table>
@@ -3625,6 +3672,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Statewide, MO
 ### 2010-01-01 to 2015-01-01
 <table>
@@ -3665,6 +3713,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - The original data was aggregated. There is detail on a number of fields (age,
   stop purpose, outcome) that is not usable as it is not cross-tabulated with
@@ -3674,6 +3723,7 @@ We’re excited to see what you come up with!
 - Counties for local stops were mapped by running the cities in the city field
   through Google's geocoder, but there is no county information for state
   patrol stops. 
+
 ## Statewide, MS
 ### 2013-01-01 to 2016-07-27
 <table>
@@ -3726,11 +3776,13 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - Counties were mapped using the dictionary provided, which is added to the raw
   data folder. Counties are numbered alphabetically.
 - There is no data on Hispanic drivers, so we exclude Mississippi from our main
   analysis. 
+
 ## Statewide, MT
 ### 2009-01-01 to 2016-12-31
 <table>
@@ -3839,6 +3891,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**: none
 ## Raleigh, NC
 ### 2002-01-01 to 2015-12-31
@@ -3956,6 +4009,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Statewide, NC
 ### 2000-01-01 to 2015-12-31
 <table>
@@ -4072,6 +4126,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - Stop time is often unreliable — we have a large overdensity of 00:00 values,
   which we set to NA. 
@@ -4090,6 +4145,7 @@ We’re excited to see what you come up with!
 - `search_conducted` is TRUE if either the driver or passenger is searched. In
   3.6% of cases, the passenger is searched. As their names suggest,
   `driver_race`, `driver_gender`, and `driver_age` always refer to the driver.
+
 ## Winston-Salem, NC
 ### 2000-01-11 to 2015-12-31
 <table>
@@ -4206,6 +4262,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Greensboro, NC
 ### 2000-01-04 to 2015-12-31
 <table>
@@ -4322,6 +4379,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Durham, NC
 ### 2001-12-28 to 2015-12-31
 <table>
@@ -4438,6 +4496,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Fayetteville, NC
 ### 2000-01-07 to 2015-12-31
 <table>
@@ -4554,6 +4613,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Charlotte, NC
 ### 2000-01-01 to 2015-12-31
 <table>
@@ -4670,6 +4730,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Grand Forks, ND
 ### 2007-01-01 to 2016-12-31
 <table>
@@ -4730,6 +4791,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Statewide, ND
 ### 2010-01-01 to 2015-06-25
 <table>
@@ -4782,12 +4844,14 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - The data contain records only for citations, not warnings, so we exclude
   North Dakota from our analysis.
 - Rows represent individual citations, not stops, so we remove duplicates by
   grouping by the other fields.
 - The `stop_purpose` field is populated by citation codes.
+
 ## Statewide, NE
 ### 2002-01-01 to 2016-10-01
 <table>
@@ -4824,6 +4888,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - The original data was aggregated. It was grouped by stop reason, outcome and
   whether there was a search separately. Therefore, it is not possible to cross
@@ -4835,6 +4900,7 @@ We’re excited to see what you come up with!
 - For state patrol stops, there is a strange jump (Q1) and then dip (Q2–4) in
   the data for 2012. It looks like for 2012 all stops are recorded as happening
   in the first quarter.
+
 ## Statewide, NH
 ### 2014-01-01 to 2015-12-31
 <table>
@@ -4907,6 +4973,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - The `driver_race` field was populated by hand-written codes that we manually
   decoded. They are prone to mislabeling and should be used with caution only.
@@ -4921,6 +4988,7 @@ We’re excited to see what you come up with!
 - The driver_age field was not populated for the 2014.2 dataset.
 - Rows represent violations, not stops, so we remove duplicates by grouping by
   the other fields.
+
 ## Statewide, NJ
 ### 2009-01-01 to 2016-12-31
 <table>
@@ -5013,6 +5081,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - New Jersey data may be updated: we received the data very recently, and still
   have a number of questions we are waiting on the state to answer. 
@@ -5036,6 +5105,7 @@ We’re excited to see what you come up with!
   code](http://law.justia.com/codes/new-jersey/2013/title-39), where possible.
 - The CAD records were mapped to a county by running the `TOWNSHIP` values
   through the Google geocoder. 
+
 ## Camden, NJ
 ### 2013-05-01 to 2018-06-13
 <table>
@@ -5136,6 +5206,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Statewide, NV
 ### 2012-02-14 to 2016-05-31
 <table>
@@ -5184,10 +5255,12 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - Nevada does not seem to record Ethnicity or have any records of Hispanic
   drivers, so we exclude it from our analysis. 
 - The violation field is populated by infraction codes.
+
 ## Statewide, NY
 ### 2010-01-01 to 2017-12-14
 <table>
@@ -5268,10 +5341,12 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - The data include only citations.
 - There is no data on searches.
 - The data stops at 2017-12-13.
+
 ## Albany, NY
 ### 2008-01-01 to 2017-12-30
 <table>
@@ -5344,6 +5419,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Columbus, OH
 ### 2012-01-01 to 2016-12-30
 <table>
@@ -5420,6 +5496,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Statewide, OH
 ### 2010-01-01 to 2015-12-31
 <table>
@@ -5512,6 +5589,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - The stop_purpose field is populated by infraction codes. The corresponding
   laws can be read [here](http://codes.ohio.gov/orc/).
@@ -5534,6 +5612,7 @@ We’re excited to see what you come up with!
   example).
 - `officer_id` refers to a single officer throughout their tenure on the state
   patrol, but it is re-assigned to a new trooper upon an officer's retirement.
+
 ## Cincinnati, OH
 ### 2001-04-04 to 2018-05-28
 <table>
@@ -5630,6 +5709,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Oklahoma City, OK
 ### 2007-07-01 to 2017-10-18
 <table>
@@ -5742,6 +5822,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Tulsa, OK
 ### 2009-01-01 to 2016-12-31
 <table>
@@ -5818,6 +5899,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Statewide, OR
 ### 2010-01-01 to 2014-01-01
 <table>
@@ -5842,10 +5924,12 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - There is basically no data, including no data on Hispanic drivers, so we
   exclude Oregon from our analysis.
 - Counts for 2015 and 2016 are much lower than in earlier years. 
+
 ## Philadelphia, PA
 ### 2014-01-01 to 2018-04-14
 <table>
@@ -5930,6 +6014,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Statewide, RI
 ### 2005-01-02 to 2015-12-31
 <table>
@@ -6038,11 +6123,13 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - The stops are mapped to state patrol zones, which represent police barrack
   juridisdiction areas. However, there is no simple mapping between zones and
   counties. We store state patrol zones in the `district` column and use this
   column in our granular location analyses. 
+
 ## Statewide, SC
 ### 2005-01-01 to 2016-12-31
 <table>
@@ -6167,6 +6254,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - The `police_department` field is populated by state patrol agency.
 - More data on local stops is available
@@ -6174,6 +6262,7 @@ We’re excited to see what you come up with!
   It is aggregated by race and age group — potentially scrapable if useful.
 - While there is data on violation, many of the stops have missing data, so we
   exclude South Carolina from our speeding analysis. 
+
 ## Statewide, SD
 ### 2012-01-01 to 2016-02-29
 <table>
@@ -6246,9 +6335,11 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - Race data is missing, so we exclude South Dakota from our analysis. 
 - Some county names were misrecorded and needed editing.
+
 ## Statewide, TN
 ### 2000-01-01 to 2016-06-26
 <table>
@@ -6321,11 +6412,13 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - The data contain only citations, so we exclude Tennessee from our analysis. 
 - The codes in the `CNTY_NBR` field represent counties ordered alphabetically.
 - It would be possible to map the highway and mile marker data to geo
   coordinates, as we did in Washington.
+
 ## Nashville, TN
 ### 2010-01-01 to 2016-12-31
 <table>
@@ -6454,6 +6547,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Houston, TX
 ### 2014-01-01 to 2018-04-08
 <table>
@@ -6534,6 +6628,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Austin, TX
 ### 2006-01-01 to 2016-06-30
 <table>
@@ -6626,6 +6721,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Plano, TX
 ### 2012-01-01 to 2015-12-31
 <table>
@@ -6766,6 +6862,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Arlington, TX
 ### 2016-01-01 to 2016-12-31
 <table>
@@ -6838,6 +6935,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Statewide, TX
 ### 2006-01-01 to 2017-12-31
 <table>
@@ -6970,6 +7068,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - There is evidence that minority drivers are labeled as white in the data. For
   example, see
@@ -6985,6 +7084,7 @@ We’re excited to see what you come up with!
   warnings.
 - The data only records when citations and warnings were issued, but not
   arrests.
+
 ## San Antonio, TX
 ### 2012-01-01 to 2018-04-19
 <table>
@@ -7097,6 +7197,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Statewide, VA
 ### 2006-01-07 to 2016-04-23
 <table>
@@ -7153,6 +7254,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - The original data was aggregated.
 - The data is aggregated by week, not by day.
@@ -7167,6 +7269,7 @@ We’re excited to see what you come up with!
 - In the raw data, "Traffic arrests" refer to citations without a search.
   "Search arrests" refer to a citation and a search (either before or after the
   citation). "Search stops" refer to searches without a corresponding citation.
+
 ## Burlington, VT
 ### 2012-01-01 to 2017-12-31
 <table>
@@ -7267,6 +7370,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Statewide, VT
 ### 2010-07-01 to 2015-12-31
 <table>
@@ -7363,6 +7467,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - Stop purpose information is not very granular — there are only five
   categories, and we have no way of identifying speeding. 
@@ -7371,6 +7476,7 @@ We’re excited to see what you come up with!
   cannot find analogues in other states.
 - Counties were mapped by running the cities in the `Stop City` field through
   Google's geocoder.
+
 ## Statewide, WA
 ### 2009-01-01 to 2016-03-31
 <table>
@@ -7479,6 +7585,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - Counties were mapped by doing a reverse look-up of the geo lat/long
   coordinate of the highway post that was recorded for the stop, then mapping
@@ -7489,6 +7596,7 @@ We’re excited to see what you come up with!
 - Arrests and citations are grouped together in the `stop_outcome`, so we
   cannot reliably identify arrests. There is data on incident to arrest
   searches, but this does not necessarily identify all arrests.
+
 ## Tacoma, WA
 ### 2007-09-11 to 2017-09-10
 <table>
@@ -7561,6 +7669,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Seattle, WA
 ### 2006-01-01 to 2015-12-31
 <table>
@@ -7685,6 +7794,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Madison, WI
 ### 2007-09-28 to 2017-09-28
 <table>
@@ -7789,6 +7899,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 ## Statewide, WI
 ### 2010-01-01 to 2016-05-16
 <table>
@@ -7933,6 +8044,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - The data come from two systems ("7.3" and “10.0”) that succeeded each other.
   They have different field names and are differently coded. This is
@@ -7947,6 +8059,7 @@ We’re excited to see what you come up with!
   potential difference in recording policy. 
 - `countyDMV` field refers to the county of the stop, as the WI police
   clarified for us. 
+
 ## Statewide, WY
 ### 2011-01-01 to 2012-12-31
 <table>
@@ -8007,6 +8120,7 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
 **Data notes**:
 - Only citations are included in the data, so we exclude Wyoming from our
   analysis. 

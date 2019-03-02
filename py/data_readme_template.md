@@ -551,6 +551,7 @@ We’re excited to see what you come up with!
   column in case it is useful to other researchers. But the data is messy and
   there are multiple ways contraband_found might be defined, and so we do not
   include Arizona in our contraband analysis. 
+
 ## Gilbert, AZ
 ## Mesa, AZ
 ## San Diego, CA
@@ -579,9 +580,11 @@ We’re excited to see what you come up with!
   from our contraband analysis. 
 - Shift time is included, but is not sufficiently granular to yield reliable
   stop time. 
+
 ## Denver, CO
 ## Aurora, CO
 ## Statewide, CO
+
 **Data notes**:
 - The state did not provide us with mappings for every police department code
   to police department name.
@@ -593,7 +596,9 @@ We’re excited to see what you come up with!
   state patrol.
 - Rows represent violations, not stops, so we remove duplicates by grouping by
   the other fields.
+
 ## Statewide, CT
+
 **Data notes**:
 - Counties were mapped by running the cities in the `Intervention Location
   Name` field through Google's geocoder.
@@ -609,6 +614,7 @@ We’re excited to see what you come up with!
 - The Connecticut state patrol created another website
   ([link](http://ctrp3.ctdata.org/)), where new data will get uploaded going
   forward. We haven't processed this yet.
+
 ## Hartford, CT
 ## Tampa, FL
 ## Saint Petersburg, FL
@@ -630,6 +636,7 @@ We’re excited to see what you come up with!
 - While there is some data on whether items were seized, it is not clear if
   these are generally seized as a result of a search, and we thus do not define
   a contraband_found column for consistency with other states. 
+
 ## Statewide, GA
 **Data notes**:
 - The data represent warnings.
@@ -639,6 +646,7 @@ We’re excited to see what you come up with!
 - Rows represent individual warnings, and thus need to be aggregated to
   represent a single stop.
 - The race field on the warnings form is optional.
+
 ## Statewide, IA
 **Data notes**: 
 - The data separates warnings and citations. They are very different with
@@ -680,6 +688,7 @@ We’re excited to see what you come up with!
   search was conducted. This occurs because the search request might be denied
   but a search was conducted anyway. Many searches have missing search type
   data, so we exclude Illinois from our search type analysis. 
+
 ## Chicago, IL
 ## Fort Wayne, IN
 ## Wichita, KS
@@ -697,6 +706,7 @@ We’re excited to see what you come up with!
 - Violation data is not very granular.
 - Counties were mapped by running the cities in the `CITY_TOWN_NAME` field
   through Google's geocoder.
+
 ## Baltimore, MD
 ## Statewide, MD
 **Data notes**:
@@ -713,6 +723,7 @@ We’re excited to see what you come up with!
 - While there is information on violation, speeding stops constitute a very
   small fraction of stops compared to other states, and we therefore exclude
   Maryland from our speeding analysis. 
+
 ## Statewide, MI
 **Data notes**:
 - The original data had some unquoted fields (`VoidReason` and `Description`)
@@ -724,6 +735,7 @@ We’re excited to see what you come up with!
   alphabetically.
 - Rows represent violations, not stops, so we remove duplicates by grouping by
   the other fields.
+
 ## Saint Paul, MN
 ## Statewide, MO
 **Data notes**:
@@ -735,12 +747,14 @@ We’re excited to see what you come up with!
 - Counties for local stops were mapped by running the cities in the city field
   through Google's geocoder, but there is no county information for state
   patrol stops. 
+
 ## Statewide, MS
 **Data notes**:
 - Counties were mapped using the dictionary provided, which is added to the raw
   data folder. Counties are numbered alphabetically.
 - There is no data on Hispanic drivers, so we exclude Mississippi from our main
   analysis. 
+
 ## Statewide, MT
 **Data notes**: none
 ## Raleigh, NC
@@ -763,6 +777,7 @@ We’re excited to see what you come up with!
 - `search_conducted` is TRUE if either the driver or passenger is searched. In
   3.6% of cases, the passenger is searched. As their names suggest,
   `driver_race`, `driver_gender`, and `driver_age` always refer to the driver.
+
 ## Winston-Salem, NC
 ## Greensboro, NC
 ## Durham, NC
@@ -776,6 +791,7 @@ We’re excited to see what you come up with!
 - Rows represent individual citations, not stops, so we remove duplicates by
   grouping by the other fields.
 - The `stop_purpose` field is populated by citation codes.
+
 ## Statewide, NE
 **Data notes**:
 - The original data was aggregated. It was grouped by stop reason, outcome and
@@ -788,6 +804,7 @@ We’re excited to see what you come up with!
 - For state patrol stops, there is a strange jump (Q1) and then dip (Q2–4) in
   the data for 2012. It looks like for 2012 all stops are recorded as happening
   in the first quarter.
+
 ## Statewide, NH
 **Data notes**:
 - The `driver_race` field was populated by hand-written codes that we manually
@@ -803,6 +820,7 @@ We’re excited to see what you come up with!
 - The driver_age field was not populated for the 2014.2 dataset.
 - Rows represent violations, not stops, so we remove duplicates by grouping by
   the other fields.
+
 ## Statewide, NJ
 **Data notes**:
 - New Jersey data may be updated: we received the data very recently, and still
@@ -827,17 +845,20 @@ We’re excited to see what you come up with!
   code](http://law.justia.com/codes/new-jersey/2013/title-39), where possible.
 - The CAD records were mapped to a county by running the `TOWNSHIP` values
   through the Google geocoder. 
+
 ## Camden, NJ
 ## Statewide, NV
 **Data notes**:
 - Nevada does not seem to record Ethnicity or have any records of Hispanic
   drivers, so we exclude it from our analysis. 
 - The violation field is populated by infraction codes.
+
 ## Statewide, NY
 **Data notes**:
 - The data include only citations.
 - There is no data on searches.
 - The data stops at 2017-12-13.
+
 ## Albany, NY
 ## Columbus, OH
 ## Statewide, OH
@@ -863,6 +884,7 @@ We’re excited to see what you come up with!
   example).
 - `officer_id` refers to a single officer throughout their tenure on the state
   patrol, but it is re-assigned to a new trooper upon an officer's retirement.
+
 ## Cincinnati, OH
 ## Oklahoma City, OK
 ## Tulsa, OK
@@ -871,6 +893,7 @@ We’re excited to see what you come up with!
 - There is basically no data, including no data on Hispanic drivers, so we
   exclude Oregon from our analysis.
 - Counts for 2015 and 2016 are much lower than in earlier years. 
+
 ## Philadelphia, PA
 ## Statewide, RI
 **Data notes**:
@@ -878,6 +901,7 @@ We’re excited to see what you come up with!
   juridisdiction areas. However, there is no simple mapping between zones and
   counties. We store state patrol zones in the `district` column and use this
   column in our granular location analyses. 
+
 ## Statewide, SC
 **Data notes**:
 - The `police_department` field is populated by state patrol agency.
@@ -886,16 +910,19 @@ We’re excited to see what you come up with!
   It is aggregated by race and age group — potentially scrapable if useful.
 - While there is data on violation, many of the stops have missing data, so we
   exclude South Carolina from our speeding analysis. 
+
 ## Statewide, SD
 **Data notes**:
 - Race data is missing, so we exclude South Dakota from our analysis. 
 - Some county names were misrecorded and needed editing.
+
 ## Statewide, TN
 **Data notes**:
 - The data contain only citations, so we exclude Tennessee from our analysis. 
 - The codes in the `CNTY_NBR` field represent counties ordered alphabetically.
 - It would be possible to map the highway and mile marker data to geo
   coordinates, as we did in Washington.
+
 ## Nashville, TN
 ## Houston, TX
 ## Austin, TX
@@ -917,6 +944,7 @@ We’re excited to see what you come up with!
   warnings.
 - The data only records when citations and warnings were issued, but not
   arrests.
+
 ## San Antonio, TX
 ## Statewide, VA
 **Data notes**:
@@ -933,6 +961,7 @@ We’re excited to see what you come up with!
 - In the raw data, "Traffic arrests" refer to citations without a search.
   "Search arrests" refer to a citation and a search (either before or after the
   citation). "Search stops" refer to searches without a corresponding citation.
+
 ## Burlington, VT
 ## Statewide, VT
 **Data notes**:
@@ -943,6 +972,7 @@ We’re excited to see what you come up with!
   cannot find analogues in other states.
 - Counties were mapped by running the cities in the `Stop City` field through
   Google's geocoder.
+
 ## Statewide, WA
 **Data notes**:
 - Counties were mapped by doing a reverse look-up of the geo lat/long
@@ -954,6 +984,7 @@ We’re excited to see what you come up with!
 - Arrests and citations are grouped together in the `stop_outcome`, so we
   cannot reliably identify arrests. There is data on incident to arrest
   searches, but this does not necessarily identify all arrests.
+
 ## Tacoma, WA
 ## Seattle, WA
 ## Madison, WI
@@ -972,6 +1003,7 @@ We’re excited to see what you come up with!
   potential difference in recording policy. 
 - `countyDMV` field refers to the county of the stop, as the WI police
   clarified for us. 
+
 ## Statewide, WY
 **Data notes**:
 - Only citations are included in the data, so we exclude Wyoming from our
