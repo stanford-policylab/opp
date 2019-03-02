@@ -33,32 +33,38 @@ def make(rerun_r, add_comments, output_dir):
 
 
 def write_md(results, add_comments, output_dir):
+    with open('data_readme_template.md') as f:
+        contents = f.readlines()
+    for r in results:
+        if not 'table' in r:
+            continue
+        title = '## %s, %s\n' % (r['city'], r['state'])
+        left, right = contents.split(title)
+        insert = [title]
+        insert.append("### %s\n" % r['date_range'])
+        insert.append(r['table'] + '\n')
+        d = {'validation': [], 'note': [], 'todo': []}
+        for m in r['matches']:
+            p = remove_leading_hashes(m['match']).replace('\n', ' ')
+            ctype, text = p.split(':', 1)
+            # NOTE: remove person assigned task if exists
+            ctype = re.sub('\(\w+\)', '', ctype)
+            # NOTE: remove [RED|YELLOW|GREEN] rating if exists
+            text = re.sub('\[\w+\]', '', text)
+            # NOTE: remove asana task links
+            text = re.sub(r'https://app.asana\S+', '', text)
+            d[ctype.lower()].append({
+                'comment': text.strip(),
+                'code': m['after'] if 'after' in m else '',
+            })
+        if add_comments:
+            insert.extend(to_list('Validation', d['validation']))
+            insert.extend(to_list('Notes', d['note']))
+            insert.extend(to_list('Issues', d['todo']))
+        insert.append('\n\n')
+        contents = ''.join(left + insert + right)
     with open(os.path.join(output_dir, 'data_readme.md'), 'w') as f:
-        for r in results:
-            if not 'table' in r:
-                continue
-            f.write('## %s, %s\n' % (r['city'], r['state']))
-            f.write("### %s\n" % r['date_range'])
-            f.write(r['table'] + '\n')
-            d = {'validation': [], 'note': [], 'todo': []}
-            for m in r['matches']:
-                p = remove_leading_hashes(m['match']).replace('\n', ' ')
-                ctype, text = p.split(':', 1)
-                # NOTE: remove person assigned task if exists
-                ctype = re.sub('\(\w+\)', '', ctype)
-                # NOTE: remove [RED|YELLOW|GREEN] rating if exists
-                text = re.sub('\[\w+\]', '', text)
-                # NOTE: remove asana task links
-                text = re.sub(r'https://app.asana\S+', '', text)
-                d[ctype.lower()].append({
-                    'comment': text.strip(),
-                    'code': m['after'] if 'after' in m else '',
-                })
-            if add_comments:
-                write_list(f, 'Validation', d['validation'])
-                write_list(f, 'Notes', d['note'])
-                write_list(f, 'Issues', d['todo'])
-            f.write('\n\n')
+        f.write(contents)
     return
 
 
@@ -66,16 +72,16 @@ def remove_leading_hashes(s):
     return re.sub(re.compile('^\s*#\s*', re.MULTILINE), '', s)
 
 
-def write_list(f, name, lst):
-    f.write('\n### %s:\n' % name)
+def to_list(name, lst):
+    v = '\n### %s:\n' % name
     for d in lst:
         cmt = d['comment']
         if 'can we get' in cmt:
             cmt = cmt.replace('can we get', 'missing').replace('?', '')
-        f.write('- %s\n' % cmt)
+        v.append('- %s\n' % cmt)
         if d['code']:
-            f.write('```r\n%s```\n' % d['code'])
-    return
+            v.append('```r\n%s```\n' % d['code'])
+    return v
 
 
 def parse_args(argv):
