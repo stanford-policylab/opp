@@ -1,9 +1,9 @@
 library(here)
 source(here::here("lib", "opp.R"))
+source(here::here("lib", "analysis_common.R"))
 
 
-
-prima_facie_stats <- function() {
+prima_facie_stats <- function(only = locations_used_in_analysis()) {
   list(
     stop_rates = aggregate_city_stop_stats_all_combined(),
     search_rates = aggregate_stats_all_combined("search_conducted"),
@@ -28,26 +28,31 @@ prima_facie_stats <- function() {
 
 
 aggregate_city_stop_stats_all_combined <- function(
-  start_year = 2012,
+  start_year = 2011,
   end_year = 2017,
-  max_null_rate = 0.1
+  max_null_rate = 0.3,
+  weighted_average = F
 ) {
-  aggregate_city_stop_stats_all(
-    start_year,
-    end_year,
-    max_null_rate
-  ) %>%
-  group_by(subject_race) %>%
-  # NOTE: weighted average rate for each race where the weighting is average
-  # number of stops per year for that race and city
-  summarize(stop_rate = weighted.mean(stop_rate, w = population_average))
+  v <-
+    aggregate_city_stop_stats_all(
+      start_year,
+      end_year,
+      max_null_rate
+    ) %>%
+    group_by(subject_race)
+  if (weighted_average)
+    # NOTE: weighted average rate for each race where the weighting is average
+    # number of stops per year for that race and city
+    summarize(v, stop_rate = weighted.mean(stop_rate, w = population_average))
+  else
+    summarize(v, stop_rate = mean(stop_rate))
 }
 
 
 aggregate_city_stop_stats_all <- function(
-  start_year = 2012,
+  start_year = 2011,
   end_year = 2017,
-  max_null_rate = 0.1
+  max_null_rate = 0.3
 ) {
   par_pmap(
     opp_available() %>% filter(city != "Statewide"),
@@ -68,9 +73,9 @@ aggregate_city_stop_stats_all <- function(
 aggregate_city_stop_stats <- function(
   state,
   city,
-  start_year = 2012,
+  start_year = 2011,
   end_year = 2017,
-  max_null_rate = 0.1
+  max_null_rate = 0.3
 ) {
   tbl <- city_stop_stats(
     state,
@@ -96,9 +101,9 @@ aggregate_city_stop_stats <- function(
 
 
 city_stop_stats_all <- function(
-  start_year = 2012,
+  start_year = 2011,
   end_year = 2017,
-  max_null_rate = 0.1
+  max_null_rate = 0.3
 ) {
   opp_available() %>%
   filter(city != "Statewide") %>%
@@ -118,9 +123,9 @@ city_stop_stats_all <- function(
 city_stop_stats <- function(
   state,
   city,
-  start_year = 2012,
+  start_year = 2011,
   end_year = 2017,
-  max_null_rate = 0.1
+  max_null_rate = 0.3
 ) {
   empty <- tibble(state = state, city = city)
   tbl <-
@@ -187,35 +192,37 @@ filter_to_complete_years <- function(tbl, min_monthly_stops = 100) {
 
 aggregate_stats_all_combined <- function(
   col = "search_conducted",
-  start_year = 2012,
+  start_year = 2011,
   end_year = 2017,
   max_null_rate_per_location = 0.1,
-  predicate = NA_character_
+  predicate = NA_character_,
+  weighted_average = F
 ) {
   rate_name = str_c(col, "_rate")
-  aggregate_stats_all(
-    col,
-    start_year,
-    end_year,
-    max_null_rate_per_location,
-    predicate
-  ) %>%
-  mutate(
-    is_state = city == "Statewide"
-  ) %>%
-  group_by(is_state, subject_race) %>%
-  # NOTE: weighted average rate for each race where the weighting is average
-  # eligible number of stops per year for that race and city
-  summarize(
-    !!rate_name := weighted.mean(get(rate_name), w = average_eligible)
-  ) %>%
-  drop_na()
+  v <-
+    aggregate_stats_all(
+      col,
+      start_year,
+      end_year,
+      max_null_rate_per_location,
+      predicate
+    ) %>%
+    mutate(
+      is_state = city == "Statewide"
+    ) %>%
+    group_by(is_state, subject_race)
+  if (weighted_average)
+    # NOTE: weighted average rate for each race where the weighting is average
+    # eligible number of stops per year for that race and city
+    summarize(v, !!rate_name := weighted.mean(get(rate_name), w = average_eligible))
+  else
+    summarize(v, !!rate_name := mean(get(rate_name)))
 }
 
 
 aggregate_stats_all <- function(
   col = "search_conducted",
-  start_year = 2012,
+  start_year = 2011,
   end_year = 2017,
   max_null_rate_per_location = 0.1,
   predicate = NA_character_
@@ -243,7 +250,7 @@ aggregate_stats <- function(
   state,
   city,
   col = "search_conducted",
-  start_year = 2012,
+  start_year = 2011,
   end_year = 2017,
   max_null_rate_per_location = 0.1,
   predicate = NA_character_
@@ -278,9 +285,9 @@ aggregate_stats <- function(
 
 stats_all <- function(
   col = "search_conducted",
-  start_year = 2012,
+  start_year = 2011,
   end_year = 2017,
-  max_null_rate = 0.1,
+  max_null_rate = 0.3,
   predicate = NA_character_
 ) {
   opp_available() %>%
@@ -303,9 +310,9 @@ stats <- function(
   state,
   city,
   col = "search_conducted",
-  start_year = 2012,
+  start_year = 2011,
   end_year = 2017,
-  max_null_rate = 0.1,
+  max_null_rate = 0.3,
   predicate = NA_character_
 ) {
   empty <- tibble(state = state, city = city)
