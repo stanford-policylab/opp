@@ -420,8 +420,8 @@ compose_inferred_threshold_changes_plot <- function(tbl) {
 }
 
 
-collect_aggregate_thresholds_for_state <- function(tbl, state) {
-  data_summary <- summarise_for_stan(filter(tbl, state == state)) 
+collect_aggregate_thresholds_for_state <- function(tbl, s) {
+  data_summary <- summarise_for_stan(filter(tbl, state == s)) 
   stan_data <- format_data_summary_for_stan(data_summary)
   fit <- stan_marijuana_threshold_test(stan_data)
   posteriors <- rstan::extract(fit)
@@ -609,5 +609,5 @@ plot_threshold_changes <- function(tbl) {
 
 
 if (!interactive() & !exists("driver")) {
-  marijuana_legalization_analysis()
+  marijuana_legalization_analysis(here::here("cache"))
 }
