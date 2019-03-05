@@ -41,6 +41,7 @@ veil_of_darkness_test <- function(
   majority_demographic = "white",
   spline_degree = 6,
   interact = T,
+  interact_dark_and_time = F,
   plot = F
 ) {
   control_colqs <- enquos(...)
@@ -72,7 +73,8 @@ veil_of_darkness_test <- function(
       darkness_indicator_col = is_dark,
       time_col = rounded_minute,
       degree = spline_degree,
-      interact = interact
+      interact = interact,
+      interact_dark_and_time = interact_dark_and_time
   )
    
 
@@ -223,7 +225,8 @@ train_vod_model <- function(
   darkness_indicator_col = is_dark,
   time_col = rounded_minute,
   degree = 6,
-  interact = T
+  interact = T,
+  interact_dark_and_time = F
 ) {
   control_colqs <- enquos(...)
   darkness_indicator_colq <- enquo(darkness_indicator_col)
@@ -243,18 +246,31 @@ train_vod_model <- function(
       n_majority = n - n_minority
     )
 
-  fmla <- as.formula(
-    str_c(
-      "cbind(n_minority, n_majority) ~ ",
-      quo_name(darkness_indicator_colq),
-      " + ",
+  if(!interact_dark_and_time) {
+    fmla <- as.formula(
       str_c(
-        str_c("ns(", quo_name(time_colq), ", df = ", degree, ")"),
-        quos_names(control_colqs),
-        sep = if (interact) "*" else " + "
+        "cbind(n_minority, n_majority) ~ ",
+        quo_name(darkness_indicator_colq),
+        " + ",
+        str_c(
+          str_c("ns(", quo_name(time_colq), ", df = ", degree, ")"),
+          quos_names(control_colqs),
+          sep = if (interact) "*" else " + "
+        )
       )
     )
-  )
+  } else {
+    fmla <- as.formula(
+      str_c(
+        "cbind(n_minority, n_majority) ~ ",
+        quo_name(darkness_indicator_colq),
+        "*",
+        str_c("ns(", quo_name(time_colq), ", df = ", degree, ")"),
+        " + ",
+        quos_names(control_colqs)
+      )
+    )
+  }
   glm(fmla, data = agg, family = binomial, control = list(maxit = 100))
 }
 
