@@ -55,8 +55,7 @@ aggregate_city_stop_stats_all <- function(
   end_year = 2017,
   max_null_rate = 0.3
 ) {
-  par_pmap(
-    opp_available() %>% filter(city != "Statewide"),
+  opp_apply(
     function(state, city) {
       aggregate_city_stop_stats(
         state,
@@ -65,7 +64,8 @@ aggregate_city_stop_stats_all <- function(
         end_year,
         max_null_rate
       )
-    }
+    },
+    opp_available() %>% filter(city != "Statewide"),
   ) %>%
   bind_rows()
 }
@@ -106,17 +106,18 @@ city_stop_stats_all <- function(
   end_year = 2017,
   max_null_rate = 0.3
 ) {
-  opp_available() %>%
-  filter(city != "Statewide") %>%
-  par_pmap(function(state, city) {
-    city_stop_stats(
-      state,
-      city,
-      start_year,
-      end_year,
-      max_null_rate
-    )
-  }) %>%
+  opp_apply(
+    function(state, city) {
+      city_stop_stats(
+        state,
+        city,
+        start_year,
+        end_year,
+        max_null_rate
+      )
+    },
+    opp_available() %>% filter(city != "Statewide")
+  ) %>%
   bind_rows()
 }
 
