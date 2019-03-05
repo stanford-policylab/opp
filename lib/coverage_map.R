@@ -40,8 +40,8 @@ compose_coverage_map <- function() {
 
   # NOTE: can uncomment some code to get fuller map
   dir_create(here::here("plots"))
-  # pdf(here::here("plots", "coverage_map.pdf"), width = 3, height = 2)
-  png(here::here("plots", "coverage_map.png"), width = 1600, height = 900)
+  pdf(here::here("plots", "coverage_map.pdf"), width = 16, height = 9)
+  # png(here::here("plots", "coverage_map.png"), width = 1600, height = 900)
   maps::map(
     database = "state",
     # col = c("white", "grey", "lightblue3")[

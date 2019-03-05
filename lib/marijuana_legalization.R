@@ -369,7 +369,7 @@ compose_misdemeanor_rate_plots <- function(tbl) {
         str_c(
           "possession of 1 oz or less of marijuana",
           # NOTE: these spike after legalization
-          "open marijuana container",
+          # "open marijuana container",
           sep = "|"
         )
       ),

@@ -110,8 +110,7 @@ valid_states <- c(
 )
 
 
-city_sub_geographies <- quos(
-  neighborhood,
+city_subgeographies <- quos(
   beat,
   district,
   subdistrict,
@@ -129,10 +128,8 @@ city_sub_geographies <- quos(
 )
 
 
-state_sub_geographies <- quos(
-  county_name,
-  department_id,
-  department_name
+state_subgeographies <- quos(
+  county_name
 )
 
 
