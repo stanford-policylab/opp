@@ -3,7 +3,7 @@ source(here::here("lib", "opp.R"))
 source(here::here("lib", "analysis_common.R"))
 
 
-prima_facie_stats <- function(only = locations_used_in_analysis()) {
+prima_facie_stats <- function(only = locations_used_in_analyses()) {
   list(
     stop_rates = aggregate_stop_stats_all_combined(only),
     search_rates = aggregate_stats_all_combined(only, "search_conducted"),
