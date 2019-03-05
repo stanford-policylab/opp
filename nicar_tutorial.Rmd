@@ -16,13 +16,12 @@ library(lutz)
 library(suncalc)
 library(splines)
 
-## NOTE(eric, justin): These next few lines will change a bit once we pin down 
-## the ubs/data format situation.
-
 ## Load the data
 # Replace the path below with the path to where your data lives
-data_path <- "~/opp/data/states/pa/philadelphia/clean/philadelphia.rds"
-stops <- read_rds(data_path)#$data
+# data_path <- "~/opp/data/states/pa/philadelphia/clean/philadelphia.rds"
+# stops <- read_rds(data_path)$data
+data_path <- "~/Desktop/pa_philadelphia_2019_02_25.rds"
+stops <- read_rds(data_path)
 
 # Additional data and fixed values we'll be using
 population_2017 <- tibble(
@@ -300,8 +299,8 @@ these values by race.
 stops %>% 
   group_by(subject_race) %>% 
   summarize(
-    search_rate = mean(search_conducted),
-    frisk_rate = mean(frisk_performed)
+    search_rate = mean(search_conducted, na.rm = T),
+    frisk_rate = mean(frisk_performed, na.rm = T)
   )
 ```
 
@@ -372,7 +371,7 @@ stops %>%
   filter(search_conducted) %>% 
   group_by(subject_race) %>% 
   summarize(
-    hit_rate = mean(contraband_found)
+    hit_rate = mean(contraband_found, na.rm = T)
   )
 ```
 
@@ -563,7 +562,7 @@ stops %>%
   filter(search_conducted, district != "77") %>% 
   group_by(subject_race) %>% 
   summarize(
-    hit_rate = mean(contraband_found)
+    hit_rate = mean(contraband_found, na.rm = T)
   )
 ```
 
@@ -746,7 +745,7 @@ vod_stops %>%
 ```
 
 ~~
-**NOTE FOR ERIC/JUSTIN/CHERYL/BETHANY:** I can add in another raw data intuition
+**NOTE FOR ERIC/JUSTIN/CHERYL/BETHANY/HANS:** I can add in another raw data intuition
 section that's a basic raw data plot if you think the concept of the VOD test
 is still confusing. But i want to keep things a bit briefer that way we have 
 more time to field questions and have them actually type things in and think 
@@ -784,7 +783,6 @@ mod1 <- glm(
 )
 
 summary(mod1)$coefficients["is_darkTRUE", c("Estimate", "Std. Error")]
-#exp(summary(mod1)$coefficients["is_darkTRUE", "Estimate"])
 ```
 
 The fact that the coefficient is negative means that darkness _lessens_ the 
@@ -827,7 +825,6 @@ mod2 <- glm(
 )
 
 summary(mod2)$coefficients["is_darkTRUE", c("Estimate", "Std. Error")]
-# exp(summary(mod2)$coefficients["is_darkTRUE", "Estimate"])
 ```
 
 Looks like no matter how you slice it, the veil of darkness test shows racial
