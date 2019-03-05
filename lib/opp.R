@@ -769,7 +769,7 @@ opp_city_demographics <- function(state, city) {
   if (city_fmt == "Nashville")
     city_query <- "Nashville-Davidson metropolitan government"
   tbl <-
-    opp_load_2017_5_year_acs_city_level_race_data() %>%
+    opp_load_acs_race_data("acs_2017_5_year_city_level_race_data.csv") %>%
     filter(state_abbreviation == state_query, str_detect(place, city_query))
   if (nrow(tbl) != length(valid_races))
     stop(str_c("Demographic query for ", city_fmt, ", ", state_fmt, " failed!"))
@@ -777,7 +777,30 @@ opp_city_demographics <- function(state, city) {
 }
 
 
-opp_load_2017_5_year_acs_city_level_race_data <- function() {
+opp_state_demographics <- function(state) {
+  state_query <- str_to_upper(state)
+  tbl <-
+    opp_load_acs_race_data("acs_2017_5_year_state_level_race_data.csv") %>%
+    filter(state_abbreviation == state_query)
+  if (nrow(tbl) != length(valid_races))
+    stop(str_c("Demographic query for ", state_query, " failed!"))
+  tbl
+}
+
+
+opp_county_demographics <- function(state, county) {
+  # TODO(danj,amyshoe): spot check
+  state_query <- str_to_upper(state)
+  county_query <- str_c("^", str_to_title(county), " (County)$")
+  tbl <-
+    opp_load_acs_race_data("acs_2017_5_year_county_level_race_data.csv") %>%
+    filter(state_abbreviation == state_query, str_detect(place, county_query))
+  if (nrow(tbl) != length(valid_races))
+    stop(str_c("Demographic query for ", state, ", ", county, " failed!"))
+}
+
+
+opp_load_acs_race_data <- function(fname) {
   # NOTE: to get the data:
   # 1. factfinder.census.gov -> Advanced Search
   # 2. Topics -> Datasets -> ACS 5 year estimate 2017
@@ -787,49 +810,52 @@ opp_load_2017_5_year_acs_city_level_race_data <- function() {
   # 6. Add descriptive column names; do not put annotations in same file
   # 7. Unzip and rename file ACS_17_5YR_<X>.csv
   # 8. Delete first line of non-descriptive headers
-  read_csv(
-    here::here("data", "acs_2017_5_year_estimates.csv")
-  ) %>%
-  select(
-    -Id,
-    -Id2,
-    -matches("Margin of Error")
-  ) %>%
-  rename_all(
-    funs(str_replace(., "Estimate; Not Hispanic or Latino: - ", ""))
-  ) %>%
-  rename(
-    place = Geography,
-    non_hispanic = `Estimate; Not Hispanic or Latino:`,
-    white = `White alone`,
-    black = `Black or African American alone`,
-    asian = `Asian alone`,
-    pacific_islander = `Native Hawaiian and Other Pacific Islander alone`,
-    hispanic = `Estimate; Hispanic or Latino:`
-  ) %>%
-  mutate(
-    `asian/pacific islander` = asian + pacific_islander,
-    `other/unknown` = non_hispanic - white - black - `asian/pacific islander`
-  ) %>%
-  select(
-    place,
-    white,
-    black,
-    hispanic,
-    `asian/pacific islander`,
-    `other/unknown`
-  ) %>%
-  gather(
-    race,
-    population,
-    -place
-  ) %>%
-  separate(
-    place,
-    c("place", "state"),
-    sep = ", "
-  ) %>%
+  tbl <-
+    read_csv(
+      here::here("data", fname)
+    ) %>%
+    select(
+      -Id,
+      -Id2,
+      -matches("Margin of Error")
+    ) %>%
+    rename_all(
+      funs(str_replace(., "Estimate; Not Hispanic or Latino: - ", ""))
+    ) %>%
+    rename(
+      place = Geography,
+      non_hispanic = `Estimate; Not Hispanic or Latino:`,
+      white = `White alone`,
+      black = `Black or African American alone`,
+      asian = `Asian alone`,
+      pacific_islander = `Native Hawaiian and Other Pacific Islander alone`,
+      hispanic = `Estimate; Hispanic or Latino:`
+    ) %>%
+    mutate(
+      `asian/pacific islander` = asian + pacific_islander,
+      `other/unknown` = non_hispanic - white - black - `asian/pacific islander`
+    ) %>%
+    select(
+      place,
+      white,
+      black,
+      hispanic,
+      `asian/pacific islander`,
+      `other/unknown`
+    ) %>%
+    gather(
+      race,
+      population,
+      -place
+    )
+
+  if (str_detect(fname, "state_level"))
+    tbl <- rename(tbl, state = place)
+  else
+    tbl <- separate(tbl, place, c("place", "state"), sep = ", ")
+
   left_join(
+    tbl,
     opp_load_state_fips()
   ) %>%
   rename(

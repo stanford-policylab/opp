@@ -5,8 +5,8 @@ source(here::here("lib", "analysis_common.R"))
 
 prima_facie_stats <- function(only = locations_used_in_analysis()) {
   list(
-    stop_rates = aggregate_city_stop_stats_all_combined(),
-    search_rates = aggregate_stats_all_combined("search_conducted"),
+    stop_rates = aggregate_stop_stats_all_combined(only),
+    search_rates = aggregate_stats_all_combined(only, "search_conducted"),
     # NOTE: example steps for
     # calculate_rates("contraband_found", predicate = "search_conducted"):
     # For each location
@@ -28,19 +28,21 @@ prima_facie_stats <- function(only = locations_used_in_analysis()) {
 }
 
 
-aggregate_city_stop_stats_all_combined <- function(
+aggregate_stop_stats_all_combined <- function(
+  only = opp_available(),
   start_year = 2011,
   end_year = 2017,
   max_null_rate = 0.3,
   weighted_average = F
 ) {
   v <-
-    aggregate_city_stop_stats_all(
+    aggregate_stop_stats_all(
       start_year,
       end_year,
       max_null_rate
     ) %>%
-    group_by(subject_race)
+    mutate(is_state = city == "Statewide") %>%
+    group_by(is_state, subject_race)
   if (weighted_average)
     # NOTE: weighted average rate for each race where the weighting is average
     # number of stops per year for that race and city
@@ -50,14 +52,15 @@ aggregate_city_stop_stats_all_combined <- function(
 }
 
 
-aggregate_city_stop_stats_all <- function(
+aggregate_stop_stats_all <- function(
+  only = opp_available(),
   start_year = 2011,
   end_year = 2017,
   max_null_rate = 0.3
 ) {
   opp_apply(
     function(state, city) {
-      aggregate_city_stop_stats(
+      aggregate_stop_stats(
         state,
         city,
         start_year,
@@ -65,26 +68,27 @@ aggregate_city_stop_stats_all <- function(
         max_null_rate
       )
     },
-    opp_available() %>% filter(city != "Statewide"),
+    only
   ) %>%
   bind_rows()
 }
 
 
-aggregate_city_stop_stats <- function(
+aggregate_stop_stats <- function(
   state,
   city,
   start_year = 2011,
   end_year = 2017,
   max_null_rate = 0.3
 ) {
-  tbl <- city_stop_stats(
-    state,
-    city,
-    start_year,
-    end_year,
-    max_null_rate
-  )
+  tbl <-
+    stop_stats(
+      state,
+      city,
+      start_year,
+      end_year,
+      max_null_rate
+    )
 
   if (nrow(tbl) <= 1)
     return(tbl)
@@ -101,14 +105,15 @@ aggregate_city_stop_stats <- function(
 }
 
 
-city_stop_stats_all <- function(
+stop_stats_all <- function(
+  only = opp_available(),
   start_year = 2011,
   end_year = 2017,
   max_null_rate = 0.3
 ) {
   opp_apply(
     function(state, city) {
-      city_stop_stats(
+      stop_stats(
         state,
         city,
         start_year,
@@ -116,13 +121,13 @@ city_stop_stats_all <- function(
         max_null_rate
       )
     },
-    opp_available() %>% filter(city != "Statewide")
+    only
   ) %>%
   bind_rows()
 }
 
 
-city_stop_stats <- function(
+stop_stats <- function(
   state,
   city,
   start_year = 2011,
@@ -134,7 +139,8 @@ city_stop_stats <- function(
     opp_load_clean_data(state, city) %>%
     mutate(state = state, city = city, year = year(date)) %>%
     filter(year >= start_year, year <= end_year) %>%
-    filter_to_complete_years()
+    filter_to_complete_years() %>%
+    filter_out_non_highway_patrol_stops_from_states()
 
   if (nrow(tbl) == 0 | !("subject_race" %in% colnames(tbl)))
     return(empty)
@@ -146,12 +152,20 @@ city_stop_stats <- function(
   if (null_rate > max_null_rate)
     return(empty)
 
+  if (city == "Statewide")
+    dem <- opp_state_demographics(state)
+  else
+    dem <- opp_city_demographics(state, city)
+
   tbl %>%
   group_by(state, city, year, subject_race) %>%
   summarize(stop_count = n()) %>%
   left_join(
-    opp_city_demographics(state, city) %>% select(-state),
+    dem %>% select(-state),
     c("subject_race" = "race")
+  ) %>%
+  mutate(
+    stop_rate = stop_count / population
   )
 }
 
@@ -211,9 +225,7 @@ aggregate_stats_all_combined <- function(
       max_null_rate,
       predicate
     ) %>%
-    mutate(
-      is_state = city == "Statewide"
-    ) %>%
+    mutate(is_state = city == "Statewide") %>%
     group_by(is_state, subject_race)
   if (weighted_average)
     # NOTE: weighted average rate for each race where the weighting is average
