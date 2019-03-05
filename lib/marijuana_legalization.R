@@ -426,7 +426,7 @@ collect_aggregate_thresholds_for_state <- function(tbl, s) {
   fit <- stan_marijuana_threshold_test(stan_data)
   posteriors <- rstan::extract(fit)
   data_with_thresholds <- add_thresholds(data_summary, posteriors)
-  summary_stats(data_with_thresholds, posteriors, state)
+  summary_stats(data_with_thresholds, posteriors, s)
 }
 
 
