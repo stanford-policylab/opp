@@ -27,6 +27,29 @@ locations_in_analysis <- function(analysis_name) {
 }
 
 
+filter_out_non_highway_patrol_stops_from_states <- function(tbl) {
+  only <- function(x, y) x == y
+  exclude <- function(x, y) x != y
+  f <- function(tbl, s, operator, dep_name) {
+    if ("department_name" %in% colnames(tbl))
+      tbl <- filter(
+          tbl,
+          ifelse(
+            state == s & city == "Statewide",
+            operator(department_name, dep_name),
+            T
+          )
+        )
+    tbl
+  }
+  tbl %>%
+    f("FL", exclude, "FLORIDA DEPARTMENT OF AGRICULTURE") %>%
+    f("NC", only, "NC State Highway Patrol") %>%
+    f("IL", only, "ILLINOIS STATE POLICE") %>%
+    f("CT", only, "State Police")
+} 
+
+
 prepare <- function(
   tbl,
   ...,

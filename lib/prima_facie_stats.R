@@ -319,7 +319,8 @@ stats <- function(
   tbl <-
     opp_load_clean_data(state, city) %>%
     mutate(state = state, city = city, year = year(date)) %>%
-    filter(year >= start_year, year <= end_year)
+    filter(year >= start_year, year <= end_year) %>%
+    filter_out_non_highway_patrol_stops_from_states()
   # NOTE: filters to predicate if present, i.e. search_conducted for
   # contraband_found, otherwise returns an empty tibble
   if (!is.na(predicate)) {

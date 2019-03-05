@@ -53,7 +53,7 @@ opp_bad_data <- function() {
     ~state, ~city,
     "TX", "El Paso", # numbers too high, don't align with external reports
     "TX", "Fort Worth", # precipitous decline yoy
-    "TX", "Dallas", # too many stop
+    "TX", "Dallas", # too many stops
     "WI", "Green Bay", # only a sample
   )
 }
