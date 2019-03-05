@@ -127,7 +127,7 @@ calculate_coverage <- function(
       state = state,
       city = city,
       nrows = nrow(tbl),
-      population = if (city != "Statewide") opp_population(state, city) else NA,
+      population = if (city != "Statewide") opp_city_population(state, city) else NA,
       start_date = date_range[1],
       end_date = date_range[2]
     ),
