@@ -40,7 +40,6 @@ coverage_for_paper <- function(use_cache = T) {
     `Date Range` = years,
     `Date` = date,
     `Time` = time,
-    `Geolocation` = geolocation,
     Subgeography = subgeography,
     `Subject Race` = subject_race,
     `Subject Age` = subject_age,
@@ -55,7 +54,7 @@ coverage_for_paper <- function(use_cache = T) {
   ) %>%
   select(
     -order
-  )
+  ) %>%
   mutate_if(
     function(v) all(is.numeric(v) & v <= 1.0, na.rm = T),
     # NOTE: put dot if coverage above 70%
@@ -85,7 +84,7 @@ coverage_for_website <- function(use_cache = T) {
 
 coverage <- function(
   locations = opp_available(),
-  start_year = 2011,
+  start_year = 2000,
   end_year = year(Sys.Date()),
   use_cache = T,
   cache_path = here::here("cache", "coverage.rds")
@@ -120,10 +119,7 @@ calculate_coverage <- function(
       veh_or_ped == "vehicular",
       year(date) >= start_year,
       year(date) <= end_year
-    ) %>%
-    mutate(state = state, city = city) %>%
-    filter_out_non_highway_patrol_stops_from_states() %>%
-    select(-state, -city)
+    )
 
   date_range = range(tbl$date, na.rm = TRUE)
   c(
@@ -142,7 +138,11 @@ calculate_coverage <- function(
 
 
 load_coverage_data <- function(state, city) {
-  tbl <- opp_load_clean_data(state, city)
+  tbl <-
+    opp_load_clean_data(state, city) %>%
+    mutate(state = state, city = city) %>%
+    filter_out_non_highway_patrol_stops_from_states() %>%
+    select(-state, -city)
 
   coverage <- select_or_add_as_na(
     tbl,

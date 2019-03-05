@@ -17,12 +17,13 @@ prima_facie_stats <- function(only = locations_used_in_analysis()) {
     # 5. calculate counts by subject_race
     # Finally, aggregate and calculate rates
     contraband_rates = aggregate_stats_all_combined(
+      only,
       "contraband_found",
       predicate = "search_conducted"
     ),
-    arrest_rates = aggregate_stats_all_combined("arrest_made"),
-    citation_rates = aggregate_stats_all_combined("citation_issued"),
-    warning_rates = aggregate_stats_all_combined("warning_issued")
+    arrest_rates = aggregate_stats_all_combined(only, "arrest_made"),
+    citation_rates = aggregate_stats_all_combined(only, "citation_issued"),
+    warning_rates = aggregate_stats_all_combined(only, "warning_issued")
   )
 }
 
@@ -191,20 +192,22 @@ filter_to_complete_years <- function(tbl, min_monthly_stops = 100) {
 
 
 aggregate_stats_all_combined <- function(
+  only = opp_available(),
   col = "search_conducted",
   start_year = 2011,
   end_year = 2017,
-  max_null_rate_per_location = 0.1,
+  max_null_rate = 0.3,
   predicate = NA_character_,
   weighted_average = F
 ) {
   rate_name = str_c(col, "_rate")
   v <-
     aggregate_stats_all(
+      only,
       col,
       start_year,
       end_year,
-      max_null_rate_per_location,
+      max_null_rate,
       predicate
     ) %>%
     mutate(
@@ -221,15 +224,15 @@ aggregate_stats_all_combined <- function(
 
 
 aggregate_stats_all <- function(
+  only = opp_available(),
   col = "search_conducted",
   start_year = 2011,
   end_year = 2017,
-  max_null_rate_per_location = 0.1,
+  max_null_rate = 0.3,
   predicate = NA_character_
 ) {
   rate_name <- str_c(col, "_rate")
-  par_pmap(
-    opp_available(),
+  opp_apply(
     function(state, city) {
       aggregate_stats(
         state,
@@ -237,10 +240,11 @@ aggregate_stats_all <- function(
         col,
         start_year,
         end_year,
-        max_null_rate_per_location,
+        max_null_rate,
         predicate
       )
-    }
+    },
+    only
   ) %>%
   bind_rows()
 }
@@ -252,7 +256,7 @@ aggregate_stats <- function(
   col = "search_conducted",
   start_year = 2011,
   end_year = 2017,
-  max_null_rate_per_location = 0.1,
+  max_null_rate = 0.3,
   predicate = NA_character_
 ) {
   tbl <- stats(
@@ -261,7 +265,7 @@ aggregate_stats <- function(
     col,
     start_year,
     end_year,
-    max_null_rate_per_location,
+    max_null_rate,
     predicate
   )
 
@@ -284,24 +288,27 @@ aggregate_stats <- function(
 
 
 stats_all <- function(
+  only = opp_available(),
   col = "search_conducted",
   start_year = 2011,
   end_year = 2017,
   max_null_rate = 0.3,
   predicate = NA_character_
 ) {
-  opp_available() %>%
-  par_pmap(function(state, city) {
-    stats(
-      state,
-      city,
-      col,
-      start_year,
-      end_year,
-      max_null_rate,
-      predicate
-    )
-  }) %>%
+  opp_apply(
+    function(state, city) {
+      stats(
+        state,
+        city,
+        col,
+        start_year,
+        end_year,
+        max_null_rate,
+        predicate
+      )
+    },
+    only
+  ) %>%
   bind_rows()
 }
 
