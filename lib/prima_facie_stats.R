@@ -37,6 +37,7 @@ aggregate_stop_stats_all_combined <- function(
 ) {
   v <-
     aggregate_stop_stats_all(
+      only,
       start_year,
       end_year,
       max_null_rate

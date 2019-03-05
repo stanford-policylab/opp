@@ -760,6 +760,15 @@ opp_city_population <- function(state, city) {
 }
 
 
+opp_state_population <- function(state, city) {
+  sum(opp_state_demographics(state)$population)
+}
+
+
+opp_county_population <- function(state, county) {
+  sum(opp_county_demographics(state, county)$population)
+}
+
 
 opp_city_demographics <- function(state, city) {
   state_query <- str_to_upper(state)
