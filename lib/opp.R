@@ -755,13 +755,13 @@ opp_fips_to_county_name_func <- function(state) {
 }
 
 
-opp_population <- function(state, city) {
-  sum(opp_demographics(state, city)$population)
+opp_city_population <- function(state, city) {
+  sum(opp_city_demographics(state, city)$population)
 }
 
 
 
-opp_demographics <- function(state, city) {
+opp_city_demographics <- function(state, city) {
   state_query <- str_to_upper(state)
   city_fmt <- str_to_title(str_replace(city, "Saint", "St."))
   city_query <- str_c("^", city_fmt, " (city|town)$")
@@ -769,7 +769,7 @@ opp_demographics <- function(state, city) {
   if (city_fmt == "Nashville")
     city_query <- "Nashville-Davidson metropolitan government"
   tbl <-
-    opp_load_2017_5_year_acs_race_data() %>%
+    opp_load_2017_5_year_acs_city_level_race_data() %>%
     filter(state_abbreviation == state_query, str_detect(place, city_query))
   if (nrow(tbl) != length(valid_races))
     stop(str_c("Demographic query for ", city_fmt, ", ", state_fmt, " failed!"))
@@ -777,11 +777,7 @@ opp_demographics <- function(state, city) {
 }
 
 
-is_valid_demographic_data <- function(tbl) {
-}
-
-
-opp_load_2017_5_year_acs_race_data <- function() {
+opp_load_2017_5_year_acs_city_level_race_data <- function() {
   # NOTE: to get the data:
   # 1. factfinder.census.gov -> Advanced Search
   # 2. Topics -> Datasets -> ACS 5 year estimate 2017

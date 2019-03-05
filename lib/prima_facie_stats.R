@@ -150,7 +150,7 @@ city_stop_stats <- function(
   group_by(state, city, year, subject_race) %>%
   summarize(stop_count = n()) %>%
   left_join(
-    opp_demographics(state, city) %>% select(-state),
+    opp_city_demographics(state, city) %>% select(-state),
     c("subject_race" = "race")
   )
 }
