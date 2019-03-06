@@ -58,8 +58,17 @@ coverage_for_paper <- function(use_cache = T) {
   mutate_if(
     function(v) all(is.numeric(v) & v <= 1.0, na.rm = T),
     # NOTE: put dot if coverage above 70%
-    function(v) if_else(v < 0.7 | is.na(v), "", "dot")
+    function(v) if_else(v < 0.65 | is.na(v), "", "dot")
+  ) %>%
+  mutate(
+    # NOTE: contraband_found data from AZ and MA is messy and unreliable
+    `Contraband Found` = if_else(
+      State %in% c("AZ", "MA") & City == "--",
+      "",
+      `Contraband Found`
+    )
   )
+
 }
 
 
@@ -77,7 +86,7 @@ coverage_for_website <- function(use_cache = T) {
           shapefiles = has_files(opp_shapefiles_dir(state, city))
         )
       }
-    )
+    ) %>% bind_rows()
   )
 }
 
@@ -90,7 +99,7 @@ coverage <- function(
   cache_path = here::here("cache", "coverage.rds")
 ) {
   if (use_cache & !is.null(cache_path) & file.exists(cache_path))
-    return(inner_join(readRDS(cache_path)))
+    return(inner_join(readRDS(cache_path), locations))
 
   cvg <-
     opp_apply(

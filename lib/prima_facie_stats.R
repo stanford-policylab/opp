@@ -17,7 +17,10 @@ prima_facie_stats <- function(only = locations_used_in_analyses()) {
     # 5. calculate counts by subject_race
     # Finally, aggregate and calculate rates
     contraband_rates = aggregate_stats_all_combined(
-      only,
+      only %>%
+        # NOTE: while there is contraband information here,
+        # it is rather messy so we exclude it
+        filter(!(state %in% c("AZ", "MA") & city == "Statewide")),
       "contraband_found",
       predicate = "search_conducted"
     ),
@@ -32,7 +35,7 @@ aggregate_stop_stats_all_combined <- function(
   only = opp_available(),
   start_year = 2011,
   end_year = 2017,
-  max_null_rate = 0.3,
+  max_null_rate = 0.35,
   weighted_average = F
 ) {
   v <-
@@ -57,7 +60,7 @@ aggregate_stop_stats_all <- function(
   only = opp_available(),
   start_year = 2011,
   end_year = 2017,
-  max_null_rate = 0.3
+  max_null_rate = 0.35
 ) {
   opp_apply(
     function(state, city) {
@@ -80,7 +83,7 @@ aggregate_stop_stats <- function(
   city,
   start_year = 2011,
   end_year = 2017,
-  max_null_rate = 0.3
+  max_null_rate = 0.35
 ) {
   tbl <-
     stop_stats(
@@ -110,7 +113,7 @@ stop_stats_all <- function(
   only = opp_available(),
   start_year = 2011,
   end_year = 2017,
-  max_null_rate = 0.3
+  max_null_rate = 0.35
 ) {
   opp_apply(
     function(state, city) {
@@ -133,7 +136,7 @@ stop_stats <- function(
   city,
   start_year = 2011,
   end_year = 2017,
-  max_null_rate = 0.3
+  max_null_rate = 0.35
 ) {
   empty <- tibble(state = state, city = city)
   tbl <-
@@ -212,7 +215,7 @@ aggregate_stats_all_combined <- function(
   col = "search_conducted",
   start_year = 2011,
   end_year = 2017,
-  max_null_rate = 0.3,
+  max_null_rate = 0.35,
   predicate = NA_character_,
   weighted_average = F
 ) {
@@ -242,7 +245,7 @@ aggregate_stats_all <- function(
   col = "search_conducted",
   start_year = 2011,
   end_year = 2017,
-  max_null_rate = 0.3,
+  max_null_rate = 0.35,
   predicate = NA_character_
 ) {
   rate_name <- str_c(col, "_rate")
@@ -270,7 +273,7 @@ aggregate_stats <- function(
   col = "search_conducted",
   start_year = 2011,
   end_year = 2017,
-  max_null_rate = 0.3,
+  max_null_rate = 0.35,
   predicate = NA_character_
 ) {
   tbl <- stats(
@@ -306,7 +309,7 @@ stats_all <- function(
   col = "search_conducted",
   start_year = 2011,
   end_year = 2017,
-  max_null_rate = 0.3,
+  max_null_rate = 0.35,
   predicate = NA_character_
 ) {
   opp_apply(
@@ -333,7 +336,7 @@ stats <- function(
   col = "search_conducted",
   start_year = 2011,
   end_year = 2017,
-  max_null_rate = 0.3,
+  max_null_rate = 0.35,
   predicate = NA_character_
 ) {
   empty <- tibble(state = state, city = city)
