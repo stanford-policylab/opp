@@ -129,7 +129,10 @@ city_subgeographies <- quos(
 
 
 state_subgeographies <- quos(
-  county_name
+  county_name,
+  beat,
+  department_id,
+  department_name
 )
 
 
