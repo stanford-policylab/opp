@@ -1,6 +1,8 @@
 ---
 title: "Open Policing Project Tutorial"
-output: html_document
+output:
+  html_document:
+    code_folding: hide
 ---
 
 
@@ -18,10 +20,10 @@ library(splines)
 
 ## Load the data
 # Replace the path below with the path to where your data lives
-# data_path <- "~/opp/data/states/pa/philadelphia/clean/philadelphia.rds"
-# stops <- read_rds(data_path)$data
-data_path <- "~/Desktop/pa_philadelphia_2019_02_25.rds"
-stops <- read_rds(data_path)
+data_path <- "~/opp/data/states/pa/philadelphia/clean/philadelphia.rds"
+stops <- read_rds(data_path)$data
+# data_path <- "~/Desktop/pa_philadelphia_2019_02_25.rds"
+# stops <- read_rds(data_path)
 
 # Additional data and fixed values we'll be using
 population_2017 <- tibble(
@@ -38,27 +40,35 @@ center_lng <- -75.1652215
 
 ## Covering the basics
 
+The core of `R` is the dataframe. We've given you one to start with, in the form
+of `stops`. Think of dataframes like a spreadsheet: they have rows and columns.
+Usually, rows are a "datapoint": in `stops`, each row corresponds to a single
+stop from Philadelphia. The columns are the "variables": again, in `stops`,
+these are the things we know about the stop, like where the stop happened, the
+age of the stop subject, whether an arrest was made, and so on.
+
 First, let's take a look at what columns exist in our `stops` dataframe. 
 
 ```{r}
-### Remove for tutorial, replace with:
-# YOUR CODE HERE
 colnames(stops)
 ```
 
-How many stops do we have in our dataset?
+How many stops do we have in our dataset? (**Hint**: Try the `nrow()` function.)
 
 ```{r}
-### Remove for tutorial, replace with:
-# YOUR CODE HERE
 nrow(stops)
 ```
 
-What date range does our data cover?
+What date range does our data cover? One way to do this would be to examine the
+`min()` and `max()` dates in our dataframe. The problem is we can't just apply
+`min()` to our dataframe: doing so produces an error.
+
+The `min()` function wants its input to be just one column from the `stops`
+dataframe. To access a single column from a dataframe, use `$`: what goes before
+`$` is the dataframe, and what comes after is the name of the column we want.
+(**Hint**: What happens if you type `stops$date` into the console?)
 
 ```{r}
-### Remove for tutorial, replace with:
-# YOUR CODE HERE
 min(stops$date)
 max(stops$date)
 ```
@@ -72,13 +82,22 @@ To do this we'll want to
 1. use the `filter()` function to specify the years we want, and 
 2. use the assignment operator `<-` (it's like = in `R`) to overwrite `stops`.
 
+#### Aside: `filter()`
+
+The `filter()` function is used to separate rows from the dataframe that
+interest us from rows that do not. In particular, `filter(DATA, CONDITION)`
+returns `DATA` with all of the rows that don't satisfy `CONDITION` removed. For
+instance, we might want to only look at stops where the subject was arrested. To
+do this, we would type `filter(stops, arrest_made == TRUE)`, since we only want
+rows from `stops` where the `arrest_made` column is (i.e., `==`) `TRUE`. (Note:
+we could actually just type `filter(stops, arrest_made)`. Do you see why?)
+
 You might have noticed in the colnames, that we have no `year` column (our data 
-only has `date`). Luckily, with the `lubridate` package, getting the year from
+only has `date`). These dates are full dates that look like `YYYY-MM-DD`.
+Luckily, with the `lubridate` package, getting the year from
 the date is as easy as `year(date)`!
 
 ```{r}
-### Remove for tutorial, replace with:
-# YOUR CODE HERE
 stops <- stops %>% filter(year(date) < 2018)
 ```
 
@@ -89,18 +108,29 @@ How many stops do we have now?
 stops %>% nrow()
 ```
 
-**tidyverse tip:** The "pipe" operator, `%>%`, just places the previous item
-into the first argument of the function. So, `x %>% f()` is simply `f(x)`. While
-in a one-function call the pipe might feel silly and unnecessary, it's going to
-become _really_ helpful once we start wanting to do multiple transformations to
-our data. 
+**tidyverse tip:** The "pipe" operator, `%>%`, helps to keep our code clean. It
+just places the previous item into the first argument of the function. So,
+`x %>% f()` is simply `f(x)`. While in a one-function call the pipe might feel
+silly and unnecessary, it's going to become _really_ helpful once we start
+wanting to do multiple transformations to our data. For instance, that means
+that instead of typing `nrows(filter(stops, year < 2018))` we can write
+`stops %>% filter(year < 2018) %>% nrows()`, which is easier to understand.
 
 Now, you may have noticed before that there was a column called `type`. Let's 
 take a closer look to see what that means.
 
+#### Aside: `select()`
+A few minutes ago, we used `filter()` to whittle our dataframe down to just the
+rows that interested us. What happens if we want to whittle down the columns
+instead? The `select()` function is designed to solve exactly this problem. It
+takes a dataframe, and gets rid of all of the columns you don't ask for. For
+instance, `select(stops, lat, long)` produces a dataframe with exactly two
+columns: `lat` and `long`. If we wanted to know the time as well, we could type
+`select(stops, lat, long, time)`.
+
+Try using `select()` to look at the `type` column.
+
 ```{r}
-### Remove for tutorial, replace with:
-# YOUR CODE HERE
 stops %>% 
   select(type) %>% 
   head(10) # this allows us to look at just the first 10 rows
@@ -117,16 +147,12 @@ vehicular stops, since one of our analyses is only relevant for traffic stops,
 and since this matches what the majority of the data in our database looks like.
 
 ```{r}
-### Remove for tutorial, replace with:
-# YOUR CODE HERE
 stops <- stops %>% filter(type == "vehicular")
 ```
 
 How many stops do we have now?
 
 ```{r}
-### Remove for tutorial, replace with:
-# YOUR CODE HERE
 stops %>% nrow()
 ```
 
@@ -137,9 +163,19 @@ define a notion of `year` (recall that our data only has `date`).
 The `count()` function gives us an easy way to tally up observations over any
 number of groupings we desire. In this case, let's count over year.
 
+#### Aside: `mutate()`
+
+Notice, though, that we have the same problem as before: there's no `year`
+column in the `stops` dataframe. We'll use the `mutate()` function to fix that.
+The `mutate()` function adds new columns to a dataframe based on old columns.
+The basic setup is `mutate(DATA, NEW_COL = FUN(OLD_COL))` where `DATA` is our
+dataframe, `NEW_COL` is the name of the new column we want, and `FUN` is the
+function we apply to the old column, `OLD_COL`, to get it.
+
+Use the `year()` and `mutate()` functions to add a new column called `year`
+to our `stops` dataframe and then use `count()` to determine the number of stops per year. 
+
 ```{r}
-### Remove for tutorial, replace with:
-# YOUR CODE HERE
 stops %>%
   mutate(year = year(date)) %>% 
   count(year)
@@ -148,8 +184,6 @@ stops %>%
 How about counts over race?
 
 ```{r}
-### Remove for tutorial, replace with:
-# YOUR CODE HERE
 stops %>% 
   count(subject_race)
 ```
@@ -159,9 +193,6 @@ Let's make another table that gives us the proprtion of stops by race.
 most natural to you.)
 
 ```{r}
-### Remove for tutorial, replace with:
-# YOUR CODE HERE
-
 # This method builds off of using `count` as above
 stops %>% 
   count(subject_race) %>% 
@@ -184,9 +215,6 @@ rigorously later on.
 How about counting how many stops by year _and_ race?
 
 ```{r}
-### Remove for tutorial, replace with:
-# YOUR CODE HERE
-
 stops %>% 
   # notice that you can also mutate `date` *within* the count funciton
   count(year = year(date), subject_race)
@@ -203,19 +231,22 @@ stops %>%
   geom_line() 
 ```
 
-There are many tweaks we could make to this plot to make it nicer, but in the 
-phase of exploring the data, it's enough just to get a coarse visual like this.
+We used ``ggplot`` to make this plot. This package provides a lot of options for
+customization, and there are many tweaks we could make to this plot to make it
+nicer. It's syntax is a little complicated, though, and in our data
+exploration, it's enough just to get a coarse visual like this.
 
-From this plot we see that, at least for black and white drivers (it's hard to
-tell from this plot for drivers of other races because the counts are 
-comparatively so much smaller), the annual trends are very different by race.
+From this plot we see that, at least for black and white drivers, the annual
+trends are very different by race. (It's hard to tell from this plot for
+drivers of other races because the counts are comparatively so much smaller.) 
 All races experienced a spike in enforcement in 2015, but thereafter, there
 were fewer white drivers stopped (in 2016 and 2017), whereas there continued to
 be an _increase_ in number of black drivers stopped over those two years. 
 
 This is already a potential lead! We'd have to investigate further to see what 
-the trend looks like when adjusting for population changes over time, etc. But 
-it's often simple explorations like this that can uncover the path to stories.
+the trend looks like when adjusting for population changes over time or other
+factors we haven't considered in this example. But it's often simple
+explorations like this that can uncover the path to stories.
 
 **Fun fact:** This same trend does _not_ hold true for pedestrian stops. In fact,
 if we hadn't filtered to only vehicular stops, we wouldn't have noticed this,
@@ -231,9 +262,6 @@ only 2017 and focus on that data for the rest of our analysis (and overwrite
 `stops`).
 
 ```{r}
-### Remove for tutorial, replace with:
-# YOUR CODE HERE
-
 stops <- stops %>% filter(year(date) == 2017)
 ```
 
@@ -247,13 +275,12 @@ being of black drivers wouldn't be at all surprising.
 ### Stop rates
 
 In order to do this baseline comparison, we need to understand the racial
-demographics in our Philly population data. Using the `population_2017` data 
-we've given you, compute the proportions by race.
+demographics in our Philly population data. The data as we've given it to you
+has raw population numbers. To make it useful, we'll need to compute the
+_proportion_ of Philadelphia residents in each demographic group. (Hint: use the
+`mutate()` function.)
 
 ```{r}
-### Remove for tutorial, replace with:
-# YOUR CODE HERE
-
 population_2017 %>% 
   mutate(prop = num_people / sum(num_people))
 ```
@@ -266,10 +293,30 @@ how many years are in your stop data, in order to get a true value of stops per
 capita; we're using only 2017 for stops and for population, so we're in good 
 shape. 
 
-```{r}
-### Remove for tutorial, replace with:
-# YOUR CODE HERE
+#### Aside: `left_join()`
 
+The way we put tables together is with the `left_join()` function. We need to
+input three things into this function: the two tables we'd like to combine,
+along with instructions on how to join them. In this case, the two tables we
+want to join is the table of stops counted according to `subject race` and
+`population_2017`. The instruction for combining the tables is to join rows that
+contain the same race, so we have to also give `left_join()` the argument `by =
+"subject_race"`. This means that `left_join()` will look at the first table,
+i.e., the table stops counted by race, and then go to the `subject_race` column
+in each row. Then, `left_join()` will take what it finds there---in this case,
+`"asian/pacific islander"`, `"black"`, `"hispanic"`, `"other/unknown"`, and
+`"white"`---and look in the second table, i.e., `population_2017`, for all the
+rows that contain the same information in `population_2017`'s race column. Then,
+it will add the second row at the end of the first to create a new row with
+information from both. What we end up with is a dataframe with all of the
+columns from __both__ tables.
+
+The process is a little complicated, and we won't use it too much, so don't
+worry if the abstract description doesn't make sense. To get a better
+understanding of what's going on, try joining the two tables described above,
+being sure to include the `by = "subject_race"` argument.
+
+```{r}
 stops %>% 
   count(subject_race) %>% 
   left_join(
@@ -279,9 +326,11 @@ stops %>%
   mutate(stop_rate = n / num_people)
 ```
 
-Good! Now this has allows us to make the quantitative claim that blacks are
-stopped at a rate 3.4 times higher than whites are, and Hispanics are stopped at
-a rate 1.5 times higher than whites are.
+Good! Now we can divide the black stop rate by the white stop rate to be able to make 
+a quantitative statement about how much more often blacks are stops versus whites,
+relative to their share of the city's population. Blacks are stopped at a rate 3.4 
+times higher than whites are, and Hispanics are stopped at a rate 1.5 times higher 
+than whites are.
 
 ### Search rates
 
@@ -292,10 +341,39 @@ to be proportion of stopped people who were subsequently searched, and frisk rat
 as proportion of stopped people who were subsequently frisked. Let's get
 these values by race.
 
-```{r}
-### Remove for tutorial, replace with:
-# YOUR CODE HERE
+#### Aside: `group_by()` and `summarize()`
 
+One thing that we often want to do with data is disaggregate it. That is, we
+might want to take the data and break it down into smaller subpopulations. Then,
+when we ask questions, we can ask about each piece---for instance, each
+demographic group, or each police district---instead asking about the population
+as a whole.
+
+The way to do this in `R` is with `group_by()` and summarise. The standard way
+to use `group_by()` is to call `group_by(DATA, COL_NAME)`, where `DATA` is our
+dataframe and `COL_NAME` is the name of a column. What `group_by()` then does is
+take all the rows in the dataframe `DATA` and put them into different groups,
+one for each different value in the column `COL_NAME`. So, for instance, if we
+called `group_by(stops, district)`, `R` would hand back to us the `stops`
+dataframe with all of its columns broken into different groups, one for each
+police district.
+
+The second step is to do something with those groups. That's what `summarize()`
+does. The way `summarize()` works is, given a dataframe broken into groups by
+`group_by()`, will calculate a value, one for each group. The basic syntax is
+`summarize(DATA, STAT = FUN(COL_NAME))`, where `DATA` is some dataframe broken
+up by `group_by()`, `STAT` is some statistic we want to calculate, `FUN` is the
+function that calculates that statistic, and `COL_NAME` is the name of the
+column (or columns) used to calculate the statistic.
+
+Let's put it all together with an example. A straightforward one is: `stops %>%
+group_by(subject_race) %>% summarize(arrest_rate = mean(arrest_made, na.rm =
+True))`. Typing this into the `R` console will calculates arrest rates
+disaggregated by race.
+
+Using `group_by()` and `summarize()`, let's calculate frisk rates by race.
+
+```{r}
 stops %>% 
   group_by(subject_race) %>% 
   summarize(
@@ -304,6 +382,8 @@ stops %>%
   )
 ```
 
+As with the stop rates, we can make a quantitative claim about disparities in
+search and frisk rates by dividing the minority rate by the white rate.
 Here we see that among drivers who were stopped, blacks were searched at a rate
 1.5 times higher than whites were, and Hispanics were searched at a rate 1.2
 times higher than whites were. Black drivers were frisked at a rate 2.1 times
@@ -359,14 +439,11 @@ officers found contraband 99% of the time, while among black drivers who were
 searched, officers found contraband only 1% of the time. This would lead us to
 believe that officers made sure they were _certain_ white individuals had
 contraband before deciding to search, but that they were searching black 
-individuals on a whif of evidence.
+individuals on a whiff of evidence.
 
 Let's investigate hit rates by race in Philly in 2017.
 
 ```{r}
-### Remove for tutorial, replace with:
-# YOUR CODE HERE
-
 stops %>% 
   filter(search_conducted) %>% 
   group_by(subject_race) %>% 
@@ -388,9 +465,6 @@ in those districts, then the observed disparities may not reflect bias.
 Now let's compute hit rates by race _and_ district. Name your result `hit_rates`.
 
 ```{r}
-### Remove for tutorial, replace with:
-# YOUR CODE HERE
-
 hit_rates <- 
   stops %>% 
   filter(search_conducted) %>% 
@@ -399,7 +473,7 @@ hit_rates <-
 ```
 
 Again, this is too many hit rates to compare in one table. To plot the hit rates
-of blacks vs whites and of Hispanics vs whites, we need to reshape our table
+of blacks vs. whites and of Hispanics vs. whites, we need to reshape our table
 to have each row containing a district, a minority race, minority hit rate in
 that district, and white hit rate in that district. We'll walk you through the 
 code below that reshapes the data for us.
@@ -415,6 +489,13 @@ hit_rates <-
 
 hit_rates
 ```
+
+**Quick Tip**: You might have noticed a strange symbol in the code above:
+`%in%`. This is really just shorthand for the sentence, "the `subject_race` is
+`"black"` or its `"white"` or its `"hispanic"`." Without the `%in%` syntax, we
+would have to write this in `R` as: `subject_race == "black" | subject_race ==
+"white" | subject_race == "hispanic"`. The `%in%` syntax is a lot shorter and
+clearer, we think you'll agree.
 
 Now let's plot it!
 
@@ -520,9 +601,6 @@ Let's figure out what district that is by filtering our `hit_rates` table
 to the smallest white hit rate.
 
 ```{r}
-### Remove for tutorial, replace with:
-# YOUR CODE HERE
-
 hit_rates %>% 
   filter(white_hit_rate == min(white_hit_rate))
 ```
@@ -531,8 +609,8 @@ Next, let's take a look at what addresses are usually written in for stops in
 this district.
 
 ```{r}
-### Remove for tutorial, replace with:
-# YOUR CODE HERE
+# Hint: Note that districts in our dataset are encoded as characters, 
+# so 77 is actually "77"
 
 stops %>% 
   filter(district == "77") %>% 
@@ -553,9 +631,7 @@ to remove them from our hit rate analysis. Try computing citywide hit rates
 again, this time filtering out district 77. 
 
 ```{r}
-### Remove for tutorial, replace with:
-# YOUR CODE HERE
-# Hint: Note that districts in our dataset are encoded as characters, 
+# Remember: Districts in our dataset are encoded as characters, 
 # so 77 is actually "77"
 
 stops %>% 
@@ -669,8 +745,6 @@ sunset_times <-
 Great. Now, using `sunset_times`, what is Philly's inter-twilight period?
 
 ```{r}
-### Remove for tutorial, replace with:
-# YOUR CODE HERE
 sunset_times %>% 
   filter(dusk == min(dusk) | dusk == max(dusk))
 ```
@@ -696,7 +770,7 @@ muddle up our analysis.
 
 Let's join the sunset times to our stops data and 
 
-* filter to the inter-twiligh period
+* filter to the inter-twilight period
 * remove that ambigous pre-dusk period
 * for simplicity, compare only black and white drivers
 
@@ -744,15 +818,6 @@ vod_stops %>%
   summarize(prop_black = mean(is_black))
 ```
 
-~~
-**NOTE FOR ERIC/JUSTIN/CHERYL/BETHANY/HANS:** I can add in another raw data intuition
-section that's a basic raw data plot if you think the concept of the VOD test
-is still confusing. But i want to keep things a bit briefer that way we have 
-more time to field questions and have them actually type things in and think 
-things through rather than just running code dan and i wrote...let me know what
-you think though.
-~~
-
 Indeed we see that the proportion is smaller when 6:30-6:45pm is dark than when
 it's light. According to the veil of darkness hypothesis, this is because 
 officers engaged in racial profiling can't determine drivers' races as well
@@ -789,8 +854,8 @@ The fact that the coefficient is negative means that darkness _lessens_ the
 likelihood that a stopped driver will be black, after adjusting for clock 
 time. This matches our intuitive result from 6:30pm.
 
-The fact that the standard error is small means that this is a _statistically
-significant_ finding. Another important thing to do, besides checking 
+The fact that the standard error is small means that this is a _statistically significant_ 
+finding. Another important thing to do, besides checking 
 statistical significance of your results, is to do a bunch of different 
 robustness checks. The idea is that all models make some choices about how to 
 turn the question at hand into math, and we want to vary those choices to make
