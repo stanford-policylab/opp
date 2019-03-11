@@ -22,6 +22,7 @@ ELIGIBLE_STATES <- tribble(
   "TX", "Statewide",
   "VT", "Statewide",
   "WI", "Statewide"
+  # TODO(danj): add CT and MI as additional controls
 )
 
 
