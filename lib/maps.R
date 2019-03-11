@@ -1,14 +1,12 @@
-library(tidyverse)
-library(ggmap)
-
-source('opp.R')
+library(here)
+source(here::here("lib", "opp.R"))
 
 stop_maps <- function(
-    state,
-    city,
-    api_key = NA,
-    n_samples = 10000,
-    pad = 0.0275
+  state,
+  city,
+  api_key = NA,
+  n_samples = 10000,
+  pad = 0.0275
 ) {
   if (is.na(api_key)) {
     api_key <- load_default_api_key()

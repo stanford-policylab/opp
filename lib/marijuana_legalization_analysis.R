@@ -1,7 +1,5 @@
-#!/usr/bin/env Rscript
+library(here)
 source(here::here("lib", "opp.R"))
-source(here::here("lib", "analysis_common.R"))
-library(rstan)
 
 
 ELIGIBLE_STATES <- tribble(
@@ -26,11 +24,11 @@ ELIGIBLE_STATES <- tribble(
 )
 
 
-marijuana_legalization_analysis <- function(output_dir = NULL) {
+marijuana_legalization_analysis <- function() {
   tbl <- load()
   test <- filter(tbl, state %in% c("CO", "WA"))
   control <- filter(tbl, !(state %in% c("CO", "WA")))
-  results <- list(
+  list(
     tables = list(
       search_rate_difference_in_difference_coefficients =
         calculate_search_rate_difference_in_difference_coefficients(tbl)
@@ -43,11 +41,6 @@ marijuana_legalization_analysis <- function(output_dir = NULL) {
         compose_inferred_threshold_changes_plot(test)
     )
   )
-
-  if (!is.null(output_dir))
-    saveRDS(results, file.path(output_dir, "mj.rds"))
-
-  results
 }
 
 
@@ -57,12 +50,11 @@ load <- function() {
     type == "vehicular",
     subject_race %in% c("black", "white", "hispanic"),
     year(date) >= 2011 & year(date) <= 2015,
-    !(state == "FL" && department_name == "FLORIDA DEPARTMENT OF AGRICULTURE"),
-    !(state == "NC" && department_name != "NC State Highway Patrol"),
     # NOTE: collison stops are qualitatively different: they have 3x the search
     # rate and lower hit rates with a larger impact on whites and hispanics
     !(state == "SC" && reason_for_stop == "Collision")
   ) %>%
+  opp_filter_out_non_highway_patrol_stops_from_states() %>%
   mutate(
     subject_race = relevel(droplevels(subject_race), "white")
   ) %>%
@@ -343,6 +335,29 @@ compose_timeseries_rate_plot <- function(
 }
 
 
+base_theme <- function() {
+    theme_bw(base_size = 15) +
+    theme(
+      # NOTE: remove the title
+      plot.title = element_blank(),
+      # NOTE: make the background white
+      panel.background = element_rect(fill = "white", color = "white"),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      # NOTE: minimize margins
+      plot.margin = unit(rep(0.2, 4), "cm"),
+      panel.margin = unit(0.25, "lines"),
+      # NOTE: tiny space between axis labels and tick marks
+      axis.title.x = element_text(margin = ggplot2::margin(t = 6.0)),
+      axis.title.y = element_text(margin = ggplot2::margin(t = 6.0)),
+      # NOTE: simplify legend
+      legend.key = element_blank(),
+      legend.background = element_rect(fill = "transparent"),
+      legend.title = element_blank()
+    )
+}
+
+
 compose_misdemeanor_rate_plots <- function(tbl) {
   filter(
     tbl,
@@ -568,8 +583,8 @@ threshold_cis = function(
   )
 }
 
-# converts the threshold signal into a percent value (0, 1)
 signal_to_percent <- function(x, phi, delta) {
+  # converts the threshold signal into a percent value (0, 1)
   phi * dnorm(x, delta, 1) / 
     (phi * dnorm(x, delta, 1) + (1 - phi) * dnorm(x, 0, 1))
 }
@@ -606,9 +621,4 @@ plot_threshold_changes <- function(tbl) {
     color = "",
     x = "Legalization Period"
   )
-}
-
-
-if (!interactive() & !exists("driver")) {
-  marijuana_legalization_analysis(here::here("cache"))
 }

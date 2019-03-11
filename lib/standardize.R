@@ -1,8 +1,5 @@
-library(dplyr)
-library(digest)
-
-source(here::here("lib", "sanitizers.R"))
-source(here::here("lib", "standards.R"))
+library(here)
+source(here::here("lib", "utils.R"))
 
 
 standardize <- function(data, metadata) {

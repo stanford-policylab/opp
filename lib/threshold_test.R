@@ -1,5 +1,5 @@
-source(here::here("lib", "analysis_common.R"))
-library("rstan")
+library(here)
+source(here::here("lib", "opp.R"))
 
 #' Threshold Test
 #'
@@ -53,7 +53,7 @@ threshold_test <- function(
   outcome_colq <- enquo(outcome_col)
 
   metadata <- list()
-  tbl <- prepare(
+  tbl <- opp_prepare_for_disparity(
     tbl,
     !!!control_colqs,
     !!geography_colq,
@@ -215,17 +215,18 @@ signal_to_percent <- function(x, phi, delta){
 }
 
 
-# Matrix operation to perfrom accumulated row means over some sub-category i
-# @pre: length(i) == nrow(M)
-# @pre: length(w) == nrow(M)
-# e.g., 
-## if rows of @M represent race-district thresholds, and
-## if @i gives integer representation of which race each row in @M corresponds to,
-## then @output will be a matrix with by-race thresholds averaged across districts
-## averages are weighted according to @w (or, default is unweighted avg)
-# @post: ncol(output) == ncol(M)
-# @post: nrow(output) == n_distinct(i)
 accumulateRowMeans <- function(
+  # Matrix operation to perfrom accumulated row means over some sub-category i
+  # @pre: length(i) == nrow(M)
+  # @pre: length(w) == nrow(M)
+  # e.g., 
+  ## if rows of @M represent race-district thresholds, and
+  ## if @i gives integer representation of which race each row in @M correspond
+  ## to, then @output will be a matrix with by-race thresholds averaged across
+  ## districts averages are weighted according to @w
+  ## (or, default is unweighted avg)
+  # @post: ncol(output) == ncol(M)
+  # @post: nrow(output) == n_distinct(i)
   M, # matrix to perform accumulated row means on
   i, # lists which sub-category value each row in M corresponds to
   w = rep(1, nrow(M)), # values used to create weightings for averaging
@@ -264,7 +265,7 @@ format_summary_stats <- function(
     ) 
   
   tibble(
-    # TODO(danj): make this less dependent on previous operations;
+    # TODO(amyshoe): make this less dependent on previous operations;
     # demographic == as.integer(factor(demographic_col)), so to get the
     # original labels back, we need to re-factor demographic_col; i.e.
     # it may originally have contained levels 1, 3, 5, but had to be

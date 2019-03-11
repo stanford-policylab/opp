@@ -1,4 +1,3 @@
-#!/usr/bin/env Rscript
 source(here::here("lib", "opp.R"))
 source(here::here("lib", "outcome_test.R"))
 source(here::here("lib", "threshold_test.R"))
@@ -478,8 +477,4 @@ plt <- function(d, prefix) {
   ggsave(fpath, p, width=12, height=6, units="in")
   print(str_c("saved: ", fpath))
   p
-}
-  
-if (!interactive() & !exists("driver")) {
-   main()
 }

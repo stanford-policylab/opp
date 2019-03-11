@@ -1,5 +1,6 @@
-source("opp.R")
-source("veil_of_darkness_test.R")
+library(here)
+source(here::here("lib", "opp.R"))
+source(here::here("lib", "veil_of_darkness_test.R"))
 
 
 ELIGIBLE_CITIES <- tribble(
@@ -53,7 +54,7 @@ ELIGIBLE_STATES <- tribble(
 )
 
 
-veil_of_darkness_cities <- function(output_file = NULL) {
+veil_of_darkness_cities <- function() {
   # NOTE: all of these places have date and time at least 95% of the time and
   # subject_race at least 80% of the time
 
@@ -165,7 +166,7 @@ veil_of_darkness_cities <- function(output_file = NULL) {
     tbl_subgeography %>%
     filter(city_state %in% eligible_subeography_locations)
   
-  print("Data prepped")
+  print("Running analysis..")
   
   coefficients <- bind_rows(
     par_pmap(
@@ -200,25 +201,16 @@ veil_of_darkness_cities <- function(output_file = NULL) {
     )
   )
 
-  # plots <-
-  #   prepare_vod_data(
-  #     tbl,
-  #     city_state,
-  #     lat_col = center_lat,
-  #     lng_col = center_lng
-  #   )$data %>%
-  #   compose_vod_plots()
-  plots <- list()
+  plots <-
+    prepare_vod_data(
+      tbl,
+      city_state,
+      lat_col = center_lat,
+      lng_col = center_lng
+    )$data %>%
+    compose_vod_plots()
 
-  results <- list(
-    coefficients = coefficients,
-    plots = plots
-  )
-
-  if (!is.null(output_file))
-    write_rds(results, output_file)
-
-  results
+  list(coefficients = coefficients, plots = plots)
 }
 
 
@@ -242,65 +234,59 @@ veil_of_darkness_cities_daylight_savings <- function() {
 }
 
 
-veil_of_darkness_states <- function(output_file = NULL, from_cache = T) {
+veil_of_darkness_states <- function() {
   # NOTE: all of these places have date and time at least 95% of the time and
   # subject_race at least 85% of the time
   # NOTE: IL, NJ, RI, VT are elligible too, but geocoding is nontrivial, 
   # because county isn't present
   tbl <- read_rds(here::here("data", "state_county_geocodes.rds"))
-  if (from_cache) {
-    data <- read_rds(here::here("cache", "vod_state_data.rds"))
-  } else {
-    data <-
-      opp_load_all_clean_data(only = ELIGIBLE_STATES) %>% 
-      filter(
-        type == "vehicular",
-        # NOTE: only keep years with complete data between 2012 and 2017
-        # runs through nov 2015 (keep dec 2011 to be able to keep 2015)
-        (state == "AZ"      & ((year(date) == 2011 & month(date) == 12)
-                            | (year(date) %in% 2012:2014)
-                            | (year(date) == 2015 & month(date) <= 11)))
-        # runs oct 2013 to sept 2015
-        | (state == "CT"    & !(year(date) == 2015 & month(date) > 9)
-                            & department_name == "State Police")
-        # runs through oct 2016 (keep nov/dec 2011 to be able to keep 2016)
-        | (state == "FL"    & ((year(date) == 2011 & month(date) >= 11)
-                               | (year(date) %in% 2012:2015)
-                               | (year(date) == 2016 & month(date) <= 10)))
-        | (state == "MI"    & year(date) %in% 2013:2015)
-        | (state == "MT"    & year(date) %in% 2012:2016)
-        | (state == "ND"    & year(date) %in% 2012:2014)
-        # runs through nov 2017 (keep dec 2011 to be able to keep 2017)
-        | (state == "NY"      & ((year(date) == 2011 & month(date) >= 12)
-                                 | (year(date) %in% 2012:2016)
-                                 | (year(date) == 2017 & month(date) <= 11)))
-        | (state == "OH"    & year(date) %in% 2012:2015)
-        | (state == "TN"    & year(date) %in% 2012:2015)
-        | (state == "TX"    & year(date) %in% 2012:2017)
-        | (state == "WI"    & year(date) %in% 2012:2015)
-        | (state == "WY"    & year(date) == 2012)
+  data <-
+    opp_load_all_clean_data(only = ELIGIBLE_STATES) %>% 
+    filter(
+      type == "vehicular",
+      # NOTE: only keep years with complete data between 2012 and 2017
+      # runs through nov 2015 (keep dec 2011 to be able to keep 2015)
+      (state == "AZ"      & ((year(date) == 2011 & month(date) == 12)
+                          | (year(date) %in% 2012:2014)
+                          | (year(date) == 2015 & month(date) <= 11)))
+      # runs oct 2013 to sept 2015
+      | (state == "CT"    & !(year(date) == 2015 & month(date) > 9)
+                          & department_name == "State Police")
+      # runs through oct 2016 (keep nov/dec 2011 to be able to keep 2016)
+      | (state == "FL"    & ((year(date) == 2011 & month(date) >= 11)
+                             | (year(date) %in% 2012:2015)
+                             | (year(date) == 2016 & month(date) <= 10)))
+      | (state == "MI"    & year(date) %in% 2013:2015)
+      | (state == "MT"    & year(date) %in% 2012:2016)
+      | (state == "ND"    & year(date) %in% 2012:2014)
+      # runs through nov 2017 (keep dec 2011 to be able to keep 2017)
+      | (state == "NY"      & ((year(date) == 2011 & month(date) >= 12)
+                               | (year(date) %in% 2012:2016)
+                               | (year(date) == 2017 & month(date) <= 11)))
+      | (state == "OH"    & year(date) %in% 2012:2015)
+      | (state == "TN"    & year(date) %in% 2012:2015)
+      | (state == "TX"    & year(date) %in% 2012:2017)
+      | (state == "WI"    & year(date) %in% 2012:2015)
+      | (state == "WY"    & year(date) == 2012)
+    )
+  
+  print("Data loaded..")
+  
+  data <-
+    data %>% 
+    left_join(
+      tbl %>% rename(county_state = loc), 
+      by = c("state", "city", "county_name")
+    ) %>% 
+    filter(
+      county_state %in% eligible_counties(
+        ., 
+        min_stops_per_race = 1000,
+        max_counties_per_state = 20
       )
-    
-    print("data loaded")
-    
-    data <-
-      data %>% 
-      left_join(
-        tbl %>% rename(county_state = loc), 
-        by = c("state", "city", "county_name")
-      ) %>% 
-      filter(
-        county_state %in% eligible_counties(
-          ., 
-          min_stops_per_race = 1000,
-          max_counties_per_state = 20
-        )
-      )
-    
-    write_rds(data, here::here("cache", "vod_state_data.rds"))
-  }
+    )
 
-  print("Data prepped")
+  print("Running analysis...")
   
   coefficients <- bind_rows(
     par_pmap(
@@ -328,29 +314,19 @@ veil_of_darkness_states <- function(output_file = NULL, from_cache = T) {
     )
   )
   
-  # plots <-
-  #   prepare_vod_data(
-  #     tbl,
-  #     city_state,
-  #     lat_col = center_lat,
-  #     lng_col = center_lng
-  #   )$data %>%
-  #   compose_vod_plots()
-  plots <- list()
+  plots <-
+    prepare_vod_data(
+      tbl,
+      city_state,
+      lat_col = center_lat,
+      lng_col = center_lng
+    )$data %>%
+    compose_vod_plots()
   
-  results <- list(
-    coefficients = coefficients,
-    plots = plots
-  )
-  
-  if (!is.null(output_file))
-    write_rds(results, output_file)
-  
-  results
+  list(coefficients = coefficients, plots = plots)
 }
 
-# selects the top `max_counties` number of counties with at least `min_stops` 
-# number of stops per demographic in `eligible demographics`
+
 eligible_counties <- function(
   tbl,
   state_col = state,
@@ -361,6 +337,8 @@ eligible_counties <- function(
   min_stops_per_race = 1000,
   max_counties_per_state = 50
 ) {
+  # selects the top `max_counties` number of counties with at least `min_stops`
+  # number of stops per demographic in `eligible demographics`
   state_colq <- enquo(state_col)
   county_colq <- enquo(county_col)
   unique_geo_colq <- enquo(unique_geo_col)
@@ -386,6 +364,7 @@ eligible_counties <- function(
     top_n(max_counties_per_state, n) %>% 
     pull(!!unique_geo_colq)
 }
+
 
 veil_of_darkness_states_daylight_savings <- function() {
   # TODO(amyshoe)

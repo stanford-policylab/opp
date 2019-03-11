@@ -1,4 +1,3 @@
-library(knitr)
 library(here)
 source(here::here("lib", "opp.R"))
 
@@ -32,8 +31,4 @@ data_readme_for <- function(state, city) {
       format='html'
     ))
   )
-}
-
-if (!interactive()) {
-  data_readme()
 }

@@ -1,17 +1,6 @@
-library(tidyverse)
 library(here)
-library(fs)
+source(here::here("lib", "opp.R"))
 
-source("analysis_common.R")
-
-# original paper filters:
-# only speeding violations
-# 100 citations
-# 20 whites, 20 minorities
-# 0-40 over
-# remove accidents
-# remove tickets not on roads...1.5%
-# fewer than 2% of tickets issued at bunching point are non-lenient
 
 bunching_test <- function(
   tbl,
@@ -27,6 +16,14 @@ bunching_test <- function(
   bunching_points = c(10),
   non_lenient_bunching_rate_max = 0.02
 ) {
+  # NOTE: original paper filters:
+  # only speeding violations
+  # 100 citations
+  # 20 whites, 20 minorities
+  # 0-40 over
+  # remove accidents
+  # remove tickets not on roads...1.5%
+  # fewer than 2% of tickets issued at bunching point are non-lenient
 
   control_colqs <- enquos(...)
   demographic_colq <- enquo(demographic_col)

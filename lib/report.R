@@ -1,9 +1,5 @@
-library(ggplot2)
-library(rlang)
-library(scales)
-library(zoo)
-
-source("opp.R")
+library(here)
+source(here::here("lib", "opp.R"))
 
 # SOURCE
 d <- opp_load_clean(state, city)
@@ -302,7 +298,8 @@ calculate_if_cols(
 
 
 # NOTE: convert to char because of weird print representation of some numbers
-loading_problems <- metadata$loading_problems %>%
+loading_problems <-
+  metadata$loading_problems %>%
   lapply(function(x) mutate_all(x, funs('as.character'))) %>%
   bind_rows()
 

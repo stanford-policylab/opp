@@ -1,9 +1,5 @@
-library(rgdal)
-library(dplyr)
-library(sp)
-library(tibble)
-
-source("utils.R")
+library(here)
+source(here::here("lib", "opp.R"))
 
 
 load_all_shapefiles_dfs <- function(dir) {
@@ -76,6 +72,49 @@ intersect_shapes_dfs <- function(below_shapes_df, above_shapes_df) {
 extract_block_group_data <- function(overlap_df, col) {
   slot(overlap_df, "data") %>% select_(col, "GEOID", "area_above_pct") %>%
     rename(block_group_geoid = GEOID, pct_of_block_group_area = area_above_pct)
+}
+
+
+process_nhgis_block_group_race_populations <- function(nhgis_acs_data_path) {
+  select(
+    read_csv(nhgis_acs_data_path),
+    `State Name`,
+    `GIS Join Match Code`,
+    starts_with("Estimates"),
+    -`Estimates: Area Name`,
+    -`Estimates: Total`,
+    # remove aggregate not-hispanic group
+    -`Estimates: Not Hispanic or Latino`,
+    # remove hispanic subdivisions
+    -matches('Estimates: Hispanic or Latino:')
+  ) %>%
+  rename(
+    state = `State Name`,
+    gis_block_group_id = `GIS Join Match Code`,
+    hispanic = `Estimates: Hispanic or Latino`,
+    white = `Estimates: Not Hispanic or Latino: White alone`,
+    black = `Estimates: Not Hispanic or Latino: Black or African American alone`
+  ) %>%
+  mutate(
+    `asian/pacific islander` = rowSums(select(
+      .,
+      matches("Asian|Pacific Islander")
+    )),
+    other = rowSums(select(
+      .,
+      matches("Some other|Two or more|American Indian")
+    ))
+  ) %>%
+  select(
+    -matches(
+      "Asian|Pacific Islander|Some other|Two or more|American Indian",
+      ignore.case=F,
+    )
+  ) %>%
+  mutate_if(
+    is.numeric,
+    as.integer
+  )
 }
 
 

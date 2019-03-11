@@ -1,4 +1,5 @@
-source(here::here("lib", "analysis_common.R"))
+library(here)
+source(here::here("lib", "opp.R"))
 
 #' Outcome Test
 #'
@@ -39,7 +40,7 @@ outcome_test <- function(
   outcome_colname <- quo_name(outcome_colq)
 
   metadata <- list()
-  tbl <- prepare(
+  tbl <- opp_prepare_for_disparity(
     tbl,
     !!!control_colqs,
     demographic_col=!!demographic_colq,

@@ -1,9 +1,8 @@
 library(here)
 source(here::here("lib", "opp.R"))
-source(here::here("lib", "analysis_common.R"))
 
 
-prima_facie_stats <- function(only = locations_used_in_analyses()) {
+prima_facie_stats <- function(only = opp_locations_used_in_analyses()) {
   list(
     stop_rates = aggregate_stop_stats_all_combined(only),
     search_rates = aggregate_stats_all_combined(only, "search_conducted"),
@@ -32,7 +31,7 @@ prima_facie_stats <- function(only = locations_used_in_analyses()) {
 
 
 aggregate_stop_stats_all_combined <- function(
-  only = opp_available(),
+  only = opp_locations_used_in_analyses(),
   start_year = 2011,
   end_year = 2017,
   max_null_rate = 0.35,
@@ -57,7 +56,7 @@ aggregate_stop_stats_all_combined <- function(
 
 
 aggregate_stop_stats_all <- function(
-  only = opp_available(),
+  only = opp_locations_used_in_analyses(),
   start_year = 2011,
   end_year = 2017,
   max_null_rate = 0.35
@@ -110,7 +109,7 @@ aggregate_stop_stats <- function(
 
 
 stop_stats_all <- function(
-  only = opp_available(),
+  only = opp_locations_used_in_analyses(),
   start_year = 2011,
   end_year = 2017,
   max_null_rate = 0.35
@@ -142,9 +141,9 @@ stop_stats <- function(
   tbl <-
     opp_load_clean_data(state, city) %>%
     mutate(state = state, city = city, year = year(date)) %>%
-    filter(year >= start_year, year <= end_year) %>%
+    filter(year >= start_year, year <= end_year, type == "vehicular") %>%
     filter_to_complete_years() %>%
-    filter_out_non_highway_patrol_stops_from_states()
+    opp_filter_out_non_highway_patrol_stops_from_states()
 
   if (nrow(tbl) == 0 | !("subject_race" %in% colnames(tbl)))
     return(empty)
@@ -211,7 +210,7 @@ filter_to_complete_years <- function(tbl, min_monthly_stops = 100) {
 
 
 aggregate_stats_all_combined <- function(
-  only = opp_available(),
+  only = opp_locations_used_in_analyses(),
   col = "search_conducted",
   start_year = 2011,
   end_year = 2017,
@@ -241,7 +240,7 @@ aggregate_stats_all_combined <- function(
 
 
 aggregate_stats_all <- function(
-  only = opp_available(),
+  only = opp_locations_used_in_analyses(),
   col = "search_conducted",
   start_year = 2011,
   end_year = 2017,
@@ -305,7 +304,7 @@ aggregate_stats <- function(
 
 
 stats_all <- function(
-  only = opp_available(),
+  only = opp_locations_used_in_analyses(),
   col = "search_conducted",
   start_year = 2011,
   end_year = 2017,
@@ -343,8 +342,8 @@ stats <- function(
   tbl <-
     opp_load_clean_data(state, city) %>%
     mutate(state = state, city = city, year = year(date)) %>%
-    filter(year >= start_year, year <= end_year) %>%
-    filter_out_non_highway_patrol_stops_from_states()
+    filter(year >= start_year, year <= end_year, type == "vehicular") %>%
+    opp_filter_out_non_highway_patrol_stops_from_states()
   # NOTE: filters to predicate if present, i.e. search_conducted for
   # contraband_found, otherwise returns an empty tibble
   if (!is.na(predicate)) {

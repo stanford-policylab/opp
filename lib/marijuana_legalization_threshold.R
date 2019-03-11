@@ -1,7 +1,7 @@
-#!/usr/bin/env Rscript
 source(here::here("lib", "opp.R"))
 source(here::here("lib", "threshold_test.R"))
 library(rstan)
+
 
 marijuana_legalization_threshold_test <- function() {
   state <- get_marijuana_state_arg()
@@ -29,7 +29,6 @@ marijuana_legalization_threshold_test <- function() {
     )
   ) %>%
   write_rds(here::here("cache", str_c("mj_threshold_results_", state, ".rds")))
-
 }
 
 get_marijuana_state_arg <- function() {
@@ -245,10 +244,3 @@ signal_to_percent <- function(x, phi, delta){
   phi * dnorm(x, delta, 1) / 
     (phi * dnorm(x, delta, 1) + (1 - phi) * dnorm(x, 0, 1))
 }
-
-if (!interactive()) {
-  marijuana_legalization_threshold_test()
-}
-
-
-

@@ -1,6 +1,7 @@
 ```{r, echo = FALSE}
 opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
-source("bunching_test.R")
+library(here)
+source(here::here("lib", "bunching_test.R"))
 
 over_limit <- 40
 

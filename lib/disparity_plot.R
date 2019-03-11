@@ -1,4 +1,4 @@
-library(tidyverse)
+source(here::here("lib", "opp.R"))
 
 #' Disparity plot: plot rates across demographic groups to identify disparities
 #'
@@ -86,7 +86,7 @@ disparity_plot <- function(
              str_c(str_to_title(minority_demographic), " drivers")
     )
   
-  if(is.null(axis_max)) {
+  if (is.null(axis_max)) {
     axis_limits <- c(
       max(min(pull(tbl, !!rate_colq)) - epsilon_rate, 0),
       max(pull(tbl, !!rate_colq)) + epsilon_rate
@@ -137,7 +137,4 @@ disparity_plot <- function(
       legend.background=element_rect(fill='transparent')
       # legend.title=element_blank()
     )
-    
 }
-
-

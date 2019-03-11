@@ -1,12 +1,6 @@
-#!/usr/bin/env Rscript
-# library(ggplot2)
-library(readr)
 library(here)
-library(maps)
-library(fs)
-
 source(here::here("lib", "opp.R"))
-source(here::here("lib", "analysis_common.R"))
+
 
 compose_coverage_map <- function() {
   data(state.fips)
@@ -38,35 +32,18 @@ compose_coverage_map <- function() {
     left_join(all_cities, city_geocodes) %>%
     anti_join(analysis_cities)
 
-  # NOTE: can uncomment some code to get fuller map
   dir_create(here::here("plots"))
-  pdf(here::here("plots", "coverage_map.pdf"), width = 16, height = 9)
-  # png(here::here("plots", "coverage_map.png"), width = 1600, height = 900)
+  out_fn <- here::here("plots", "coverage_map.pdf")
+  pdf(out_fn), width = 16, height = 9)
   maps::map(
     database = "state",
-    # col = c("white", "grey", "lightblue3")[
     col = c("white", "lightblue3")[
       1
-      # + (state_polynames %in% eligible_state_polynames)
       + (state_polynames %in% analysis_state_polynames)
     ],
     fill = T,
     namesonly = T
   )
-  # points(
-  #   unused_cities$lng,
-  #   unused_cities$lat,
-  #   col = "red",
-  #   pch = 16,
-  #   cex = 2
-  # )
-  # points(
-  #   analysis_cities$lng,
-  #   analysis_cities$lat,
-  #   col = "darkgreen",
-  #   pch = 16,
-  #   cex = 2
-  # )
   points(
     analysis_cities$lng,
     analysis_cities$lat,
@@ -75,8 +52,5 @@ compose_coverage_map <- function() {
     cex = 2
   )
   dev.off() 
-}
-
-if (!interactive()) {
-  compose_coverage_map()
+  print(str_c("saved to ", out_fn))
 }
