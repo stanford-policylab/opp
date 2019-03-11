@@ -689,7 +689,7 @@ opp_locations_used_in_analyses <- function() {
 
 
 opp_locations_used_in_analysis <- function(analysis_name) {
-  source(here::here("lib", str_c(analysis_name, ".R")))
+  source(here::here("lib", str_c(analysis_name, ".R")), local = T)
   states <- tibble()
   cities <- tibble()
   if (exists("ELIGIBLE_STATES"))
@@ -928,6 +928,34 @@ opp_report_all <- function() {
 
 opp_results_dir <- function(state, city = "statewide") {
   dir_create(path(opp_data_dir(state, city), "results"))
+}
+
+
+opp_run_disparity <- function() {
+  # TODO(danj): implement
+}
+
+
+opp_run_marijuana_legalization_analysis <- function() {
+  source(here::here("lib", "marijuana_legalization_analysis.R"), local = T)
+  mj <- marijuana_legalization_analysis()
+  saveRDS(mj, here::here("results", "marijuana_legalization_analysis.rds"))
+  mj
+}
+
+
+opp_recreate_results_for_paper <- function() {
+  # TODO(danj): implement
+}
+
+
+opp_run_veil_of_darkness <- function() {
+  source(here::here("lib", "veil_of_darkness.R"), local = T)
+  vod_cities <- veil_of_darkness_cities()
+  saveRDS(vod_cities, here::here("results", "veil_of_darkness_cities.rds"))
+  vod_states <- veil_of_darkness_states()
+  saveRDS(vod_cities, here::here("results", "veil_of_darkness_states.rds"))
+  list(cities = vod_cities, states = vod_states)
 }
 
 

@@ -21,11 +21,18 @@ main <- function() {
     v <- opp_process_all()
     print(v)
   }
-  
   if (not_null(args$report_all)) {
     v <- opp_report_all()
     print(v)
   }
+  if (not_null(args$marijuana))
+    opp_run_marijuana_legalization_analysis()
+  if (not_null(args$vod))
+    opp_run_veil_of_darkness()
+  if (not_null(args$disparity))
+    opp_run_disparity()
+  if (not_null(args$paper))
+    opp_recreate_results_for_paper()
   print("Finished!")
   q(status = 0)
 }
@@ -45,6 +52,7 @@ get_args <- function() {
                  "[--coverage]",
                  "[--process_all]",
                  "[--report_all]",
+                 "[--paper]"
                  sep = " ")
 
   spec <- tribble(
@@ -55,12 +63,16 @@ get_args <- function() {
     "report",      "r",         "none",         "logical",
     "prima_facie", "f",         "none",         "logical",
     "bunching",    "b",         "none",         "logical",
-    "plot",        "p",         "none",         "logical",
+    "plot",        "pl",        "none",         "logical",
     "state",       "s",         "none",         "character",
     "city",        "c",         "none",         "character",
     "coverage",    "v",         "none",         "logical",
     "process_all", "pa",        "none",         "logical",
-    "report_all",  "ra",        "none",         "logical"
+    "report_all",  "ra",        "none",         "logical",
+    "marijuana",   "m",         "none",         "logical",
+    "vod",         "vod",       "none",         "logical",
+    "disparity",   "d",         "none",         "logical",
+    "paper",       "p",         "none",         "logical"
   )
 
   args <- parse_args(spec)
