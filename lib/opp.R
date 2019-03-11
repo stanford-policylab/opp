@@ -492,7 +492,7 @@ opp_load_acs_race_data <- function(fname) {
   # 8. Delete first line of non-descriptive headers
   tbl <-
     read_csv(
-      here::here("data", fname)
+      here::here("resources", fname)
     ) %>%
     select(
       -Id,

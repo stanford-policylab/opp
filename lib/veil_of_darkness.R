@@ -59,7 +59,7 @@ veil_of_darkness_cities <- function() {
   # subject_race at least 80% of the time
 
   city_geocodes <-
-    read_csv(here::here("data", "city_coverage_geocodes.csv")) %>%
+    read_csv(here::here("resources", "city_coverage_geocodes.csv")) %>%
     separate(loc, c("city", "state"), sep = ",") %>%
     rename(center_lat = lat, center_lng = lng)
 
@@ -239,7 +239,7 @@ veil_of_darkness_states <- function() {
   # subject_race at least 85% of the time
   # NOTE: IL, NJ, RI, VT are elligible too, but geocoding is nontrivial, 
   # because county isn't present
-  tbl <- read_rds(here::here("data", "state_county_geocodes.rds"))
+  tbl <- read_rds(here::here("resources", "state_county_geocodes.rds"))
   data <-
     opp_load_all_clean_data(only = ELIGIBLE_STATES) %>% 
     filter(
