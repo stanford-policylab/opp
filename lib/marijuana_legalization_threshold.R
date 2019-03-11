@@ -1,6 +1,6 @@
+library(here)
 source(here::here("lib", "opp.R"))
 source(here::here("lib", "threshold_test.R"))
-library(rstan)
 
 
 marijuana_legalization_threshold_test <- function() {
@@ -99,6 +99,7 @@ load_mj_state <- function(state) {
     ) 
 }
 
+
 add_legalization_info <- function(tbl) {
   mutate(
     tbl,
@@ -112,6 +113,7 @@ add_legalization_info <- function(tbl) {
     legal = date >= legalization_date
   )
 }
+
 
 summarise_for_stan <- function(tbl) {
   tbl%>%
@@ -129,6 +131,7 @@ summarise_for_stan <- function(tbl) {
     ungroup()
 }
 
+
 format_data_summary_for_stan <- function(d) {
   list(
     n_groups = nrow(d),
@@ -142,6 +145,7 @@ format_data_summary_for_stan <- function(d) {
     hit_count = pull(d, num_hits)
   )
 }
+
 
 stan_marijuana_threshold_test <- function(
   data,
@@ -177,7 +181,6 @@ stan_marijuana_threshold_test <- function(
 
 
 ### post processing
-
 add_thresholds <- function(
   data_summary,
   posteriors
@@ -192,6 +195,7 @@ add_thresholds <- function(
     )
 }
 
+
 summary_stats <- function(obs, post) {
   threshold_cis(
     obs, post,
@@ -202,6 +206,7 @@ summary_stats <- function(obs, post) {
       with(w)
   ) 
 }
+
 
 threshold_cis = function(obs, post,
                          groups = 'subject_race',
@@ -239,8 +244,8 @@ threshold_cis = function(obs, post,
     
 }
 
-# converts the threshold signal into a percent value (0, 1)
 signal_to_percent <- function(x, phi, delta){
+  # converts the threshold signal into a percent value (0, 1)
   phi * dnorm(x, delta, 1) / 
     (phi * dnorm(x, delta, 1) + (1 - phi) * dnorm(x, 0, 1))
 }
