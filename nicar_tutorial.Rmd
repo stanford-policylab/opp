@@ -9,6 +9,9 @@ output:
 
 ## Setup
 
+First, let's load the necessary libraries and data that will allow us to
+begin our investigation!
+
 ```{r setup, message=FALSE,  warning=FALSE}
 ## Libraries to include
 library(tidyverse)
@@ -20,10 +23,8 @@ library(splines)
 
 ## Load the data
 # Replace the path below with the path to where your data lives
-data_path <- "~/opp/data/states/pa/philadelphia/clean/philadelphia.rds"
-stops <- read_rds(data_path)$data
-# data_path <- "~/Desktop/pa_philadelphia_2019_02_25.rds"
-# stops <- read_rds(data_path)
+data_path <- "~/Desktop/pa_philadelphia_2019_02_25.rds"
+stops <- read_rds(data_path)
 
 # Additional data and fixed values we'll be using
 population_2017 <- tibble(
@@ -98,7 +99,7 @@ Luckily, with the `lubridate` package, getting the year from
 the date is as easy as `year(date)`!
 
 ```{r}
-stops <- stops %>% filter(year(date) < 2018)
+stops <- filter(stops, year(date) < 2018)
 ```
 
 How many stops do we have now?
@@ -108,7 +109,7 @@ How many stops do we have now?
 stops %>% nrow()
 ```
 
-**tidyverse tip:** The "pipe" operator, `%>%`, helps to keep our code clean. It
+**tidyverse tip**: The "pipe" operator, `%>%`, helps to keep our code clean. It
 just places the previous item into the first argument of the function. So,
 `x %>% f()` is simply `f(x)`. While in a one-function call the pipe might feel
 silly and unnecessary, it's going to become _really_ helpful once we start
@@ -233,7 +234,7 @@ stops %>%
 
 We used ``ggplot`` to make this plot. This package provides a lot of options for
 customization, and there are many tweaks we could make to this plot to make it
-nicer. It's syntax is a little complicated, though, and in our data
+nicer. Its syntax is a little complicated, though, and in our data
 exploration, it's enough just to get a coarse visual like this.
 
 From this plot we see that, at least for black and white drivers, the annual
@@ -252,7 +253,7 @@ explorations like this that can uncover the path to stories.
 if we hadn't filtered to only vehicular stops, we wouldn't have noticed this,
 because this same plot over the combined pedestrian + vehicular data looks
 unremarkable. The takeaway is that looking at trends by sub-categories can often
-be very helpful. (e.g., In Nashville, looking at the different listed stop 
+be very helpful. (E.g., in Nashville, looking at the different listed stop 
 reasons uncovers the extent of the disparities.)
 
 To give us time to dive into a variety of analysis methods, we'll let you 
@@ -346,10 +347,10 @@ these values by race.
 One thing that we often want to do with data is disaggregate it. That is, we
 might want to take the data and break it down into smaller subpopulations. Then,
 when we ask questions, we can ask about each piece---for instance, each
-demographic group, or each police district---instead asking about the population
+demographic group, or each police district---instead of asking about the population
 as a whole.
 
-The way to do this in `R` is with `group_by()` and summarise. The standard way
+The way to do this in `R` is with `group_by()` and `summarize()`. The standard way
 to use `group_by()` is to call `group_by(DATA, COL_NAME)`, where `DATA` is our
 dataframe and `COL_NAME` is the name of a column. What `group_by()` then does is
 take all the rows in the dataframe `DATA` and put them into different groups,
@@ -367,8 +368,7 @@ function that calculates that statistic, and `COL_NAME` is the name of the
 column (or columns) used to calculate the statistic.
 
 Let's put it all together with an example. A straightforward one is: `stops %>%
-group_by(subject_race) %>% summarize(arrest_rate = mean(arrest_made, na.rm =
-True))`. Typing this into the `R` console will calculates arrest rates
+group_by(subject_race) %>% summarize(arrest_rate = mean(arrest_made))`. Typing this into the `R` console will calculates arrest rates
 disaggregated by race.
 
 Using `group_by()` and `summarize()`, let's calculate frisk rates by race.
@@ -382,7 +382,15 @@ stops %>%
   )
 ```
 
-As with the stop rates, we can make a quantitative claim about disparities in
+Note that with functions like `mean()`, if any of the values that are being
+averaged are `NA`, the output value of the mean will simply be `NA`. We don't have
+to worry about that with our Philly data, because it's super clean. But you may
+encounter this problem in some of your own data. The easy workaround is to pass
+the argument `na.rm = T` into `mean()` -- as you see in the code above. This tells 
+`R` to remove the `NA` values and compute the mean over all the non-NA values.
+
+Now let's dive into these results! As with the stop rates, we can make a 
+quantitative claim about disparities in
 search and frisk rates by dividing the minority rate by the white rate.
 Here we see that among drivers who were stopped, blacks were searched at a rate
 1.5 times higher than whites were, and Hispanics were searched at a rate 1.2
@@ -393,8 +401,8 @@ higher than white drivers were, and Hispanic drivers were frisked at a rate
 ### Caveats about the benchmark test
 
 While these baseline stats give us a sense that there are racial disparities in
-policing practices is Philadelphia, they are not evidence discrimination. The
-argument against the banchmark test is that we haven't identified the correct
+policing practices in Philadelphia, they are not evidence of discrimination. The
+argument against the benchmark test is that we haven't identified the correct
 baseline to compare to. 
 
 For the stop rate benchmark, what we really want to know is what the true 
@@ -409,11 +417,18 @@ only `stops %>% summarize(p = round(100 * mean(arrest_made), 1)) %>% pull(p)`%
 of stops result in an arrest, so the arrested population will naturally not
 match the stopped population. 
 
+An even simpler critique of the population bechmark for stop rates is that it
+doesn't account for possible race-specific differences in driving behavior, including
+amount of time spent on the road (and adherence to traffic laws, as mentioned above).
+If black drivers, hypothetically, spend more time on the road than whites, that in and
+of itself could explain the higher stop rates we see for black drivers, even in the
+absence of discrimination.
+
 Search and frisk rates are slightly less suspect, since among the stopped 
 population, it's more reasonable to believe that people of different races
 offend at equal rates. In the context of searches, this means assuming that
 all races exhibit probable cause of possessing contraband at equal rates. And
-in the case of frisks, this means assuming that all race exhibit reasonable
+in the case of frisks, this means assuming that all races exhibit reasonable
 articulable suspicion of possessing a weapon at equal rates. Of course, these
 assumptions can also be argued against. One could claim that the stopped population
 isn't a good measure of the true racial distribution of probable cause.
@@ -470,6 +485,8 @@ hit_rates <-
   filter(search_conducted) %>% 
   group_by(subject_race, district) %>% 
   summarize(hit_rate = mean(contraband_found, na.rm = T))
+
+hit_rates
 ```
 
 Again, this is too many hit rates to compare in one table. To plot the hit rates
@@ -485,17 +502,18 @@ hit_rates <-
   filter(subject_race %in% c("black", "white", "hispanic")) %>% 
   spread(subject_race, hit_rate, fill = 0) %>% 
   rename(white_hit_rate = white) %>% 
-  gather(minority_race, minority_hit_rate, c(black, hispanic))
+  gather(minority_race, minority_hit_rate, c(black, hispanic)) %>%
+  arrange(district)
 
 hit_rates
 ```
 
 **Quick Tip**: You might have noticed a strange symbol in the code above:
 `%in%`. This is really just shorthand for the sentence, "the `subject_race` is
-`"black"` or its `"white"` or its `"hispanic"`." Without the `%in%` syntax, we
+`"black"` or it is `"white"` or it is `"hispanic"`." Without the `%in%` syntax, we
 would have to write this in `R` as: `subject_race == "black" | subject_race ==
 "white" | subject_race == "hispanic"`. The `%in%` syntax is a lot shorter and
-clearer, we think you'll agree.
+clearer; we think you'll agree.
 
 Now let's plot it!
 
@@ -527,13 +545,17 @@ hit_rates %>%
   coord_fixed() +
   # This allows us to compare black v. white and Hispanic v. white side by
   # side, in panels
-  facet_grid(cols = vars(minority_race))
+  facet_grid(. ~ minority_race)
+  # Depending on your version of ggplot2, you may be able to use the syntax 
+  # below (the newer ggplot2 syntax) -- which is clearer, in my opinion.
+  # But older versions of ggplot2 will only accept the above syntax
+  # facet_grid(cols = vars(minority_race))
 ```
 
 This is a good start. However, it's hard to tell where the mass is. That is, 
 maybe the points above the dotted line (i.e., the points where minority hit
 rates are _higher_ than white hit rates), maybe those districts have all of 
-Philadelphia's popualtion, and the districts below the line only represent 
+Philadelphia's population, and the districts below the line only represent 
 a few people. While this is unlikely, it's still good to have a marker of how 
 much weight or emphasis to give each of the points on our plot. 
 
@@ -577,7 +599,9 @@ hit_rates %>%
     labels = scales::percent
   ) +
   coord_fixed() +
-  facet_grid(cols = vars(minority_race))
+  facet_grid(. ~ minority_race)
+  # same facet_grid syntax issue here as before!
+  # facet_grid(cols = vars(minority_race))
 ```
 
 It seems like we can now say with confidence that even looking within location,
@@ -707,7 +731,7 @@ Let's calculate the sunset and dusk times for Philly in 2017.
 (Note that we distinguish here between _sunset_ and _dusk_. Sunset is the point 
 in time where the sun dips below the horizon. Dusk, also known as the end of 
 civil twilight, is the time when the sun is six degrees below the horizon, and 
-is it is widely considered to be dark. We'll explain why this is relevant in a
+it is widely considered to be dark. We'll explain why this is relevant in a
 moment.)
 
 ```{r}
@@ -763,7 +787,7 @@ patterns tend to change only with clock time. For example, the demographics
 of commuters who are on the road at 6:30pm likely stays pretty steady throughout
 the year, compared to demographics of commuters at 5pm versus at 9pm. 
 
-One quick note: We want to make sure to filtering out stops that occurred in the
+One quick note: We want to make sure to filter out stops that occurred in the
 approximately 30-minute period between sunset and dusk (end of civil twilight),
 since it is ambiguous as to whether that period is light or dark, which would
 muddle up our analysis. 
@@ -897,5 +921,42 @@ profiling of black drivers is present in Philly traffic stops.
 
 ### Caveats on the Veil of Darkness test
 
-TODO(amyshoe)
+The veil-of-darkness test is a popular technique for assessing disparate treatment, 
+but, like all statistical methods, it comes with caveats. (Hopefully that's one of
+the takeaways today -- data and statistical analysis can be very powerful, but it's
+good to know what the limitations are.)
+Perhaps most importantly, darkness--after adjusting for time of day--is a 
+function of the date. 
+As such, to the extent that driver behavior changes throughout the year, and these 
+changes are correlated with race, the test can suggest discrimination where there is 
+none. 
+One way to account for seasonal effects is to consider the brief period around daylight
+savings. Driving behavior likely doesn't change much at, say, 6pm on the day before
+daylight savings to the day after; but the sky is light on one day and dark on the next.
+Clever checks like this can help circumvent some of the concerns about the veil of 
+darkness test. However, if driving behavior is more related to lighting than time of day, the daylight savings test wouldn't help.
 
+Another thing to note is that artificial lighting (e.g., from street lamps) can weaken the relationship between sunlight and visibility, and so the method may underestimate the extent to which stops are predicated on perceived race.
+
+Other things, like vehicle make, year, and model often correlate with race and are
+still visible at night, which could lead to the test under-estimating the extent of
+racial profiling. Similarly, the test doesn't control for stop reason, which is often
+correlated with both race and time of day (consider, for example, pretextual broken 
+tail light stops).
+
+Finally, the test only speaks to presence of racial profiling in the intertwilight period -- doesn't say anything about other hours.
+
+Nevertheless, despite these shortcomings, the test provides a useful if imperfect measure of bias in stop decisions.
+
+## Parting shots
+
+Hopefully this gets you started on the basics of how to analyze data, and gives
+you a little glimpse of some more complex modeling you can do with the data too.
+While these analyses (from simple hit rates to modeling racial
+profiling) can be really helpful in quantifying racial disparities, it's often
+basic exploration of the data that yields the most interesting stories. So, the 
+number one rule in working with data is **be curious!**
+
+Make sure to read the [full paper](https://5harad.com/papers/100M-stops.pdf) for a 
+more in-depth analysis. And we look forward to reading about all of the analysis
+you all do, and all the interesting stories you uncover!
