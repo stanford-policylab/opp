@@ -1,0 +1,92 @@
+---
+title: "A large-scale analysis of racial disparities in police stops across the
+United States"
+header-includes:
+  - \usepackage{pdflscape}
+  - \usepackage{graphicx}
+---
+
+```{r setup, echo = FALSE}
+opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+library(here)
+pfs <- readRDS(here::here("results", "prima_facie_stats.rds"))
+# vod <- readRDS(here::here("results", "veil_of_darkness.rds"))
+# disp <- readRDS(here::here("results", "disparity.rds"))
+mj <- readRDS(here::here("results", "marijuana_legalization_analysis.rds"))
+```
+
+\begin{center}
+\section{Prima Facie Stats}
+\end{center}
+
+```{r stop_rates}
+kable(pfs$stop_rates)
+```
+```{r search_rates}
+kable(pfs$search_rates)
+```
+
+
+\newpage
+\begin{center}
+\section{Veil of Darkness}
+\end{center}
+
+```{r veil_of_darkness}
+# TODO(danj/amyshoe):
+```
+
+\newpage
+\begin{center}
+\section{Disparity Analysis}
+\end{center}
+```{r disparity}
+# TODO(amyshoe):
+```
+
+\newpage
+\begin{center}
+\section{Marijuana Legalization Analysis}
+\end{center}
+```{r mj_table}
+kable(mj$tables$search_rate_difference_in_difference_coefficients)
+```
+
+\newpage
+```{r mj_test_search_rates_plot, fig.height = 3, fig.width = 7}
+mj$plots$test_search_rates +
+  theme(
+    legend.position = c(0.88, 0.80),
+    axis.title.y = element_text(size = 12)
+  )
+```
+
+
+```{r mj_test_misdemeanor_rates_plot, fig.height = 3, fig.width = 7}
+mj$plots$test_misdemeanor_rates +
+  theme(
+    legend.position = c(0.88, 0.80),
+    axis.title.y = element_text(size = 12)
+  )
+```
+
+
+```{r mj_inferred_threshold_plot, fig.height = 3, fig.width = 7}
+mj$plots$inferred_threshold_changes
+```
+
+
+```{r save_mj_control_search_rates}
+# NOTE: have to save the file to the tmp directory because landscape doesn't
+# work with r execution blocks
+library(ggplot2)
+ggsave(
+  "/tmp/mj_control_search_rates.png",
+  mj$plots$control_search_rates,
+  height = 6,
+  width = 11
+)
+```
+\begin{landscape}
+\includegraphics{/tmp/mj_control_search_rates.png}
+\end{landscape}
