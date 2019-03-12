@@ -12,7 +12,7 @@ Open Policing Project -- City Data
 
 ## Required R Packages
 ```R
-install.packages(
+install.packages(c(
   "digest",
   "fs",
   "functional",
@@ -37,7 +37,7 @@ install.packages(
   "suncalc",
   "tidyverse",
   "zoo"
-)
+))
 ```
   
 ## TODO

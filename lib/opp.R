@@ -273,8 +273,8 @@ opp_clean <- function(d, state, city = "statewide") {
 opp_clean_data_path <- function(state, city = "statewide") {
   # NOTE: all clean data is stored and loaded in RDS format to
   # maintain data types
-  data_dir <- opp_data_dir(state, city)
-  file.path(data_dir, "clean", str_c(normalize_city(city), ".rds"))
+  clean_data_dir <- dir_create(here::here(opp_data_dir(state, city), "clean"))
+  path(clean_data_dir, str_c(normalize_city(city), ".rds"))
 }
 
 
@@ -309,12 +309,12 @@ opp_coverage <- function() {
 
 
 opp_data_dir <- function(state, city = "statewide") {
-  here::here(
+  dir_create(here::here(
     "data",
     "states",
     normalize_state(state),
     normalize_city(city)
-  )
+  ))
 }
 
 
@@ -324,42 +324,42 @@ opp_data_paths <- function() {
 }
 
 
-opp_download_data <- function(state, city, data_dir = "/tmp/opp_data") {
-  output_dir <- dir_create(here::here(
-      data_dir,
-      str_to_lower(state),
-      normalize_city(city),
-      "clean"
-  ))
-  dir_create(here::here("data"))
-  file.symlink(data_dir, here::here("data"))
+opp_download_all_data <- function() {
+  opp_apply(opp_download_data)
+}
+
+
+opp_download_analyses_data <- function() {
+  opp_apply(
+    opp_download_data,
+    opp_locations_used_in_analyses()
+  )
+}
+
+
+opp_download_data <- function(state, city) {
+  if (!link_exists(here::here("data")))
+    opp_set_download_directory("/tmp/opp_data")
+  output_path <- opp_clean_data_path(state, city)
+  if (!file_exists(output_path)) {
+    pattern <- str_c(normalize_state(state), normalize_city(city), sep = "_")
+    urls <- opp_download_urls(state, city)
+    url <- urls[str_detect(urls, "\\.rds")]
+    download.file(url, output_path)
+  }
+}
+
+
+opp_download_urls <- function(state, city) {
   prefix <- "https://embed.stanford.edu/iframe?url="
   if (city == "Statewide")
     purl <- str_c(prefix, "https://purl.stanford.edu/jb084sr9005")
   else
     purl <- str_c(prefix, "https://purl.stanford.edu/tr137st9964")
   html <- str_c(readLines(purl), collapse = "\n")
-  urls <- unique(unlist(str_match_all(html, '<a href="(.*?)"')))
+  urls <- str_match_all(html, '<a href="(.*?)"')[[1]][,2]
   pattern <- str_c(normalize_state(state), normalize_city(city), sep = "_")
-  file <- urls[str_detect(pattern, urls)]
-  # download.file(file, path(path))
-  file
-}
-
-
-opp_download_all_data <- function(data_dir = "/tmp/opp_data") {
-  opp_apply(
-    function(state, city) opp_download(state, city, data_dir),
-    opp_available()
-  )
-}
-
-
-opp_download_analyses_data <- function(data_dir = "/tmp/opp_data") {
-  opp_apply(
-    function(state, city) opp_download(state, city, data_dir),
-    opp_locations_used_in_analyses()
-  )
+  unique(urls[str_detect(urls, pattern)])
 }
 
 
@@ -1014,6 +1014,14 @@ opp_run_veil_of_darkness <- function() {
 
 opp_save <- function(d, state, city = "statewide") {
   saveRDS(d, opp_clean_data_path(state, city))
+}
+
+
+opp_set_download_directory <- function(data_dir) {
+  repo_data_dir <- here::here("data")
+  dir_create(data_dir)
+  file.remove(repo_data_dir)
+  file.symlink(data_dir, repo_data_dir)
 }
 
 
