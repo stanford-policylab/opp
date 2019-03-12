@@ -273,7 +273,7 @@ opp_clean <- function(d, state, city = "statewide") {
 opp_clean_data_path <- function(state, city = "statewide") {
   # NOTE: all clean data is stored and loaded in RDS format to
   # maintain data types
-  clean_data_dir <- dir_create(here::here(opp_data_dir(state, city), "clean"))
+  clean_data_dir <- dir_create(path(opp_data_dir(state, city), "clean"))
   path(clean_data_dir, str_c(normalize_city(city), ".rds"))
 }
 
@@ -952,15 +952,7 @@ opp_results_path <- function(fname) {
 
 
 opp_run_disparity <- function() {
-  output_path <- here::here("results", "disparity.rds")
-  source(here::here("lib", "disparity.R"), local = T)
-  disp <- disparity()
-  saveRDS(disp, output_path)
-  print(str_c(
-    "saved to disparity analysis results to ",
-    output_path
-  ))
-  disp
+  # TODO(danj): implement
 }
 
 
