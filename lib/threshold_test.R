@@ -83,35 +83,6 @@ threshold_test <- function(
     majority_demographic
   )
   
-  # NOTE(danj): commenting out, this is causing ./run.R --disparity to fail
-  # generally, functions shouldn't have side effects, i.e. saving or doing
-  # anything that modifies internal state, except a main (client) function; if
-  # you need access data_summary, you can put it in the output and
-  # save/manipulate it in the calling script; if you have to save stuff, the
-  # typical method is to provide an output directory and allow the script to
-  # put all it's output there
-
-  # ## TODO(amy): generalize this to any geography --
-  # ## Note that passing in the pathname is hard given how `disparity.R` is 
-  # ## currently written. Maybe change disparity to purrr instead?
-  # output_dir <- dir_create(here::here("tables"))
-  # if(data_summary %>% count(state, city) %>% nrow() == 1) {
-  #   write_rds(
-  #     summary_stats, 
-  #     path = path(output_dir, str_c(
-  #       unique(pull(data_summary, state)), 
-  #       unique(pull(data_summary, city)), 
-  #       "threshold_summary.rds", sep = "_")
-  #     )
-  #   )
-  # }
-  # else {
-    # write_rds(
-    #   summary_stats,
-    #   path = path(output_dir, "all_cities_threshold_summary.rds", sep = "_")
-    # )
-  # }
-  
   list(
     metadata = c(
       metadata,
