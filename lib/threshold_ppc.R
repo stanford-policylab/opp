@@ -54,7 +54,8 @@ state_obs <- d$state$threshold$results$thresholds %>%
   ) %>% 
   rename(num_stops = n)
 state_post <- rstan::extract(d$state$threshold$metadata$fit)  
-city_obs <- d$city$threshold$results$thresholds %>% 
+# city_obs <- d$city$threshold$results$thresholds %>% 
+city_obs <- v$threshold$results$thresholds %>% 
   select(-race) %>% 
   mutate(
     search_rate = n_action / n,
@@ -62,7 +63,7 @@ city_obs <- d$city$threshold$results$thresholds %>%
     race = str_to_title(subject_race)
   ) %>% 
   rename(num_stops = n)
-city_post <- rstan::extract(d$city$threshold$metadata$fit) 
+city_post <- rstan::extract(v$threshold$metadata$fit) 
 
 rate_ppc(
   "search_rate", state_obs, state_post, 
