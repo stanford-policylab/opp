@@ -11,14 +11,34 @@ Open Policing Project -- City Data
 * libjpeg-turbo-devel
 
 ## Required R Packages
-* *tidyverse
-* stringr
-* jsonlite
-* rgdal
-* rgeos
-* maptools
-* suncalc
-* lutz
+```R
+install.packages(
+  "digest",
+  "fs",
+  "functional",
+  "getopt",
+  "here",
+  "jsonlite",
+  "knitr",
+  "lubridate",
+  "lutz",
+  "maps",
+  "parallel",
+  "purrr",
+  "rgdal",
+  "rlang",
+  "rmarkdown",
+  "rstan",
+  "scales",
+  "sp",
+  "splines",
+  "stringi",
+  "stringr",
+  "suncalc",
+  "tidyverse",
+  "zoo"
+)
+```
   
 ## TODO
 * create vod plot with CIs
