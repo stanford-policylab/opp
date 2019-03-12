@@ -1,5 +1,4 @@
-# opp-city
-Stanford Computational Policy Lab (SCPL): Open Policing Project (OPP)
+# Stanford Computational Policy Lab (SCPL): Open Policing Project (OPP)
 
 ## Required System Packages
 
