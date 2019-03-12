@@ -70,6 +70,24 @@ main <- function() {
         v$threshold$results$thresholds, 
         str_c("threshold aggregate: ", dataset_name)
       )
+    print("Running threshold posterior predictive checks...")
+    v$threshold$ppc <- list()
+    v$threshold$ppc$search_rate <- plt_ppc_rates(
+      v$threshold$results$thresholds,
+      rstan::extract(v$threshold$metadata$fit),
+      "search_rate", 
+      numerator_col = n_action,
+      denominator_col = n,
+      title = str_c(dataset_name, " threshold ppc - search rates")
+    )
+    v$threshold$ppc$hit_rate <- plt_ppc_rates(
+      v$threshold$results$thresholds,
+      rstan::extract(v$threshold$metadata$fit),
+      "hit_rate", 
+      numerator_col = n_outcome,
+      denominator_col = n_action,
+      title = str_c(dataset_name, " threshold ppc - hit rates")
+    )
     
     results[[dataset_name]] <- v
   }
@@ -307,4 +325,73 @@ plt_all <- function(tbl, prefix) {
       "geography",
       "plot"
     )
+}
+
+plt_ppc_rates <- function(
+  obs, 
+  post,
+  rate_to_plot,
+  numerator_col,
+  denominator_col,
+  size_col = n,
+  demographic_col = subject_race,
+  title, 
+  truncate_prob = 0.99
+) {
+  numerator_colq <- enquo(numerator_col)
+  denominator_colq <- enquo(denominator_col)
+  size_colq <- enquo(size_col)
+  demographic_colq <- enquo(demographic_col)
+  
+  rate_name <- str_remove(rate_to_plot, "_rate") 
+  obs <- obs %>% 
+    mutate(
+      rate = !!numerator_colq / !!denominator_colq,
+      num_stops = !!size_colq,
+      pred_rate = colMeans(post[[rate_to_plot]]),
+      pred_error = rate - pred_rate,
+      demographic = str_to_title(!!demographic_colq)
+    ) 
+  
+  print(with(
+    obs,
+    sprintf(
+      'Weighted RMS prediction error: %.2f%%',
+      100*sqrt(weighted.mean((pred_error)^2, num_stops))
+    )
+  ))
+  
+  obs <- obs %>% 
+    filter(pred_rate <= quantile(.$pred_rate, probs = truncate_prob)[[1]])
+
+  ylim <- obs$pred_error %>% range() %>% abs() %>% max()
+
+  plt <- obs %>% 
+    sample_n(nrow(obs)) %>% 
+    ggplot(aes(x=pred_rate, y=pred_error)) +
+    geom_point(
+      aes(size=!!size_colq, color=demographic), 
+      alpha = 0.8
+    ) + 
+    scale_size_area(max_size=10) +
+    scale_x_continuous(
+      str_c('\nPredicted ', rate_name, ' rate'),  
+      labels = scales::percent
+    ) + 
+    scale_y_continuous(
+      str_c(str_to_title(rate_name), ' rate prediction error\n'), 
+      labels = scales::percent, limits = c(-2*ylim, 2*ylim)
+    ) +
+    geom_abline(slope=0, intercept=0, linetype='dashed') +
+    theme_bw(base_size = 20) +
+    theme(
+      legend.position=c(1.0,0),
+      legend.justification=c(1,0),
+      legend.title = element_blank(),
+      legend.background = element_rect(fill = 'transparent')
+    ) +
+    scale_color_manual(values=c('black','red','blue')) +
+    guides(size=FALSE) +
+    labs(title = title)
+  plt
 }
