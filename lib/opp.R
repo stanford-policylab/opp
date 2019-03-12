@@ -296,14 +296,15 @@ opp_county_population <- function(state, county) {
 
 
 opp_coverage <- function() {
-  print("assessing coverage...")
-  output_dir = here::here("reports")
-  dir_create(output_dir)
+  print("generateing coverage report...")
+  dir_create(here::here("reports"))
+  output_path <- here::here("reports", "coverage.pdf")
   render(
     "coverage.Rmd",
     "pdf_document",
-    file.path(output_dir, "coverage.pdf")
+    output_path
   )
+  print(str_c("saved coverage report to ", output_path))
 }
 
 
@@ -886,11 +887,12 @@ opp_raw_data_dir <- function(state, city = "statewide") {
 
 opp_report <- function(state, city = "statewide") {
   print("building report...")
-  output_dir <- dir_create(here::here("reports"))
+  dir_create(here::here("reports"))
+  output_path <- here::here("reports", pdf_filename(state, city))
   render(
     "report.Rmd",
     "pdf_document",
-    file.path(output_dir, pdf_filename(state, city)),
+    output_path,
     params = list(
       state = state,
       city = city
@@ -915,25 +917,51 @@ opp_run_disparity <- function() {
 
 
 opp_run_marijuana_legalization_analysis <- function() {
+  output_path <- here::here("results", "marijuana_legalization_analysis.rds")
   source(here::here("lib", "marijuana_legalization_analysis.R"), local = T)
   mj <- marijuana_legalization_analysis()
-  saveRDS(mj, here::here("results", "marijuana_legalization_analysis.rds"))
+  saveRDS(mj, output_path)
+  print(str_c(
+    "saved to marijuana legalization analysis results to ",
+    output_path
+  ))
   mj
 }
 
 
-opp_recreate_results_for_paper <- function() {
-  # TODO(danj): implement
+opp_run_prima_facie_stats <- function() {
+  output_path <- here::here("results", "prima_facie_stats.rds")
+  source(here::here("lib", "prima_facie_stats.R"), local = T)
+  pfs <- prima_facie_stats()
+  saveRDS(pfs, output_path)
+  print(str_c("saved prima facie stats to ", output_path))
+  pfs
+}
+
+
+opp_run_paper_analyses <- function() {
+  # TODO(danj): uncomment
+  # opp_run_prima_facie_stats()
+  # opp_run_veil_of_darkness()
+  # opp_run_disparity()
+  # opp_run_marijuana_legalization_analysis()
+  dir_create(here::here("results"))
+  output_path <- here::here("results", "paper_results.pdf")
+  render("paper_results.Rmd", "pdf_document", output_path)
+  print(str_c("saved paper results to ", output_path))
 }
 
 
 opp_run_veil_of_darkness <- function() {
+  output_path <- here::here("results", "veil_of_darkness.rds")
   source(here::here("lib", "veil_of_darkness.R"), local = T)
-  vod_cities <- veil_of_darkness_cities()
-  saveRDS(vod_cities, here::here("results", "veil_of_darkness_cities.rds"))
-  vod_states <- veil_of_darkness_states()
-  saveRDS(vod_cities, here::here("results", "veil_of_darkness_states.rds"))
-  list(cities = vod_cities, states = vod_states)
+  vod <- list(
+    cities = veil_of_darkness_cities(),
+    states = veil_of_darkness_states()
+  )
+  saveRDS(vod, output_path)
+  print(str_c("saved veil of darkness results to ", output_path))
+  vod
 }
 
 

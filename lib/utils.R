@@ -395,8 +395,11 @@ is_null <- function(v) {
 
 json_to_tr <- function(json_map) {
   # NOTE: Converts a json map loaded with jsonlite to a tr.
-  n <- names(json_map)
-  unlist(setNames(n %>% map(function(x) { unname(unlist(json_map[x])) }), n))
+  nms <- names(json_map)
+  unlist(setNames(
+    nms %>% purrr::map(function(x) { unname(unlist(json_map[x])) }),
+    nms
+  ))
 }
 
 
@@ -885,7 +888,7 @@ similar_rows_report <- function(tbl) {
 
 
 simple_map <- function(v, func) {
-  unlist(map(v, func))
+  unlist(purrr::map(v, func))
 }
 
 
@@ -980,7 +983,7 @@ top_all <- function(tbl, exclude = c(), n = 50) {
 
 top_str <- function(tbl, cols, n = 50) {
   tbl %>% 
-    group_by_(.dots=simple_map(cols, as.name)) %>%
+    group_by_(.dots = simple_map(cols, as.name)) %>%
     summarize(count = n()) %>%
     arrange(desc(count)) %>%
     ungroup() %>%

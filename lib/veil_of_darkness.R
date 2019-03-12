@@ -159,20 +159,17 @@ veil_of_darkness_cities <- function() {
     filter(subgeography_coverage > 0.80) %>%
     pull(city_state)
 
-  print("Eligible subgeography locations: ")
+  print("eligible subgeography locations: ")
   print(eligible_subeography_locations)
 
   tbl_subgeography <-
     tbl_subgeography %>%
     filter(city_state %in% eligible_subeography_locations)
   
-  print("Running analysis..")
-  
   coefficients <- bind_rows(
     par_pmap(
       mc.cores = 3,
-      # tibble(degree = rep(1:6, 2), interact = c(rep(T, 6), rep(F, 6))),
-      tibble(degree = rep(6, 2), interact = c(T, F)),
+      tibble(degree = rep(1:6, 2), interact = c(rep(T, 6), rep(F, 6))),
       function(degree, interact) {
         bind_rows(
           vod_coef(tbl, city_state, degree, interact),
@@ -270,8 +267,6 @@ veil_of_darkness_states <- function() {
       | (state == "WY"    & year(date) == 2012)
     )
   
-  print("Data loaded..")
-  
   data <-
     data %>% 
     left_join(
@@ -286,8 +281,6 @@ veil_of_darkness_states <- function() {
       )
     )
 
-  print("Running analysis...")
-  
   coefficients <- bind_rows(
     par_pmap(
       mc.cores = 3,
