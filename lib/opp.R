@@ -226,7 +226,7 @@ opp_bunching_report <- function() {
 
 
 opp_calculated_features_path <- function(state, city = "statewide") {
-  data_dir = opp_data_dir(state, city)
+  data_dir <- opp_data_dir(state, city)
   file.path(data_dir, "calculated_features")
 }
 
@@ -273,7 +273,7 @@ opp_clean <- function(d, state, city = "statewide") {
 opp_clean_data_path <- function(state, city = "statewide") {
   # NOTE: all clean data is stored and loaded in RDS format to
   # maintain data types
-  data_dir = opp_data_dir(state, city)
+  data_dir <- opp_data_dir(state, city)
   file.path(data_dir, "clean", str_c(normalize_city(city), ".rds"))
 }
 
@@ -321,6 +321,45 @@ opp_data_dir <- function(state, city = "statewide") {
 opp_data_paths <- function() {
   paths <- list.files(here::here("data"), ".*\\.rds$", recursive = T)
   here::here("data", paths[str_detect(paths, "clean")])
+}
+
+
+opp_download_data <- function(state, city, data_dir = "/tmp/opp_data") {
+  output_dir <- dir_create(here::here(
+      data_dir,
+      str_to_lower(state),
+      normalize_city(city),
+      "clean"
+  ))
+  dir_create(here::here("data"))
+  file.symlink(data_dir, here::here("data"))
+  prefix <- "https://embed.stanford.edu/iframe?url="
+  if (city == "Statewide")
+    purl <- str_c(prefix, "https://purl.stanford.edu/jb084sr9005")
+  else
+    purl <- str_c(prefix, "https://purl.stanford.edu/tr137st9964")
+  html <- str_c(readLines(purl), collapse = "\n")
+  urls <- unique(unlist(str_match_all(html, '<a href="(.*?)"')))
+  pattern <- str_c(normalize_state(state), normalize_city(city), sep = "_")
+  file <- urls[str_detect(pattern, urls)]
+  # download.file(file, path(path))
+  file
+}
+
+
+opp_download_all_data <- function(data_dir = "/tmp/opp_data") {
+  opp_apply(
+    function(state, city) opp_download(state, city, data_dir),
+    opp_available()
+  )
+}
+
+
+opp_download_analyses_data <- function(data_dir = "/tmp/opp_data") {
+  opp_apply(
+    function(state, city) opp_download(state, city, data_dir),
+    opp_locations_used_in_analyses()
+  )
 }
 
 
@@ -880,7 +919,7 @@ opp_processor_paths <- function() {
 
 
 opp_raw_data_dir <- function(state, city = "statewide") {
-  data_dir = opp_data_dir(state, city)
+  data_dir <- opp_data_dir(state, city)
   file.path(data_dir, "raw_csv")
 }
 
@@ -906,8 +945,9 @@ opp_report_all <- function() {
 }
 
 
-opp_results_dir <- function(state, city = "statewide") {
-  dir_create(path(opp_data_dir(state, city), "results"))
+opp_results_path <- function(fname) {
+  dir_create(here::here("results"))
+  here::here("results", fname)
 }
 
 
@@ -925,7 +965,7 @@ opp_run_disparity <- function() {
 
 
 opp_run_marijuana_legalization_analysis <- function() {
-  output_path <- here::here("results", "marijuana_legalization_analysis.rds")
+  output_path <- opp_results_path("marijuana_legalization_analysis.rds")
   source(here::here("lib", "marijuana_legalization_analysis.R"), local = T)
   mj <- marijuana_legalization_analysis()
   saveRDS(mj, output_path)
@@ -938,7 +978,7 @@ opp_run_marijuana_legalization_analysis <- function() {
 
 
 opp_run_prima_facie_stats <- function() {
-  output_path <- here::here("results", "prima_facie_stats.rds")
+  output_path <- opp_results_path("prima_facie_stats.rds")
   source(here::here("lib", "prima_facie_stats.R"), local = T)
   pfs <- prima_facie_stats()
   saveRDS(pfs, output_path)
@@ -953,15 +993,14 @@ opp_run_paper_analyses <- function() {
   # opp_run_veil_of_darkness()
   # opp_run_disparity()
   # opp_run_marijuana_legalization_analysis()
-  dir_create(here::here("results"))
-  output_path <- here::here("results", "paper_results.pdf")
+  output_path <- opp_results_path("paper_results.pdf")
   render("paper_results.Rmd", "pdf_document", output_path)
   print(str_c("saved paper results to ", output_path))
 }
 
 
 opp_run_veil_of_darkness <- function() {
-  output_path <- here::here("results", "veil_of_darkness.rds")
+  output_path <- opp_results_path("veil_of_darkness.rds")
   source(here::here("lib", "veil_of_darkness.R"), local = T)
   vod <- list(
     cities = veil_of_darkness_cities(),
@@ -979,7 +1018,7 @@ opp_save <- function(d, state, city = "statewide") {
 
 
 opp_shapefiles_dir <- function(state, city = "statewide") {
-  data_dir = opp_data_dir(state, city)
+  data_dir <- opp_data_dir(state, city)
   file.path(data_dir, "shapefiles")
 }
 

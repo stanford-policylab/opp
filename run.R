@@ -45,6 +45,7 @@ get_args <- function() {
                  "[--coverage]",
                  "[--process_all]",
                  "[--report_all]",
+                 "[--package]",
                  "[--prima_facie_stats]",
                  "[--veil_of_darkness]",
                  "[--disparity]",
