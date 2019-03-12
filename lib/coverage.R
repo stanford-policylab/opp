@@ -2,13 +2,11 @@ library(here)
 source(here::here("lib", "opp.R"))
 
 
-coverage_for_paper <- function(use_cache = T) {
+coverage_for_paper <- function() {
   coverage(
     locations_used_in_analyses(),
     start_year = 2011,
-    end_year = 2017,
-    use_cache = use_cache,
-    cache_path = here::here("cache", "paper_coverage.rds")
+    end_year = 2017
   ) %>%
   mutate(
     order = if_else(city == "Statewide", 1, 0),
@@ -70,11 +68,8 @@ coverage_for_paper <- function(use_cache = T) {
 
 
 coverage_for_website <- function(use_cache = T) {
-  coverage(
-    use_cache = use_cache,
-    cache_path = here::here("cache", "website_coverage.rds")
-  ) %>%
   left_join(
+    coverage(),
     opp_apply(
       function(state, city) {
         tibble(
@@ -91,24 +86,34 @@ coverage_for_website <- function(use_cache = T) {
 coverage <- function(
   locations = opp_available(),
   start_year = 2000,
-  end_year = year(Sys.Date()),
-  use_cache = T,
-  cache_path = here::here("cache", "coverage.rds")
+  end_year = year(Sys.Date())
 ) {
-  if (use_cache & !is.null(cache_path) & file.exists(cache_path))
-    return(inner_join(readRDS(cache_path), locations))
-
-  cvg <-
-    opp_apply(
-      function(state, city) {
-        calculate_coverage(state, city, start_year, end_year)
-      },
-      locations
-    ) %>%
-    bind_rows()
-
-  saveRDS(cvg, cache_path)
-  cvg
+  opp_apply(
+    function(state, city) {
+      calculate_coverage(state, city, start_year, end_year)
+    },
+    locations
+  ) %>%
+  bind_rows() %>%
+  select(
+    date,
+    time,
+    type,
+    geolocation,
+    subgeography,
+    subject_age,
+    subject_race,
+    subject_sex,
+    reason_for_stop,
+    warning_issued,
+    citation_issued,
+    arrest_made,
+    violation,
+    search_conducted,
+    search_basis,
+    frisk_performed,
+    contraband_found
+  )
 }
 
 
@@ -122,7 +127,7 @@ calculate_coverage <- function(
   tbl <-
     load_coverage_data(state, city) %>%
     filter(
-      veh_or_ped == "vehicular",
+      type == "vehicular",
       year(date) >= start_year,
       year(date) <= end_year
     )
@@ -151,30 +156,30 @@ load_coverage_data <- function(state, city) {
   tbl <-
     opp_load_clean_data(state, city) %>%
     mutate(state = state, city = city) %>%
-    filter_out_non_highway_patrol_stops_from_states() %>%
+    opp_filter_out_non_highway_patrol_stops_from_states() %>%
     select(-state, -city)
 
-  coverage <- select_or_add_as_na(
+  base <- select_or_add_as_na(
     tbl,
     c(
       "date",
       "time",
       "lat",
       "lng",
+      "subject_age",
       "subject_race",
       "subject_sex",
       "type",
+      "reason_for_stop",
       "warning_issued",
       "citation_issued",
       "arrest_made",
+      "violation",
       "contraband_found",
       "frisk_performed",
       "search_conducted",
-      "speed"
+      "search_basis"
     )
-  ) %>%
-  rename(
-    veh_or_ped = type
   ) %>%
   mutate(
     geolocation = !is.na(lat) & !is.na(lng)
@@ -183,37 +188,6 @@ load_coverage_data <- function(state, city) {
     -lat,
     -lng
   )
-
-  vehicle_desc <- select_least_na(
-    tbl,
-    c(
-      "vehicle_color",
-      "vehicle_make",
-      "vehicle_model",
-      "vehicle_type"
-    ),
-    rename = "vehicle_desc"
-  )
-
-  subject_age <- select_least_na(
-    tbl,
-    c(
-      "subject_age",
-      "subject_dob",
-      "subject_yob"
-    ),
-    rename = "subject_age"
-  )
-
-  violation_desc <- select_least_na(
-    tbl,
-    c(
-      "disposition",
-      "violation"
-    ),
-    rename = "violation_desc"
-  )
-
 
   subgeography <- select_least_na(
     tbl,
@@ -224,11 +198,5 @@ load_coverage_data <- function(state, city) {
     rename = "subgeography"
   )
 
-  bind_cols(
-    coverage,
-    vehicle_desc,
-    subject_age,
-    violation_desc,
-    subgeography
-  )
+  bind_cols(base, subgeography)
 }

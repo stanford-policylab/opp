@@ -155,23 +155,32 @@ format_data_summary_for_stan <- function(data_summary) {
 
 
 collect_average_threshold_test_summary_stats <- function(
-  data_summary,
+  thresholds,
   posteriors,
   demographic_col = subject_race,
   majority_demographic = "white"
 ) {
   demographic_colq <- enquo(demographic_col)
-  avg_thresh <- accumulateRowMeans(
+  # get weighted avg of thresholds by geography
+  avg_thresh_geo <- accumulateRowMeans(
     t(signal_to_percent(
       posteriors$threshold,
       posteriors$phi,
       posteriors$delta
     )),
-    pull(data_summary, race),
-    data_summary$n
+    pull(thresholds, geography_race),
+    thresholds$n
+  )
+  geography_idx_helper <- thresholds %>% 
+    group_by(geography_race, race) %>% 
+    summarize(count = n(), n = sum(n))
+  # get unweighted averages of thresholds across geographies
+  avg_thresh <- accumulateRowMeans(
+    avg_thresh_geo,
+    pull(geography_idx_helper, race)
   )
   format_summary_stats(
-    data_summary, 
+    thresholds, 
     avg_thresh,
     !!demographic_colq,
     majority_demographic
