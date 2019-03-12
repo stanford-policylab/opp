@@ -427,7 +427,7 @@ opp_fips_to_county_name_func <- function(state) {
   # NOTE: uses 2010 FIPS codes for counties:
   # https://www.census.gov/geo/reference/codes/cou.html
   fips <- read_csv(
-    here::here("data", "fips_county.csv"),
+    here::here("resources", "fips_county.csv"),
     col_types = cols_only(STATE = "c", COUNTYFP = "c", COUNTYNAME = "c")
   ) %>%
   filter(
@@ -573,28 +573,6 @@ opp_load_all_shapefiles_dfs <- function(state, city = "statewide") {
 }
 
 
-opp_load_block_group_data <- function(state) {
-  full_state_name = state.name[toupper(state) == state.abb]
-  filter(
-    read_csv(here::here(
-      "data",
-      "population_by_block_group_by_race_2012_to_2016_with_lat_lng.csv"
-    )),
-    state == full_state_name
-  )
-}
-
-
-opp_load_block_group_shapefiles <- function(state) {
-  source(here::here("lib", "shapefiles.R"), local = TRUE)
-  # NOTE: all these block group shapefiles are from 2017
-  # NOTE: there should only be one shapefile layer for each state, so 1st index
-  load_all_shapefiles_objects(
-    here::here("data", "block_group_shapefiles", "2017", state)
-  )[[1]]
-}
-
-
 opp_load_clean <- function(state, city = "statewide") {
   readRDS(opp_clean_data_path(state, city))
 }
@@ -658,7 +636,7 @@ opp_load_raw_data_file <- function(state, city = "statewide", file, n_max = Inf)
 
 opp_load_state_fips <- function() {
   fips <- read_csv(
-    here::here("data", "fips_state.csv"),
+    here::here("resources", "fips_state.csv"),
     col_types = cols_only(
       STATE = "c",
       STUSAB = "c",
