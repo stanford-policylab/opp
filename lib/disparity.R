@@ -46,13 +46,14 @@ main <- function() {
     print("Running outcome test...")
     v$outcome <- outcome_test(
       datasets[[dataset_name]],
-      geography, sub_geography
+      sub_geography,
+      geography_col = geography
     )
     print("Composing outcome plots...")
-    v$outcome$plots <- plt_all(v$outcome$results, "outcome")
+    v$outcome$plots <- plt_all(v$outcome$results$hit_rates, "outcome")
     v$outcome$plots$aggregate <- 
       plt(
-        v$outcome$results, 
+        v$outcome$results$hit_rates, 
         str_c("outcome aggregate: ", dataset_name)
       )
   
