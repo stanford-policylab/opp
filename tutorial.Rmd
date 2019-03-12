@@ -413,7 +413,7 @@ stronger evidence. Some people then proposed to use benchmarks that approximate
 those offending rates, like arrests, for example. However, we know arrests to
 themselves be racially skewed (especially for low-level drug offenses, for
 example), so it wouldn't give us the true offending population's racial
-distribution. Furthermore, only `stops %>% summarize(p = round(100 *
+distribution. Furthermore, only `r stops %>% summarize(p = round(100 *
 mean(arrest_made), 1)) %>% pull(p)`% of stops result in an arrest, so the
 arrested population will naturally not match the stopped population. 
 
