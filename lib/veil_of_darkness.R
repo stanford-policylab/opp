@@ -111,7 +111,8 @@ veil_of_darkness_cities <- function() {
       year(date) <= 2017
     ) %>%
     left_join(city_geocodes) %>%
-    mutate(city_state = str_c(city, state, sep = ", "))
+    mutate(city_state = str_c(city, state, sep = ", ")) %>%
+    prepare_vod_data(city_state)
 
   tbl_subgeography <-
     tbl %>%
@@ -164,7 +165,8 @@ veil_of_darkness_cities <- function() {
 
   tbl_subgeography <-
     tbl_subgeography %>%
-    filter(city_state %in% eligible_subeography_locations)
+    filter(city_state %in% eligible_subeography_locations) %>%
+    prepare_vod_data(city_state_subgeography)
   
   coefficients <- bind_rows(
     par_pmap(
@@ -198,31 +200,18 @@ veil_of_darkness_cities <- function() {
     )
   )
 
-  plots <-
-    prepare_vod_data(
-      tbl,
-      city_state,
-      lat_col = center_lat,
-      lng_col = center_lng
-    )$data %>%
-    compose_vod_plots()
-
-  list(coefficients = coefficients, plots = plots)
+  list(coefficients = coefficients, plots = compose_vod_plots(tbl))
 }
 
 
 vod_coef <- function(tbl, control_col, degree, interact) {
   control_colq <- enquo(control_col)
-  summary(veil_of_darkness_test(
+  summary(train_vod_model(
     tbl,
     !!control_colq,
-    # NOTE: use city centers instead of stop lat/lng since sunset times
-    # don't vary that much within a city and it speeds things up
-    lat_col = center_lat,
-    lng_col = center_lng,
     spline_degree = degree,
     interact = interact
-  )$results$model)$coefficients[2, 1:2]
+  ))$coefficients[2, 1:2]
 }
 
 
@@ -236,8 +225,7 @@ veil_of_darkness_states <- function() {
   # subject_race at least 85% of the time
   # NOTE: IL, NJ, RI, VT are elligible too, but geocoding is nontrivial, 
   # because county isn't present
-  tbl <- read_rds(here::here("resources", "state_county_geocodes.rds"))
-  data <-
+  tbl <-
     opp_load_all_clean_data(only = ELIGIBLE_STATES) %>% 
     filter(
       type == "vehicular",
@@ -265,12 +253,10 @@ veil_of_darkness_states <- function() {
       | (state == "TX"    & year(date) %in% 2012:2017)
       | (state == "WI"    & year(date) %in% 2012:2015)
       | (state == "WY"    & year(date) == 2012)
-    )
-  
-  data <-
-    data %>% 
+    ) %>%
     left_join(
-      tbl %>% rename(county_state = loc), 
+      read_rds(here::here("resources", "state_county_geocodes.rds")) %>%
+        rename(county_state = loc), 
       by = c("state", "city", "county_name")
     ) %>% 
     filter(
@@ -279,44 +265,35 @@ veil_of_darkness_states <- function() {
         min_stops_per_race = 1000,
         max_counties_per_state = 20
       )
-    )
+    ) %>%
+    prepare_vod_data(county_state)
 
   coefficients <- bind_rows(
     par_pmap(
       mc.cores = 3,
-      # tibble(degree = rep(1:6, 2), interact = c(rep(T, 6), rep(F, 6))),
       tibble(degree = rep(6, 2), interact = c(T, F)),
       function(interact, degree = 6) {
         bind_rows(
-          vod_coef(data, state, degree, interact),
-          vod_coef(data, county_state, degree, interact)
+          vod_coef(tbl, state, degree, interact),
+          vod_coef(tbl, county_state, degree, interact)
         ) %>%
-          rename(
-            is_dark = Estimate,
-            std_error = `Std. Error`
-          ) %>%
-          mutate(
-            controls = c(
-              "time, state",
-              "time, county_state"
-            ),
-            spline_degree = degree,
-            interact = interact
-          )
+        rename(
+          is_dark = Estimate,
+          std_error = `Std. Error`
+        ) %>%
+        mutate(
+          controls = c(
+            "time, state",
+            "time, county_state"
+          ),
+          spline_degree = degree,
+          interact = interact
+        )
       }
     )
   )
   
-  plots <-
-    prepare_vod_data(
-      tbl,
-      city_state,
-      lat_col = center_lat,
-      lng_col = center_lng
-    )$data %>%
-    compose_vod_plots()
-  
-  list(coefficients = coefficients, plots = plots)
+  list(coefficients = coefficients, plots = compose_vod_plots(tbl))
 }
 
 
