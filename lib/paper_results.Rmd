@@ -53,7 +53,6 @@ kable(disp$state$outcome$results$aggregate_hit_rates)
 ```{r disparity-city-hit_rates-plot, fig.height = 3, fig.width = 7}
 disp$city$outcome$plots$aggregate
 ```
-\newpage
 ```{r disparity-state-hit_rates-plot, fig.height = 3, fig.width = 7}
 disp$state$outcome$plots$aggregate
 ```
@@ -71,7 +70,6 @@ kable(disp$state$threshold$results$aggregate_thresholds)
 ```{r disparity-city-thresholds-plot, fig.height = 3, fig.width = 7}
 disp$city$threshold$plots$aggregate
 ```
-\newpage
 ```{r disparity-state-thresholds-plot, fig.height = 3, fig.width = 7}
 disp$state$threshold$plots$aggregate
 ```
