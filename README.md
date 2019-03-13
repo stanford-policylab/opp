@@ -50,7 +50,8 @@ install.packages(c(
   "sp",
   "stringr",
   "suncalc",
-  "tidyverse"
+  "tidyverse",
+  "zoo"
 ))
 ```
 5. [R] load the main library
