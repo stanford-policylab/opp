@@ -30,7 +30,6 @@ install.packages(c(
   "lutz",
   "maps",
   "purrr",
-  "rgdal",
   "rlang",
   "rmarkdown",
   "rstan",
@@ -39,7 +38,6 @@ install.packages(c(
   "stringi",
   "stringr",
   "suncalc",
-  "tidyverse",
-  "zoo"
+  "tidyverse"
 ))
 ```
