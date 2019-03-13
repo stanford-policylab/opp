@@ -324,20 +324,20 @@ opp_data_paths <- function() {
 }
 
 
-opp_download_all_data <- function() {
-  opp_apply(function(state, city) opp_download_data(state, city, load = F))
+opp_download_all_clean_data <- function() {
+  opp_apply(opp_download_clean_data)
 }
 
 
-opp_download_analyses_data <- function() {
+opp_download_analyses_clean_data <- function() {
   opp_apply(
-    function(state, city) opp_download_data(state, city, load = F),
+    opp_download_clean_data,
     opp_locations_used_in_analyses()
   )
 }
 
 
-opp_download_data <- function(state, city, load = T) {
+opp_download_clean_data <- function(state, city) {
   if (!link_exists(here::here("data")))
     opp_set_download_directory("/tmp/opp_data")
   output_path <- opp_clean_data_path(state, city)
@@ -347,8 +347,6 @@ opp_download_data <- function(state, city, load = T) {
     url <- urls[str_detect(urls, "\\.rds")]
     download.file(url, output_path)
   }
-  if (load)
-    return(opp_load_clean_data(state, city))
 }
 
 
