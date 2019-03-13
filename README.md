@@ -30,11 +30,11 @@ install.packages(c(
   "lutz",
   "maps",
   "purrr",
+  "rgdal",
   "rlang",
   "rmarkdown",
   "rstan",
   "sp",
-  "stringi",
   "stringr",
   "suncalc",
   "tidyverse"
