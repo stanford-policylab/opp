@@ -40,3 +40,29 @@ install.packages(c(
   "tidyverse"
 ))
 ```
+
+## Getting Started
+- Clone the repository
+```
+git clone https://github.com/stanford-policylab/opp.git
+```
+- Change directories
+```
+cd opp/lib
+```
+- Start R
+```
+R
+```
+- from R, load the main library
+```R
+source("opp.R")
+```
+- from R, download some clean data
+```R
+opp_download_clean_data("wa", "seattle")
+```
+- from R, load the clean data
+```R
+d <- opp_load_clean_data("wa", "seattle")
+```
