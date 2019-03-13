@@ -1012,7 +1012,8 @@ opp_save <- function(d, state, city = "statewide") {
 opp_set_download_directory <- function(data_dir) {
   repo_data_dir <- here::here("data")
   dir_create(data_dir)
-  file.remove(repo_data_dir)
+  if (dir_exists(repo_data_dir))
+    file.remove(repo_data_dir)
   file.symlink(data_dir, repo_data_dir)
 }
 
