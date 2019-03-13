@@ -957,7 +957,15 @@ opp_results_path <- function(fname) {
 
 
 opp_run_disparity <- function() {
-  # TODO(danj): implement
+  output_path <- opp_results_path("disparity.rds")
+  source(here::here("lib", "disparity.R"))
+  disp <- disparity()
+  saveRDS(disp, output_path)
+  print(str_c(
+    "saved to disparity analysis results to ",
+    output_path
+  ))
+  disp
 }
 
 
