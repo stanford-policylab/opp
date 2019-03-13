@@ -79,6 +79,16 @@ coverage_for_website <- function(use_cache = T) {
         )
       }
     ) %>% bind_rows()
+  ) %>%
+  mutate(
+    state_with_local_data = city == "Statewide" & state %in% c(
+      "CT",
+      "IL",
+      "MD",
+      "MS",
+      "MO",
+      "NC"
+    )
   )
 }
 
@@ -96,6 +106,12 @@ coverage <- function(
   ) %>%
   bind_rows() %>%
   select(
+    state,
+    city,
+    nrows,
+    population,
+    start_date,
+    end_date,
     date,
     time,
     type,
