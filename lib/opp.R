@@ -622,7 +622,7 @@ opp_load_clean_data <- function(state, city = "statewide") {
   # NOTE: local files store metadata and data with rds files, but archive files
   # only have the data
   d <- opp_load_clean(state, city)
-  if ("data" in names(d))
+  if ("data" %in% names(d))
     d <- d$data
   d
 }
