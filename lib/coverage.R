@@ -85,8 +85,8 @@ coverage_for_website <- function(use_cache = T) {
       "CT",
       "IL",
       "MD",
-      "MS",
       "MO",
+      "MS",
       "NC"
     )
   )
