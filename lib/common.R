@@ -16,7 +16,6 @@ library(rstan)
 library(scales)
 library(sp)
 library(splines)
-library(stringr)
 library(suncalc)
 library(tidyverse)
 
