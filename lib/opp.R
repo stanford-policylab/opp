@@ -443,6 +443,7 @@ opp_extract_state_from_path <- function(path) {
 opp_filter_out_non_highway_patrol_stops_from_states <- function(tbl) {
   only <- function(x, y) x == y
   exclude <- function(x, y) x != y
+  is_in <- function(x, y) x %in% y
   f <- function(tbl, s, operator, dep_name) {
     if ("department_name" %in% colnames(tbl))
       tbl <- filter(
@@ -459,7 +460,10 @@ opp_filter_out_non_highway_patrol_stops_from_states <- function(tbl) {
     f("FL", exclude, "FLORIDA DEPARTMENT OF AGRICULTURE") %>%
     f("NC", only, "NC State Highway Patrol") %>%
     f("IL", only, "ILLINOIS STATE POLICE") %>%
-    f("CT", only, "State Police")
+    f("CT", only, "State Police") %>% 
+    f("MD", is_in, c("Maryland State Police", "MSP")) %>% 
+    f("MS", only, "Mississippi Highway Patrol") %>% 
+    f("MO", only, "Missouri State Highway Patrol") 
 } 
 
 
