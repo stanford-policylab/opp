@@ -343,14 +343,14 @@ opp_download_clean_data <- function(state, city) {
   output_path <- opp_clean_data_path(state, city)
   if (!file_exists(output_path)) {
     pattern <- str_c(normalize_state(state), normalize_city(city), sep = "_")
-    urls <- opp_download_urls(state, city)
+    urls <- opp_download_clean_urls(state, city)
     url <- urls[str_detect(urls, "\\.rds")]
     download.file(url, output_path)
   }
 }
 
 
-opp_download_urls <- function(state, city) {
+opp_download_clean_urls <- function(state, city) {
   prefix <- "https://embed.stanford.edu/iframe?url="
   if (city == "Statewide")
     purl <- str_c(prefix, "https://purl.stanford.edu/jb084sr9005")
@@ -619,7 +619,12 @@ opp_load_clean <- function(state, city = "statewide") {
 
 
 opp_load_clean_data <- function(state, city = "statewide") {
-  opp_load_clean(state, city)$data
+  # NOTE: local files store metadata and data with rds files, but archive files
+  # only have the data
+  d <- opp_load_clean(state, city)
+  if ("data" in names(d))
+    d <- d$data
+  d
 }
 
 
