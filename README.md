@@ -16,19 +16,19 @@
 ### Mac
 
 ## Getting Started
-- Clone the repository
+1. [command line] Clone the repository
 ```
 git clone https://github.com/stanford-policylab/opp.git
 ```
-- Change directories
+2. [command line] Change directories
 ```
 cd opp/lib
 ```
-- Start R
+3. [command line] Start R
 ```
 R
 ```
-- Install the required packages
+4. [R] install the required packages
 ```R
 install.packages(c(
   "digest",
@@ -53,15 +53,15 @@ install.packages(c(
   "tidyverse"
 ))
 ```
-- from R, load the main library
+5. [R] load the main library
 ```R
 source("opp.R")
 ```
-- from R, download some clean data
+6. [R] download some clean data
 ```R
 opp_download_clean_data("wa", "seattle")
 ```
-- from R, load the clean data
+7. [R] load the clean data
 ```R
 d <- opp_load_clean_data("wa", "seattle")
 ```
