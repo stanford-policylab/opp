@@ -33,7 +33,6 @@ install.packages(c(
   "rlang",
   "rmarkdown",
   "rstan",
-  "scales",
   "sp",
   "stringi",
   "stringr",
