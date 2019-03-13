@@ -67,7 +67,7 @@ coverage_for_paper <- function() {
 }
 
 
-coverage_for_website <- function(use_cache = T) {
+coverage_for_website <- function() {
   left_join(
     coverage(),
     opp_apply(
