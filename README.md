@@ -15,7 +15,20 @@
 
 ### Mac
 
-## Required R Packages
+## Getting Started
+- Clone the repository
+```
+git clone https://github.com/stanford-policylab/opp.git
+```
+- Change directories
+```
+cd opp/lib
+```
+- Start R
+```
+R
+```
+- Install the required packages
 ```R
 install.packages(c(
   "digest",
@@ -39,20 +52,6 @@ install.packages(c(
   "suncalc",
   "tidyverse"
 ))
-```
-
-## Getting Started
-- Clone the repository
-```
-git clone https://github.com/stanford-policylab/opp.git
-```
-- Change directories
-```
-cd opp/lib
-```
-- Start R
-```
-R
 ```
 - from R, load the main library
 ```R
