@@ -4,7 +4,7 @@ library(lubridate)
 
 
 valid_start_date <- parse_date("2000-01-01")
-valid_end_date <- parse_date(Sys.Date())
+valid_end_date <- parse_date(as.character(Sys.Date()))
 
 
 valid_vehicle_start_year <- 1800
