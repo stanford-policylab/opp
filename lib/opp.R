@@ -377,10 +377,14 @@ opp_download_clean_data <- function(state, city) {
   output_path <- opp_clean_data_path(state, city)
   if (!file_exists(output_path)) {
     pattern <- str_c(normalize_state(state), normalize_city(city), sep = "_")
-    urls <- opp_download_clean_urls(state, city)
-    url <- urls[str_detect(urls, "\\.rds")]
-    download.file(url, output_path)
+    download.file(opp_download_clean_data_url(state, city), output_path)
   }
+}
+
+
+opp_download_clean_data_url <- function(state, city) {
+  urls <- opp_download_clean_urls(state, city)
+  urls[str_detect(urls, "\\.rds")]
 }
 
 
