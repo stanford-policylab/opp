@@ -78,7 +78,7 @@ coverage_for_website <- function() {
   has_pedestrian_stops <- function(state, city) {
     tbl <- opp_load_clean_data(state, city)
     v <- F
-    if ("type" in colnames(tbl))
+    if ("type" %in% colnames(tbl))
       v <- sum(tbl$type == "pedestrian") > 0
     v
   }
@@ -113,7 +113,7 @@ coverage_for_website <- function() {
 coverage <- function(
   locations = opp_available(),
   years = 2000:year(Sys.Date()),
-  vehicular_only = F
+  vehicular_only = F,
   exclude_non_highway_patrol_from_states = F,
   only_analysis_demographics = F
 ) {
