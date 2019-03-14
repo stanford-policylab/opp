@@ -79,7 +79,7 @@ coverage_for_website <- function() {
     tbl <- opp_load_clean_data(state, city)
     v <- F
     if ("type" %in% colnames(tbl))
-      v <- sum(tbl$type == "pedestrian") > 0
+      v <- sum(tbl$type == "pedestrian", na.rm = T) > 0
     v
   }
   left_join(

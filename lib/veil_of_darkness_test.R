@@ -46,7 +46,6 @@ veil_of_darkness_test <- function(
   lat_colq = enquo(lat_col)
   lng_colq = enquo(lng_col)
 
-
   print("preparing data...")
   d <- prepare_vod_data(
       tbl,
@@ -71,7 +70,6 @@ veil_of_darkness_test <- function(
       interact = interact,
       interact_dark_and_time = interact_dark_and_time
   )
-   
 
   plots <- list()
   if (plot) {
