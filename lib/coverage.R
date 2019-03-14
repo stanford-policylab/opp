@@ -3,11 +3,19 @@ source(here::here("lib", "opp.R"))
 
 
 coverage_for_paper <- function() {
+  target_years <- 2011:2017
+  target_threshold <- 0.65
+  target_columns <- c("date", "time", "subject_race")
   coverage(
-    locations_used_in_analyses(),
-    start_year = 2011,
-    end_year = 2017,
-    vehicular_only = T
+    opp_analysis_eligible_locations(
+      years = target_years,
+      threshold = target_threshold,
+      columns = target_columns
+    ),
+    years = target_years,
+    vehicular_only = T,
+    exclude_non_highway_patrol_from_states = T,
+    only_analysis_demographics = T
   ) %>%
   mutate(
     order = if_else(city == "Statewide", 1, 0),
@@ -23,7 +31,6 @@ coverage_for_paper <- function() {
     date,
     time,
     subgeography,
-    subject_race,
     subject_age,
     subject_sex,
     search_conducted,
@@ -37,7 +44,6 @@ coverage_for_paper <- function() {
     `Date` = date,
     `Time` = time,
     Subgeography = subgeography,
-    `Subject Race` = subject_race,
     `Subject Age` = subject_age,
     `Subject Sex` = subject_sex,
     `Search Conducted` = search_conducted,
@@ -54,7 +60,7 @@ coverage_for_paper <- function() {
   mutate_if(
     function(v) all(is.numeric(v) & v <= 1.0, na.rm = T),
     # NOTE: put dot if coverage above 70%
-    function(v) if_else(v < 0.65 | is.na(v), "", "dot")
+    function(v) if_else(v < target_threshold | is.na(v), "", "dot")
   ) %>%
   mutate(
     # NOTE: contraband_found data from AZ and MA is messy and unreliable
@@ -91,18 +97,27 @@ coverage_for_website <- function() {
       "NC"
     )
   )
+  # TODO(danj): add pedestrian column
 }
 
 
 coverage <- function(
   locations = opp_available(),
-  start_year = 2000,
-  end_year = year(Sys.Date()),
+  years = 2000:year(Sys.Date()),
   vehicular_only = F
+  exclude_non_highway_patrol_from_states = F,
+  only_analysis_demographics = F
 ) {
   opp_apply(
     function(state, city) {
-      calculate_coverage(state, city, start_year, end_year, vehicular_only)
+      calculate_coverage(
+        state,
+        city,
+        years,
+        vehicular_only,
+        exclude_non_highway_patrol_from_states,
+        only_analysis_demographics
+      )
     },
     locations
   ) %>%
@@ -138,18 +153,20 @@ coverage <- function(
 calculate_coverage <- function(
   state,
   city,
-  start_year = 2011,
-  end_year = 2017,
-  vehicular_only = F
+  years = 2000:year(Sys.Date()),
+  vehicular_only = F,
+  exclude_non_highway_patrol_from_states = F,
+  only_analysis_demographics = F
 ) {
   # NOTE: for coverage we filter to vehicular stops
-  tbl <-
-    load_coverage_data(state, city) %>%
-    filter(year(date) >= start_year, year(date) <= end_year)
-
-  if (vehicular_only) 
-    tbl <- filter(tbl, type == "vehicular")
-
+  tbl <- load_coverage_data(
+    state,
+    city,
+    years,
+    vehicular_only,
+    exclude_non_highway_patrol_from_states,
+    only_analysis_demographics
+  )
   date_range = range(tbl$date, na.rm = TRUE)
   if (city == "Statewide")
     population <- opp_state_population(state)
@@ -170,12 +187,29 @@ calculate_coverage <- function(
 }
 
 
-load_coverage_data <- function(state, city) {
+load_coverage_data <- function(
+  state,
+  city,
+  years = 2000:year(Sys.Date()),
+  vehicular_only = F,
+  exclude_non_highway_patrol_from_states = F,
+  only_analysis_demographics = F
+) {
   tbl <-
     opp_load_clean_data(state, city) %>%
-    mutate(state = state, city = city) %>%
-    opp_filter_out_non_highway_patrol_stops_from_states() %>%
-    select(-state, -city)
+    filter(year(date) %in% years)
+
+  if (vehicular_only)
+    tbl <- filter(tbl, type == "vehicular")
+
+  if (exclude_non_highway_patrol_from_states)
+    tbl <-
+      mutate(tbl, state = state, city = city) %>%
+      opp_filter_out_non_highway_patrol_stops_from_states() %>%
+      select(-state, -city)
+
+  if (only_analysis_demographics)
+    tbl <- filter(tbl, subject_race %in% c("black", "white", "hispanic"))
 
   base <- select_or_add_as_na(
     tbl,
