@@ -184,6 +184,40 @@ opp_add_type_func <- function(state, city) {
 }
 
 
+opp_analysis_eligible_locations <- function(
+  years = 2011:2017,
+  threshold = 0.65,
+  columns = c("date", "time", "subject_race")
+) {
+  opp_apply(
+    function(state, city) {
+      opp_analysis_is_eligible(state, city, years, threshold, columns)
+    }) %>%
+    bind_rows() %>%
+    filter(is_eligible) %>%
+    select(-is_eligible)
+}
+
+
+opp_analysis_is_eligible <- function(
+  state,
+  city,
+  years = 2011:2017,
+  threshold = 0.65,
+  columns = c("date", "time", "subject_race")
+) {
+  tbl <- opp_load_clean_data(state, city) %>% mutate(is_eligible = T)
+  res <- tibble(state = state, city = city, is_eligible = T)
+  for (col in columns) {
+    if (col %in% colnames(tbl))
+      tbl <- mutate(tbl, is_eligible = is_eligible & !is.na(get(col)))
+    else
+      return(mutate(res, is_eligible = F))
+  }
+  mutate(res, is_eligible = mean(tbl$is_eligible) > threshold)
+}
+
+
 opp_apply <- function(func, only = NULL) {
   if (is.null(only)) { only <- opp_available() }
   par_pmap(only, func)
@@ -360,67 +394,6 @@ opp_download_clean_urls <- function(state, city) {
   urls <- str_match_all(html, '<a href="(.*?)"')[[1]][,2]
   pattern <- str_c(normalize_state(state), normalize_city(city), sep = "_")
   unique(urls[str_detect(urls, pattern)])
-}
-
-
-opp_eligibility <- function(tbl) {
-
-  filter(
-    tbl,
-    search_conducted,
-    !is.na(date)
-  ) %>%
-  mutate(
-    action_outcome = !is.na(subject_race) & !is.na(contraband_found),
-    ao = action_outcome,
-    neighborhood = ao & !is.na(neighborhood),
-    beat = ao & !is.na(beat),
-    district = ao & !is.na(district),
-    subdistrict = ao & !is.na(subdistrict),
-    division = ao & !is.na(division),
-    subdivision = ao & !is.na(subdivision),
-    police_grid_number = ao & !is.na(police_grid_number),
-    precinct = ao & !is.na(precinct),
-    region = ao & !is.na(region),
-    reporting_area = ao & !is.na(reporting_area),
-    sector = ao & !is.na(sector),
-    subsector = ao & !is.na(subsector),
-    service_area = ao & !is.na(service_area),
-    zone = ao & !is.na(zone),
-    county_name = ao & !is.na(county_name),
-    department_id = ao & !is.na(department_id),
-    department_name = ao & !is.na(department_name)
-  ) %>%
-  select(
-    -ao
-  ) %>%
-  group_by(
-    state,
-    city,
-    year = year(date)
-  ) %>%
-  summarize(
-    n_searches = n(),
-    neighborhood = mean(neighborhood),
-    beat = mean(beat),
-    district = mean(district),
-    subdistrict = mean(subdistrict),
-    division = mean(division),
-    subdivision = mean(subdivision),
-    police_grid_number = mean(police_grid_number),
-    precinct = mean(precinct),
-    region = mean(region),
-    reporting_area = mean(reporting_area),
-    sector = mean(sector),
-    subsector = mean(subsector),
-    service_area = mean(service_area),
-    zone = mean(zone),
-    county_name = mean(county_name),
-    department_id = mean(department_id),
-    department_name = mean(department_name)
-  ) %>%
-  ungroup(
-  )
 }
 
 
@@ -1038,33 +1011,6 @@ opp_set_download_directory <- function(data_dir) {
 opp_shapefiles_dir <- function(state, city = "statewide") {
   data_dir <- opp_data_dir(state, city)
   file.path(data_dir, "shapefiles")
-}
-
-
-opp_simplify_eligibility <- function(tbl) {
-  mutate(
-    tbl,
-    race_contra_subg_where_search = if_else(
-      city == "Statewide",
-      pmax(!!!state_subgeographies, na.rm = T),
-      pmax(!!!city_subgeographies, na.rm = T)
-    )
-  ) %>%
-  select(
-    state,
-    city,
-    year,
-    n_searches,
-    race_contra_subg_where_search
-  ) %>%
-  mutate(
-    n_eligible = floor(n_searches * race_contra_subg_where_search)
-  ) %>%
-  arrange(
-    state,
-    city,
-    year
-  )
 }
 
 
