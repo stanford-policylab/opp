@@ -32,18 +32,12 @@ prima_facie_stats <- function(only = opp_locations_used_in_analyses()) {
 
 aggregate_stop_stats_all_combined <- function(
   only = opp_locations_used_in_analyses(),
-  start_year = 2011,
-  end_year = 2017,
+  years = 2011:2017,
   max_null_rate = 0.35,
   weighted_average = F
 ) {
   v <-
-    aggregate_stop_stats_all(
-      only,
-      start_year,
-      end_year,
-      max_null_rate
-    ) %>%
+    aggregate_stop_stats_all(only, years max_null_rate) %>%
     mutate(is_state = city == "Statewide") %>%
     group_by(is_state, subject_race)
   if (weighted_average)
@@ -57,19 +51,12 @@ aggregate_stop_stats_all_combined <- function(
 
 aggregate_stop_stats_all <- function(
   only = opp_locations_used_in_analyses(),
-  start_year = 2011,
-  end_year = 2017,
+  years = 2011:2017,
   max_null_rate = 0.35
 ) {
   opp_apply(
     function(state, city) {
-      aggregate_stop_stats(
-        state,
-        city,
-        start_year,
-        end_year,
-        max_null_rate
-      )
+      aggregate_stop_stats(state, city, years, max_null_rate)
     },
     only
   ) %>%
@@ -80,22 +67,12 @@ aggregate_stop_stats_all <- function(
 aggregate_stop_stats <- function(
   state,
   city,
-  start_year = 2011,
-  end_year = 2017,
+  years = 2011:2017,
   max_null_rate = 0.35
 ) {
-  tbl <-
-    stop_stats(
-      state,
-      city,
-      start_year,
-      end_year,
-      max_null_rate
-    )
-
+  tbl <- stop_stats(state, city, years, max_null_rate)
   if (nrow(tbl) <= 1)
     return(tbl)
-
   tbl %>%
   group_by(state, city, subject_race) %>% 
   summarize(
@@ -110,19 +87,12 @@ aggregate_stop_stats <- function(
 
 stop_stats_all <- function(
   only = opp_locations_used_in_analyses(),
-  start_year = 2011,
-  end_year = 2017,
+  years = 2011:2017,
   max_null_rate = 0.35
 ) {
   opp_apply(
     function(state, city) {
-      stop_stats(
-        state,
-        city,
-        start_year,
-        end_year,
-        max_null_rate
-      )
+      stop_stats(state, city, years, max_null_rate)
     },
     only
   ) %>%
@@ -133,15 +103,14 @@ stop_stats_all <- function(
 stop_stats <- function(
   state,
   city,
-  start_year = 2011,
-  end_year = 2017,
+  years = 2011:2017,
   max_null_rate = 0.35
 ) {
   empty <- tibble(state = state, city = city)
   tbl <-
     opp_load_clean_data(state, city) %>%
     mutate(state = state, city = city, year = year(date)) %>%
-    filter(year >= start_year, year <= end_year, type == "vehicular") %>%
+    filter(year %in% years, type == "vehicular") %>%
     filter_to_complete_years() %>%
     opp_filter_out_non_highway_patrol_stops_from_states()
 
@@ -212,22 +181,14 @@ filter_to_complete_years <- function(tbl, min_monthly_stops = 100) {
 aggregate_stats_all_combined <- function(
   only = opp_locations_used_in_analyses(),
   col = "search_conducted",
-  start_year = 2011,
-  end_year = 2017,
+  years = 2011:2017,
   max_null_rate = 0.35,
   predicate = NA_character_,
   weighted_average = F
 ) {
   rate_name = str_c(col, "_rate")
   v <-
-    aggregate_stats_all(
-      only,
-      col,
-      start_year,
-      end_year,
-      max_null_rate,
-      predicate
-    ) %>%
+    aggregate_stats_all(only, col, years, max_null_rate, predicate) %>%
     mutate(is_state = city == "Statewide") %>%
     group_by(is_state, subject_race)
   if (weighted_average)
@@ -242,8 +203,7 @@ aggregate_stats_all_combined <- function(
 aggregate_stats_all <- function(
   only = opp_locations_used_in_analyses(),
   col = "search_conducted",
-  start_year = 2011,
-  end_year = 2017,
+  yearas = 2011:2017,
   max_null_rate = 0.35,
   predicate = NA_character_
 ) {
@@ -254,8 +214,7 @@ aggregate_stats_all <- function(
         state,
         city,
         col,
-        start_year,
-        end_year,
+        years,
         max_null_rate,
         predicate
       )
@@ -270,28 +229,16 @@ aggregate_stats <- function(
   state,
   city,
   col = "search_conducted",
-  start_year = 2011,
-  end_year = 2017,
+  years = 2011:2017,
   max_null_rate = 0.35,
   predicate = NA_character_
 ) {
-  tbl <- stats(
-    state,
-    city,
-    col,
-    start_year,
-    end_year,
-    max_null_rate,
-    predicate
-  )
-
+  tbl <- stats(state, city, col, years, max_null_rate, predicate)
   if (nrow(tbl) <= 1)
     return(tbl)
-
   rate_name <- str_c(col, "_rate")
   count_name <- str_c(col, "_count")
   total_name <- str_c(col, "_total")
-
   tbl %>%
   group_by(state, city, subject_race) %>% 
   summarize(
@@ -306,8 +253,7 @@ aggregate_stats <- function(
 stats_all <- function(
   only = opp_locations_used_in_analyses(),
   col = "search_conducted",
-  start_year = 2011,
-  end_year = 2017,
+  years = 2011:2017,
   max_null_rate = 0.35,
   predicate = NA_character_
 ) {
@@ -317,8 +263,7 @@ stats_all <- function(
         state,
         city,
         col,
-        start_year,
-        end_year,
+        years,
         max_null_rate,
         predicate
       )
@@ -333,8 +278,7 @@ stats <- function(
   state,
   city,
   col = "search_conducted",
-  start_year = 2011,
-  end_year = 2017,
+  years = 2011:2017,
   max_null_rate = 0.35,
   predicate = NA_character_
 ) {
@@ -342,7 +286,7 @@ stats <- function(
   tbl <-
     opp_load_clean_data(state, city) %>%
     mutate(state = state, city = city, year = year(date)) %>%
-    filter(year >= start_year, year <= end_year, type == "vehicular") %>%
+    filter(year %in% years, type == "vehicular") %>%
     opp_filter_out_non_highway_patrol_stops_from_states()
   # NOTE: filters to predicate if present, i.e. search_conducted for
   # contraband_found, otherwise returns an empty tibble

@@ -113,8 +113,7 @@ coverage <- function(
       calculate_coverage(
         state,
         city,
-        start_year,
-        end_year,
+        years,
         vehicular_only,
         exclude_non_highway_patrol_from_states,
         only_analysis_demographics
@@ -163,8 +162,7 @@ calculate_coverage <- function(
   tbl <- load_coverage_data(
     state,
     city,
-    start_year,
-    end_year,
+    years,
     vehicular_only,
     exclude_non_highway_patrol_from_states,
     only_analysis_demographics
@@ -199,7 +197,7 @@ load_coverage_data <- function(
 ) {
   tbl <-
     opp_load_clean_data(state, city) %>%
-    filter(year(date) >= start_year, year(date) <= end_year)
+    filter(year(date) %in% years)
 
   if (vehicular_only)
     tbl <- filter(tbl, type == "vehicular")
