@@ -6,7 +6,8 @@ coverage_for_paper <- function() {
   coverage(
     locations_used_in_analyses(),
     start_year = 2011,
-    end_year = 2017
+    end_year = 2017,
+    vehicular_only = T
   ) %>%
   mutate(
     order = if_else(city == "Statewide", 1, 0),
@@ -96,11 +97,12 @@ coverage_for_website <- function() {
 coverage <- function(
   locations = opp_available(),
   start_year = 2000,
-  end_year = year(Sys.Date())
+  end_year = year(Sys.Date()),
+  vehicular_only = F
 ) {
   opp_apply(
     function(state, city) {
-      calculate_coverage(state, city, start_year, end_year)
+      calculate_coverage(state, city, start_year, end_year, vehicular_only)
     },
     locations
   ) %>%
@@ -137,16 +139,16 @@ calculate_coverage <- function(
   state,
   city,
   start_year = 2011,
-  end_year = 2017
+  end_year = 2017,
+  vehicular_only = F
 ) {
   # NOTE: for coverage we filter to vehicular stops
   tbl <-
     load_coverage_data(state, city) %>%
-    filter(
-      type == "vehicular",
-      year(date) >= start_year,
-      year(date) <= end_year
-    )
+    filter(year(date) >= start_year, year(date) <= end_year)
+
+  if (vehicular_only) 
+    tbl <- filter(tbl, type == "vehicular")
 
   date_range = range(tbl$date, na.rm = TRUE)
   if (city == "Statewide")
