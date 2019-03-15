@@ -257,7 +257,7 @@ veil_of_darkness_states <- function() {
     left_join(
       read_rds(here::here("resources", "state_county_geocodes.rds")) %>%
         rename(county_state = loc), 
-      by = c("state", "city", "county_name")
+      by = c("state", "county_name")
     ) %>% 
     filter(
       county_state %in% eligible_counties(

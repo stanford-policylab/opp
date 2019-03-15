@@ -381,9 +381,15 @@ compose_time_sliced_vod_plots <- function(
       time_str, rounded_minute, minutes_since_dark, minute, 
       n, n_minority
     ) %>% 
+    mutate(geography = !!geography_colq) %>% 
     group_by(!!geography_colq) %>% 
     do(
-      plot = generate_time_sliced_vod_plots(., minority_demographic, window_size)
+      plot = generate_time_sliced_vod_plots(
+        ., 
+        geography,
+        minority_demographic, 
+        window_size
+      )
     ) %>%
     translator_from_tbl(
       quo_name(geography_colq),
@@ -393,10 +399,12 @@ compose_time_sliced_vod_plots <- function(
 
 
 generate_time_sliced_vod_plots <- function(
-  data, 
+  data, geography_col = geography,
   minority_demographic = "black", 
   window_size = 15, eps = 0.05
 ) {
+  geography_colq <- enquo(geography_col)
+  
   d <-
     data %>%
     # remove the bin between sunset and dusk
@@ -459,7 +467,7 @@ generate_time_sliced_vod_plots <- function(
         scale_color_manual(values = c("blue", "blue")) +
         labs(
           title = str_c(
-            geography, ", ",
+            unique(pull(., !!geography_colq)), ", ",
             minute_to_time(unique(.$rounded_minute)), " to ",
             minute_to_time(unique(.$rounded_minute) + window_size)
           )
