@@ -401,6 +401,16 @@ opp_download_clean_urls <- function(state, city) {
 }
 
 
+opp_download_shapefiles_url <- function(state, city) {
+  urls <- opp_download_clean_urls(state, city)
+  is_shapefiles <- str_detect(urls, "shapefiles")
+  url <- ""
+  if (any(is_shapefiles))
+    url <- urls[is_shapefiles]
+  url
+}
+
+
 opp_extract_city_from_path <- function(path) {
   tokens <- tokenize_path(path)
   format_proper_noun(str_replace(

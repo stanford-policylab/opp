@@ -66,5 +66,14 @@ clean <- function(d, helpers) {
     filter(
       !is.na(date)
     ) %>%
+    merge_rows(
+      datetime,
+      lat,
+      lng,
+      subject_race,
+      subject_sex,
+      officer_last_name,
+      officer_first_name
+    ) %>%
     standardize(d$metadata)
 }

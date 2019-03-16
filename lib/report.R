@@ -80,10 +80,11 @@ plot_prop_by_race <- function(col, pred_col = TRUE) {
 # REPORT VARIABLES
 title <- create_title(state, city)
 
-if (city == "Statewide")
+if (city == "Statewide") {
   population <- opp_state_population(state, city)
-else
+} else {
   population <- opp_city_population(state, city)
+}
 
 total_rows <- nrow(data)
 

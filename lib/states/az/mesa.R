@@ -35,6 +35,11 @@ clean <- function(d, helpers) {
 
   colnames(d$data) <- tolower(colnames(d$data))
 
+  # NOTE: INCIDENT_NO appears to refer to the same incident but can involve
+  # multiple people, i.e. 20150240096, which appears to be an alcohol bust of
+  # several underage teenagers; in other instances, the rows look nearly
+  # identical, but given this information and checking several other seeming
+  # duplicates, it appears as though there is one row per person per incident
   d$data %>%
     mutate(
       location = str_trim(str_c(block, city, sep = ", "))

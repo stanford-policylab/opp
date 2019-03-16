@@ -89,7 +89,7 @@ coverage_for_website <- function() {
         tibble(
           state = state,
           city = city,
-          shapefiles = has_files(opp_shapefiles_dir(state, city)),
+          shapefiles = opp_download_shapefiles_url(state, city),
           url = opp_download_clean_data_url(state, city),
           has_pedestrian_stops = has_pedestrian_stops(state, city)
         )
@@ -106,7 +106,6 @@ coverage_for_website <- function() {
       "NC"
     )
   )
-  # TODO(danj): add pedestrian column
 }
 
 

@@ -54,16 +54,23 @@ to privacy concerns.
   </tr>
   <tr>
     <td>lat</td>
-    <td>The latitude of the stop. If not provided, we attempt to geocode this
-    using the location field. Stops with geocodes more than 4 standard
-    deviations from the median stop lat/lng are set to NA. </td>
+    <td>The latitude of the stop. If not provided by the department, we
+    attempt to geocode any provided address or location using
+    Google Maps. Google Maps returns a "best effort" response, which may not
+    be completely accurate if the provided location was malformed or
+    underspecified. To protect against suprious responses, geocodes more than
+    4 standard deviations from the median stop lat/lng are set to NA.
     <td>72.23545</td>
   </tr>
   <tr>
     <td>lng</td>
-    <td>The longitude of the stop. If not provided, we attempt to geocode this
-    using the location field. Stops with geocodes more than 4 standard
-    deviations from the median stop lat/lng are set to NA. </td>
+    <td>The longitude of the stop. If not provided by the department, we
+    attempt to geocode any provided address or location using
+    Google Maps. Google Maps returns a "best effort" response, which may not
+    be completely accurate if the provided location was malformed or
+    underspecified. To protect against suprious responses, geocodes more than
+    4 standard deviations from the median stop lat/lng are set to NA.
+    </td>
     <td>115.2808</td>
   </tr>
   <tr>
@@ -520,7 +527,24 @@ reading prior to performing detailed analysis of a location.
 Our analysis only scratches the surface of what’s possible with these data.
 We’re excited to see what you come up with!
 
+## Gilbert, AZ
+**Data notes**:
+- Data is deduplicated on call_id
+- Most important data is missing, including outcome (arrest, citation,
+  warning), reason for stop, search, contraband, and demographic information
+  on the subject (except name, which is redacted for privacy)
+
+## Mesa, AZ
+- INCIDENT_NO appears to refer to the same incident but can involve
+  multiple people, i.e. 20150240096, which appears to be an alcohol bust of
+  several underage teenagers; in other instances, the rows look nearly
+  identical, but given this information and checking several other seeming
+  duplicates, it appears as though there is one row per person per incident
+
 ## Little Rock, AR
+- Data is deduplicated on date, time, location, race, sex, and officer name
+- Data consists only of citations
+
 ## Statewide, AZ
 **Data notes**:
 - Counties were mapped in two ways. First, we determined which counties the
@@ -552,18 +576,37 @@ We’re excited to see what you come up with!
   there are multiple ways contraband_found might be defined, and so we do not
   include Arizona in our contraband analysis. 
 
-## Gilbert, AZ
-## Mesa, AZ
-## San Diego, CA
-## San Bernardino, CA
 ## Anaheim, CA
-## San Francisco, CA
-## Long Beach, CA
-## Santa Ana, CA
-## San Jose, CA
-## Stockton, CA
+- Very little information received, only a reference number, date, year, case
+  type (with no translation), and a case type (with no translation)
+
 ## Bakersfield, CA
+- Data is deduplicated on raw columns date_of_birth, subject_address,
+  ethnicity, gender_code, occ_date, occ_time
+- Data does not include reason for stop, search, contraband fields
+- Missing data dictionaries for ticket classes, ticket statuses, and
+  statute section
+- Data consists only of citations
+
+## San Bernardino, CA
+- Data is deduplicated on raw columns CreateDateTime, Address, and CallType
+- Data does not include most useful information, including demographic,
+  outcome, and search/contraband information, so the deduplication above
+  potentially over-deduplicates
+
+## Long Beach, CA
+- Data is deduplicated on raw columns Date, Location, Race, Sex, and Officer
+  DID
+- Data does not include reason for stop, search, or contraband fields 
+
+## San Diego, CA
+- 
+
+## San Francisco, CA
+## San Jose, CA
+## Santa Ana, CA
 ## Statewide, CA
+## Stockton, CA
 **Data notes**:
 - CHP districts roughly map to counties, so we mapped stops to counties using
   the map of CHP districts, which is included in the raw data. Some counties
@@ -861,6 +904,13 @@ We’re excited to see what you come up with!
 
 ## Albany, NY
 ## Columbus, OH
+**Data notes**:
+  - `Incident Number` in the original data seems unreliable as it has several
+    hundred entries for 9999 and 99999; furthermore, occasionally, it does
+    appear to reference the same incident, but is duplicated for every
+    distinct action taken against the subject
+  - The raw data is deduplicated on `Stop Date`, `Contact End Date`, Ethnicity,
+    Gender, ViolationStreet, and ViolationCrossStreet
 ## Statewide, OH
 **Data notes**:
 - The stop_purpose field is populated by infraction codes. The corresponding
