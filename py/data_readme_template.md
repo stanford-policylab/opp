@@ -726,8 +726,12 @@ We’re excited to see what you come up with!
   forward. We haven't processed this yet.
 
 ## Hartford, CT
+
 ## Tampa, FL
+
 ## Saint Petersburg, FL
+
+
 ## Statewide, FL
 **Data notes**:
 - The raw data is very messy. Two different data sets were supplied, both with
@@ -778,7 +782,9 @@ We’re excited to see what you come up with!
   were mapped by comparing the identifiers in the `LOCKCOUNTY` field with the
   cities in the `LOCKCITY` field.
 - The codes in the county field represent counties ordered alphabetically.
+
 ## Idaho Falls, ID
+
 ## Statewide, IL
 **Data notes**:
 - The data is very messy. The presence and meaning of fields relating to search
@@ -800,10 +806,15 @@ We’re excited to see what you come up with!
   data, so we exclude Illinois from our search type analysis. 
 
 ## Chicago, IL
+
 ## Fort Wayne, IN
+
 ## Wichita, KS
+
 ## Owensboro, KY
+
 ## New Orleans, LA
+
 ## Statewide, MA
 **Data notes**:
 - The search and outcome fields are inconsistent. We take the most progressive
@@ -818,6 +829,7 @@ We’re excited to see what you come up with!
   through Google's geocoder.
 
 ## Baltimore, MD
+
 ## Statewide, MD
 **Data notes**:
 - The data is very messy. It comes from three different time periods: 2007,
@@ -847,6 +859,7 @@ We’re excited to see what you come up with!
   the other fields.
 
 ## Saint Paul, MN
+
 ## Statewide, MO
 **Data notes**:
 - The original data was aggregated. There is detail on a number of fields (age,
@@ -867,7 +880,9 @@ We’re excited to see what you come up with!
 
 ## Statewide, MT
 **Data notes**: none
+
 ## Raleigh, NC
+
 ## Statewide, NC
 **Data notes**:
 - Stop time is often unreliable — we have a large overdensity of 00:00 values,
