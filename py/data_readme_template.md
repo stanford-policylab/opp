@@ -529,12 +529,16 @@ We’re excited to see what you come up with!
 
 ## Gilbert, AZ
 **Data notes**:
-- Data is deduplicated on call_id
+- Data is deduplicated on call_id, reducing the number of records 17.6%; this
+  was equivalent to deduping on date, time, location, and officer_id; subject
+  name appears to have been entered multiple times per call_id, and often in
+  subtly different formats
 - Most important data is missing, including outcome (arrest, citation,
   warning), reason for stop, search, contraband, and demographic information
   on the subject (except name, which is redacted for privacy)
 
 ## Mesa, AZ
+**Data notes**:
 - INCIDENT_NO appears to refer to the same incident but can involve
   multiple people, i.e. 20150240096, which appears to be an alcohol bust of
   several underage teenagers; in other instances, the rows look nearly
@@ -542,7 +546,11 @@ We’re excited to see what you come up with!
   duplicates, it appears as though there is one row per person per incident
 
 ## Little Rock, AR
-- Data is deduplicated on date, time, location, race, sex, and officer name
+**Data notes**:
+- lat/lng data doesn't appear totally accurate, there are ~18k lat/lngs that
+  were coerced to NA because they all equalled "-1.79769313486232E+308"
+- Data is deduplicated on date, time, lat, lng, race, sex, and officer name,
+  reducing the number of records by ~30.6%
 - Data consists only of citations
 
 ## Statewide, AZ
@@ -577,36 +585,73 @@ We’re excited to see what you come up with!
   include Arizona in our contraband analysis. 
 
 ## Anaheim, CA
+**Data notes**:
 - Very little information received, only a reference number, date, year, case
   type (with no translation), and a case type (with no translation)
 
 ## Bakersfield, CA
+**Data notes**:
 - Data is deduplicated on raw columns date_of_birth, subject_address,
-  ethnicity, gender_code, occ_date, occ_time
+  ethnicity, gender_code, occ_date, occ_time, reducing the number of records by
+  ~1.2% 
 - Data does not include reason for stop, search, contraband fields
 - Missing data dictionaries for ticket classes, ticket statuses, and
   statute section
 - Data consists only of citations
 
 ## San Bernardino, CA
-- Data is deduplicated on raw columns CreateDateTime, Address, and CallType
+**Data notes**:
+- Data is deduplicated on raw columns CreateDateTime, Address, and CallType,
+  removing ~26.3% of records
 - Data does not include most useful information, including demographic,
   outcome, and search/contraband information, so the deduplication above
   potentially over-deduplicates
 
 ## Long Beach, CA
+**Data notes**:
 - Data is deduplicated on raw columns Date, Location, Race, Sex, and Officer
-  DID
+  DID, reducing the number of records by ~14.3%
 - Data does not include reason for stop, search, or contraband fields 
 
 ## San Diego, CA
-- 
+**Data notes**:
+- stop_id in raw data doesn't appear to apply to unique events, as the same
+  id has different service_area, subject_race, subject_age, and subject_sex,
+  i.e.1099162
+- Data is deduplicated on raw columns timestamp, subject_race, subject_sex,
+  subject_age, and service_area, reducing the number or records by X%
+- There are no locations, but service_area is provided
 
 ## San Francisco, CA
+**Data notes**:
+- Search basis in the raw data is only "No Search", consent, or other
+  (inventory, incident to arrest, and parole searches) 
+- Data is deduplicated on raw columns date, time, race_description, sex, age,
+  location, removing ~0.3% of stops
+
 ## San Jose, CA
+**Data notes**:
+- event_number in raw data has indeterminate meaning, several event numbers
+  occur at the same time but have up to 16 duplicates; however, some of these
+  involve different subjects, so it's unclear whether they are distinct
+  incidents or large incidents involving many people
+- Data is deduplicated using date, time, location, and subject race; this
+  removes about 5.0% of rows, but many of these rows are lacking sufficient
+  information for differentiation, i.e. they have NA for many of their values
+
 ## Santa Ana, CA
+**Data notes**:
+- Deduping on raw columns Date, Race, Sex, Violation Description, Officer
+  (Badge), and Primary Street would reduce this dataset by ~9.7%, but there is
+  insufficient information to justify this without the incident time. For
+  instance, the highest frequency "incident" deduping on that critera was 16
+  male Hispanic drivers failing to stop at a stop sign by the same officer on
+  5th Street; while this could be 16 duplicates, it could also be the same
+  officer pulling over 16 people throughtout that day
+- Data does not include search or contraband information
+- Data includes only citations
+
 ## Statewide, CA
-## Stockton, CA
 **Data notes**:
 - CHP districts roughly map to counties, so we mapped stops to counties using
   the map of CHP districts, which is included in the raw data. Some counties
@@ -624,10 +669,33 @@ We’re excited to see what you come up with!
 - Shift time is included, but is not sufficiently granular to yield reliable
   stop time. 
 
-## Denver, CO
-## Aurora, CO
-## Statewide, CO
+## Stockton, CA
+**Data notes**:
+- Data consists of two sets of files, traffic stop surveys and CAD stop files,
+  but currently there is no information on how to join them; location is in the
+  stop files, but all other demographic information is in the traffic stop
+  survey files
+- There may be duplicates, but unclear how to identify them, as date, age,
+  gender, and race are the only consistently filled in fields, and the maximum
+  number of stops for any date, age, gender, race combination is 10, which is a
+  reasonable number of stops for that combination over the course of a day in
+  the entire city occasionally
+- officer_id is coalesced officer_id and officer_id2, the former being 90% null
+  and the latter 50% null in the dataset
 
+## Aurora, CO
+**Data notes**:
+- Data is deduplicated on raw columns Ticket Date, Ticket Time, Ticket
+  Location, First Name, Last Name, sex, and Date of Birth, reducing the number
+  of rows by ~1.0%
+
+## Denver, CO
+**Data notes**:
+- Data is deduplicated on MASTER_INCIDENT_NUMBER, which decreases the number of
+  rows by 62.6%
+- Data does not contain subject demographic or search/contraband information
+
+## Statewide, CO
 **Data notes**:
 - The state did not provide us with mappings for every police department code
   to police department name.
@@ -641,7 +709,6 @@ We’re excited to see what you come up with!
   the other fields.
 
 ## Statewide, CT
-
 **Data notes**:
 - Counties were mapped by running the cities in the `Intervention Location
   Name` field through Google's geocoder.

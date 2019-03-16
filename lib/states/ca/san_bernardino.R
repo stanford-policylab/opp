@@ -23,7 +23,7 @@ clean <- function(d, helpers) {
   # https://app.asana.com/0/456927885748233/594103520238659
   d$data %>%
     merge_rows(
-      CreateDateTime,
+      CreateDatetime,
       Address,
       CallType
     ) %>%

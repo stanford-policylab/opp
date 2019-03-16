@@ -83,6 +83,13 @@ clean <- function(d, helpers) {
   )
 
   d$data %>%
+    merge_rows(
+      timestamp,
+      subject_race,
+      subject_sex,
+      subject_age,
+      service_area
+    ) %>%
     rename(
       reason_for_stop = stop_cause,
       time = stop_time,

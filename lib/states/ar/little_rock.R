@@ -47,6 +47,16 @@ clean <- function(d, helpers) {
       sep = " - "
     ) %>%
     mutate(
+      lat = if_else(
+        lat %in% c("-1.79769313486232E+308", "0", "1", "-1", "-2"),
+        NA_character_,
+        lat
+      ),
+      lng = if_else(
+        lng %in% c("-1.79769313486232E+308", "0", "1", "-1", "-2"),
+        NA_character_,
+        lng
+      ),
       datetime = parse_datetime(DateTime, "%m/%d/%Y %I:%M:%S %p"),
       date = as.Date(datetime),
       time = format(datetime, "%H:%M:%S"),
