@@ -34,6 +34,14 @@ clean <- function(d, helpers) {
   )
 
   d$data %>%
+    merge_rows(
+      InterventionDateTime,
+      ReportingOfficerIdentificationID,
+      InterventionLocationDescriptionText,
+      SubjectRaceCode,
+      SubjectSexCode,
+      SubjectAge
+    ) %>%
     rename(
       contraband_found = ContrabandIndicator,
       department_name = `Department Name`,

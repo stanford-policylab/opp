@@ -687,12 +687,13 @@ We’re excited to see what you come up with!
 **Data notes**:
 - Data is deduplicated on raw columns Ticket Date, Ticket Time, Ticket
   Location, First Name, Last Name, sex, and Date of Birth, reducing the number
-  of rows by ~1.0%
+  of records by ~1.0%
 
 ## Denver, CO
 **Data notes**:
-- Data is deduplicated on MASTER_INCIDENT_NUMBER, which decreases the number of
-  rows by 62.6%
+- MASTER_INCIDENT_NUMBER has many duplicates, but it's unclear what it
+  corresponds to or how to deduplicate it if that is the correct thing to do,
+  since the records are nearly identical except for the NEIGHBORHOOD_NAME
 - Data does not contain subject demographic or search/contraband information
 
 ## Statewide, CO
@@ -726,10 +727,27 @@ We’re excited to see what you come up with!
   forward. We haven't processed this yet.
 
 ## Hartford, CT
+**Data notes**:
+- Data is deduplicated on raw columns InterventionDateTime,
+  ReportingOfficerIdentificationID, InterventionLocationDescriptionText,
+  SubjectRaceCode, SubjectSexCode, and SubjectAge, reducing the number of rows
+  by ~1.1%
 
 ## Tampa, FL
+**Data notes**:
+- Data is deduplicated on date, subject_race, subject_dob, officer_last_name,
+  officer_first_name, and Driver License Number, reducing the number of rows by
+  ~13.2%
+- Data is missing search and contraband information, as well as outcomes other
+  than citations
+- The data sources are public (it's unclear what the difference is between the
+  stop types):
+  - https://publicrec.hillsclerk.com/Traffic/Civil_Traffic_Name_Index_files/
+  - https://publicrec.hillsclerk.com/Traffic/Criminal_Traffic_Name_Index_files/
+  of the stop or the address on the subject's license
 
 ## Saint Petersburg, FL
+**Data notes**:
 
 
 ## Statewide, FL
@@ -909,6 +927,7 @@ We’re excited to see what you come up with!
 ## Fayetteville, NC
 ## Charlotte, NC
 ## Grand Forks, ND
+STOP
 ## Statewide, ND
 **Data notes**:
 - The data contain records only for citations, not warnings, so we exclude
@@ -1027,6 +1046,11 @@ We’re excited to see what you come up with!
 - Counts for 2015 and 2016 are much lower than in earlier years. 
 
 ## Philadelphia, PA
+**Data notes**:
+- Data is deduplicated on raw columns datetimeoccur, location, districtoccur,
+  lat, lng, gender, age, and race, reducing the number of records by ~1.6%
+- Information on citations and warnings is missing, but arrests are included
+
 ## Statewide, RI
 **Data notes**:
 - The stops are mapped to state patrol zones, which represent police barrack

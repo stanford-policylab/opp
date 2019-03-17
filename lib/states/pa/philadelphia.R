@@ -40,6 +40,16 @@ clean <- function(d, helpers) {
   # TODO(phoebe): can we get reason_for_stop?
   # https://app.asana.com/0/456927885748233/658391963833525
   d$data %>%
+    merge_rows(
+      datetimeoccur,
+      location,
+      districtoccur,
+      lat,
+      lng,
+      gender,
+      age,
+      race
+    ) %>%
     rename(
       subject_age = age,
       location = location,
