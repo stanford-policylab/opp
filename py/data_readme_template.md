@@ -619,7 +619,7 @@ We’re excited to see what you come up with!
   id has different service_area, subject_race, subject_age, and subject_sex,
   i.e.1099162
 - Data is deduplicated on raw columns timestamp, subject_race, subject_sex,
-  subject_age, and service_area, reducing the number or records by X%
+  subject_age, and service_area, reducing the number or records by ~2.0%
 - There are no locations, but service_area is provided
 
 ## San Francisco, CA
@@ -636,7 +636,7 @@ We’re excited to see what you come up with!
   involve different subjects, so it's unclear whether they are distinct
   incidents or large incidents involving many people
 - Data is deduplicated using date, time, location, and subject race; this
-  removes about 5.0% of rows, but many of these rows are lacking sufficient
+  removes about ~5.0% of records, but many of these rows are lacking sufficient
   information for differentiation, i.e. they have NA for many of their values
 
 ## Santa Ana, CA
@@ -744,11 +744,11 @@ We’re excited to see what you come up with!
   stop types):
   - https://publicrec.hillsclerk.com/Traffic/Civil_Traffic_Name_Index_files/
   - https://publicrec.hillsclerk.com/Traffic/Criminal_Traffic_Name_Index_files/
-  of the stop or the address on the subject's license
 
 ## Saint Petersburg, FL
 **Data notes**:
-
+- Only 7 months of data provided
+- No demographic, search/contraband, or outcome data
 
 ## Statewide, FL
 **Data notes**:
@@ -802,6 +802,16 @@ We’re excited to see what you come up with!
 - The codes in the county field represent counties ordered alphabetically.
 
 ## Idaho Falls, ID
+- Race and gender are not on the ID driver's license and filled in only rarely,
+  subject age is also 100% null
+- There is 'reptspec' data, but the values are extrenely vague, i.e. "PAST",
+  "SATURATION", "PERSON", "OTHER AGENCY"
+- There are 6 more months of data unprocessed with the main files since they
+  are of a completely different format, but are available upon request
+- The data is missing demographic information as well as search/contraband
+  information
+- It's unclear whether there are duplicates, since officerid is 0 sometimes and
+  there is no demographic information
 
 ## Statewide, IL
 **Data notes**:
@@ -824,6 +834,12 @@ We’re excited to see what you come up with!
   data, so we exclude Illinois from our search type analysis. 
 
 ## Chicago, IL
+- Dataset is created by joining arrests and citations on date, hour, officer
+  name, and location
+- There may be duplicates, but there is often insufficient information to
+  deduplicate, i.e. the time resolution is hourly driver_race is null 99% of
+  the time
+- Data includes warnings and arrests, but is missing warnings
 
 ## Fort Wayne, IN
 
