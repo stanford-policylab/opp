@@ -802,6 +802,7 @@ We’re excited to see what you come up with!
 - The codes in the county field represent counties ordered alphabetically.
 
 ## Idaho Falls, ID
+**Data notes**:
 - Race and gender are not on the ID driver's license and filled in only rarely,
   subject age is also 100% null
 - There is 'reptspec' data, but the values are extrenely vague, i.e. "PAST",
@@ -834,6 +835,7 @@ We’re excited to see what you come up with!
   data, so we exclude Illinois from our search type analysis. 
 
 ## Chicago, IL
+**Data notes**:
 - Dataset is created by joining arrests and citations on date, hour, officer
   name, and location
 - There may be duplicates, but there is often insufficient information to
@@ -842,12 +844,40 @@ We’re excited to see what you come up with!
 - Data includes warnings and arrests, but is missing warnings
 
 ## Fort Wayne, IN
+**Data notes**:
+- Roster.csv (police officer info) is available in raw data, but
+  doesn't join cleanly to stops data; first names are often truncated and
+  nicknames are used, i.e.  Manny vs Manuel; it can be loaded and reviewed
+  upon request.
+- Data is missing search/contraband information, as well as demographic
+  information
 
 ## Wichita, KS
+**Data notes**:
+- Data is deduplicated on raw columns citation_date_time, citation_location,
+  defendant_first_name, defendant_last_name, defendant_age, defendant_sex, and
+  defendant_race, resulting in ~4.1% fewer records
+- Data is missing search/contraband fields
+- citation_number in the raw data doesn't appear to be unique. i.e. citation
+  "07M000645" is associated with two different dates, locations, and people
+- Only citations are included
 
 ## Owensboro, KY
+**Data notes**:
+- There is a list_of_officers.csv as well as the excel spreadsheet
+  (preferable given the formatting) that have more officer information
+  available upon request
+- Data is missing search/contraband information
+- Data is all citations, although it appears to include an arrest indicator as
+  well, when that also occurred
+- Provided longitude is lacking the negative sign, which we add (without which
+  all points are in central China)
 
 ## New Orleans, LA
+**Data notes**:
+- Addresses were partially anonymized by the department replacing the last two
+  numbers of the address number with XX; these were replaced with 00 so we
+  could at least geocode the block level address
 
 ## Statewide, MA
 **Data notes**:
@@ -863,6 +893,15 @@ We’re excited to see what you come up with!
   through Google's geocoder.
 
 ## Baltimore, MD
+**Data notes**:
+- Data is missing search/contraband information as well as demographic
+  information and outcomes other than citations
+- The primary key seems to be a combination of Ticket and Citation Number; when
+  Ticket is null, Citation Number isn't and vice versa; both are duplicated
+  across rows, so we deduplicate on those two IDs coalesced, resulting in
+  ~0.01% fewer records
+- Data lacks translations for `Ordinance Code` and `Citation Type`
+- Violation data is almsot all null
 
 ## Statewide, MD
 **Data notes**:
@@ -893,6 +932,13 @@ We’re excited to see what you come up with!
   the other fields.
 
 ## Saint Paul, MN
+**Data notes**:
+- Data is deduplication on `DATE OF STOP`, `RACE OF DRIVER`, `AGE OF DRIVER`,
+  `GENDER OF DRIVER`, and `POLICE GRID NUMBER`, resulting in ~0.02% fewer
+  records
+- Data is lacking contraband and location information
+- If a citation was not issued, it's unclear whether a warning was issued or
+  something else
 
 ## Statewide, MO
 **Data notes**:

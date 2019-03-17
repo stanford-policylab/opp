@@ -29,7 +29,13 @@ clean <- function(d, helpers) {
     # for the same citation number, i.e. "07M000645"?
     # https://app.asana.com/0/456927885748233/1106093271701480
     merge_rows(
-      citation_number
+      citation_date_time,
+      citation_location,
+      defendant_first_name,
+      defendant_last_name,
+      defendant_age,
+      defendant_sex,
+      defendant_race
     ) %>%
     rename(
       subject_age = defendant_age,

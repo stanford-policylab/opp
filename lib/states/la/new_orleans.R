@@ -21,6 +21,11 @@ clean <- function(d, helpers) {
   )
 
   d$data %>%
+    merge_rows(
+      EventDate,
+      BlockAddress,
+      SubjectID
+    ) %>%
     rename(
       district = District,
       zone = Zone,
