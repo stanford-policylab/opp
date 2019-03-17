@@ -267,7 +267,7 @@ opp_calculated_features_path <- function(state, city = "statewide") {
 
 opp_city_demographics <- function(state, city) {
   state_query <- str_to_upper(state)
-  city_fmt <- str_to_title(str_replace(city, "Saint", "St."))
+  city_fmt <- str_replace(str_to_title(city), "Saint", "St.")
   city_query <- str_c("^", city_fmt, " (city|town)$")
   # NOTE: https://en.wikipedia.org/wiki/Nashville-Davidson_(balance),_Tennessee
   if (city_fmt == "Nashville")
@@ -276,7 +276,7 @@ opp_city_demographics <- function(state, city) {
     opp_load_acs_race_data("acs_2017_5_year_city_level_race_data.csv") %>%
     filter(state_abbreviation == state_query, str_detect(place, city_query))
   if (nrow(tbl) != length(valid_races))
-    stop(str_c("Demographic query for ", city_fmt, ", ", state_fmt, " failed!"))
+    stop(str_c("Demographic query for ", city_fmt, ", ", state_query, " failed!"))
   tbl
 }
 
