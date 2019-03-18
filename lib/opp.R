@@ -920,6 +920,22 @@ opp_raw_data_dir <- function(state, city = "statewide") {
 }
 
 
+opp_relative_violation_rates <- function() {
+  tbl <- opp_violation_rates()
+  tbl <- 
+    tbl %>%
+    left_join(
+      filter(tbl, subject_race == "white") %>%
+        select(location, violation_rate) %>%
+        rename(white_violation_rate = violation_rate)
+    ) %>%
+    mutate(
+      relative_violation_rate = violation_rate / white_violation_rate - 1
+    ) %>%
+    filter(subject_race %in% c("black", "hispanic", "asian/pacific islander"))
+}
+
+
 opp_report <- function(state, city = "statewide") {
   print("building report...")
   dir_create(here::here("reports"))
