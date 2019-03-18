@@ -35,6 +35,9 @@ clean <- function(d, helpers) {
   # TODO(phoebe): can we get reason_for_stop/search/contraband fields?
   # https://app.asana.com/0/456927885748233/757611127540101
   d$data %>%
+    merge_rows(
+      case_number
+    ) %>%
     rename(
       location = IncidentLocation,
       vehicle_registration_state = `License State`,
@@ -60,9 +63,6 @@ clean <- function(d, helpers) {
       date = as.Date(datetime),
       time = format(datetime, "%H:%M:%S"),
       subject_sex = tr_sex[SubjectGender],
-      # NOTE: it appears as though Camden police often classify hispanics as
-      # white, since the stop rate for whites is extremely high and there are
-      # no stops for hispanics
       subject_race = tr_race[if_else_na(
         Ethnicity == "Hispanic Or Latino",
         "hispanic",

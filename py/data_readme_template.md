@@ -962,6 +962,9 @@ We’re excited to see what you come up with!
 **Data notes**: none
 
 ## Raleigh, NC
+**Data notes**:
+- Data is pulled out of Statewide, NC data, so refer to that for processing
+  documentation
 
 ## Statewide, NC
 **Data notes**:
@@ -974,22 +977,70 @@ We’re excited to see what you come up with!
   the stop with that county. However, some districts cover multiple counties.
   Stops in these districts can thus not be unambiguously mapped to a single
   county. In both cases, district of the stop is provided in the "district"
-  column, providing granular location data for the vast majority of stops.
+  column, providing coarse location data for the vast majority of stops.
 - Action is sometimes "No Action" or a similarly minor enforcement action even
   when `DriverArrest` or `PassengerArrest` is TRUE. In these cases, we set
-  stop_outcome to be "Arrest" because the stop_outcome field represents the
+  outcome to be "Arrest" because the outcome field represents the
   most severe outcome of the stop.
-- `search_conducted` is TRUE if either the driver or passenger is searched. In
-  3.6% of cases, the passenger is searched. As their names suggest,
-  `driver_race`, `driver_gender`, and `driver_age` always refer to the driver.
+- There can be multiple search bases per stop-search-peron, so we collapse them
+  into a single value
+- There is a 1:N correspondence between StopID and PersonID, so we filtered out
+  passengers when joining demographic information to stop data to prevent
+  duplicates; this also means that the demographic information pertains to the
+  driver
+- When joining search data onto the stop data, the data is joined by StopID
+  only and not also PersonID, since the person searched could be either the
+  driver or passenger; this means that the search data may be of either the
+  driver or the passenger, and in 3.6% of cases, it was actually the passenger
+  who was searched, but search_conducted is true in either case; fortunately,
+  there is a 1:1 correspondence between StopID and and SearchID, as well as
+  between SearchID and PersonID (who, again, can be either the driver or
+  passenger) and SearchID and ContrabandID 
+- Data is deduplicated on date, time, location, department_name, officer_id,
+  subject_race, subject_sex, and subject_age resulting in ~2.8% fewer records,
+  although some of these have Unknown or NA for some of their values, so for
+  these deduplication may over compress rows; either way, these rows are not
+  useful for analysis, given their lack of information
 
 ## Winston-Salem, NC
+**Data notes**:
+- Data is pulled out of Statewide, NC data, so refer to that for processing
+  documentation
+
 ## Greensboro, NC
+**Data notes**:
+- Data is pulled out of Statewide, NC data, so refer to that for processing
+  documentation
+
 ## Durham, NC
+**Data notes**:
+- Data is pulled out of Statewide, NC data, so refer to that for processing
+  documentation
+
 ## Fayetteville, NC
+**Data notes**:
+- Data is pulled out of Statewide, NC data, so refer to that for processing
+  documentation
+
 ## Charlotte, NC
+**Data notes**:
+- Data is pulled out of Statewide, NC data, so refer to that for processing
+  documentation
+
 ## Grand Forks, ND
-STOP
+**Data notes**:
+- Data is deduplicated on raw columns agency, date, time, sex, race, age,
+  ht_ft, ht_in, house, and street, reducing the number of records by ~14.2%
+- Many of the offenses fall into categories other than obvious pedestrian or
+  vehicular stops, i.e. BARKING DOG, and are encoded as NA for type, but
+  the description is provided in reason_for_stop
+- The department says that arrest, search, and contraband are not recorded with
+  stop data
+- There are unidentified spikes that are relatively large every year in late
+  May or early June, i.e. 2010-05-08, 2011-06-02, 2012-05-05, 2013-05-04,
+  2014-05-10, 2015-05-09, 2016-05-20; it's unclear what these correspond to and
+  the PD has not yet responded to our inquiry
+
 ## Statewide, ND
 **Data notes**:
 - The data contain records only for citations, not warnings, so we exclude
@@ -997,6 +1048,9 @@ STOP
 - Rows represent individual citations, not stops, so we remove duplicates by
   grouping by the other fields.
 - The `stop_purpose` field is populated by citation codes.
+- (danj): deduping by violation_date_time, Age, sex, Race, county_name,
+  street_cnty_rd_location, desc_of_area, highway, ref_point reduces rows by
+  ~16.6%
 
 ## Statewide, NE
 **Data notes**:
@@ -1053,6 +1107,20 @@ STOP
   through the Google geocoder. 
 
 ## Camden, NJ
+**Data notes**:
+- Data is deduplicated on case_number, reducing the number of records by ~5.4%;
+  this is equivalent to deduplicating on Incident Datetime, IncidentLocation,
+  Department, OfficerName, SubjectGender, DateOfBirth, Race, and Ethnicity
+- Data does not contain search/contraband fields
+- There are 3 CFS_Codes, TRAFFIC STOP, PEDESTRIAN STOP, and freeform text,
+  which is classified as vehicular since most reference a driver or traffic
+  stop situation
+- It appears as though Camden police often classify hispanics as white, since
+  the stop rate for whites is extremely high and there are no stops for
+  hispanics
+- According to the PD, a "summons" is a citation, so that corresponds to
+  citation_issued in this data
+
 ## Statewide, NV
 **Data notes**:
 - Nevada does not seem to record Ethnicity or have any records of Hispanic
@@ -1066,6 +1134,10 @@ STOP
 - The data stops at 2017-12-13.
 
 ## Albany, NY
+**Data notes**:
+- Data is deduplicated on incident, reducing the number of records by ~32%
+- Search/contraband information is missing, as well as outcomes
+
 ## Columbus, OH
 **Data notes**:
   - `Incident Number` in the original data seems unreliable as it has several
@@ -1074,6 +1146,7 @@ STOP
     distinct action taken against the subject
   - The raw data is deduplicated on `Stop Date`, `Contact End Date`, Ethnicity,
     Gender, ViolationStreet, and ViolationCrossStreet
+
 ## Statewide, OH
 **Data notes**:
 - The stop_purpose field is populated by infraction codes. The corresponding
@@ -1099,8 +1172,30 @@ STOP
   patrol, but it is re-assigned to a new trooper upon an officer's retirement.
 
 ## Cincinnati, OH
+**Data notes**:
+- Data filters out passengers and deduplicates on instance_id; together this
+  reduces the number of rows by ~80.6%
+- Addresses are "sanitized", i.e. 1823 Field St. -> 18XX Field St.  since 83%
+  of given geocodes in the raw data are null, we replace X with 0 and get
+  approximate geocoding locations
+- Data before 2009 is removed since it is so sparse it is likely not to be
+  trusted
+
 ## Oklahoma City, OK
+**Data notes**:
+- Data is deduplicated on date, time, location, division, subject_dob,
+  subject_race, subject_sex, and officer_id, reducing the number of records by
+  ~15.7%
+- Partial data from before 2011 is filtered out
+- Search/contraband information is missing
+
 ## Tulsa, OK
+**Data notes**:
+- Data is deduplicated on raw columns violationdate, violation_location,
+  officerdiv, race, and sex, reducing the number of records by ~30.0%
+- Data is all citations
+- Data appears to be all vehicular, although the PD hasn't confirmed that yet
+
 ## Statewide, OR
 **Data notes**:
 - There is basically no data, including no data on Hispanic drivers, so we
@@ -1142,10 +1237,27 @@ STOP
   coordinates, as we did in Washington.
 
 ## Nashville, TN
+**Data notes**:
+- Data is deduplicated on raw columns stop_date_time, stop_location_street,
+  officer_employee_number, race, sex, and age_of_suspect, reducing the number
+  of records by ~0.3%
+
 ## Houston, TX
+**Data notes**:
+- 
+
 ## Austin, TX
+**Data notes**:
+- 
+
 ## Plano, TX
+**Data notes**:
+- 
+
 ## Arlington, TX
+**Data notes**:
+- 
+
 ## Statewide, TX
 **Data notes**:
 - There is evidence that minority drivers are labeled as white in the data. For
@@ -1164,6 +1276,9 @@ STOP
   arrests.
 
 ## San Antonio, TX
+**Data notes**:
+- 
+
 ## Statewide, VA
 **Data notes**:
 - The original data was aggregated.
@@ -1181,6 +1296,9 @@ STOP
   citation). "Search stops" refer to searches without a corresponding citation.
 
 ## Burlington, VT
+**Data notes**:
+- 
+
 ## Statewide, VT
 **Data notes**:
 - Stop purpose information is not very granular — there are only five
@@ -1202,10 +1320,25 @@ STOP
 - Arrests and citations are grouped together in the `stop_outcome`, so we
   cannot reliably identify arrests. There is data on incident to arrest
   searches, but this does not necessarily identify all arrests.
+- (danj): there may be duplicates, deduping on  employee_last, employee_first,
+  officer_race_raw, officer_gender, contact_date, contact_hour, highway_type,
+  road_number, milepost, driver_race_orig, driver_age_orig, driver_gender_orig
+  yields ~3.4% fewer rows; however, many of these have NA for the driver
+  demographics; at the same time, it's hard to believe an officer could stop 45
+  people in an hour..
 
 ## Tacoma, WA
+**Data notes**:
+- 
+
 ## Seattle, WA
+**Data notes**:
+- 
+
 ## Madison, WI
+**Data notes**:
+- 
+
 ## Statewide, WI
 **Data notes**:
 - The data come from two systems ("7.3" and “10.0”) that succeeded each other.

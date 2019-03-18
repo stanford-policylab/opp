@@ -1,6 +1,5 @@
 source("common.R")
 
-
 # VALIDATION: [YELLOW] The Grand Forks PD's 2016 Annual Report cites figures
 # that don't totally correspond to our classification here, but are not far
 # off. It's not clear what is considered a traffic stop by the PD (i.e. a
@@ -78,10 +77,27 @@ clean <- function(d, helpers) {
     helpers$add_type(
       "desc"
     ) %>%
+    merge_rows(
+      agency,
+      date,
+      time,
+      sex,
+      race,
+      age,
+      ht_ft,
+      ht_in,
+      house,
+      street
+    ) %>%
     rename(
       reason_for_stop = desc
     ) %>%
     mutate(
+      type = case_when(
+        str_detect(type, "vehicular") ~ "vehicular",
+        str_detect(type, "pedestrian") ~ "pedestrian",
+        T ~ "other"
+      ),
       date = parse_date(date, "%Y%m%d"),
       time = coalesce(
         parse_time_int(time),

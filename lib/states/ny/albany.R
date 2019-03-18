@@ -29,6 +29,9 @@ clean <- function(d, helpers) {
   # TODO(phoebe): can we get outcomes (warning/citation/arrest)?
   # https://app.asana.com/0/456927885748233/758649899422595
   d$data %>%
+    merge_rows(
+      incident
+    ) %>%
     rename(
       violation = crime_code_A,
       vehicle_color = veh_color,

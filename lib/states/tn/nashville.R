@@ -37,7 +37,12 @@ clean <- function(d, helpers) {
 
   d$data %>%
     merge_rows(
-      stop_number
+      stop_date_time,
+      stop_location_street,
+      officer_employee_number,
+      race,
+      sex,
+      age_of_suspect
     ) %>%
     rename(
       arrest_made = custodial_arrest_issued,

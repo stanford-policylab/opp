@@ -35,12 +35,12 @@ clean <- function(d, helpers) {
   # TODO(phoebe): can we get search/contraband fields?
   # https://app.asana.com/0/456927885748233/757611127540100
   d$data %>%
-    merge_rows(
-      instance_id
-    ) %>%
     filter(
       # NOTE: filtering out passengers, since we are concerned about drivers
       !str_detect(field_subject_cid, "PASS")
+    ) %>%
+    merge_rows(
+      instance_id
     ) %>%
     rename(
       location = address_x,
@@ -93,6 +93,10 @@ clean <- function(d, helpers) {
       ),
       vehicle_registration_state =
         tr_state_to_abbreviation[tolower(license_plate_state)]
+    ) %>%
+    filter(
+      # NOTE: data before 2008 is so sparse as not to be trusted
+      year(date) > 2008
     ) %>%
     standardize(d$metadata)
 }

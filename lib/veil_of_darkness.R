@@ -171,7 +171,8 @@ veil_of_darkness_cities <- function() {
   coefficients <- bind_rows(
     par_pmap(
       mc.cores = 3,
-      tibble(degree = rep(1:6, 2), interact = c(rep(T, 6), rep(F, 6))),
+      tibble(degree = c(6, 6), interact = c(T, F)),
+      # tibble(degree = rep(1:6, 2), interact = c(rep(T, 6), rep(F, 6))),
       function(degree, interact) {
         bind_rows(
           vod_coef(tbl, city_state, degree, interact),

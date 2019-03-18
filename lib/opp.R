@@ -1102,6 +1102,49 @@ opp_tbl_from_eligible_subset <- function(eligible_subset_tbl) {
 }
 
 
+opp_violation_rate <- function(
+  state,
+  city,
+  min_coverage = 0.85,
+  sep = "\\|"
+) {
+  tbl <- opp_load_clean_data(state, city)
+  res <- tibble(state = state, city = city)
+  if (all(c("subject_race", "violation") %in% colnames(tbl))) {
+    if (coverage_rate(tbl$subject_race) > min_coverage
+        & coverage_rate(tbl$violation) > min_coverage) {
+      res <-
+        tbl %>%
+        mutate(n_violations = str_count(violation, sep) + 1) %>%
+        group_by(subject_race) %>%
+        summarize(
+          total_violations = sum(n_violations, na.rm = T),
+          n_subjects = n(),
+          violation_rate = total_violations / n_subjects
+        ) %>%
+        mutate(
+          state = str_to_upper(state),
+          city = str_to_title(city),
+          location = str_c(str_to_title(city), str_to_upper(state), sep = ", ")
+        )
+    }
+  }
+  res
+}
+
+
+opp_violation_rates <- function() {
+  tbl <- opp_apply(opp_violation_rate) %>% bind_rows() %>% drop_na()
+  tbl %>%
+  group_by(location) %>%
+  summarize(avg = mean(violation_rate)) %>%
+  # NOTE: remove places with trivial violation rates, i.e. ~1 per stop
+  filter(avg < 0.99 | avg > 1.01) %>%
+  inner_join(tbl) %>%
+  select(-avg)
+}
+
+
 pdf_filename <- function(state, city) {
   str_c(for_filename(state, city), ".pdf")
 }

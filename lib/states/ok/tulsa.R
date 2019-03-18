@@ -48,6 +48,16 @@ clean <- function(d, helpers) {
 	# https://app.asana.com/0/456927885748233/642528085814347
   colnames(d$data) <- tolower(colnames(d$data))
   d$data %>%
+    helpers$add_type(
+      "charge"
+    ) %>%
+    merge_rows(
+      violationdate,
+      violation_location,
+      officerdiv,
+      race,
+      sex
+    ) %>%
     rename(
       violation = charge,
       location = violation_location,
@@ -58,10 +68,12 @@ clean <- function(d, helpers) {
       vehicle_model = model,
       vehicle_registration_state = tagstate
     ) %>%
-    helpers$add_type(
-      "violation"
-    ) %>%
     mutate(
+      type = case_when(
+        str_detect(type, "vehicular") ~ "vehicular",
+        str_detect(type, "pedestrian") ~ "pedestrian",
+        T ~ "other"
+      ),
       datetime = coalesce(
         parse_datetime(violationdate, "%Y/%m/%d %H:%M:%S"),
         parse_datetime(violationdate, "%Y/%m/%d")
