@@ -1367,7 +1367,12 @@ We’re excited to see what you come up with!
 
 ## Madison, WI
 **Data notes**:
-- 
+- Data is deduplicated on date, time, location, officer_last_name,
+  officer_first_name, subject_race, subject_sex, vehicle_make, vehicle_model,
+  reducing the number of records by ~0.88%
+- Search/contraband information is missing
+- Data only includes warnings and citations, no arrests
+- Shapefiles don't include district 2 and it's accompanying sectors
 
 ## Statewide, WI
 **Data notes**:

@@ -80,5 +80,16 @@ clean <- function(d, helpers) {
       sector = Sector,
       district = District
     ) %>%
+    merge_rows(
+      date,
+      time,
+      location,
+      officer_last_name,
+      officer_first_name,
+      subject_race,
+      subject_sex,
+      vehicle_make,
+      vehicle_model
+    ) %>%
     standardize(d$metadata)
 }
