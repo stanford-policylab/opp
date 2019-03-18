@@ -48,12 +48,13 @@ clean <- function(d, helpers) {
       vehicle_make = `Vehicle Make`,
       vehicle_model = `Vehicle Model`,
       vehicle_color = `Vehicle Color`,
-      reason_for_stop = Offense,
       arrest_made = `Custodial Arrest Made`,
       speed = `Actual Speed`,
-      posted_speed = `Posted Speed`
+      posted_speed = `Posted Speed`,
+      violation = Offense
     ) %>%
     helpers$add_type(
+      "violation"
     ) %>%
     mutate(
       date = parse_date(`Violation Date`),
@@ -81,6 +82,14 @@ clean <- function(d, helpers) {
       district = DISTRICT,
       # NOTE: SUBCODE is just the first letter of SUBSTN
       substation = SUBSTN.x
+    ) %>%
+    merge_rows(
+      date,
+      time,
+      location,
+      subject_race,
+      subject_sex,
+      subject_age
     ) %>%
     standardize(d$metadata)
 }

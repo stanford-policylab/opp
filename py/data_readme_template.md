@@ -1244,19 +1244,44 @@ We’re excited to see what you come up with!
 
 ## Houston, TX
 **Data notes**:
-- 
+- Data is deduplicated on raw columns `Defendant Name`, Gender, Race, Street,
+  Block, `Scnd Street`, `Scnd Block`, `Officer Name`, and `Offense Date`,
+  reducing the number of records by ~0.02%; there is a possibility this over
+  collapses rows in the case where an officer pulls over the same person twice
+  in the same day at the same location
+- Data is lacking search/contraband information
+- Data consists only of citations
 
 ## Austin, TX
 **Data notes**:
-- 
+- Data is deduplicated on raw column street_check_case_number, reducing the
+  number of records by ~10.3%
+- Data does not include location or outcomes
+- There are no clear pedestrian-only discretionary stops in
+  reason_checked_description; SUSPICIOUS PERSON / VEHICLE is one category in
+  reason_for_stop, but is included with "vehicular" stops; as such, it may over
+  count vehicular stops
 
 ## Plano, TX
 **Data notes**:
-- 
+- Data is rather messy from year to year with different columns, and files with
+  "all_traffic_stops" in the name are difficult to join into the other incident
+  data, since the incident number in those files is populate donly ~15% of the
+  time; location data is spread across 4 columns in different files, and each
+  is null at least 75% of the time
+- violation appears to be a combination of offense nad violation_description
+  based on the year, so they are coalesced to find the first non-null value;
+  violation_description is 73.81% null, primary_violation is 99.35% null, and
+  98.16% null, and offense is 49.69% null
+- Data is deduplicated on date, time, location, officer_id, subject_age,
+  subject_race, and subject_sex, reducing the number of records by ~0.0004%,
+  but some of this may be over-deduplication because NAs are common in
+  location, officer_id, and subject_age
 
 ## Arlington, TX
 **Data notes**:
-- 
+- Unclear what PRA, xCoordinate, and yCoordinate are in the raw data
+- Missing data dictionaries for reason_for_stop, outcome, and search_ outcome
 
 ## Statewide, TX
 **Data notes**:
@@ -1277,7 +1302,9 @@ We’re excited to see what you come up with!
 
 ## San Antonio, TX
 **Data notes**:
-- 
+- Data is deduplicated on date, time, location, subject_race, subject_sex, and
+  subject_age, reducing the number of rows by ~25.3%
+- Data consists only of arrests and citations
 
 ## Statewide, VA
 **Data notes**:
@@ -1297,7 +1324,9 @@ We’re excited to see what you come up with!
 
 ## Burlington, VT
 **Data notes**:
-- 
+- Data is deduplicated on raw columns issued_at, location, race, gender, city,
+  dob, lat, lon, reducing the number of records by ~7.0%
+- Calls are also provided in the raw data, but aren't loaded here
 
 ## Statewide, VT
 **Data notes**:
@@ -1329,11 +1358,12 @@ We’re excited to see what you come up with!
 
 ## Tacoma, WA
 **Data notes**:
-- 
+- reason_for_stop is not recorded, and search/contraband information is not in
+  their database, only in written reports; subject_race is also not recorded
 
 ## Seattle, WA
 **Data notes**:
-- 
+- citation_issued includes criminal and non-criminal citations
 
 ## Madison, WI
 **Data notes**:
