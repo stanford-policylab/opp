@@ -217,7 +217,8 @@ prepare_veil_of_darkness_states <- function() {
     read_rds(here::here("resources", "state_county_geocodes.rds")) %>%
     rename(county_state = loc)
   
-  load_veil_of_darkness_states() %>%
+  tbl <- 
+    load_veil_of_darkness_states() %>%
     left_join(
       state_geocodes, 
       by = c("state", "county_name")
@@ -228,8 +229,10 @@ prepare_veil_of_darkness_states <- function() {
         min_stops_per_race = 1000,
         max_counties_per_state = 20
       )
-    ) %>%
-    prepare_vod_data(state, county_state)$data
+    ) 
+  
+  tbl <- tbl %>% prepare_vod_data(state, county_state)
+  tbl$data
 }
 
 veil_of_darkness_cities <- function() {
@@ -358,4 +361,21 @@ eligible_counties <- function(
 
 veil_of_darkness_daylight_savings <- function() {
 #TODO
+  city_data <- prepare_veil_of_darkness_cities()
+  state_data <- prepare_veil_of_darkness_states()
+  
+  tbl <- bind_rows(
+    state_data %>% 
+      mutate(
+        state_patrol = T,
+        geography = str_c(state, " State")
+      ) %>% 
+      select(-state, -county_state),
+    city_data$vod_tbl %>% 
+      mutate(state_patrol = F) %>% 
+      rename(geography = city_state)
+  )
+  
+  # Run actual test
+
 }
