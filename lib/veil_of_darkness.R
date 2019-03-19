@@ -53,19 +53,8 @@ ELIGIBLE_STATES <- tribble(
   "WY", "Statewide"
 )
 
-
-veil_of_darkness_cities <- function() {
-  # NOTE: all of these places have date and time at least 95% of the time and
-  # subject_race at least 80% of the time
-
-  city_geocodes <-
-    read_csv(here::here("resources", "city_coverage_geocodes.csv")) %>%
-    separate(loc, c("city", "state"), sep = ",") %>%
-    rename(center_lat = lat, center_lng = lng)
-
-  print("loading data..")
-  tbl <-
-    opp_load_all_clean_data(only = ELIGIBLE_CITIES) %>%
+load_veil_of_darkness_cities <- function() {
+  opp_load_all_clean_data(only = ELIGIBLE_CITIES) %>%
     mutate(yr = year(date)) %>%
     filter(
       type == "vehicular",
@@ -82,11 +71,11 @@ veil_of_darkness_cities <- function() {
       | (city == "Saint Paul"     & yr %in% 2001:2016)
       | (city == "Charlotte"      & yr %in% setdiff(2002:2015, 2008))
       | (city == "Durham"         & yr %in%
-        setdiff(2002:2015, c(2008, 2009, 2010, 2013))
+           setdiff(2002:2015, c(2008, 2009, 2010, 2013))
       )
       | (city == "Fayetteville"   & yr %in% setdiff(2002:2015, 2009))
       | (city == "Greensboro"     & yr %in%
-        setdiff(2002:2015, c(2005, 2006, 2010, 2014, 2015))
+           setdiff(2002:2015, c(2005, 2006, 2010, 2014, 2015))
       )
       | (city == "Raleigh"        & yr %in% 2010:2011)
       | (city == "Grand Forks"    & yr %in% 2007:2016)
@@ -109,7 +98,49 @@ veil_of_darkness_cities <- function() {
       # 2012-2017
       yr >= 2012,
       yr <= 2017
-    ) %>%
+    ) 
+}
+
+load_veil_of_darkness_states <- function() {
+  opp_load_all_clean_data(only = ELIGIBLE_STATES) %>% 
+    filter(
+      type == "vehicular",
+      # NOTE: only keep years with complete data between 2012 and 2017
+      # runs through nov 2015 (keep dec 2011 to be able to keep 2015)
+      (state == "AZ"      & ((year(date) == 2011 & month(date) == 12)
+                             | (year(date) %in% 2012:2014)
+                             | (year(date) == 2015 & month(date) <= 11)))
+      # runs oct 2013 to sept 2015
+      | (state == "CT"    & !(year(date) == 2015 & month(date) > 9)
+         & department_name == "State Police")
+      # runs through oct 2016 (keep nov/dec 2011 to be able to keep 2016)
+      | (state == "FL"    & ((year(date) == 2011 & month(date) >= 11)
+                             | (year(date) %in% 2012:2015)
+                             | (year(date) == 2016 & month(date) <= 10)))
+      | (state == "MI"    & year(date) %in% 2013:2015)
+      | (state == "MT"    & year(date) %in% 2012:2016)
+      | (state == "ND"    & year(date) %in% 2012:2014)
+      # runs through nov 2017 (keep dec 2011 to be able to keep 2017)
+      | (state == "NY"      & ((year(date) == 2011 & month(date) >= 12)
+                               | (year(date) %in% 2012:2016)
+                               | (year(date) == 2017 & month(date) <= 11)))
+      | (state == "TX"    & year(date) %in% 2012:2017)
+      | (state == "WI"    & year(date) %in% 2012:2015)
+      | (state == "WY"    & year(date) == 2012)
+    )
+}
+
+veil_of_darkness_cities <- function() {
+  # NOTE: all of these places have date and time at least 95% of the time and
+  # subject_race at least 80% of the time
+
+  city_geocodes <-
+    read_csv(here::here("resources", "city_coverage_geocodes.csv")) %>%
+    separate(loc, c("city", "state"), sep = ",") %>%
+    rename(center_lat = lat, center_lng = lng)
+
+  print("loading data..")
+  tbl <- load_veil_of_darkness_cities() %>% 
     left_join(city_geocodes) %>%
     mutate(city_state = str_c(city, state, sep = ", "))
 
@@ -197,7 +228,7 @@ veil_of_darkness_cities <- function() {
       }
     ) %>% bind_rows()
 
-  list(coefficients = coefficients, plots = compose_vod_plots(vod_tbl))
+  list(coefficients = coefficients, plots = compose_vod_plots(vod_tbl, city_state))
 }
 
 
@@ -213,46 +244,20 @@ vod_coef <- function(tbl, control_col, degree, interact) {
 }
 
 
-veil_of_darkness_cities_daylight_savings <- function() {
-  # TODO(danj)
-}
-
-
 veil_of_darkness_states <- function() {
   # NOTE: all of these places have date and time at least 95% of the time and
   # subject_race at least 85% of the time
   # NOTE: IL, NJ, RI, VT are elligible too, but geocoding is nontrivial, 
   # because county isn't present
+  
+  state_geocodes <-
+    read_csv(here::here("resources", "state_county_geocodes.rds")) %>%
+    rename(county_state = loc)
+  
   tbl <-
-    opp_load_all_clean_data(only = ELIGIBLE_STATES) %>% 
-    filter(
-      type == "vehicular",
-      # NOTE: only keep years with complete data between 2012 and 2017
-      # runs through nov 2015 (keep dec 2011 to be able to keep 2015)
-      (state == "AZ"      & ((year(date) == 2011 & month(date) == 12)
-                          | (year(date) %in% 2012:2014)
-                          | (year(date) == 2015 & month(date) <= 11)))
-      # runs oct 2013 to sept 2015
-      | (state == "CT"    & !(year(date) == 2015 & month(date) > 9)
-                          & department_name == "State Police")
-      # runs through oct 2016 (keep nov/dec 2011 to be able to keep 2016)
-      | (state == "FL"    & ((year(date) == 2011 & month(date) >= 11)
-                             | (year(date) %in% 2012:2015)
-                             | (year(date) == 2016 & month(date) <= 10)))
-      | (state == "MI"    & year(date) %in% 2013:2015)
-      | (state == "MT"    & year(date) %in% 2012:2016)
-      | (state == "ND"    & year(date) %in% 2012:2014)
-      # runs through nov 2017 (keep dec 2011 to be able to keep 2017)
-      | (state == "NY"      & ((year(date) == 2011 & month(date) >= 12)
-                               | (year(date) %in% 2012:2016)
-                               | (year(date) == 2017 & month(date) <= 11)))
-      | (state == "TX"    & year(date) %in% 2012:2017)
-      | (state == "WI"    & year(date) %in% 2012:2015)
-      | (state == "WY"    & year(date) == 2012)
-    ) %>%
+    load_veil_of_darkness_states() %>%
     left_join(
-      read_rds(here::here("resources", "state_county_geocodes.rds")) %>%
-        rename(county_state = loc), 
+      state_geocodes, 
       by = c("state", "county_name")
     ) %>% 
     filter(
@@ -289,7 +294,7 @@ veil_of_darkness_states <- function() {
     )
   )
   
-  list(coefficients = coefficients, plots = compose_vod_plots(tbl))
+  list(coefficients = coefficients, plots = compose_vod_plots(tbl, state))
 }
 
 
@@ -332,6 +337,6 @@ eligible_counties <- function(
 }
 
 
-veil_of_darkness_states_daylight_savings <- function() {
+veil_of_darkness_daylight_savings <- function() {
   # TODO(amyshoe)
 }
