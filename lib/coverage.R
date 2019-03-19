@@ -78,6 +78,13 @@ coverage_for_paper <- function() {
 
 
 coverage_for_website <- function() {
+  has_pedestrian_stops <- function(state, city) {
+    tbl <- opp_load_clean_data(state, city)
+    v <- F
+    if ("type" %in% colnames(tbl))
+      v <- sum(tbl$type == "pedestrian", na.rm = T) > 0
+    v
+  }
   left_join(
     coverage(),
     opp_apply(
@@ -85,7 +92,9 @@ coverage_for_website <- function() {
         tibble(
           state = state,
           city = city,
-          shapefiles = has_files(opp_shapefiles_dir(state, city))
+          shapefiles = opp_download_shapefiles_url(state, city),
+          url = opp_download_clean_data_url(state, city),
+          has_pedestrian_stops = has_pedestrian_stops(state, city)
         )
       }
     ) %>% bind_rows()
@@ -100,7 +109,6 @@ coverage_for_website <- function() {
       "NC"
     )
   )
-  # TODO(danj): add pedestrian column
 }
 
 

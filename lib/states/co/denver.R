@@ -26,9 +26,6 @@ clean <- function(d, helpers) {
   # TODO(phoebe): can we get reason_for_stop/search/contraband fields?
   # https://app.asana.com/0/456927885748233/758649899422593
   d$data %>%
-    merge_rows(
-      MASTER_INCIDENT_NUMBER
-    ) %>%
     rename(
       location = ADDRESS,
       lat = GEO_LAT,

@@ -27,6 +27,13 @@ clean <- function(d, helpers) {
   )
 
   d$data %>%
+    merge_rows(
+      `DATE OF STOP`,
+      `RACE OF DRIVER`,
+      `AGE OF DRIVER`,
+      `GENDER OF DRIVER`,
+      `POLICE GRID NUMBER`
+    ) %>%
     rename(
       police_grid_number = `POLICE GRID NUMBER`,
       subject_age = `AGE OF DRIVER`

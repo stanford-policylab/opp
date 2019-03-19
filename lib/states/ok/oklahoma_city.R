@@ -89,5 +89,19 @@ clean <- function(d, helpers) {
       subject_dob = parse_date(subject_dob, "%Y%m%d"),
       subject_age = age_at_date(subject_dob, date)
     ) %>%
+    merge_rows(
+      date,
+      time,
+      location,
+      division,
+      subject_dob,
+      subject_race,
+      subject_sex,
+      officer_id
+    ) %>%
+    filter(
+      # NOTE: data before 2011 is partial
+      year(date) > 2010
+    ) %>%
     standardize(d$metadata)
 }

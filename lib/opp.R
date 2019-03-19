@@ -267,7 +267,7 @@ opp_calculated_features_path <- function(state, city = "statewide") {
 
 opp_city_demographics <- function(state, city) {
   state_query <- str_to_upper(state)
-  city_fmt <- str_to_title(str_replace(city, "Saint", "St."))
+  city_fmt <- str_replace(str_to_title(city), "Saint", "St.")
   city_query <- str_c("^", city_fmt, " (city|town)$")
   # NOTE: https://en.wikipedia.org/wiki/Nashville-Davidson_(balance),_Tennessee
   if (city_fmt == "Nashville")
@@ -276,7 +276,7 @@ opp_city_demographics <- function(state, city) {
     opp_load_acs_race_data("acs_2017_5_year_city_level_race_data.csv") %>%
     filter(state_abbreviation == state_query, str_detect(place, city_query))
   if (nrow(tbl) != length(valid_races))
-    stop(str_c("Demographic query for ", city_fmt, ", ", state_fmt, " failed!"))
+    stop(str_c("Demographic query for ", city_fmt, ", ", state_query, " failed!"))
   tbl
 }
 
@@ -377,10 +377,14 @@ opp_download_clean_data <- function(state, city) {
   output_path <- opp_clean_data_path(state, city)
   if (!file_exists(output_path)) {
     pattern <- str_c(normalize_state(state), normalize_city(city), sep = "_")
-    urls <- opp_download_clean_urls(state, city)
-    url <- urls[str_detect(urls, "\\.rds")]
-    download.file(url, output_path)
+    download.file(opp_download_clean_data_url(state, city), output_path)
   }
+}
+
+
+opp_download_clean_data_url <- function(state, city) {
+  urls <- opp_download_clean_urls(state, city)
+  urls[str_detect(urls, "\\.rds")]
 }
 
 
@@ -394,6 +398,16 @@ opp_download_clean_urls <- function(state, city) {
   urls <- str_match_all(html, '<a href="(.*?)"')[[1]][,2]
   pattern <- str_c(normalize_state(state), normalize_city(city), sep = "_")
   unique(urls[str_detect(urls, pattern)])
+}
+
+
+opp_download_shapefiles_url <- function(state, city) {
+  urls <- opp_download_clean_urls(state, city)
+  is_shapefiles <- str_detect(urls, "shapefiles")
+  url <- ""
+  if (any(is_shapefiles))
+    url <- urls[is_shapefiles]
+  url
 }
 
 
@@ -906,6 +920,22 @@ opp_raw_data_dir <- function(state, city = "statewide") {
 }
 
 
+opp_relative_violation_rates <- function() {
+  tbl <- opp_violation_rates()
+  tbl <- 
+    tbl %>%
+    left_join(
+      filter(tbl, subject_race == "white") %>%
+        select(location, violation_rate) %>%
+        rename(white_violation_rate = violation_rate)
+    ) %>%
+    mutate(
+      relative_violation_rate = violation_rate / white_violation_rate - 1
+    ) %>%
+    filter(subject_race %in% c("black", "hispanic", "asian/pacific islander"))
+}
+
+
 opp_report <- function(state, city = "statewide") {
   print("building report...")
   dir_create(here::here("reports"))
@@ -1085,6 +1115,49 @@ opp_tbl_from_eligible_subset <- function(eligible_subset_tbl) {
     ungroup()
 
   bind_rows(par_pmap(pmap_tbl, prepare_city))
+}
+
+
+opp_violation_rate <- function(
+  state,
+  city,
+  min_coverage = 0.85,
+  sep = "\\|"
+) {
+  tbl <- opp_load_clean_data(state, city)
+  res <- tibble(state = state, city = city)
+  if (all(c("subject_race", "violation") %in% colnames(tbl))) {
+    if (coverage_rate(tbl$subject_race) > min_coverage
+        & coverage_rate(tbl$violation) > min_coverage) {
+      res <-
+        tbl %>%
+        mutate(n_violations = str_count(violation, sep) + 1) %>%
+        group_by(subject_race) %>%
+        summarize(
+          total_violations = sum(n_violations, na.rm = T),
+          n_subjects = n(),
+          violation_rate = total_violations / n_subjects
+        ) %>%
+        mutate(
+          state = str_to_upper(state),
+          city = str_to_title(city),
+          location = str_c(str_to_title(city), str_to_upper(state), sep = ", ")
+        )
+    }
+  }
+  res
+}
+
+
+opp_violation_rates <- function() {
+  tbl <- opp_apply(opp_violation_rate) %>% bind_rows() %>% drop_na()
+  tbl %>%
+  group_by(location) %>%
+  summarize(avg = mean(violation_rate)) %>%
+  # NOTE: remove places with trivial violation rates, i.e. ~1 per stop
+  filter(avg < 0.99 | avg > 1.01) %>%
+  inner_join(tbl) %>%
+  select(-avg)
 }
 
 

@@ -572,6 +572,12 @@ make_ergonomic <- function(strs) {
 }
 
 
+make_ergonomic_colnames <- function(tbl) {
+  colnames(tbl) <- make_ergonomic(colnames(tbl))
+  tbl
+}
+
+
 merge_rows <- function(tbl, ..., null_fill = "NA", sep = "|") {
   # NOTE: merging converts all columns being merged to strings so the values
   # can be concatenated; so, for instance, the number 1987 will become the
@@ -963,7 +969,7 @@ tokenize_path <- function(path) {
 }
 
 
-top <- function(tbl, ..., n = 50) {
+top <- function(tbl, ..., n = 1000) {
   tbl %>%
     group_by(...) %>%
     summarize(count = n()) %>%

@@ -25,7 +25,18 @@ clean <- function(d, helpers) {
   # https://app.asana.com/0/456927885748233/663043550621572
   d$data %>%
     merge_rows(
-      `Case Number`
+      `Defendant Name`,
+      Gender,
+      Race,
+      Street,
+      Block,
+      `Scnd Street`,
+      `Scnd Block`,
+      `Officer Name`,
+      `Offense Date`
+    ) %>%
+    filter(
+      `Defendant Name` != "TICKET, TEST"
     ) %>%
     rename(
       vehicle_color = `V Color`,

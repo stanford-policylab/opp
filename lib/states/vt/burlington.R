@@ -27,6 +27,16 @@ clean <- function(d, helpers) {
   d$data %>%
     # NOTE: while not included here, violation_group provides a simpler
     # grouping of specific violations
+    merge_rows(
+      issued_at,
+      location,
+      race,
+      gender,
+      city,
+      dob,
+      lat,
+      lon
+    ) %>%
     rename(
       department_name = ori,
       vehicle_registration_state = license_state,

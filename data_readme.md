@@ -54,16 +54,23 @@ to privacy concerns.
   </tr>
   <tr>
     <td>lat</td>
-    <td>The latitude of the stop. If not provided, we attempt to geocode this
-    using the location field. Stops with geocodes more than 4 standard
-    deviations from the median stop lat/lng are set to NA. </td>
+    <td>The latitude of the stop. If not provided by the department, we
+    attempt to geocode any provided address or location using
+    Google Maps. Google Maps returns a "best effort" response, which may not
+    be completely accurate if the provided location was malformed or
+    underspecified. To protect against suprious responses, geocodes more than
+    4 standard deviations from the median stop lat/lng are set to NA.
     <td>72.23545</td>
   </tr>
   <tr>
     <td>lng</td>
-    <td>The longitude of the stop. If not provided, we attempt to geocode this
-    using the location field. Stops with geocodes more than 4 standard
-    deviations from the median stop lat/lng are set to NA. </td>
+    <td>The longitude of the stop. If not provided by the department, we
+    attempt to geocode any provided address or location using
+    Google Maps. Google Maps returns a "best effort" response, which may not
+    be completely accurate if the provided location was malformed or
+    underspecified. To protect against suprious responses, geocodes more than
+    4 standard deviations from the median stop lat/lng are set to NA.
+    </td>
     <td>115.2808</td>
   </tr>
   <tr>
@@ -520,6 +527,172 @@ reading prior to performing detailed analysis of a location.
 Our analysis only scratches the surface of what’s possible with these data.
 We’re excited to see what you come up with!
 
+## Gilbert, AZ
+### 2008-01-01 to 2018-05-23
+<table>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> feature </th>
+   <th style="text-align:left;"> coverage rate </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> date </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> time </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> location </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> lat </td>
+   <td style="text-align:left;"> 99.9% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> lng </td>
+   <td style="text-align:left;"> 99.9% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> officer_id </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> officer_id_hash </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> officer_first_name </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> officer_last_name </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> type </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> vehicle_color </td>
+   <td style="text-align:left;"> 0.1% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> vehicle_make </td>
+   <td style="text-align:left;"> 0.1% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> vehicle_model </td>
+   <td style="text-align:left;"> 0.1% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> vehicle_year </td>
+   <td style="text-align:left;"> 0.0% </td>
+  </tr>
+</tbody>
+</table>
+
+**Data notes**:
+- Data is deduplicated on call_id, reducing the number of records 17.6%; this
+  was equivalent to deduping on date, time, location, and officer_id; subject
+  name appears to have been entered multiple times per call_id, and often in
+  subtly different formats
+- Most important data is missing, including outcome (arrest, citation,
+  warning), reason for stop, search, contraband, and demographic information
+  on the subject (except name, which is redacted for privacy)
+
+## Mesa, AZ
+### 2014-01-01 to 2017-03-31
+<table>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> feature </th>
+   <th style="text-align:left;"> coverage rate </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> date </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> time </td>
+   <td style="text-align:left;"> 99.8% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> location </td>
+   <td style="text-align:left;"> 99.4% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> lat </td>
+   <td style="text-align:left;"> 98.5% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> lng </td>
+   <td style="text-align:left;"> 98.5% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> subject_age </td>
+   <td style="text-align:left;"> 98.5% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> subject_race </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> subject_sex </td>
+   <td style="text-align:left;"> 98.7% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> officer_id </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> officer_id_hash </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> officer_last_name </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> type </td>
+   <td style="text-align:left;"> 93.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> violation </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> arrest_made </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> citation_issued </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> warning_issued </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> outcome </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+</tbody>
+</table>
+
+**Data notes**:
+- INCIDENT_NO appears to refer to the same incident but can involve
+  multiple people, i.e. 20150240096, which appears to be an alcohol bust of
+  several underage teenagers; in other instances, the rows look nearly
+  identical, but given this information and checking several other seeming
+  duplicates, it appears as though there is one row per person per incident
+
 ## Little Rock, AR
 ### 2017-01-01 to 2017-11-03
 <table>
@@ -584,6 +757,13 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
+**Data notes**:
+- lat/lng data doesn't appear totally accurate, there are ~18k lat/lngs that
+  were coerced to NA because they all equalled "-1.79769313486232E+308"
+- Data is deduplicated on date, time, lat, lng, race, sex, and officer name,
+  reducing the number of records by ~30.6%
+- Data consists only of citations
 
 ## Statewide, AZ
 ### 2009-01-06 to 2015-11-30
@@ -724,8 +904,8 @@ We’re excited to see what you come up with!
   there are multiple ways contraband_found might be defined, and so we do not
   include Arizona in our contraband analysis. 
 
-## Gilbert, AZ
-### 2008-01-01 to 2018-05-23
+## Anaheim, CA
+### 2012-01-01 to 2017-03-14
 <table>
  <thead>
   <tr>
@@ -739,225 +919,101 @@ We’re excited to see what you come up with!
    <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> time </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> location </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> lat </td>
-   <td style="text-align:left;"> 99.9% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> lng </td>
-   <td style="text-align:left;"> 99.9% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> officer_id </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> officer_id_hash </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> officer_first_name </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> officer_last_name </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
    <td style="text-align:left;"> type </td>
    <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> vehicle_color </td>
-   <td style="text-align:left;"> 0.1% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> vehicle_make </td>
-   <td style="text-align:left;"> 0.1% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> vehicle_model </td>
-   <td style="text-align:left;"> 0.1% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> vehicle_year </td>
-   <td style="text-align:left;"> 0.0% </td>
-  </tr>
-</tbody>
-</table>
-
-## Mesa, AZ
-### 2014-01-01 to 2017-03-31
-<table>
- <thead>
-  <tr>
-   <th style="text-align:left;"> feature </th>
-   <th style="text-align:left;"> coverage rate </th>
-  </tr>
- </thead>
-<tbody>
-  <tr>
-   <td style="text-align:left;"> date </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> time </td>
-   <td style="text-align:left;"> 99.8% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> location </td>
-   <td style="text-align:left;"> 99.4% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> lat </td>
-   <td style="text-align:left;"> 98.5% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> lng </td>
-   <td style="text-align:left;"> 98.5% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> subject_age </td>
-   <td style="text-align:left;"> 98.5% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> subject_sex </td>
-   <td style="text-align:left;"> 98.7% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> officer_id </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> officer_id_hash </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> officer_last_name </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> type </td>
-   <td style="text-align:left;"> 93.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> violation </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> arrest_made </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> citation_issued </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> warning_issued </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> outcome </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-</tbody>
-</table>
-
-## San Diego, CA
-### 2014-01-01 to 2017-03-31
-<table>
- <thead>
-  <tr>
-   <th style="text-align:left;"> feature </th>
-   <th style="text-align:left;"> coverage rate </th>
-  </tr>
- </thead>
-<tbody>
-  <tr>
-   <td style="text-align:left;"> date </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> time </td>
-   <td style="text-align:left;"> 99.7% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> service_area </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> subject_age </td>
-   <td style="text-align:left;"> 96.8% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 99.6% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> subject_sex </td>
-   <td style="text-align:left;"> 99.8% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> type </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> arrest_made </td>
-   <td style="text-align:left;"> 91.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> citation_issued </td>
-   <td style="text-align:left;"> 91.6% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> warning_issued </td>
-   <td style="text-align:left;"> 91.6% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> outcome </td>
-   <td style="text-align:left;"> 89.8% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> contraband_found </td>
-   <td style="text-align:left;"> 66.3% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> search_conducted </td>
-   <td style="text-align:left;"> 90.5% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> search_person </td>
-   <td style="text-align:left;"> 3.7% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> search_vehicle </td>
-   <td style="text-align:left;"> 3.7% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> search_basis </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> reason_for_search </td>
-   <td style="text-align:left;"> 87.1% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> reason_for_stop </td>
-   <td style="text-align:left;"> 99.9% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
 </tbody>
 </table>
+
+**Data notes**:
+- Very little information received, only a reference number, date, year, case
+  type (with no translation), and a case type (with no translation)
+
+## Bakersfield, CA
+### 2008-03-09 to 2018-03-09
+<table>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> feature </th>
+   <th style="text-align:left;"> coverage rate </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> date </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> time </td>
+   <td style="text-align:left;"> 99.4% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> location </td>
+   <td style="text-align:left;"> 99.9% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> lat </td>
+   <td style="text-align:left;"> 98.6% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> lng </td>
+   <td style="text-align:left;"> 98.6% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> beat </td>
+   <td style="text-align:left;"> 91.3% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> subject_age </td>
+   <td style="text-align:left;"> 99.5% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> subject_dob </td>
+   <td style="text-align:left;"> 99.4% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> subject_race </td>
+   <td style="text-align:left;"> 99.5% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> subject_sex </td>
+   <td style="text-align:left;"> 99.5% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> officer_id </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> officer_id_hash </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> type </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> citation_issued </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> outcome </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+</tbody>
+</table>
+
+**Data notes**:
+- Data is deduplicated on raw columns date_of_birth, subject_address,
+  ethnicity, gender_code, occ_date, occ_time, reducing the number of records by
+  ~1.2% 
+- Data does not include reason for stop, search, contraband fields
+- Missing data dictionaries for ticket classes, ticket statuses, and
+  statute section
+- Data consists only of citations
 
 ## San Bernardino, CA
 ### 2011-12-13 to 2017-09-19
@@ -1012,119 +1068,12 @@ We’re excited to see what you come up with!
 </tbody>
 </table>
 
-## Anaheim, CA
-### 2012-01-01 to 2017-03-14
-<table>
- <thead>
-  <tr>
-   <th style="text-align:left;"> feature </th>
-   <th style="text-align:left;"> coverage rate </th>
-  </tr>
- </thead>
-<tbody>
-  <tr>
-   <td style="text-align:left;"> date </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> type </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> reason_for_stop </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-</tbody>
-</table>
-
-## San Francisco, CA
-### 2007-01-01 to 2016-06-30
-<table>
- <thead>
-  <tr>
-   <th style="text-align:left;"> feature </th>
-   <th style="text-align:left;"> coverage rate </th>
-  </tr>
- </thead>
-<tbody>
-  <tr>
-   <td style="text-align:left;"> date </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> time </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> location </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> lat </td>
-   <td style="text-align:left;"> 99.8% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> lng </td>
-   <td style="text-align:left;"> 99.8% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> district </td>
-   <td style="text-align:left;"> 94.2% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> subject_age </td>
-   <td style="text-align:left;"> 93.5% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> subject_sex </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> type </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> arrest_made </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> citation_issued </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> warning_issued </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> outcome </td>
-   <td style="text-align:left;"> 98.3% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> contraband_found </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> search_conducted </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> search_vehicle </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> search_basis </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> reason_for_stop </td>
-   <td style="text-align:left;"> 99.8% </td>
-  </tr>
-</tbody>
-</table>
+**Data notes**:
+- Data is deduplicated on raw columns CreateDateTime, Address, and CallType,
+  removing ~26.3% of records
+- Data does not include most useful information, including demographic,
+  outcome, and search/contraband information, so the deduplication above
+  potentially over-deduplicates
 
 ## Long Beach, CA
 ### 2008-01-01 to 2017-12-31
@@ -1235,8 +1184,13 @@ We’re excited to see what you come up with!
 </tbody>
 </table>
 
-## Santa Ana, CA
-### 2014-06-11 to 2018-04-13
+**Data notes**:
+- Data is deduplicated on raw columns Date, Location, Race, Sex, and Officer
+  DID, reducing the number of records by ~14.3%
+- Data does not include reason for stop, search, or contraband fields 
+
+## San Diego, CA
+### 2014-01-01 to 2017-03-31
 <table>
  <thead>
   <tr>
@@ -1250,47 +1204,136 @@ We’re excited to see what you come up with!
    <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
+   <td style="text-align:left;"> time </td>
+   <td style="text-align:left;"> 99.7% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> service_area </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> subject_age </td>
+   <td style="text-align:left;"> 96.8% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> subject_race </td>
+   <td style="text-align:left;"> 99.6% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> subject_sex </td>
+   <td style="text-align:left;"> 99.8% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> type </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> arrest_made </td>
+   <td style="text-align:left;"> 91.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> citation_issued </td>
+   <td style="text-align:left;"> 91.6% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> warning_issued </td>
+   <td style="text-align:left;"> 91.6% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> outcome </td>
+   <td style="text-align:left;"> 89.8% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> contraband_found </td>
+   <td style="text-align:left;"> 66.3% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> search_conducted </td>
+   <td style="text-align:left;"> 90.5% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> search_person </td>
+   <td style="text-align:left;"> 3.7% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> search_vehicle </td>
+   <td style="text-align:left;"> 3.7% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> search_basis </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> reason_for_search </td>
+   <td style="text-align:left;"> 87.1% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> reason_for_stop </td>
+   <td style="text-align:left;"> 99.9% </td>
+  </tr>
+</tbody>
+</table>
+
+**Data notes**:
+- stop_id in raw data doesn't appear to apply to unique events, as the same
+  id has different service_area, subject_race, subject_age, and subject_sex,
+  i.e.1099162
+- Data is deduplicated on raw columns timestamp, subject_race, subject_sex,
+  subject_age, and service_area, reducing the number or records by ~2.0%
+- There are no locations, but service_area is provided
+
+## San Francisco, CA
+### 2007-01-01 to 2016-06-30
+<table>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> feature </th>
+   <th style="text-align:left;"> coverage rate </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> date </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> time </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
    <td style="text-align:left;"> location </td>
    <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> lat </td>
-   <td style="text-align:left;"> 99.9% </td>
+   <td style="text-align:left;"> 99.8% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> lng </td>
-   <td style="text-align:left;"> 99.9% </td>
+   <td style="text-align:left;"> 99.8% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> district </td>
-   <td style="text-align:left;"> 96.1% </td>
+   <td style="text-align:left;"> 94.2% </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> region </td>
-   <td style="text-align:left;"> 96.6% </td>
+   <td style="text-align:left;"> subject_age </td>
+   <td style="text-align:left;"> 93.5% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 99.8% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
    <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> officer_id </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> officer_id_hash </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
    <td style="text-align:left;"> type </td>
-   <td style="text-align:left;"> 99.9% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> violation </td>
+   <td style="text-align:left;"> arrest_made </td>
    <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
@@ -1298,11 +1341,41 @@ We’re excited to see what you come up with!
    <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> outcome </td>
+   <td style="text-align:left;"> warning_issued </td>
    <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> outcome </td>
+   <td style="text-align:left;"> 98.3% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> contraband_found </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> search_conducted </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> search_vehicle </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> search_basis </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> reason_for_stop </td>
+   <td style="text-align:left;"> 99.8% </td>
   </tr>
 </tbody>
 </table>
+
+**Data notes**:
+- Search basis in the raw data is only "No Search", consent, or other
+  (inventory, incident to arrest, and parole searches) 
+- Data is deduplicated on raw columns date, time, race_description, sex, age,
+  location, removing ~0.3% of stops
 
 ## San Jose, CA
 ### 2013-09-01 to 2018-03-31
@@ -1377,8 +1450,17 @@ We’re excited to see what you come up with!
 </tbody>
 </table>
 
-## Stockton, CA
-### 2012-01-01 to 2016-12-31
+**Data notes**:
+- event_number in raw data has indeterminate meaning, several event numbers
+  occur at the same time but have up to 16 duplicates; however, some of these
+  involve different subjects, so it's unclear whether they are distinct
+  incidents or large incidents involving many people
+- Data is deduplicated using date, time, location, and subject race; this
+  removes about ~5.0% of records, but many of these rows are lacking sufficient
+  information for differentiation, i.e. they have NA for many of their values
+
+## Santa Ana, CA
+### 2014-06-11 to 2018-04-13
 <table>
  <thead>
   <tr>
@@ -1392,136 +1474,70 @@ We’re excited to see what you come up with!
    <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> division </td>
-   <td style="text-align:left;"> 99.6% </td>
+   <td style="text-align:left;"> location </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> subject_age </td>
-   <td style="text-align:left;"> 99.4% </td>
+   <td style="text-align:left;"> lat </td>
+   <td style="text-align:left;"> 99.9% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> lng </td>
+   <td style="text-align:left;"> 99.9% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> district </td>
+   <td style="text-align:left;"> 96.1% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> region </td>
+   <td style="text-align:left;"> 96.6% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 99.5% </td>
+   <td style="text-align:left;"> 99.8% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
-   <td style="text-align:left;"> 99.6% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_id </td>
-   <td style="text-align:left;"> 54.9% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_id_hash </td>
-   <td style="text-align:left;"> 54.9% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> type </td>
-   <td style="text-align:left;"> 100.0% </td>
+   <td style="text-align:left;"> 99.9% </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> arrest_made </td>
-   <td style="text-align:left;"> 99.7% </td>
+   <td style="text-align:left;"> violation </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> citation_issued </td>
-   <td style="text-align:left;"> 99.7% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> warning_issued </td>
-   <td style="text-align:left;"> 99.7% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> outcome </td>
-   <td style="text-align:left;"> 99.5% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> search_conducted </td>
-   <td style="text-align:left;"> 99.7% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> search_basis </td>
    <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> reason_for_stop </td>
-   <td style="text-align:left;"> 99.6% </td>
+   <td style="text-align:left;"> outcome </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
 </tbody>
 </table>
 
-## Bakersfield, CA
-### 2008-03-09 to 2018-03-09
-<table>
- <thead>
-  <tr>
-   <th style="text-align:left;"> feature </th>
-   <th style="text-align:left;"> coverage rate </th>
-  </tr>
- </thead>
-<tbody>
-  <tr>
-   <td style="text-align:left;"> date </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> time </td>
-   <td style="text-align:left;"> 99.4% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> location </td>
-   <td style="text-align:left;"> 99.9% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> lat </td>
-   <td style="text-align:left;"> 98.6% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> lng </td>
-   <td style="text-align:left;"> 98.6% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> beat </td>
-   <td style="text-align:left;"> 91.3% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> subject_age </td>
-   <td style="text-align:left;"> 99.5% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> subject_dob </td>
-   <td style="text-align:left;"> 99.4% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 99.5% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> subject_sex </td>
-   <td style="text-align:left;"> 99.5% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> officer_id </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> officer_id_hash </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> type </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> citation_issued </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> outcome </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-</tbody>
-</table>
+**Data notes**:
+- Deduping on raw columns Date, Race, Sex, Violation Description, Officer
+  (Badge), and Primary Street would reduce this dataset by ~9.7%, but there is
+  insufficient information to justify this without the incident time. For
+  instance, the highest frequency "incident" deduping on that critera was 16
+  male Hispanic drivers failing to stop at a stop sign by the same officer on
+  5th Street; while this could be 16 duplicates, it could also be the same
+  officer pulling over 16 people throughtout that day
+- Data does not include search or contraband information
+- Data includes only citations
 
 ## Statewide, CA
 ### 2009-07-01 to 2016-06-30
@@ -1629,8 +1645,8 @@ We’re excited to see what you come up with!
 - Shift time is included, but is not sufficiently granular to yield reliable
   stop time. 
 
-## Denver, CO
-### 2010-12-31 to 2018-07-19
+## Stockton, CA
+### 2012-01-01 to 2016-12-31
 <table>
  <thead>
   <tr>
@@ -1644,55 +1660,76 @@ We’re excited to see what you come up with!
    <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> time </td>
-   <td style="text-align:left;"> 100.0% </td>
+   <td style="text-align:left;"> division </td>
+   <td style="text-align:left;"> 99.6% </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> location </td>
-   <td style="text-align:left;"> 100.0% </td>
+   <td style="text-align:left;"> subject_age </td>
+   <td style="text-align:left;"> 99.4% </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> lat </td>
-   <td style="text-align:left;"> 100.0% </td>
+   <td style="text-align:left;"> subject_race </td>
+   <td style="text-align:left;"> 99.5% </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> lng </td>
-   <td style="text-align:left;"> 100.0% </td>
+   <td style="text-align:left;"> subject_sex </td>
+   <td style="text-align:left;"> 99.6% </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> district </td>
-   <td style="text-align:left;"> 100.0% </td>
+   <td style="text-align:left;"> officer_id </td>
+   <td style="text-align:left;"> 54.9% </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> precinct </td>
-   <td style="text-align:left;"> 100.0% </td>
+   <td style="text-align:left;"> officer_id_hash </td>
+   <td style="text-align:left;"> 54.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> type </td>
    <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> disposition </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
    <td style="text-align:left;"> arrest_made </td>
-   <td style="text-align:left;"> 100.0% </td>
+   <td style="text-align:left;"> 99.7% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> citation_issued </td>
-   <td style="text-align:left;"> 100.0% </td>
+   <td style="text-align:left;"> 99.7% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> warning_issued </td>
-   <td style="text-align:left;"> 100.0% </td>
+   <td style="text-align:left;"> 99.7% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> outcome </td>
-   <td style="text-align:left;"> 51.4% </td>
+   <td style="text-align:left;"> 99.5% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> search_conducted </td>
+   <td style="text-align:left;"> 99.7% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> search_basis </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> reason_for_stop </td>
+   <td style="text-align:left;"> 99.6% </td>
   </tr>
 </tbody>
 </table>
+
+**Data notes**:
+- Data consists of two sets of files, traffic stop surveys and CAD stop files,
+  but currently there is no information on how to join them; location is in the
+  stop files, but all other demographic information is in the traffic stop
+  survey files
+- There may be duplicates, but unclear how to identify them, as date, age,
+  gender, and race are the only consistently filled in fields, and the maximum
+  number of stops for any date, age, gender, race combination is 10, which is a
+  reasonable number of stops for that combination over the course of a day in
+  the entire city occasionally
+- officer_id is coalesced officer_id and officer_id2, the former being 90% null
+  and the latter 50% null in the dataset
 
 ## Aurora, CO
 ### 2012-01-01 to 2016-12-31
@@ -1762,6 +1799,82 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
+**Data notes**:
+- Data is deduplicated on raw columns Ticket Date, Ticket Time, Ticket
+  Location, First Name, Last Name, sex, and Date of Birth, reducing the number
+  of records by ~1.0%
+
+## Denver, CO
+### 2010-12-31 to 2018-07-19
+<table>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> feature </th>
+   <th style="text-align:left;"> coverage rate </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> date </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> time </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> location </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> lat </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> lng </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> district </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> precinct </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> type </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> disposition </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> arrest_made </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> citation_issued </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> warning_issued </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> outcome </td>
+   <td style="text-align:left;"> 51.4% </td>
+  </tr>
+</tbody>
+</table>
+
+**Data notes**:
+- MASTER_INCIDENT_NUMBER has many duplicates, but it's unclear what it
+  corresponds to or how to deduplicate it if that is the correct thing to do,
+  since the records are nearly identical except for the NEIGHBORHOOD_NAME
+- Data does not contain subject demographic or search/contraband information
 
 ## Statewide, CO
 ### 2010-01-01 to 2017-12-31
@@ -1863,7 +1976,6 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
-
 
 **Data notes**:
 - The state did not provide us with mappings for every police department code
@@ -1982,7 +2094,6 @@ We’re excited to see what you come up with!
 </tbody>
 </table>
 
-
 **Data notes**:
 - Counties were mapped by running the cities in the `Intervention Location
   Name` field through Google's geocoder.
@@ -2100,6 +2211,12 @@ We’re excited to see what you come up with!
 </tbody>
 </table>
 
+**Data notes**:
+- Data is deduplicated on raw columns InterventionDateTime,
+  ReportingOfficerIdentificationID, InterventionLocationDescriptionText,
+  SubjectRaceCode, SubjectSexCode, and SubjectAge, reducing the number of rows
+  by ~1.1%
+
 ## Tampa, FL
 ### 2000-03-02 to 2018-03-07
 <table>
@@ -2165,6 +2282,17 @@ We’re excited to see what you come up with!
 </tbody>
 </table>
 
+**Data notes**:
+- Data is deduplicated on date, subject_race, subject_dob, officer_last_name,
+  officer_first_name, and Driver License Number, reducing the number of rows by
+  ~13.2%
+- Data is missing search and contraband information, as well as outcomes other
+  than citations
+- The data sources are public (it's unclear what the difference is between the
+  stop types):
+  - https://publicrec.hillsclerk.com/Traffic/Civil_Traffic_Name_Index_files/
+  - https://publicrec.hillsclerk.com/Traffic/Criminal_Traffic_Name_Index_files/
+
 ## Saint Petersburg, FL
 ### 2010-01-01 to 2010-07-29
 <table>
@@ -2213,6 +2341,10 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
+**Data notes**:
+- Only 7 months of data provided
+- No demographic, search/contraband, or outcome data
 
 ## Statewide, FL
 ### 2010-01-01 to 2016-10-31
@@ -2560,6 +2692,7 @@ We’re excited to see what you come up with!
   were mapped by comparing the identifiers in the `LOCKCOUNTY` field with the
   cities in the `LOCKCITY` field.
 - The codes in the county field represent counties ordered alphabetically.
+
 ## Idaho Falls, ID
 ### 2008-08-13 to 2016-07-25
 <table>
@@ -2624,6 +2757,18 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
+**Data notes**:
+- Race and gender are not on the ID driver's license and filled in only rarely,
+  subject age is also 100% null
+- There is 'reptspec' data, but the values are extrenely vague, i.e. "PAST",
+  "SATURATION", "PERSON", "OTHER AGENCY"
+- There are 6 more months of data unprocessed with the main files since they
+  are of a completely different format, but are available upon request
+- The data is missing demographic information as well as search/contraband
+  information
+- It's unclear whether there are duplicates, since officerid is 0 sometimes and
+  there is no demographic information
 
 ## Statewide, IL
 ### 2012-01-01 to 2017-12-31
@@ -2854,6 +2999,14 @@ We’re excited to see what you come up with!
 </tbody>
 </table>
 
+**Data notes**:
+- Dataset is created by joining arrests and citations on date, hour, officer
+  name, and location
+- There may be duplicates, but there is often insufficient information to
+  deduplicate, i.e. the time resolution is hourly driver_race is null 99% of
+  the time
+- Data includes warnings and arrests, but is missing warnings
+
 ## Fort Wayne, IN
 ### 2007-09-01 to 2017-09-30
 <table>
@@ -2918,6 +3071,14 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
+**Data notes**:
+- Roster.csv (police officer info) is available in raw data, but
+  doesn't join cleanly to stops data; first names are often truncated and
+  nicknames are used, i.e.  Manny vs Manuel; it can be loaded and reviewed
+  upon request.
+- Data is missing search/contraband information, as well as demographic
+  information
 
 ## Wichita, KS
 ### 2006-01-01 to 2016-12-31
@@ -3012,6 +3173,15 @@ We’re excited to see what you come up with!
 </tbody>
 </table>
 
+**Data notes**:
+- Data is deduplicated on raw columns citation_date_time, citation_location,
+  defendant_first_name, defendant_last_name, defendant_age, defendant_sex, and
+  defendant_race, resulting in ~4.1% fewer records
+- Data is missing search/contraband fields
+- citation_number in the raw data doesn't appear to be unique. i.e. citation
+  "07M000645" is associated with two different dates, locations, and people
+- Only citations are included
+
 ## Owensboro, KY
 ### 2015-09-01 to 2017-09-01
 <table>
@@ -3096,6 +3266,16 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
+**Data notes**:
+- There is a list_of_officers.csv as well as the excel spreadsheet
+  (preferable given the formatting) that have more officer information
+  available upon request
+- Data is missing search/contraband information
+- Data is all citations, although it appears to include an arrest indicator as
+  well, when that also occurred
+- Provided longitude is lacking the negative sign, which we add (without which
+  all points are in central China)
 
 ## New Orleans, LA
 ### 2001-03-03 to 2018-07-18
@@ -3225,6 +3405,11 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
+**Data notes**:
+- Addresses were partially anonymized by the department replacing the last two
+  numbers of the address number with XX; these were replaced with 00 so we
+  could at least geocode the block level address
 
 ## Statewide, MA
 ### 2007-01-01 to 2015-12-31
@@ -3387,6 +3572,16 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
+**Data notes**:
+- Data is missing search/contraband information as well as demographic
+  information and outcomes other than citations
+- The primary key seems to be a combination of Ticket and Citation Number; when
+  Ticket is null, Citation Number isn't and vice versa; both are duplicated
+  across rows, so we deduplicate on those two IDs coalesced, resulting in
+  ~0.01% fewer records
+- Data lacks translations for `Ordinance Code` and `Citation Type`
+- Violation data is almsot all null
 
 ## Statewide, MD
 ### 2007-01-01 to 2014-03-31
@@ -3673,6 +3868,14 @@ We’re excited to see what you come up with!
 </tbody>
 </table>
 
+**Data notes**:
+- Data is deduplication on `DATE OF STOP`, `RACE OF DRIVER`, `AGE OF DRIVER`,
+  `GENDER OF DRIVER`, and `POLICE GRID NUMBER`, resulting in ~0.02% fewer
+  records
+- Data is lacking contraband and location information
+- If a citation was not issued, it's unclear whether a warning was issued or
+  something else
+
 ## Statewide, MO
 ### 2010-01-01 to 2015-01-01
 <table>
@@ -3893,6 +4096,7 @@ We’re excited to see what you come up with!
 </table>
 
 **Data notes**: none
+
 ## Raleigh, NC
 ### 2002-01-01 to 2015-12-31
 <table>
@@ -4009,6 +4213,10 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
+**Data notes**:
+- Data is pulled out of Statewide, NC data, so refer to that for processing
+  documentation
 
 ## Statewide, NC
 ### 2000-01-01 to 2015-12-31
@@ -4137,14 +4345,30 @@ We’re excited to see what you come up with!
   the stop with that county. However, some districts cover multiple counties.
   Stops in these districts can thus not be unambiguously mapped to a single
   county. In both cases, district of the stop is provided in the "district"
-  column, providing granular location data for the vast majority of stops.
+  column, providing coarse location data for the vast majority of stops.
 - Action is sometimes "No Action" or a similarly minor enforcement action even
   when `DriverArrest` or `PassengerArrest` is TRUE. In these cases, we set
-  stop_outcome to be "Arrest" because the stop_outcome field represents the
+  outcome to be "Arrest" because the outcome field represents the
   most severe outcome of the stop.
-- `search_conducted` is TRUE if either the driver or passenger is searched. In
-  3.6% of cases, the passenger is searched. As their names suggest,
-  `driver_race`, `driver_gender`, and `driver_age` always refer to the driver.
+- There can be multiple search bases per stop-search-peron, so we collapse them
+  into a single value
+- There is a 1:N correspondence between StopID and PersonID, so we filtered out
+  passengers when joining demographic information to stop data to prevent
+  duplicates; this also means that the demographic information pertains to the
+  driver
+- When joining search data onto the stop data, the data is joined by StopID
+  only and not also PersonID, since the person searched could be either the
+  driver or passenger; this means that the search data may be of either the
+  driver or the passenger, and in 3.6% of cases, it was actually the passenger
+  who was searched, but search_conducted is true in either case; fortunately,
+  there is a 1:1 correspondence between StopID and and SearchID, as well as
+  between SearchID and PersonID (who, again, can be either the driver or
+  passenger) and SearchID and ContrabandID 
+- Data is deduplicated on date, time, location, department_name, officer_id,
+  subject_race, subject_sex, and subject_age resulting in ~2.8% fewer records,
+  although some of these have Unknown or NA for some of their values, so for
+  these deduplication may over compress rows; either way, these rows are not
+  useful for analysis, given their lack of information
 
 ## Winston-Salem, NC
 ### 2000-01-11 to 2015-12-31
@@ -4263,6 +4487,10 @@ We’re excited to see what you come up with!
 </tbody>
 </table>
 
+**Data notes**:
+- Data is pulled out of Statewide, NC data, so refer to that for processing
+  documentation
+
 ## Greensboro, NC
 ### 2000-01-04 to 2015-12-31
 <table>
@@ -4379,6 +4607,10 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
+**Data notes**:
+- Data is pulled out of Statewide, NC data, so refer to that for processing
+  documentation
 
 ## Durham, NC
 ### 2001-12-28 to 2015-12-31
@@ -4497,6 +4729,10 @@ We’re excited to see what you come up with!
 </tbody>
 </table>
 
+**Data notes**:
+- Data is pulled out of Statewide, NC data, so refer to that for processing
+  documentation
+
 ## Fayetteville, NC
 ### 2000-01-07 to 2015-12-31
 <table>
@@ -4613,6 +4849,10 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
+**Data notes**:
+- Data is pulled out of Statewide, NC data, so refer to that for processing
+  documentation
 
 ## Charlotte, NC
 ### 2000-01-01 to 2015-12-31
@@ -4731,6 +4971,10 @@ We’re excited to see what you come up with!
 </tbody>
 </table>
 
+**Data notes**:
+- Data is pulled out of Statewide, NC data, so refer to that for processing
+  documentation
+
 ## Grand Forks, ND
 ### 2007-01-01 to 2016-12-31
 <table>
@@ -4792,6 +5036,19 @@ We’re excited to see what you come up with!
 </tbody>
 </table>
 
+**Data notes**:
+- Data is deduplicated on raw columns agency, date, time, sex, race, age,
+  ht_ft, ht_in, house, and street, reducing the number of records by ~14.2%
+- Many of the offenses fall into categories other than obvious pedestrian or
+  vehicular stops, i.e. BARKING DOG, and are encoded as NA for type, but
+  the description is provided in reason_for_stop
+- The department says that arrest, search, and contraband are not recorded with
+  stop data
+- There are unidentified spikes that are relatively large every year in late
+  May or early June, i.e. 2010-05-08, 2011-06-02, 2012-05-05, 2013-05-04,
+  2014-05-10, 2015-05-09, 2016-05-20; it's unclear what these correspond to and
+  the PD has not yet responded to our inquiry
+
 ## Statewide, ND
 ### 2010-01-01 to 2015-06-25
 <table>
@@ -4851,6 +5108,9 @@ We’re excited to see what you come up with!
 - Rows represent individual citations, not stops, so we remove duplicates by
   grouping by the other fields.
 - The `stop_purpose` field is populated by citation codes.
+- (danj): deduping by violation_date_time, Age, sex, Race, county_name,
+  street_cnty_rd_location, desc_of_area, highway, ref_point reduces rows by
+  ~16.6%
 
 ## Statewide, NE
 ### 2002-01-01 to 2016-10-01
@@ -5207,6 +5467,20 @@ We’re excited to see what you come up with!
 </tbody>
 </table>
 
+**Data notes**:
+- Data is deduplicated on case_number, reducing the number of records by ~5.4%;
+  this is equivalent to deduplicating on Incident Datetime, IncidentLocation,
+  Department, OfficerName, SubjectGender, DateOfBirth, Race, and Ethnicity
+- Data does not contain search/contraband fields
+- There are 3 CFS_Codes, TRAFFIC STOP, PEDESTRIAN STOP, and freeform text,
+  which is classified as vehicular since most reference a driver or traffic
+  stop situation
+- It appears as though Camden police often classify hispanics as white, since
+  the stop rate for whites is extremely high and there are no stops for
+  hispanics
+- According to the PD, a "summons" is a citation, so that corresponds to
+  citation_issued in this data
+
 ## Statewide, NV
 ### 2012-02-14 to 2016-05-31
 <table>
@@ -5420,6 +5694,10 @@ We’re excited to see what you come up with!
 </tbody>
 </table>
 
+**Data notes**:
+- Data is deduplicated on incident, reducing the number of records by ~32%
+- Search/contraband information is missing, as well as outcomes
+
 ## Columbus, OH
 ### 2012-01-01 to 2016-12-30
 <table>
@@ -5496,6 +5774,14 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
+**Data notes**:
+  - `Incident Number` in the original data seems unreliable as it has several
+    hundred entries for 9999 and 99999; furthermore, occasionally, it does
+    appear to reference the same incident, but is duplicated for every
+    distinct action taken against the subject
+  - The raw data is deduplicated on `Stop Date`, `Contact End Date`, Ethnicity,
+    Gender, ViolationStreet, and ViolationCrossStreet
 
 ## Statewide, OH
 ### 2010-01-01 to 2015-12-31
@@ -5710,6 +5996,15 @@ We’re excited to see what you come up with!
 </tbody>
 </table>
 
+**Data notes**:
+- Data filters out passengers and deduplicates on instance_id; together this
+  reduces the number of rows by ~80.6%
+- Addresses are "sanitized", i.e. 1823 Field St. -> 18XX Field St.  since 83%
+  of given geocodes in the raw data are null, we replace X with 0 and get
+  approximate geocoding locations
+- Data before 2009 is removed since it is so sparse it is likely not to be
+  trusted
+
 ## Oklahoma City, OK
 ### 2007-07-01 to 2017-10-18
 <table>
@@ -5823,6 +6118,13 @@ We’re excited to see what you come up with!
 </tbody>
 </table>
 
+**Data notes**:
+- Data is deduplicated on date, time, location, division, subject_dob,
+  subject_race, subject_sex, and officer_id, reducing the number of records by
+  ~15.7%
+- Partial data from before 2011 is filtered out
+- Search/contraband information is missing
+
 ## Tulsa, OK
 ### 2009-01-01 to 2016-12-31
 <table>
@@ -5899,6 +6201,12 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
+**Data notes**:
+- Data is deduplicated on raw columns violationdate, violation_location,
+  officerdiv, race, and sex, reducing the number of records by ~30.0%
+- Data is all citations
+- Data appears to be all vehicular, although the PD hasn't confirmed that yet
 
 ## Statewide, OR
 ### 2010-01-01 to 2014-01-01
@@ -6014,6 +6322,11 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
+**Data notes**:
+- Data is deduplicated on raw columns datetimeoccur, location, districtoccur,
+  lat, lng, gender, age, and race, reducing the number of records by ~1.6%
+- Information on citations and warnings is missing, but arrests are included
 
 ## Statewide, RI
 ### 2005-01-02 to 2015-12-31
@@ -6548,6 +6861,11 @@ We’re excited to see what you come up with!
 </tbody>
 </table>
 
+**Data notes**:
+- Data is deduplicated on raw columns stop_date_time, stop_location_street,
+  officer_employee_number, race, sex, and age_of_suspect, reducing the number
+  of records by ~0.3%
+
 ## Houston, TX
 ### 2014-01-01 to 2018-04-08
 <table>
@@ -6628,6 +6946,15 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
+**Data notes**:
+- Data is deduplicated on raw columns `Defendant Name`, Gender, Race, Street,
+  Block, `Scnd Street`, `Scnd Block`, `Officer Name`, and `Offense Date`,
+  reducing the number of records by ~0.02%; there is a possibility this over
+  collapses rows in the case where an officer pulls over the same person twice
+  in the same day at the same location
+- Data is lacking search/contraband information
+- Data consists only of citations
 
 ## Austin, TX
 ### 2006-01-01 to 2016-06-30
@@ -6721,6 +7048,15 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
+**Data notes**:
+- Data is deduplicated on raw column street_check_case_number, reducing the
+  number of records by ~10.3%
+- Data does not include location or outcomes
+- There are no clear pedestrian-only discretionary stops in
+  reason_checked_description; SUSPICIOUS PERSON / VEHICLE is one category in
+  reason_for_stop, but is included with "vehicular" stops; as such, it may over
+  count vehicular stops
 
 ## Plano, TX
 ### 2012-01-01 to 2015-12-31
@@ -6863,6 +7199,21 @@ We’re excited to see what you come up with!
 </tbody>
 </table>
 
+**Data notes**:
+- Data is rather messy from year to year with different columns, and files with
+  "all_traffic_stops" in the name are difficult to join into the other incident
+  data, since the incident number in those files is populate donly ~15% of the
+  time; location data is spread across 4 columns in different files, and each
+  is null at least 75% of the time
+- violation appears to be a combination of offense nad violation_description
+  based on the year, so they are coalesced to find the first non-null value;
+  violation_description is 73.81% null, primary_violation is 99.35% null, and
+  98.16% null, and offense is 49.69% null
+- Data is deduplicated on date, time, location, officer_id, subject_age,
+  subject_race, and subject_sex, reducing the number of records by ~0.0004%,
+  but some of this may be over-deduplication because NAs are common in
+  location, officer_id, and subject_age
+
 ## Arlington, TX
 ### 2016-01-01 to 2016-12-31
 <table>
@@ -6935,6 +7286,10 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
+**Data notes**:
+- Unclear what PRA, xCoordinate, and yCoordinate are in the raw data
+- Missing data dictionaries for reason_for_stop, outcome, and search_ outcome
 
 ## Statewide, TX
 ### 2006-01-01 to 2017-12-31
@@ -7198,6 +7553,11 @@ We’re excited to see what you come up with!
 </tbody>
 </table>
 
+**Data notes**:
+- Data is deduplicated on date, time, location, subject_race, subject_sex, and
+  subject_age, reducing the number of rows by ~25.3%
+- Data consists only of arrests and citations
+
 ## Statewide, VA
 ### 2006-01-07 to 2016-04-23
 <table>
@@ -7370,6 +7730,11 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
+**Data notes**:
+- Data is deduplicated on raw columns issued_at, location, race, gender, city,
+  dob, lat, lon, reducing the number of records by ~7.0%
+- Calls are also provided in the raw data, but aren't loaded here
 
 ## Statewide, VT
 ### 2010-07-01 to 2015-12-31
@@ -7596,6 +7961,12 @@ We’re excited to see what you come up with!
 - Arrests and citations are grouped together in the `stop_outcome`, so we
   cannot reliably identify arrests. There is data on incident to arrest
   searches, but this does not necessarily identify all arrests.
+- (danj): there may be duplicates, deduping on  employee_last, employee_first,
+  officer_race_raw, officer_gender, contact_date, contact_hour, highway_type,
+  road_number, milepost, driver_race_orig, driver_age_orig, driver_gender_orig
+  yields ~3.4% fewer rows; however, many of these have NA for the driver
+  demographics; at the same time, it's hard to believe an officer could stop 45
+  people in an hour..
 
 ## Tacoma, WA
 ### 2007-09-11 to 2017-09-10
@@ -7669,6 +8040,10 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
+**Data notes**:
+- reason_for_stop is not recorded, and search/contraband information is not in
+  their database, only in written reports; subject_race is also not recorded
 
 ## Seattle, WA
 ### 2006-01-01 to 2015-12-31
@@ -7795,6 +8170,9 @@ We’re excited to see what you come up with!
 </tbody>
 </table>
 
+**Data notes**:
+- citation_issued includes criminal and non-criminal citations
+
 ## Madison, WI
 ### 2007-09-28 to 2017-09-28
 <table>
@@ -7899,6 +8277,14 @@ We’re excited to see what you come up with!
   </tr>
 </tbody>
 </table>
+
+**Data notes**:
+- Data is deduplicated on date, time, location, officer_last_name,
+  officer_first_name, subject_race, subject_sex, vehicle_make, vehicle_model,
+  reducing the number of records by ~0.88%
+- Search/contraband information is missing
+- Data only includes warnings and citations, no arrests
+- Shapefiles don't include district 2 and it's accompanying sectors
 
 ## Statewide, WI
 ### 2010-01-01 to 2016-05-16

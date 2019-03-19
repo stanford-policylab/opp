@@ -51,6 +51,7 @@ clean <- function(d, helpers) {
   d$data %>%
     rename(
       officer_id = `PrimaryID (Officer ID)`,
+      sector = Sector,
       district = District,
       beat = Beat
     ) %>%

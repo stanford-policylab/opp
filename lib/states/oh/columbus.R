@@ -13,6 +13,9 @@ load_raw <- function(raw_data_dir, n_max) {
 clean <- function(d, helpers) {
 
   d$data %>%
+    # TODO(phoebe): what does `Incident Number` stand for? There are lots of
+    # duplicates
+    # https://app.asana.com/0/456927885748233/1114613936426887 
     mutate(
       # NOTE: stop location is null about 2/3 of the time,
       # so using violation location
@@ -23,6 +26,13 @@ clean <- function(d, helpers) {
           sep = " and "
         )
       )
+    ) %>%
+    merge_rows(
+      `Stop Date`,
+      `Contact End Date`,
+      Ethnicity,
+      Gender,
+      location
     ) %>%
     helpers$add_lat_lng(
     ) %>%
@@ -44,12 +54,10 @@ clean <- function(d, helpers) {
       date = parse_date(date, "%Y/%m/%d"),
       subject_race = tr_race[tolower(Ethnicity)],
       subject_sex = tr_sex[Gender],
-      search_conducted = `Enforcement Taken` %in%
-        c("Vehicle Search", "Driver Search"),
-      arrest_made = `Enforcement Taken` == "Arrest",
-      citation_issued = `Enforcement Taken` %in%
-        c("Traffic Citation", "Misd. Citation or Summons"),
-      warning_issued = `Enforcement Taken` == "Verbal Warning",
+      search_conducted = str_detect(`Enforcement Taken`, "Search"),
+      arrest_made = str_detect(`Enforcement Taken`, "Arrest"),
+      citation_issued = str_detect(`Enforcement Taken`, "Citation"),
+      warning_issued = str_detect(`Enforcement Taken`, "Warning"),
       outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued,

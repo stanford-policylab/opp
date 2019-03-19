@@ -58,6 +58,14 @@ clean <- function(d, helpers) {
   # TODO(phoebe): can we get a data dictionary for statute_{name, section}
   # https://app.asana.com/0/456927885748233/645792862056546
   d$data %>%
+    merge_rows(
+      date_of_birth,
+      subject_address,
+      ethnicity,
+      gender_code,
+      occ_date,
+      occ_time
+    ) %>%
     mutate(
       # TODO(danj): improve this once we get decodings for statute_section;
       # until then, going with vehicular stops since the file has

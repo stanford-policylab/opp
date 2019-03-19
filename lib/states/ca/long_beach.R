@@ -61,6 +61,13 @@ clean <- function(d, helpers) {
   # https://app.asana.com/0/456927885748233/596075286170964
   d$data %>%
     # NOTE: type classification is based on first [assumed primary] violation
+    merge_rows(
+      Date,
+      Location,
+      Race,
+      Sex,
+      `Officer DID`
+    ) %>%
     helpers$add_type(
       "violation_1_description"
     ) %>%

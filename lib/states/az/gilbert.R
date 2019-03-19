@@ -22,6 +22,9 @@ clean <- function(d, helpers) {
   # https://app.asana.com/0/456927885748233/758649899422602
   # NOTE: we have subject name here but no other demographic information
   d$data %>%
+    merge_rows(
+      call_id
+    ) %>%
     rename(
       vehicle_make = make,
       vehicle_model = model,

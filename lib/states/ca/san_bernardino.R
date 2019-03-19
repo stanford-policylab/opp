@@ -22,6 +22,11 @@ clean <- function(d, helpers) {
   # dictionary?
   # https://app.asana.com/0/456927885748233/594103520238659
   d$data %>%
+    merge_rows(
+      CreateDatetime,
+      Address,
+      CallType
+    ) %>%
     rename(
       location = Address,
       disposition = Disposition

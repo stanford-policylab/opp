@@ -294,7 +294,6 @@ clean <- function(d, helpers) {
         offense_location,
         arrest_location
       ),
-      # TODO(danj): fix str_c_na
       results = str_c_na(
         officer_result,
         result,
@@ -374,6 +373,15 @@ clean <- function(d, helpers) {
     filter(
       # NOTE: there is only one aberrant date from 2016
       date != as.Date("2016-12-26")
+    ) %>%
+    merge_rows(
+      date,
+      time,
+      location,
+      officer_id,
+      subject_age,
+      subject_race,
+      subject_sex
     ) %>%
     standardize(d$metadata)
 }

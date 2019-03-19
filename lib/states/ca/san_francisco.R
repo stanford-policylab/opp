@@ -113,6 +113,14 @@ clean <- function(d, helpers) {
   )
 
   d$data %>%
+    merge_rows(
+      date,
+      time,
+      race_description,
+      sex,
+      age,
+      location
+    ) %>%
     select(
       -reason_for_stop
     ) %>%

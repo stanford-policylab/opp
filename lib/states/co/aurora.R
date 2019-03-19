@@ -27,6 +27,15 @@ clean <- function(d, helpers) {
   # TODO(phoebe): get search and contraband
   # https://app.asana.com/0/456927885748233/570989790365269 
   d$data %>%
+    merge_rows(
+      `Ticket Date`,
+      `Ticket Time`,
+      `Ticket Location`,
+      `First Name`,
+      `Last Name`,
+      sex,
+      `Date of Birth`
+    ) %>%
     helpers$add_lat_lng(
       "Ticket Location"
     ) %>%

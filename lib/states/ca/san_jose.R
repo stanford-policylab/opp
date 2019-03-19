@@ -192,5 +192,11 @@ clean <- function(d, helpers) {
     ) %>%
     helpers$add_lat_lng(
     ) %>%
+    merge_rows(
+      date,
+      time,
+      location,
+      subject_race
+    ) %>%
     standardize(d$metadata)
 }

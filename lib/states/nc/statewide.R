@@ -162,7 +162,8 @@ clean <- function(d, helpers) {
     !is.na(col) & col > 0
   }
 
-  d$data %>%
+  tbl <-
+    d$data %>%
     rename(
       department_name = AgencyDescription,
       officer_id = OfficerId,
@@ -232,6 +233,18 @@ clean <- function(d, helpers) {
         gt_0(Weapons),
         NA
       )
+    )
+    # NOTE: select only schema cols so merge rows has to merge fewer columns
+    select_only_schema_cols(list(data = tbl))$data %>%
+    merge_rows(
+      date,
+      time,
+      location,
+      department_name,
+      officer_id,
+      subject_race,
+      subject_sex,
+      subject_age
     ) %>%
     standardize(d$metadata)
 }
