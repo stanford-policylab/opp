@@ -188,7 +188,10 @@ calculate_sunset_times <- function(
     select(!!dateq, !!latq, !!lngq) %>%
     distinct() %>%
     left_join(tzs) %>%
-    mutate(lat = !!latq, lon = !!lngq) %>% 
+    mutate(
+      lat = !!latq, 
+      lon = !!lngq
+    ) %>% 
     mutate(
       sunset_utc = getSunlightTimes(data = ., keep = c("sunset"))$sunset,
       date = ymd(str_sub(!!dateq, 1, 10))
@@ -483,4 +486,73 @@ minute_to_time <- function(minute) {
     str_pad(as.character(minute %% 60), 2, pad = "0"),
     "pm"
   )
+}
+
+
+tmp_dst_model <- function(
+  tbl,
+  ...,
+  demographic_indicator_col = is_minority_demographic,
+  darkness_indicator_col = is_dark,
+  time_col = rounded_minute,
+  degree = 6,
+  interact_dark_time = F,
+  interact_time_location = F
+) {
+  control_colqs <- enquos(...)
+  darkness_indicator_colq <- enquo(darkness_indicator_col)
+  demographic_indicator_colq <- enquo(demographic_indicator_col)
+  time_colq <- enquo(time_col)
+  
+  tbl <- prep_dst_data(tbl)
+  
+  agg <-
+    tbl %>%
+    group_by(
+      !!darkness_indicator_colq,
+      !!time_colq,
+      !!!control_colqs,
+      state_patrol, 
+      geography,
+      season
+    ) %>%
+    summarize(
+      n = n(),
+      n_minority = sum(!!demographic_indicator_colq),
+      n_majority = n - n_minority
+    )
+  
+  fmla <- as.formula(
+    str_c(
+      "cbind(n_minority, n_majority) ~ ",
+      quo_name(darkness_indicator_colq),
+      if (interact_dark_time) "*" else " + ",
+      str_c(
+        str_c("ns(", quo_name(time_colq), ", df = ", degree, ")"),
+        quos_names(control_colqs),
+        sep = if (interact_time_location) "*" else " + "
+      ), 
+      " + geography + state_patrol + season "
+    )
+  )
+  glm(fmla, data = agg, family = binomial, control = list(maxit = 100))
+}
+
+prep_dst_data <- function(tbl, week_radius = 2) {
+  tbl %>% 
+    # NOTE: not all states observe dst
+    filter(!(geography %in% c("AZ State", "HI State"))) %>% 
+    mutate(year = year(date)) %>% 
+    left_join(
+      read_rds(here::here("resources", "dst_start_end_dates.rds")), 
+      by = "year"
+    ) %>% 
+    mutate(
+      spring = date >= dst_start - weeks(week_radius)
+        & date <= dst_start + weeks(week_radius),
+      fall =  date >= dst_end - weeks(week_radius) 
+        & date <= dst_end + weeks(week_radius)
+    ) %>% 
+    filter(spring | fall) %>% 
+    mutate(season = if_else(spring, "spring", "fall"))
 }
