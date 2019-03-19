@@ -28,6 +28,7 @@ veil_of_darkness_test <- function(
   tbl,
   ...,
   demographic_col = subject_race,
+  geography_col_for_plot = city_state,
   date_col = date,
   time_col = time,
   lat_col = center_lat,
@@ -75,7 +76,9 @@ veil_of_darkness_test <- function(
   if (plot) {
     print("composing plots...")
     plots$color_controlled <- compose_color_controlled_vod_plots(d$data)
-    plots$time_sliced <- compose_time_sliced_vod_plots(d$data)
+    plots$time_sliced <- compose_time_sliced_vod_plots(
+      d$data, geography_col_for_plot
+    )
   }
 
   list(
@@ -379,6 +382,7 @@ compose_time_sliced_vod_plots <- function(
       time_str, rounded_minute, minutes_since_dark, minute, 
       n, n_minority
     ) %>% 
+    mutate(geography = !!geography_colq) %>% 
     group_by(!!geography_colq) %>% 
     do(
       plot = generate_time_sliced_vod_plots(., minority_demographic, window_size)
@@ -399,7 +403,7 @@ generate_time_sliced_vod_plots <- function(
     data %>%
     # remove the bin between sunset and dusk
     filter(minutes_since_dark != -20) %>%
-    group_by(minutes_since_dark, time_str, rounded_minute) %>%
+    group_by(minutes_since_dark, time_str, rounded_minute, geography) %>%
     summarise(
       proportion_minority = sum(n_minority) / sum(n),
       n = sum(n)
@@ -457,7 +461,7 @@ generate_time_sliced_vod_plots <- function(
         scale_color_manual(values = c("blue", "blue")) +
         labs(
           title = str_c(
-            geography, ", ",
+            unique(.$geography), ", ",
             minute_to_time(unique(.$rounded_minute)), " to ",
             minute_to_time(unique(.$rounded_minute) + window_size)
           )
