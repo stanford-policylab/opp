@@ -36,7 +36,7 @@ ELIGIBLE_CITIES <- tribble(
 disparity <- function() {
   datasets <- list()
   print("Preparing data...")
-  datasets$state <- load_eligible_state_disparity_data()
+  # datasets$state <- load_eligible_state_disparity_data()
   datasets$city <- load_eligible_city_disparity_data()
  
   results <- list()
@@ -138,8 +138,7 @@ load_eligible_city_disparity_data <- function() {
         T
       ),
       # NOTE: San Antonio looks good
-      # NOTE: remove these to compare only blacks/hispanics with whites
-      !(subject_race %in% c("asian/pacific islander", "other/unknown")),
+      subject_race %in% c("white", "black", "hispanic"),
       year(date) >= 2011,
       year(date) <= 2017,
       type == "vehicular"
@@ -189,7 +188,6 @@ load_eligible_state_disparity_data <- function() {
       
       # NOTE: WI 2010 data is too sparse to trust
       !(state == "WI" & year(date) <= 2010),
-      
       subject_race %in% c("black", "white", "hispanic"),
       type == "vehicular"
     ) %>%

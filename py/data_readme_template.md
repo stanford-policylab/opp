@@ -613,6 +613,9 @@ We’re excited to see what you come up with!
   DID, reducing the number of records by ~14.3%
 - Data does not include reason for stop, search, or contraband fields 
 
+## Los Angeles, CA
+- 
+
 ## San Diego, CA
 **Data notes**:
 - stop_id in raw data doesn't appear to apply to unique events, as the same
@@ -1145,7 +1148,8 @@ We’re excited to see what you come up with!
     appear to reference the same incident, but is duplicated for every
     distinct action taken against the subject
   - The raw data is deduplicated on `Stop Date`, `Contact End Date`, Ethnicity,
-    Gender, ViolationStreet, and ViolationCrossStreet
+    Gender, ViolationStreet, and ViolationCrossStreet, reducing the number of
+    records by ~15.8%
 
 ## Statewide, OH
 **Data notes**:
@@ -1242,15 +1246,10 @@ We’re excited to see what you come up with!
   officer_employee_number, race, sex, and age_of_suspect, reducing the number
   of records by ~0.3%
 
-## Houston, TX
+## Arlington, TX
 **Data notes**:
-- Data is deduplicated on raw columns `Defendant Name`, Gender, Race, Street,
-  Block, `Scnd Street`, `Scnd Block`, `Officer Name`, and `Offense Date`,
-  reducing the number of records by ~0.02%; there is a possibility this over
-  collapses rows in the case where an officer pulls over the same person twice
-  in the same day at the same location
-- Data is lacking search/contraband information
-- Data consists only of citations
+- Unclear what PRA, xCoordinate, and yCoordinate are in the raw data
+- Missing data dictionaries for reason_for_stop, outcome, and search_ outcome
 
 ## Austin, TX
 **Data notes**:
@@ -1261,6 +1260,16 @@ We’re excited to see what you come up with!
   reason_checked_description; SUSPICIOUS PERSON / VEHICLE is one category in
   reason_for_stop, but is included with "vehicular" stops; as such, it may over
   count vehicular stops
+
+## Houston, TX
+**Data notes**:
+- Data is deduplicated on raw columns `Defendant Name`, Gender, Race, Street,
+  Block, `Scnd Street`, `Scnd Block`, `Officer Name`, and `Offense Date`,
+  reducing the number of records by ~0.02%; there is a possibility this over
+  collapses rows in the case where an officer pulls over the same person twice
+  in the same day at the same location
+- Data is lacking search/contraband information
+- Data consists only of citations
 
 ## Plano, TX
 **Data notes**:
@@ -1277,11 +1286,6 @@ We’re excited to see what you come up with!
   subject_race, and subject_sex, reducing the number of records by ~0.0004%,
   but some of this may be over-deduplication because NAs are common in
   location, officer_id, and subject_age
-
-## Arlington, TX
-**Data notes**:
-- Unclear what PRA, xCoordinate, and yCoordinate are in the raw data
-- Missing data dictionaries for reason_for_stop, outcome, and search_ outcome
 
 ## Statewide, TX
 **Data notes**:
