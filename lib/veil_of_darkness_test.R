@@ -35,8 +35,8 @@ veil_of_darkness_test <- function(
   minority_demographic = "black",
   majority_demographic = "white",
   spline_degree = 6,
-  interact = T,
-  interact_dark_and_time = F,
+  interact_dark_time = F,
+  interact_time_location = T,
   plot = F
 ) {
   control_colqs <- enquos(...)
@@ -67,15 +67,14 @@ veil_of_darkness_test <- function(
       darkness_indicator_col = is_dark,
       time_col = rounded_minute,
       degree = spline_degree,
-      interact = interact,
-      interact_dark_and_time = interact_dark_and_time
+      interact_dark_time = interact_dark_time,
+      interact_time_location = interact_time_location
   )
 
   plots <- list()
   if (plot) {
     print("composing plots...")
-    plots$color_controlled <- compose_color_controlled_vod_plots(d$data)
-    plots$time_sliced <- compose_time_sliced_vod_plots(d$data)
+    plots <- compose_vod_plots(d$data)
   }
 
   list(
@@ -219,8 +218,8 @@ train_vod_model <- function(
   darkness_indicator_col = is_dark,
   time_col = rounded_minute,
   degree = 6,
-  interact = T,
-  interact_dark_and_time = F
+  interact_dark_time = F,
+  interact_time_location = T
 ) {
   control_colqs <- enquos(...)
   darkness_indicator_colq <- enquo(darkness_indicator_col)
@@ -240,32 +239,27 @@ train_vod_model <- function(
       n_majority = n - n_minority
     )
 
-  if(!interact_dark_and_time) {
-    fmla <- as.formula(
+  fmla <- as.formula(
+    str_c(
+      "cbind(n_minority, n_majority) ~ ",
+      quo_name(darkness_indicator_colq),
+      "*" if (interact_dark_time) else " + "
       str_c(
-        "cbind(n_minority, n_majority) ~ ",
-        quo_name(darkness_indicator_colq),
-        " + ",
-        str_c(
-          str_c("ns(", quo_name(time_colq), ", df = ", degree, ")"),
-          quos_names(control_colqs),
-          sep = if (interact) "*" else " + "
-        )
-      )
-    )
-  } else {
-    fmla <- as.formula(
-      str_c(
-        "cbind(n_minority, n_majority) ~ ",
-        quo_name(darkness_indicator_colq),
-        "*",
         str_c("ns(", quo_name(time_colq), ", df = ", degree, ")"),
-        " + ",
-        quos_names(control_colqs)
+        quos_names(control_colqs),
+        sep = if (interact_time_location) "*" else " + "
       )
     )
-  }
+  )
   glm(fmla, data = agg, family = binomial, control = list(maxit = 100))
+}
+
+
+compose_vod_plots <- function(tbl) {
+  list(
+    color_controlled = compose_color_controlled_vod_plots(tbl),
+    time_sliced = compose_time_sliced_vod_plots(tbl)
+  )
 }
 
 

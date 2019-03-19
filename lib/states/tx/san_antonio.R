@@ -39,7 +39,8 @@ clean <- function(d, helpers) {
     "Evidence" = "probable cause"
   )
 
-  d$data %>%
+  tbl <-
+    d$data %>%
     rename(
       subject_age = `Age At Time Of Violation`,
       location = `Violation Location`,
@@ -61,7 +62,10 @@ clean <- function(d, helpers) {
       time = parse_time(`Violation Time`),
       subject_race = tr_race[Race],
       subject_sex = tr_sex[Gender],
-      search_conducted = `Search Reason` %in% names(tr_search_basis),
+      search_conducted = str_detect(
+        `Search Reason`,
+        str_c(names(tr_search_basis), collapse = "|")
+      ),
       search_basis = tr_search_basis[`Search Reason`],
       contraband_found = tr_yn[`Contraband Or Evidence`],
       arrest_made = tr_yn[arrest_made],
@@ -82,14 +86,17 @@ clean <- function(d, helpers) {
       district = DISTRICT,
       # NOTE: SUBCODE is just the first letter of SUBSTN
       substation = SUBSTN.x
-    ) %>%
-    merge_rows(
-      date,
-      time,
-      location,
-      subject_race,
-      subject_sex,
-      subject_age
-    ) %>%
-    standardize(d$metadata)
+    )
+
+  # NOTE: select only schema cols to void merging columns that will be dropped
+  select_only_schema_cols(list(data = tbl))$data %>%
+  merge_rows(
+    date,
+    time,
+    location,
+    subject_race,
+    subject_sex,
+    subject_age
+  ) %>%
+  standardize(d$metadata)
 }

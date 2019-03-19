@@ -583,7 +583,6 @@ opp_load_all_clean_data <- function(only = NULL) {
 opp_load_all_data <- function(only = NULL, include_raw = T) {
   load_func <- ifelse(include_raw, opp_load_data, opp_load_clean_data)
   if (is.null(only)) { only <- opp_available() }
-  bind_rows(
     par_pmap(
       only,
       function(state, city) {
@@ -593,8 +592,7 @@ opp_load_all_data <- function(only = NULL, include_raw = T) {
           city = city
         )
       }
-    )
-  )
+    ) %>% bind_rows()
 }
 
 

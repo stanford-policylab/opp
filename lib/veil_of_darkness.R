@@ -63,58 +63,58 @@ veil_of_darkness_cities <- function() {
     separate(loc, c("city", "state"), sep = ",") %>%
     rename(center_lat = lat, center_lng = lng)
 
+  print("loading data..")
   tbl <-
     opp_load_all_clean_data(only = ELIGIBLE_CITIES) %>%
+    mutate(yr = year(date)) %>%
     filter(
       type == "vehicular",
       # NOTE: only keep years with complete data
-      (city == "Mesa"             & year(date) %in% 2014:2016)
-      | (city == "Bakersfield"    & year(date) %in% 2010:2017)
-      | (city == "San Diego"      & year(date) %in% 2014:2016)
-      | (city == "San Francisco"  & year(date) %in% 2007:2015)
-      | (city == "San Jose"       & year(date) %in% 2014:2017)
-      | (city == "Aurora"         & year(date) %in% 2012:2016)
-      | (city == "Hartford"       & year(date) %in% 2014:2015)
-      | (city == "Wichita"        & year(date) %in% 2006:2016)
-      | (city == "New Orleans"    & year(date) %in% 2010:2017)
-      | (city == "Saint Paul"     & year(date) %in% 2001:2016)
-      | (city == "Charlotte"      & year(date) %in%
-        setdiff(2002:2015, 2008)
-      )
-      | (city == "Durham"         & year(date) %in%
+      (city == "Mesa"             & yr %in% 2014:2016)
+      | (city == "Bakersfield"    & yr %in% 2010:2017)
+      | (city == "San Diego"      & yr %in% 2014:2016)
+      | (city == "San Francisco"  & yr %in% 2007:2015)
+      | (city == "San Jose"       & yr %in% 2014:2017)
+      | (city == "Aurora"         & yr %in% 2012:2016)
+      | (city == "Hartford"       & yr %in% 2014:2015)
+      | (city == "Wichita"        & yr %in% 2006:2016)
+      | (city == "New Orleans"    & yr %in% 2010:2017)
+      | (city == "Saint Paul"     & yr %in% 2001:2016)
+      | (city == "Charlotte"      & yr %in% setdiff(2002:2015, 2008))
+      | (city == "Durham"         & yr %in%
         setdiff(2002:2015, c(2008, 2009, 2010, 2013))
       )
-      | (city == "Fayetteville"   & year(date) %in% setdiff(2002:2015, 2009))
-      | (city == "Greensboro"     & year(date) %in%
+      | (city == "Fayetteville"   & yr %in% setdiff(2002:2015, 2009))
+      | (city == "Greensboro"     & yr %in%
         setdiff(2002:2015, c(2005, 2006, 2010, 2014, 2015))
       )
-      | (city == "Raleigh"        & year(date) %in% 2010:2011)
-      | (city == "Grand Forks"    & year(date) %in% 2007:2016)
-      | (city == "Camden"         & year(date) %in% 2014:2017)
-      | (city == "Cincinnati"     & year(date) %in% 2009:2017)
-      | (city == "Columbus"       & year(date) %in% 2012:2016)
-      | (city == "Oklahoma City"  & year(date) %in% 2012:2016)
-      | (city == "Tulsa"          & year(date) %in% 2009:2016)
-      | (city == "Philadelphia"   & year(date) %in% 2015:2017)
-      | (city == "Nashville"      & year(date) %in% 2010:2016)
-      | (city == "Arlington"      & year(date) %in% 2016:2016)
-      | (city == "Plano"          & year(date) %in% 2012:2015)
-      | (city == "San Antonio"    & year(date) %in% 2012:2017)
-      | (city == "Burlington"     & year(date) %in% 2012:2017)
-      | (city == "Madison"        & year(date) %in% 2010:2016),
+      | (city == "Raleigh"        & yr %in% 2010:2011)
+      | (city == "Grand Forks"    & yr %in% 2007:2016)
+      | (city == "Camden"         & yr %in% 2014:2017)
+      | (city == "Cincinnati"     & yr %in% 2009:2017)
+      | (city == "Columbus"       & yr %in% 2012:2016)
+      | (city == "Oklahoma City"  & yr %in% 2012:2016)
+      | (city == "Tulsa"          & yr %in% 2009:2016)
+      | (city == "Philadelphia"   & yr %in% 2015:2017)
+      | (city == "Nashville"      & yr %in% 2010:2016)
+      | (city == "Arlington"      & yr %in% 2016:2016)
+      | (city == "Plano"          & yr %in% 2012:2015)
+      | (city == "San Antonio"    & yr %in% 2012:2017)
+      | (city == "Burlington"     & yr %in% 2012:2017)
+      | (city == "Madison"        & yr %in% 2010:2016),
       # NOTE: the above contains all valid years for each location, but
       # limiting to 2012-2017 to be less affected by locations with many more
       # years of data; incidentally, the 95% CI for the is_dark coefficient is
       # virtually identical using all valid years for all locations vs. only
       # 2012-2017
-      year(date) >= 2012,
-      year(date) <= 2017
+      yr >= 2012,
+      yr <= 2017
     ) %>%
     left_join(city_geocodes) %>%
-    mutate(city_state = str_c(city, state, sep = ", ")) %>%
-    prepare_vod_data(city_state)
+    mutate(city_state = str_c(city, state, sep = ", "))
 
-  tbl_subgeography <-
+  print("creating subgeography data..")
+  tbl_sg <-
     tbl %>%
     filter(
       !(city == "Nashville" & precinct == "U"),
@@ -151,7 +151,7 @@ veil_of_darkness_cities <- function() {
     )
 
   eligible_subeography_locations <-
-    tbl_subgeography %>%
+    tbl_sg %>%
     group_by(city_state) %>%
     summarize(
       subgeography_coverage = sum(!is.na(city_state_subgeography)) / n()
@@ -162,26 +162,23 @@ veil_of_darkness_cities <- function() {
 
   print("eligible subgeography locations: ")
   print(eligible_subeography_locations)
+  tbl_sg <- filter(tbl_sg, city_state %in% eligible_subeography_locations)
 
-  tbl_subgeography <-
-    tbl_subgeography %>%
-    filter(city_state %in% eligible_subeography_locations) %>%
-    prepare_vod_data(city_state_subgeography)
+  print("preparing data for vod analysis..")
+  vod_tbl <- prepare_vod_data(tbl, city_state)$data
+  vod_tbl_sg<- prepare_vod_data(tbl_sg, city_state)$data
+  vod_tbl_sg_plus <- prepare_vod_data(tbl_sg, city_state_subgeography)$data
   
-  coefficients <- bind_rows(
+  coefficients <-
     par_pmap(
       mc.cores = 3,
       tibble(degree = c(6, 6), interact = c(T, F)),
       # tibble(degree = rep(1:6, 2), interact = c(rep(T, 6), rep(F, 6))),
       function(degree, interact) {
         bind_rows(
-          vod_coef(tbl, city_state, degree, interact),
-          vod_coef(tbl_subgeography, city_state, degree, interact),
-          vod_coef(tbl_subgeography, city_state_subgeography, degree, interact)
-        ) %>%
-        rename(
-          is_dark = Estimate,
-          std_error = `Std. Error`
+          vod_coef(vod_tbl, city_state, degree, interact),
+          vod_coef(vod_tbl_sg, city_state, degree, interact),
+          vod_coef(vod_tbl_sg_plus, city_state_subgeography, degree, interact)
         ) %>%
         mutate(
           data = c(
@@ -198,21 +195,21 @@ veil_of_darkness_cities <- function() {
           interact = interact
         )
       }
-    )
-  )
+    ) %>% bind_rows()
 
-  list(coefficients = coefficients, plots = compose_vod_plots(tbl))
+  list(coefficients = coefficients, plots = compose_vod_plots(vod_tbl))
 }
 
 
 vod_coef <- function(tbl, control_col, degree, interact) {
   control_colq <- enquo(control_col)
-  summary(train_vod_model(
+  is_dark_e_sd <- summary(train_vod_model(
     tbl,
     !!control_colq,
     spline_degree = degree,
     interact = interact
   ))$coefficients[2, 1:2]
+  list(is_dark = is_dark_e_sd[1], std_error = is_dark_e_sd[2])
 }
 
 
@@ -249,8 +246,6 @@ veil_of_darkness_states <- function() {
       | (state == "NY"      & ((year(date) == 2011 & month(date) >= 12)
                                | (year(date) %in% 2012:2016)
                                | (year(date) == 2017 & month(date) <= 11)))
-      | (state == "OH"    & year(date) %in% 2012:2015)
-      | (state == "TN"    & year(date) %in% 2012:2015)
       | (state == "TX"    & year(date) %in% 2012:2017)
       | (state == "WI"    & year(date) %in% 2012:2015)
       | (state == "WY"    & year(date) == 2012)
@@ -267,7 +262,7 @@ veil_of_darkness_states <- function() {
         max_counties_per_state = 20
       )
     ) %>%
-    prepare_vod_data(county_state)
+    prepare_vod_data(county_state)$data
 
   coefficients <- bind_rows(
     par_pmap(
