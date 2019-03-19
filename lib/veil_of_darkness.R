@@ -214,7 +214,7 @@ prepare_veil_of_darkness_states <- function() {
   # because county isn't present
   
   state_geocodes <-
-    read_csv(here::here("resources", "state_county_geocodes.rds")) %>%
+    read_rds(here::here("resources", "state_county_geocodes.rds")) %>%
     rename(county_state = loc)
   
   load_veil_of_darkness_states() %>%
@@ -357,5 +357,5 @@ eligible_counties <- function(
 
 
 veil_of_darkness_daylight_savings <- function() {
-  #TODO
+#TODO
 }
