@@ -5,14 +5,17 @@ source(here::here("lib", "opp.R"))
 coverage_for_paper <- function() {
   target_years <- 2011:2017
   target_threshold <- 0.65
-  target_columns <- c("date", "time", "subject_race")
+  target_races <- c("black", "white", "hispanic")
+  # target_columns <- c("date", "time", "subject_race")
   coverage(
-    opp_analysis_eligible_locations(
-      years = target_years,
-      threshold = target_threshold,
-      columns = target_columns
-    ),
+    # opp_analysis_eligible_locations(
+    #   years = target_years,
+    #   threshold = target_threshold,
+    #   columns = target_columns
+    # ),
+    opp_locations_used_in_analyses(),
     years = target_years,
+    races = target_races,
     vehicular_only = T,
     exclude_non_highway_patrol_from_states = T,
     only_analysis_demographics = T
@@ -104,7 +107,8 @@ coverage_for_website <- function() {
 coverage <- function(
   locations = opp_available(),
   years = 2000:year(Sys.Date()),
-  vehicular_only = F
+  races = c("asian/pacific islander", "black", "hispanic", "other", "white"),
+  vehicular_only = F,
   exclude_non_highway_patrol_from_states = F,
   only_analysis_demographics = F
 ) {
@@ -114,6 +118,7 @@ coverage <- function(
         state,
         city,
         years,
+        races,
         vehicular_only,
         exclude_non_highway_patrol_from_states,
         only_analysis_demographics
@@ -154,6 +159,7 @@ calculate_coverage <- function(
   state,
   city,
   years = 2000:year(Sys.Date()),
+  races = c("asian/pacific islander", "black", "hispanic", "other", "white"),
   vehicular_only = F,
   exclude_non_highway_patrol_from_states = F,
   only_analysis_demographics = F
@@ -163,6 +169,7 @@ calculate_coverage <- function(
     state,
     city,
     years,
+    races,
     vehicular_only,
     exclude_non_highway_patrol_from_states,
     only_analysis_demographics
@@ -191,13 +198,17 @@ load_coverage_data <- function(
   state,
   city,
   years = 2000:year(Sys.Date()),
+  races = c("asian/pacific islander", "black", "hispanic", "other", "white"),
   vehicular_only = F,
   exclude_non_highway_patrol_from_states = F,
   only_analysis_demographics = F
 ) {
   tbl <-
     opp_load_clean_data(state, city) %>%
-    filter(year(date) %in% years)
+    filter(
+      year(date) %in% years,
+      subject_race %in% races
+    ) 
 
   if (vehicular_only)
     tbl <- filter(tbl, type == "vehicular")
