@@ -247,7 +247,7 @@ train_vod_model <- function(
     str_c(
       "cbind(n_minority, n_majority) ~ ",
       quo_name(darkness_indicator_colq),
-      "*" if (interact_dark_time) else " + "
+      if (interact_dark_time) "*" else " + ",
       str_c(
         str_c("ns(", quo_name(time_colq), ", df = ", degree, ")"),
         quos_names(control_colqs),
@@ -259,10 +259,11 @@ train_vod_model <- function(
 }
 
 
-compose_vod_plots <- function(tbl) {
+compose_vod_plots <- function(tbl, geography_col) {
+  geography_colq <- enquo(geography_col)
   list(
-    color_controlled = compose_color_controlled_vod_plots(tbl),
-    time_sliced = compose_time_sliced_vod_plots(tbl)
+    color_controlled = compose_color_controlled_vod_plots(tbl, !!geography_colq),
+    time_sliced = compose_time_sliced_vod_plots(tbl, !!geography_colq)
   )
 }
 
