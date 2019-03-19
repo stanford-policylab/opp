@@ -130,20 +130,20 @@ load_veil_of_darkness_states <- function() {
     )
 }
 
-veil_of_darkness_cities <- function() {
+prepare_veil_of_darkness_cities <- function() {
   # NOTE: all of these places have date and time at least 95% of the time and
   # subject_race at least 80% of the time
-
+  
   city_geocodes <-
     read_csv(here::here("resources", "city_coverage_geocodes.csv")) %>%
     separate(loc, c("city", "state"), sep = ",") %>%
     rename(center_lat = lat, center_lng = lng)
-
+  
   print("loading data..")
   tbl <- load_veil_of_darkness_cities() %>% 
     left_join(city_geocodes) %>%
     mutate(city_state = str_c(city, state, sep = ", "))
-
+  
   print("creating subgeography data..")
   tbl_sg <-
     tbl %>%
@@ -180,7 +180,7 @@ veil_of_darkness_cities <- function() {
       ),
       city_state_subgeography = str_c(city_state, ": ", subgeography)
     )
-
+  
   eligible_subeography_locations <-
     tbl_sg %>%
     group_by(city_state) %>%
@@ -190,15 +190,55 @@ veil_of_darkness_cities <- function() {
     # TODO(danj): does 80% make sense?
     filter(subgeography_coverage > 0.80) %>%
     pull(city_state)
-
+  
   print("eligible subgeography locations: ")
   print(eligible_subeography_locations)
   tbl_sg <- filter(tbl_sg, city_state %in% eligible_subeography_locations)
-
+  
   print("preparing data for vod analysis..")
   vod_tbl <- prepare_vod_data(tbl, city_state)$data
-  vod_tbl_sg<- prepare_vod_data(tbl_sg, city_state)$data
+  vod_tbl_sg <- prepare_vod_data(tbl_sg, city_state)$data
   vod_tbl_sg_plus <- prepare_vod_data(tbl_sg, city_state_subgeography)$data
+  
+  list(
+    vod_tbl = vod_tbl,
+    vod_tbl_sg = vod_tbl_sg,
+    vod_tbl_sg_plus = vod_tbl_sg_plus
+  )
+}
+
+prepare_veil_of_darkness_states <- function() {
+  # NOTE: all of these places have date and time at least 95% of the time and
+  # subject_race at least 85% of the time
+  # NOTE: IL, NJ, RI, VT are elligible too, but geocoding is nontrivial, 
+  # because county isn't present
+  
+  state_geocodes <-
+    read_csv(here::here("resources", "state_county_geocodes.rds")) %>%
+    rename(county_state = loc)
+  
+  load_veil_of_darkness_states() %>%
+    left_join(
+      state_geocodes, 
+      by = c("state", "county_name")
+    ) %>% 
+    filter(
+      county_state %in% eligible_counties(
+        ., 
+        min_stops_per_race = 1000,
+        max_counties_per_state = 20
+      )
+    ) %>%
+    prepare_vod_data(state, county_state)$data
+}
+
+veil_of_darkness_cities <- function() {
+  
+  vod_data <- prepare_veil_of_darkness_cities()
+  
+  vod_tbl <- vod_data$vod_tbl
+  vod_tbl_sg <- vod_data$vod_tbl_sg
+  vod_tbl_sg_plus <- vod_data$vod_tbl_sg_plus
   
   coefficients <-
     par_pmap(
@@ -245,29 +285,8 @@ vod_coef <- function(tbl, control_col, degree, interact) {
 
 
 veil_of_darkness_states <- function() {
-  # NOTE: all of these places have date and time at least 95% of the time and
-  # subject_race at least 85% of the time
-  # NOTE: IL, NJ, RI, VT are elligible too, but geocoding is nontrivial, 
-  # because county isn't present
   
-  state_geocodes <-
-    read_csv(here::here("resources", "state_county_geocodes.rds")) %>%
-    rename(county_state = loc)
-  
-  tbl <-
-    load_veil_of_darkness_states() %>%
-    left_join(
-      state_geocodes, 
-      by = c("state", "county_name")
-    ) %>% 
-    filter(
-      county_state %in% eligible_counties(
-        ., 
-        min_stops_per_race = 1000,
-        max_counties_per_state = 20
-      )
-    ) %>%
-    prepare_vod_data(state, county_state)$data
+  tbl <- prepare_veil_of_darkness_states()
 
   coefficients <- bind_rows(
     par_pmap(
@@ -338,5 +357,5 @@ eligible_counties <- function(
 
 
 veil_of_darkness_daylight_savings <- function() {
-  # TODO(amyshoe)
+  #TODO
 }
