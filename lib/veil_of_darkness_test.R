@@ -77,7 +77,10 @@ veil_of_darkness_test <- function(
   if (plot) {
     print("composing plots...")
     plots$color_controlled <- compose_color_controlled_vod_plots(d$data)
-    plots$time_sliced <- compose_time_sliced_vod_plots(d$data)
+    plots$time_sliced <- compose_time_sliced_vod_plots(
+      d$data, 
+      geography_col = 
+  )
   }
 
   list(
@@ -409,7 +412,7 @@ generate_time_sliced_vod_plots <- function(
     data %>%
     # remove the bin between sunset and dusk
     filter(minutes_since_dark != -20) %>%
-    group_by(minutes_since_dark, time_str, rounded_minute) %>%
+    group_by(minutes_since_dark, time_str, rounded_minute, !!geography_colq) %>%
     summarise(
       proportion_minority = sum(n_minority) / sum(n),
       n = sum(n)
