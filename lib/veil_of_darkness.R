@@ -42,7 +42,6 @@ ELIGIBLE_STATES <- tribble(
   "AZ", "Statewide",
   "CT", "Statewide",
   "FL", "Statewide",
-  "MI", "Statewide",
   "MT", "Statewide",
   "ND", "Statewide",
   "NY", "Statewide",
@@ -377,5 +376,7 @@ veil_of_darkness_daylight_savings <- function() {
   )
   
   # Run actual test
+  mod <- tmp_dst_model(tbl, degree = 2)
+  write_rds(here::here("cache", "dst_mod.rds"))
 
 }
