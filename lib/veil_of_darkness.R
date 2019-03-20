@@ -377,6 +377,6 @@ veil_of_darkness_daylight_savings <- function() {
   
   # Run actual test
   mod <- tmp_dst_model(tbl, degree = 2)
-  write_rds(here::here("cache", "dst_mod.rds"))
+  write_rds(mod, here::here("cache", "dst_mod.rds"))
 
 }
