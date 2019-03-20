@@ -3,6 +3,8 @@ source(here::here("lib", "opp.R"))
 source(here::here("lib", "veil_of_darkness_test.R"))
 
 
+# TODO(danj): add los angeles
+
 ELIGIBLE_CITIES <- tribble(
   ~state, ~city,
   "AZ", "Mesa",
@@ -273,13 +275,13 @@ veil_of_darkness_cities <- function() {
 }
 
 
-vod_coef <- function(tbl, control_col, degree, interact) {
+vod_coef <- function(tbl, control_col, degree, interact_time_location) {
   control_colq <- enquo(control_col)
   is_dark_e_sd <- summary(train_vod_model(
     tbl,
     !!control_colq,
     spline_degree = degree,
-    interact = interact
+    interact_time_location = interact_time_location
   ))$coefficients[2, 1:2]
   list(is_dark = is_dark_e_sd[1], std_error = is_dark_e_sd[2])
 }
