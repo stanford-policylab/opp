@@ -116,7 +116,6 @@ load_veil_of_darkness_states <- function() {
       | (state == "FL"    & ((year(date) == 2011 & month(date) >= 11)
                              | (year(date) %in% 2012:2015)
                              | (year(date) == 2016 & month(date) <= 10)))
-      | (state == "MI"    & year(date) %in% 2013:2015)
       | (state == "MT"    & year(date) %in% 2012:2016)
       | (state == "ND"    & year(date) %in% 2012:2014)
       # runs through nov 2017 (keep dec 2011 to be able to keep 2017)
