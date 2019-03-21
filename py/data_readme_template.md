@@ -614,7 +614,11 @@ We’re excited to see what you come up with!
 - Data does not include reason for stop, search, or contraband fields 
 
 ## Los Angeles, CA
-- 
+- Data is deduplicated on raw columns stop_date, stop_time, reporting_district,
+  division_description_1, division_description_2, officer_1_serial_number,
+  officer_2_serial_number, descent_description, sex_code, and stop_type,
+  reducing the number of records by ~17.7%
+- Search/contraband, outcome, and location data are missing
 
 ## San Diego, CA
 **Data notes**:
@@ -1211,6 +1215,33 @@ We’re excited to see what you come up with!
 - Data is deduplicated on raw columns datetimeoccur, location, districtoccur,
   lat, lng, gender, age, and race, reducing the number of records by ~1.6%
 - Information on citations and warnings is missing, but arrests are included
+
+## Pittsburgh, PA
+**Data notes**:
+- The raw data for pedestrian stops actually has many cities in it, but here we
+  filter to only Pittsburg; vehicular stops do not have an associated city, and
+  so are assumed to be only Pittsburgh
+- Raw data for vehicle stops has stop end time as well, but it is not included
+  in the clean data
+- Sex and gender do not match 73% of the time in pedestrian data, so we have an
+  outsanding inquiry here; in our data, we only record subject_sex when they
+  both agree
+- There are instances when evidencefound is true but contrabandfound is NA, so
+  we have an oustanding inquiry as to what evidencefound refers to; similarly,
+  weaponsfound is sometimes true when contrabandfound is false and vice versa,
+  so it's unclear whether the contraband is weapons or not, so for now we leave
+  out contraband_weapons and have another outstanding inquiry; in sum,
+  contraband_found is true when contrabandfound is true and false when
+  nothingfound is true
+- search_conducted is true when any one of objectsearched (pedestrian stops),
+  contrabandfound, evidencefound, weaponsfound, and nothingfound (vehicular
+  stops) is not NA
+- race and ethnicity are mismatched quite often, we have an outstanding
+  inquiry; for now, we coalesce race and ethnicity, and if they disagree, we
+  set it to NA
+- There are 4 zone columns in the raw data: zone, zone_division, policezone,
+  and officerzone, since we don't know how they relate, we leave them out of
+  the clean data and have asked for clarification
 
 ## Statewide, RI
 **Data notes**:
