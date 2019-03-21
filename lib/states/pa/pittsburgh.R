@@ -55,6 +55,14 @@ clean <- function(d, helpers) {
 
   d$data %>%
     filter(city == "Pittsburgh") %>%
+    merge_rows(
+      stop_date,
+      stopstart,
+      stopend,
+      address,
+      officer_id,
+      person_id
+    ) %>%
     rename(
       subject_age = age,
       reason_for_stop = reason,
@@ -63,23 +71,23 @@ clean <- function(d, helpers) {
     ) %>%
     # TODO(phoebe): what is the difference between zone, zone_division,
     # policezone, and officerzone?
-    # 
+    # https://app.asana.com/0/456927885748233/1115427454091545 
     mutate(
       # NOTE: vehicular data contains stopend as well
       datetime = parse_datetime(coalesce(stop_date, stopstart)),
       date = as.Date(datetime),
       time = format(datetime, "%H:%M:%S"),
       # TODO(phoebe): why are sex and gender mismatched 73% of the time?
+      # https://app.asana.com/0/456927885748233/1115427454091546
       subject_sex = tr_sex[if_else_na(
         subject_sex != gender,
         NA_character_,
-        subject_sex
+        coalesce(subject_sex, gender)
       )],
       subject_race = tr_race[subject_race],
       ethnicity = tr_race[ethnicity],
-      # TODO(phoebe): ethnicity and race are mismatched quite often, what's
-      # going on?
-      #
+      # TODO(phoebe): why are ethnicity and race are mismatched so often?
+      # https://app.asana.com/0/456927885748233/1115427454091546
       subject_race = if_else_na(
         subject_race != ethnicity,
         NA_character_,
@@ -88,7 +96,7 @@ clean <- function(d, helpers) {
       # TODO(phoebe); what does evidencefound refer to, and how is it
       # different from contraband? And is there any way to tell when
       # weaponsfound means weapons that are contraband?
-      # 
+      # https://app.asana.com/0/456927885748233/1115427454091547
       contraband_found = coalesce(
         tr_yn[contraband_found],
         !tr_yn[nothingfound]
@@ -110,7 +118,7 @@ clean <- function(d, helpers) {
         warning = warning_issued
       )
     ) %>%
-    # helpers$add_lat_lng(
-    # ) %>%
+    helpers$add_lat_lng(
+    ) %>%
     standardize(d$metadata)
 }
