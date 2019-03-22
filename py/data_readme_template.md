@@ -1219,13 +1219,10 @@ We’re excited to see what you come up with!
 ## Pittsburgh, PA
 **Data notes**:
 - The raw data for pedestrian stops actually has many cities in it, but here we
-  filter to only Pittsburg; vehicular stops do not have an associated city, and
-  so are assumed to be only Pittsburgh
+  filter to only Pittsburgh; vehicular stops do not have an associated city,
+  and so are assumed to be only Pittsburgh
 - Raw data for vehicle stops has stop end time as well, but it is not included
   in the clean data
-- Sex and gender do not match 73% of the time in pedestrian data, so we have an
-  outsanding inquiry here; in our data, we only record subject_sex when they
-  both agree
 - There are instances when evidencefound is true but contrabandfound is NA, so
   we have an oustanding inquiry as to what evidencefound refers to; similarly,
   weaponsfound is sometimes true when contrabandfound is false and vice versa,
@@ -1236,12 +1233,19 @@ We’re excited to see what you come up with!
 - search_conducted is true when any one of objectsearched (pedestrian stops),
   contrabandfound, evidencefound, weaponsfound, and nothingfound (vehicular
   stops) is not NA
-- race and ethnicity are mismatched quite often, we have an outstanding
-  inquiry; for now, we coalesce race and ethnicity, and if they disagree, we
-  set it to NA
+- Sex and gender do not match 73% of the time in pedestrian data, and race and
+  ethnicity mismatch often as well. In both cases, if sex != gender or race !=
+  ethnicity, we set the value to NA, otherwise we coalesce(sex, gender) or
+  coalesce(race, ethnicity) [this keeps values when one is NA but the other
+  isn't]
 - There are 4 zone columns in the raw data: zone, zone_division, policezone,
   and officerzone, since we don't know how they relate, we leave them out of
   the clean data and have asked for clarification
+- The data is deduplicated on raw columns stop_date, stopstart, stopend,
+  address, officer_id, and person_id, reducing the number of rows by ~x%
+
+
+
 
 ## Statewide, RI
 **Data notes**:

@@ -4,7 +4,7 @@ import os
 import pandas as pd
 
 
-for path in glob.iglob('opp/data/**/geocoded_locations.csv', recursive=True):
+for path in glob.iglob('../data/**/geocoded_locations.csv', recursive=True):
     base, fn = os.path.split(path)
     output_path = os.path.join(base, "geocoded_locations_sanitized.csv")
     d = pd.read_csv(path)
@@ -20,6 +20,8 @@ for path in glob.iglob('opp/data/**/geocoded_locations.csv', recursive=True):
         & (d.lng < median_lng + n_std * lng_std)
     ]
     removed = d.shape[0] - tmp.shape[0]
-    removed_pct = removed / d.shape[0] * 100
+    removed_pct = 0.0
+    if (d.shape[0]):
+        removed_pct = removed / d.shape[0] * 100
     print('removed %d (%f pct) of rows from %s' % (removed, removed_pct, path))
     tmp.to_csv(output_path, index=False)

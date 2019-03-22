@@ -22,13 +22,13 @@ clean <- function(d, helpers) {
     "WHITE" = "white"
   )
   # TODO(phoebe): can we get reason_for_stop/search/contraband fields?
-  #
+  # https://app.asana.com/0/456927885748233/1115427454091539
   # TODO(phoebe): what does post_stop_activity_indicator mean?
-  #
+  # https://app.asana.com/0/456927885748233/1115427454091540
   # TODO(phoebe): can we get outcome data?
-  # 
+  # https://app.asana.com/0/456927885748233/1115427454091541 
   # TODO(phoebe): can we get location data?
-  # 
+  # https://app.asana.com/0/456927885748233/1115427454091542 
   d$data %>%
     merge_rows(
       stop_date,
