@@ -145,6 +145,13 @@ load_eligible_city_disparity_data <- function() {
       type == "vehicular"
     ) %>%
     mutate(
+      # If a search was conducted but we don't have contraband info,
+      # assume no contraband was found (unless dealt with otherwise above)
+      contraband_found = if_else(
+        search_conducted,
+        replace_na(contraband_found, FALSE),
+        contraband_found
+      ),
       sg = NA_character_,
       sg = if_else(city == "San Diego", service_area, sg),
       sg = if_else(city == "San Francisco", district, sg),
