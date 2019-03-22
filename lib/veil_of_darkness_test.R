@@ -512,7 +512,6 @@ tmp_dst_model <- function(
       !!darkness_indicator_colq,
       !!time_colq,
       !!!control_colqs,
-      state_patrol, 
       geography,
       season
     ) %>%
@@ -532,7 +531,7 @@ tmp_dst_model <- function(
         quos_names(control_colqs),
         sep = if (interact_time_location) "*" else " + "
       ), 
-      " + geography + state_patrol + season "
+      " + geography + season "
     )
   )
   glm(fmla, data = agg, family = binomial, control = list(maxit = 100))
@@ -541,7 +540,7 @@ tmp_dst_model <- function(
 prep_dst_data <- function(tbl, week_radius = 2) {
   tbl %>% 
     # NOTE: not all states observe dst
-    filter(!(geography %in% c("AZ State", "HI State"))) %>% 
+    filter(!str_detect(geography, "AZ|HI")) %>% 
     mutate(year = year(date)) %>% 
     left_join(
       read_rds(here::here("resources", "dst_start_end_dates.rds")), 
@@ -556,3 +555,24 @@ prep_dst_data <- function(tbl, week_radius = 2) {
     filter(spring | fall) %>% 
     mutate(season = if_else(spring, "spring", "fall"))
 }
+
+# compute_dst_dates <- function(years) {
+#   tibble(
+#     date = seq(
+#       ymd(str_c(min(years), "-01-01")), 
+#       ymd(str_c(max(years), "-12-31")),
+#       by = "days"
+#     ),
+#     is_dst = lubridate::dst(as.character(date))
+#   ) %>% 
+#     mutate(year = year(date)) %>% 
+#     group_by(year, is_dst) %>% 
+#     summarize(
+#       dst_start = min(date),
+#       dst_end = max(date)
+#     ) #%>% 
+#     # group_by(year) %>% 
+#     # summarize(
+#     #   dst_start = if_else(is_dst, )
+#     # )
+# }

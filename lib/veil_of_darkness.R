@@ -359,25 +359,37 @@ eligible_counties <- function(
 }
 
 
-veil_of_darkness_daylight_savings <- function() {
+veil_of_darkness_daylight_savings <- function(states = FALSE) {
 #TODO
-  city_data <- prepare_veil_of_darkness_cities()
-  state_data <- prepare_veil_of_darkness_states()
-  
-  tbl <- bind_rows(
-    state_data %>% 
-      mutate(
-        state_patrol = T,
-        geography = str_c(state, " State")
-      ) %>% 
-      select(-state, -county_state),
-    city_data$vod_tbl %>% 
-      mutate(state_patrol = F) %>% 
+  if(states) {
+    tbl <- prepare_veil_of_darkness_states() %>% 
+      rename(geography = state)
+    geo <- "states"
+  }
+  else {
+    tbl <- prepare_veil_of_darkness_cities()$vod_tbl %>% 
       rename(geography = city_state)
-  )
+    geo <- "cities"
+  }
+  
+    
+  # city_data <- prepare_veil_of_darkness_cities()
+  # state_data <- prepare_veil_of_darkness_states()
+  # 
+  # tbl <- bind_rows(
+  #   state_data %>% 
+  #     mutate(
+  #       state_patrol = T,
+  #       geography = str_c(state, " State")
+  #     ) %>% 
+  #     select(-state, -county_state),
+  #   city_data$vod_tbl %>% 
+  #     mutate(state_patrol = F) %>% 
+  #     rename(geography = city_state)
+  # )
   
   # Run actual test
   mod <- tmp_dst_model(tbl, degree = 2)
-  write_rds(mod, here::here("cache", "dst_mod.rds"))
+  write_rds(mod, here::here("cache", str_c("dst_mod_", geo, ".rds")))
 
 }
