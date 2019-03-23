@@ -349,6 +349,12 @@ enforce_types_table <- kable(
 	caption = "Enforce data types null rates"
 )
 
+if (nrow(metadata$standardize$predication_correction) > 0)
+  correct_predicates_table <- kable(
+    metadata$standardize$predication_correction,
+    caption = "Correct predicated columns"
+  )
+
 sanitize_table <- kable(
 	metadata$standardize$sanitize,
 	caption = "Sanitize data null rates"

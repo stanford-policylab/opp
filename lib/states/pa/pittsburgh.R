@@ -74,7 +74,10 @@ clean <- function(d, helpers) {
     # https://app.asana.com/0/456927885748233/1115427454091545 
     mutate(
       # NOTE: vehicular data contains stopend as well
-      datetime = parse_datetime(coalesce(stop_date, stopstart)),
+      datetime = parse_datetime(
+        coalesce(stop_date, stopstart),
+        "%Y/%m/%d %H:%M:%S"
+      ),
       date = as.Date(datetime),
       time = format(datetime, "%H:%M:%S"),
       # TODO(phoebe): why are sex and gender mismatched 73% of the time?
@@ -93,6 +96,8 @@ clean <- function(d, helpers) {
         NA_character_,
         coalesce(subject_race, ethnicity)
       ),
+      officer_race = tr_race[officer_race],
+      officer_sex = tr_sex[officer_sex],
       # TODO(phoebe); what does evidencefound refer to, and how is it
       # different from contraband? And is there any way to tell when
       # weaponsfound means weapons that are contraband?

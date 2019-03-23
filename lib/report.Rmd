@@ -103,6 +103,10 @@ display_if_exists("loading_problems_random_sample_sorted_table")
 enforce_types_table
 ```
 
+```{r correct_predicates_table}
+display_if_exists("correct_predicates_table")
+```
+
 ```{r sanitize_table}
 sanitize_table
 ```

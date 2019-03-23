@@ -253,6 +253,10 @@ predicated_columns <- list(
   contraband_weapons = list(
     predicate = "contraband_found",
     if_not = FALSE
+  ),
+  contraband_other = list(
+    predicate = "contraband_found",
+    if_not = FALSE
   )
 )
 
