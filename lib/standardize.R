@@ -21,7 +21,6 @@ standardize <- function(data, metadata) {
     select_only_schema_cols %>%
     enforce_types %>%
     correct_predicates %>%
-    posit_contraband_false_when_na_and_search_conducted %>%
     sanitize
 
   # put all local metadata in standarize sublist of all metadata
