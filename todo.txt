@@ -1,2 +1,4 @@
 1. Go over locations with contraband_found to determine when NA can be defined
 as FALSE
+2. split up other/unknown
+3. Pull out other raw columns?
