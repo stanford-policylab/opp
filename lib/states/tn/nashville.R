@@ -29,7 +29,7 @@ clean <- function(d, helpers) {
     "INV" = "investigative stop",
     "MTV" = "moving traffic violation",
     "PARK" = "parking violation",
-    "REGS" = "regulatory violation",
+    "REGS" = "registration",
     "S/BELT" = "seatbelt violation",
     "SAFETY" = "safety violation",
     "VEV" = "vehicle equipment violation"
@@ -89,7 +89,7 @@ clean <- function(d, helpers) {
       "written_warning_issued"
     ) %>%
     mutate(
-      # NOTE: all the files are traffic_stop_* and the violations are vehicle
+      # NOTE: all the files are traffic_stop_* and the stop reasons are vehicle
       # related
       type = "vehicular",
       date = parse_date(date, "%m/%d/%Y"),
@@ -101,7 +101,7 @@ clean <- function(d, helpers) {
         citation = citation_issued,
         warning = warning_issued
       ),
-      violation = tr_stop_type[stop_type],
+      reason_for_stop = tr_stop_type[stop_type],
       search_person = driver_searched | passenger_searched,
       subject_race = tr_race[if_else_na(
         (suspect_ethnicity == "H" | suspect_ethnicity == "LATINO"),
