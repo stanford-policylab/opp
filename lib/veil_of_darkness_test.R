@@ -545,7 +545,7 @@ prep_dst_data <- function(tbl, week_radius = 2) {
     left_join(
       read_rds(here::here("resources", "dst_start_end_dates.rds")), 
       by = "year"
-    ) tbl %>% 
+    ) %>% 
     mutate(
       spring = date >= dst_start - weeks(week_radius)
         & date <= dst_start + weeks(week_radius),
