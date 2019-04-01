@@ -57,17 +57,28 @@ select_only_schema_cols <- function(d) {
 
 correct_predicates <- function(d) {
   print("correcting predicated columns...")
+  # TODO(danj): add a function record not just change in null rates but
+  # distribution of values, i.e. TRUE -> FALSE
+  f <- function(predicate_v, if_not) {
+    function(predicated_v) {
+      if_else(as.logical(predicate_v), predicated_v, if_not)
+    }
+  }
+  predication_schema <- c()
   for (predicated_column in names(predicated_columns)) {
     if (predicated_column %in% colnames(d$data)) {
-      predicate = predicated_columns[[predicated_column]]$predicate
-      if_not = predicated_columns[[predicated_column]]$if_not
-      d$data[[predicated_column]] <- if_else(
-        as.logical(d$data[[predicate]]),
-        d$data[[predicated_column]],
-        if_not
+      predicate_column <- predicated_columns[[predicated_column]]$predicate
+      if_not <- predicated_columns[[predicated_column]]$if_not
+      predication_schema <- append_to(
+        predication_schema,
+        predicated_column,
+        f(d$data[[predicate_column]], if_not)
       )
     }
   }
+  res <- apply_schema_and_collect_null_rates(predication_schema, d$data)
+  d$data <- res$data
+  d$metadata[["predication_correction"]] <- res$null_rates
   d
 }
 

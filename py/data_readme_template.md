@@ -599,6 +599,25 @@ We’re excited to see what you come up with!
   statute section
 - Data consists only of citations
 
+## Oakland, CA
+**Data notes**:
+- Data is deduplicated on raw columns contactdate, contacttime, streetname,
+  subject_sdrace, subject_sex, and subject_age, reducing the number of records
+  by ~5.2%
+- Stops from 2013-2015 don't have encountertype like 2016-2017, so we attempt
+  to pull it out from ReasonForEncounter; however, this breakdown is imprecise,
+  because while one category is "Traffic Violation", another is "Probable
+  Cause"; presumably, "Probable Cause" could be a reason for a vehicular stop;
+  so, the stop is vehicular if the encountertype was vehicular or the reason
+  for encounter involved a traffic violation; it was classified as pedestrian
+  if the encountertype was pedestrian or bicycle, otherwise this field is NA,
+  since we can't say whether "Probable Cause" or "Reasonable Suspicion" was a
+  vehicular or pedestrian stop
+- Contraband is encoded based on ResultOfSearch (pedestrian) and
+  subject_resultofsearch (vehicular); None, NA, and anything with "Returned"
+  after it are excluded, i.e. "Marijuana - Returned", "Other Weapons -
+  Returned," under the assumption that returned items were not contraband
+
 ## San Bernardino, CA
 **Data notes**:
 - Data is deduplicated on raw columns CreateDateTime, Address, and CallType,
@@ -633,6 +652,9 @@ We’re excited to see what you come up with!
 **Data notes**:
 - Search basis in the raw data is only "No Search", consent, or other
   (inventory, incident to arrest, and parole searches) 
+- Contraband found is derived from search_vehicle_description, which,
+  unfortunately, only has the search basis and "Positive Result" or "Negative
+  Result", the former indicating when contraband found is true
 - Data is deduplicated on raw columns date, time, race_description, sex, age,
   location, removing ~0.3% of stops
 
@@ -1221,8 +1243,7 @@ We’re excited to see what you come up with!
 - The raw data for pedestrian stops actually has many cities in it, but here we
   filter to only Pittsburgh; vehicular stops do not have an associated city,
   and so are assumed to be only Pittsburgh
-- Raw data for vehicle stops has stop end time as well, but it is not included
-  in the clean data
+- Raw data for vehicle stops has stop end time as well
 - There are instances when evidencefound is true but contrabandfound is NA, so
   we have an oustanding inquiry as to what evidencefound refers to; similarly,
   weaponsfound is sometimes true when contrabandfound is false and vice versa,
@@ -1239,13 +1260,10 @@ We’re excited to see what you come up with!
   coalesce(race, ethnicity) [this keeps values when one is NA but the other
   isn't]
 - There are 4 zone columns in the raw data: zone, zone_division, policezone,
-  and officerzone, since we don't know how they relate, we leave them out of
-  the clean data and have asked for clarification
+  and officerzone; we pass on zone to the clean data but have an outstanding
+  inquiry as to their respective meanings
 - The data is deduplicated on raw columns stop_date, stopstart, stopend,
-  address, officer_id, and person_id, reducing the number of rows by ~x%
-
-
-
+  address, officer_id, and person_id, reducing the number of rows by ~21.1%
 
 ## Statewide, RI
 **Data notes**:
@@ -1443,3 +1461,10 @@ We’re excited to see what you come up with!
 - `contraband_found` could potentially be derived from violation codes
   (drug/alcohol/weapons), but it would be less reliable and not necessarily
   comparable to how we defined contraband_found for other states. 
+
+
+CHANGE LOG FOR NEXT UPDATE:
+- More stringent deduping logic
+- Contraband found set to FALSE when NA and search conducted is true
+- Predication correction added to metadata
+- Six more cities
