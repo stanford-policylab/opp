@@ -226,7 +226,7 @@ prepare_veil_of_darkness_states <- function() {
     filter(
       county_state %in% eligible_counties(
         ., 
-        min_stops_per_race = 1000,
+        min_stops_per_race = 100,
         max_counties_per_state = 20
       )
     ) 
@@ -360,7 +360,7 @@ eligible_counties <- function(
 
 
 veil_of_darkness_daylight_savings <- function(states = FALSE) {
-#TODO
+
   if(states) {
     tbl <- prepare_veil_of_darkness_states() %>% 
       rename(geography = state)
@@ -372,6 +372,8 @@ veil_of_darkness_daylight_savings <- function(states = FALSE) {
     geo <- "cities"
   }
   
+  print("Geographies after load:")
+  print(unique(tbl$geography))
     
   # city_data <- prepare_veil_of_darkness_cities()
   # state_data <- prepare_veil_of_darkness_states()
