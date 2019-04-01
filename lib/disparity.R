@@ -36,7 +36,7 @@ ELIGIBLE_CITIES <- tribble(
 disparity <- function() {
   datasets <- list()
   print("Preparing data...")
-  datasets$state <- load_eligible_state_disparity_data()
+  # datasets$state <- load_eligible_state_disparity_data()
   datasets$city <- load_eligible_city_disparity_data()
  
   results <- list()
