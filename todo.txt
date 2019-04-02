@@ -1,5 +1,18 @@
-1. Go over locations with contraband_found to determine when NA can be defined
-as FALSE
-2. split up other/unknown
-3. Pull out other raw columns?
-4. improve pedestrian/vehicular classification in chicago
+1. clean up/paper
+  - clean up data
+    - raw race -> concatenate all race fields for raw race
+    - locations with contraband_found to determine when NA can be defined as FALSE
+      - do by location for analyses, develop heuristic, apply to other locations
+    - split up other/unknown
+      - same time
+    - pull out other raw columns?
+      - look at columns and pull out raw 
+  - process last 4
+  - go over analyses line by line
+  - pimprove pedestrian/vehicular classification in chicago
+  - RIPA
+    - post on website
+2. migration
+  - write general FAQ (amy)
+  - write guidelines/best practices for updating data/adding new locations (dan)
+  - write FAQ and issue submission guidelines for github (dan)

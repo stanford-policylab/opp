@@ -52,3 +52,16 @@ sanitize_vehicle_year_func <- function(dates) {
     )
   }
 }
+
+
+sanitize_sensitive_information <- function(val) {
+  ssn <- "([^\\d]|^)(\\d{3}[- ]?\\d{2}[- ]?\\d{4})([^\\d]|$)"
+  phone <- "\\(? *\\d{3} *\\)? *[.-]? *\\d{3} *[.-]? *[.-]? *\\d{4}"
+  email <- "^[[:alnum:].-_]+@[[:alnum:].-]+$"
+  # NOTE: assume any digit string of length 6 or more could be personally
+  # identifying
+  any_id <- "\\d{6,}"
+  pattern <- str_c(ssn, phone, email, any_id, sep = "|")
+  replacement <- "[[redacted]]"
+  str_replace(val, pattern, replacement)
+}
