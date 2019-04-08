@@ -275,7 +275,8 @@ opp_city_demographics <- function(state, city) {
   tbl <-
     opp_load_acs_race_data("acs_2017_5_year_city_level_race_data.csv") %>%
     filter(state_abbreviation == state_query, str_detect(place, city_query))
-  if (nrow(tbl) != length(valid_races))
+  # NOTE: valid races less unknown
+  if (nrow(tbl) != length(valid_races) - 1)
     stop(str_c("Demographic query for ", city_fmt, ", ", state_query, " failed!"))
   tbl
 }
@@ -544,7 +545,7 @@ opp_load_acs_race_data <- function(fname) {
     ) %>%
     mutate(
       `asian/pacific islander` = asian + pacific_islander,
-      `other/unknown` = non_hispanic - white - black - `asian/pacific islander`
+      `other` = non_hispanic - white - black - `asian/pacific islander`
     ) %>%
     select(
       place,
@@ -552,7 +553,7 @@ opp_load_acs_race_data <- function(fname) {
       black,
       hispanic,
       `asian/pacific islander`,
-      `other/unknown`
+      `other`
     ) %>%
     gather(
       race,
@@ -890,7 +891,18 @@ opp_process <- function(state, city = "statewide", n_max = Inf) {
 
 
 opp_process_all <- function() {
-  par_pmap(opp_available(), opp_process)
+  opp_apply(
+    function(state, city) {
+      tibble(
+        state = state,
+        city = city,
+        result = tryCatch(
+          { opp_process(state, city) },
+          error = function(e) { as.character(e) }
+        )
+      )
+    }
+  ) %>% bind_rows()
 }
 
 

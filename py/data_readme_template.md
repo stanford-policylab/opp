@@ -1150,6 +1150,23 @@ We’re excited to see what you come up with!
 - According to the PD, a "summons" is a citation, so that corresponds to
   citation_issued in this data
 
+## Henderson, NV
+**Data notes**:
+- Data is deduplicated on raw columns location, city, state, zip, off_dt,
+  off_ti, dob, ht, sex, wt, eye, hair, make, ofcr_id, reducing the total number
+  of records by ~2.1%
+- violation is a concatenation of offense_1 and offense_2 in the original data,
+  separated by "|"
+- Missing reason_for_stop/search/contraband information
+- 2012 has no or very little data for July, August, and September, we have an
+  outstanding inquiry as to why
+- Data before 2011 is filtered out since 2010 data is so sparse it appears to
+  be recording error
+- One of the files, `Traffic Stops 01-01-11 to 05-30-18.xlsx` came corrupted,
+  we are attempting to get a clean copy of this
+- We assume these are all citations since the primary raw key appears to be
+  'cite', although we have an outstanding inquiry to confirm this 
+
 ## Statewide, NV
 **Data notes**:
 - Nevada does not seem to record Ethnicity or have any records of Hispanic
@@ -1254,6 +1271,12 @@ We’re excited to see what you come up with!
 - search_conducted is true when any one of objectsearched (pedestrian stops),
   contrabandfound, evidencefound, weaponsfound, and nothingfound (vehicular
   stops) is not NA
+- if a search was conducted and the stop type was vehicular (pedestrian stops
+  don't provide search outcomes) and contrabandfound was NA, we set
+  contraband_found to false, otherwise we use the value in the contrabandfound
+  field. We do this under the assumption that false and NA for contraband_found
+  are equivalent when a search occured, i.e. an officer conducted a search and
+  either found nothing or recorded nothing
 - Sex and gender do not match 73% of the time in pedestrian data, and race and
   ethnicity mismatch often as well. In both cases, if sex != gender or race !=
   ethnicity, we set the value to NA, otherwise we coalesce(sex, gender) or
@@ -1314,6 +1337,18 @@ We’re excited to see what you come up with!
   reason_for_stop, but is included with "vehicular" stops; as such, it may over
   count vehicular stops
 
+## Garland, TX
+**Data notes**:
+- Data is deduplicated on raw columns sex, race, vehicle_year, vehicle_color,
+  make, vehicle_state, incident_date, incident_time, and officer_badge,
+  reducing the number of records by ~33.1%
+- incident_address (location in clean) is 100% null, we have an outstanding
+  inquiry here
+- We assume these are all citations since they appear to be indexed by ticket
+  number, but we have an outstanding task to clarify this
+- violation represents `offense_title` in the original data
+- Data is lacking reason_for_stop/search/contraband information
+
 ## Houston, TX
 **Data notes**:
 - Data is deduplicated on raw columns `Defendant Name`, Gender, Race, Street,
@@ -1323,6 +1358,12 @@ We’re excited to see what you come up with!
   in the same day at the same location
 - Data is lacking search/contraband information
 - Data consists only of citations
+
+## Lubbock, TX
+**Data notes**:
+- Insufficient information here to deduplicate records, if there are duplicates
+- Missing reason_for_stop/search/contraband/subject_sex/subject_race data
+- There is an outstanding ask for a data dictionary for the disposition codes
 
 ## Plano, TX
 **Data notes**:

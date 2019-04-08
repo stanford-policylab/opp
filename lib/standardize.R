@@ -49,8 +49,10 @@ add_calculated_columns <- function(d) {
 
 
 select_only_schema_cols <- function(d) {
-  cols = intersect(names(schema), colnames(d$data))
-  d$data <- select_(d$data, .dots = cols)
+  cols <- colnames(d$data)
+  target_cols <- intersect(names(schema), cols)
+  target_raw_cols <- cols[str_detect(cols, "^raw_")]
+  d$data <- select_(d$data, .dots = c(target_cols, target_raw_cols))
   d
 }
 
@@ -141,6 +143,7 @@ sanitize <- function(d) {
         sanitize_schema,
         col,
         sanitize_sensitive_information
+      )
     }
   }
   x <- apply_schema_and_collect_null_rates(sanitize_schema, d$data)

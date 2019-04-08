@@ -352,7 +352,7 @@ def convert_file(filename, **kwargs):
 
 
 def get_file_type(filename):
-    return os.path.splitext(filename)[1].lstrip('.')
+    return os.path.splitext(filename)[1].lstrip('.').lower()
 
 
 def is_supported(file_type):
