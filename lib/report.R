@@ -352,7 +352,7 @@ enforce_types_table <- kable(
 if (nrow(metadata$standardize$predication_correction) > 0)
   correct_predicates_table <- kable(
     metadata$standardize$predication_correction,
-    caption = "Correct predicated columns"
+    caption = "Predication correction"
   )
 
 sanitize_table <- kable(

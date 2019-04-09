@@ -98,20 +98,24 @@ clean <- function(d, helpers) {
       ),
       officer_race = tr_race[officer_race],
       officer_sex = tr_sex[officer_sex],
+      # NOTE: vehicular stops don't indicate whether a search occurred, so we
+      # infer it from search outcome fields; objectsearched is from pedestrian
+      # stops, the others are from vehicular data
+      search_conducted = !is.na(objectsearched)
+        | !is.na(contraband_found)
+        | !is.na(evidencefound)
+        | !is.na(weaponsfound)
+        | !is.na(nothingfound),
       # TODO(phoebe); what does evidencefound refer to, and how is it
       # different from contraband? And is there any way to tell when
       # weaponsfound means weapons that are contraband?
       # https://app.asana.com/0/456927885748233/1115427454091547
-      contraband_found = coalesce(
-        tr_yn[contraband_found],
-        !tr_yn[nothingfound]
+      contraband_found = tr_yn[contraband_found],
+      contraband_found = if_else_na(
+        search_conducted & type == "vehicular" & is.na(contraband_found),
+        FALSE,
+        contraband_found
       ),
-      # NOTE: vehicular stops don't indicate whether a search occurred, so we
-      # infer it from whether contraband was found
-      search_conducted = !is.na(objectsearched)
-        | !is.na(contraband_found)
-        | !is.na(evidencefound)
-        | !is.na(weaponsfound),
       frisk_performed = tr_yn[occupfrisked],
       tmp_outcome = str_to_lower(coalesce(results, outcome)),
       arrest_made = str_detect(tmp_outcome, "arrest"),

@@ -3,7 +3,7 @@ library(readr)
 library(lubridate)
 
 
-valid_start_date <- parse_date("2000-01-01")
+valid_start_date <- parse_date("1970-01-01")
 valid_end_date <- parse_date(as.character(Sys.Date()))
 
 
@@ -50,8 +50,9 @@ valid_races <- c(
   "asian/pacific islander",
   "black",
   "hispanic",
-  "other/unknown",
-  "white"
+  "white",
+  "other",
+  "unknown"
 )
 
 

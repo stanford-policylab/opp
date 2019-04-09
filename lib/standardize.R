@@ -49,8 +49,19 @@ add_calculated_columns <- function(d) {
 
 
 select_only_schema_cols <- function(d) {
-  cols = intersect(names(schema), colnames(d$data))
-  d$data <- select_(d$data, .dots = cols)
+  cols <- colnames(d$data)
+  target_cols <- intersect(names(schema), cols)
+  target_raw_cols <- cols[str_detect(cols, "^raw_")]
+  d$data <- select_(d$data, .dots = c(target_cols, target_raw_cols))
+  d
+}
+
+
+enforce_types <- function(d) {
+  print("enforcing standard types...")
+  res <- apply_schema_and_collect_null_rates(schema, d$data)
+  d$data <- res$data
+  d$metadata[["enforce_types"]] <- res$null_rates
   d
 }
 
@@ -60,8 +71,12 @@ correct_predicates <- function(d) {
   # TODO(danj): add a function record not just change in null rates but
   # distribution of values, i.e. TRUE -> FALSE
   f <- function(predicate_v, if_not) {
+    # NOTE: for some reason, the closure doesn't cpature the type of if_not
+    # unless it is a variable in the outer scope that is not a function
+    # parameter
+    default <- if_not
     function(predicated_v) {
-      if_else(as.logical(predicate_v), predicated_v, if_not)
+      if_else(predicate_v, predicated_v, default)
     }
   }
   predication_schema <- c()
@@ -79,15 +94,6 @@ correct_predicates <- function(d) {
   res <- apply_schema_and_collect_null_rates(predication_schema, d$data)
   d$data <- res$data
   d$metadata[["predication_correction"]] <- res$null_rates
-  d
-}
-
-
-enforce_types <- function(d) {
-  print("enforcing standard types...")
-  res <- apply_schema_and_collect_null_rates(schema, d$data)
-  d$data <- res$data
-  d$metadata[["enforce_types"]] <- res$null_rates
   d
 }
 
@@ -119,6 +125,24 @@ sanitize <- function(d) {
         sanitize_schema,
         col,
         sanitize_vehicle_year_func(d$data$date)
+      )
+    }
+    # NOTE: sanitize any columns where the officer may intentionally or
+    # inadvertantly include personally identifying information
+    if (col %in% c(
+      "disposition",
+      "reason_for_arrest",
+      "reason_for_frisk",
+      "reason_for_search",
+      "reason_for_stop",
+      "use_of_force_description",
+      "use_of_force_reason",
+      "notes"
+    )) {
+      sanitize_schema <- append_to(
+        sanitize_schema,
+        col,
+        sanitize_sensitive_information
       )
     }
   }
