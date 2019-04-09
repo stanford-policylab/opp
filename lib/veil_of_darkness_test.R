@@ -489,51 +489,64 @@ minute_to_time <- function(minute) {
 }
 
 
-tmp_dst_model <- function(
+dst_model <- function(
   tbl,
-  ...,
   demographic_indicator_col = is_minority_demographic,
   darkness_indicator_col = is_dark,
+  state_patrol_indicator_col = is_state_patrol,
   time_col = rounded_minute,
   degree = 6,
-  interact_dark_time = F,
+  week_radius = 2,
+  interact_dark_patrol = F,
   interact_time_location = F
 ) {
-  control_colqs <- enquos(...)
   darkness_indicator_colq <- enquo(darkness_indicator_col)
   demographic_indicator_colq <- enquo(demographic_indicator_col)
+  state_patrol_indicator_colq <- enquo(state_patrol_indicator_col)
   time_colq <- enquo(time_col)
   
   tbl <- prep_dst_data(tbl)
   
+  print("DST prep complete.")
+  
   agg <-
     tbl %>%
+    mutate(
+      agency_type = factor(
+        if_else(!!state_patrol_indicator_colq, "state_patrol", "municipal_pd"),
+        levels = c("state_patrol", "municipal_pd")
+      ),
+      year = factor(year)
+    ) %>% 
     group_by(
       !!darkness_indicator_colq,
       !!time_colq,
-      !!!control_colqs,
+      agency_type,
       geography,
-      season
+      season,
+      year
     ) %>%
     summarize(
       n = n(),
       n_minority = sum(!!demographic_indicator_colq),
       n_majority = n - n_minority
-    )
+    ) %>% 
+    ungroup()
   
   fmla <- as.formula(
     str_c(
       "cbind(n_minority, n_majority) ~ ",
       quo_name(darkness_indicator_colq),
-      if (interact_dark_time) "*" else " + ",
+      if (interact_dark_patrol) "*agency_type + " else " + ",
       str_c(
         str_c("ns(", quo_name(time_colq), ", df = ", degree, ")"),
-        quos_names(control_colqs),
+        "geography",
         sep = if (interact_time_location) "*" else " + "
       ), 
-      " + geography + season "
+      " + season + year"
     )
   )
+  print("Fitting model...")
   glm(fmla, data = agg, family = binomial, control = list(maxit = 100))
 }
 
