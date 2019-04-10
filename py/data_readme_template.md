@@ -576,7 +576,8 @@ We’re excited to see what you come up with!
   (e.g., probable cause vs. consent). ConsentSearchAccepted gives us
   information on search type for a small fraction of searches.  
 - There is a two-week period in October 2012 and a two-week period in November
-  2013 when no stops are recorded. Dates are sparse in 2009–2010.
+  2013 when no stops are recorded. Dates are sparse in 2009–2010 (and even up
+  until mid-2011).
 - We also received a file with partial data on traffic stops pre-2009; this is
   not included in the cleaned dataset. 
 - Some contraband information is available and so we define a contraband_found
@@ -689,14 +690,43 @@ We’re excited to see what you come up with!
   not actually the resident population.
 - Driver age categories are included in the raw data; these cannot be mapped to
   granular values, so we cannot fill out the driver_age field. 
+- Driver race was recorded with high granularity. Raw mapping:
+    * A = Other Asian
+    * B = Black
+    * C = Chinese
+    * D = Cambodian
+    * F = Filipino
+    * G = Guamanian
+    * H = Hispanic
+    * I = Indian
+    * J = Japanese
+    * K = Korean
+    * L = Laotian
+    * O = Other
+    * P = Other Pacific Islander
+    * S = Samoan
+    * U = Hawaiian
+    * V = Vietnamese
+    * W = White
+    * Z = Asian Indian
+- Search basis was recorded more finely in raw data. Raw mapping:
+    * 1 = Probable Cause (positive)
+    * 2 = Probable Cause (negative)
+    * 3 = Consent (positive), 202D Required
+    * 4 = Consent (negative), 202D Required
+    * 5 = Incidental to Arrest
+    * 6 = Vehicle Inventory
+    * 7 = Parole / Probation / Warrant
+    * 8 = Other
+    * 9 = Pat Down / Frisk
 - Very few consent searches are conducted relative to other states. 
 - Contraband found information is only available for a small subset of
   searches: the raw data can tell you if a probable cause search or a consent
   search yielded contraband, but cannot tell you if contraband was located
   during a search conducted incident to arrest. We therefore exclude California
   from our contraband analysis. 
-- Shift time is included, but is not sufficiently granular to yield reliable
-  stop time. 
+- Raw data contains shift time is included, but is not sufficiently granular 
+  to yield reliable stop time. 
 
 ## Stockton, CA
 **Data notes**:
@@ -735,8 +765,8 @@ We’re excited to see what you come up with!
   has many fewer stops than expected given the residential population; this is
   because it only contains a small section of highway which is policed by the
   state patrol.
-- Rows represent violations, not stops, so we remove duplicates by grouping by
-  the other fields.
+- Rows in raw data represent violations, not stops, so we remove duplicates by
+  grouping by the other fields.
 
 ## Statewide, CT
 **Data notes**:
@@ -751,6 +781,16 @@ We’re excited to see what you come up with!
   as "Other", so we exclude Connecticut from our consent search analysis.
 - While there is some violation data, we exclude Connecticut from the speeding
   analysis because it has too much missing data in the violation field.
+- Race (`SubjectRaceCode`, `SubjectEthnicityCode`) mapping:
+    * A = Asian/Pacific Islander
+    * B = Black
+    * H = Hispanic
+    * W = White
+    * I = Native American
+- Search basis (`SearchAuthorizationCode`) mapping:
+    * C = consent
+    * O = probable cause
+    * I = inventory
 - The Connecticut state patrol created another website
   ([link](http://ctrp3.ctdata.org/)), where new data will get uploaded going
   forward. We haven't processed this yet.
@@ -801,7 +841,7 @@ We’re excited to see what you come up with!
 ## Statewide, GA
 **Data notes**:
 - The data represent warnings.
-- The provided `.txt` was comma-separated, but not quoted. Therefor we had to
+- The provided `.txt` was comma-separated, but not quoted. Therefore we had to
   write a script (`convert_GA.py`) to iron out some obviously misaligned
   columns.
 - Rows represent individual warnings, and thus need to be aggregated to
@@ -849,6 +889,8 @@ We’re excited to see what you come up with!
   and contraband vary year by year. Caution should be used when inspecting
   search and hit rates over time. We exclude Illinois from our time trend
   marijuana analysis for this reason. 
+- We only process statewide data from 2012 to 2017. We received data back to
+  2004, but chose not to process it due to format issues and relevance.
 - For state patrol stops, there is mostly no information on the county of the
   stop. Instead, stops are mapped to districts (see the district column), which
   have a one-to-many relationship with counties. See the relevant map
@@ -856,12 +898,23 @@ We’re excited to see what you come up with!
   district (#15) with a lot of stops that does not directly map to counties, as
   it refers to stops made on the Chicago tollways. We use districts in our
   analysis. 
-- Counties for local stops were mapped by running the police departments in the
-  AgencyName field through Google's geocoder.
+- Counties for local stops could be mapped by running the police departments 
+  in the AgencyName field through Google's geocoder.
 - The `search_type_raw` field is occasionally "Consent search denied", when a
   search was conducted. This occurs because the search request might be denied
   but a search was conducted anyway. Many searches have missing search type
   data, so we exclude Illinois from our search type analysis. 
+- Race (`DriverRace`) mapping:
+    * 1 = White
+    * 2 = Black
+    * 3 = American Indian or Alaska Native
+    * 4 = Hispanic
+    * 5 = Asian
+    * 6 = Native Hawaiian or Other Pacific Islander
+- Outcome (`ResultOfStop`) mapping:
+    * 1 = Citation
+    * 2 = Written Warning
+    * 3 = Verbal Warning (stop card)
 
 ## Chicago, IL
 **Data notes**:
@@ -917,9 +970,15 @@ We’re excited to see what you come up with!
   researchers, it is sufficiently messy (there are multiple ways you might
   define `contraband_found`, and they are quite inconsistent) that we exclude
   it from our contraband analysis.
+- In <1% of the data, `RsltSrchNo` and `RsltSrch<contraband type>` conflict.
+  In these cases, we use the value from `RsltSrchNo`.
 - Violation data is not very granular.
 - Counties were mapped by running the cities in the `CITY_TOWN_NAME` field
   through Google's geocoder.
+- There are only a handful of stops in the data before 2007; we drop those
+  years as they are clearly unreliable. It appears that the first few months
+  (nearly half) of 2007 are also incomplete, but we have not attempted to remove
+  the incomplete months.
 
 ## Baltimore, MD
 **Data notes**:
