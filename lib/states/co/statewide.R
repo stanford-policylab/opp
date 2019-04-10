@@ -104,7 +104,6 @@ clean <- function(d, helpers) {
   # create a single row for a stop. For search_conducted and contraband_found
   # fields, >99.9% all stops in group have same value. 
   d$data %>%
-    # group_by(
     merge_rows(
       officer_id,
       officer_first_name,

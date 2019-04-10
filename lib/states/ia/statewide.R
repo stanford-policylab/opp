@@ -95,13 +95,14 @@ clean <- function(d, helpers) {
     # records with NA for key have no other fields
     filter(!is.na(INDIVKEY)) %>%
     # dedupe
-    # NOTE: (old opp) There are duplicates where more than one warning or citation is given within 
-    # the same stop. We remove these by grouping by the remaining fields by the stop key and date.
-    # In some cases, there are multiple time stamps per unique (key, date) combination. 
-    # In most of these cases, the timestamps differ by a few minutes, but all other fields 
-    # (except for violation) are the same. In 0.1% of stops, the max span between timestamps 
-    # is more than 60 minutes. In those cases it looks like the same officer stopped the same 
-    # individual more than once in the same day.
+    # NOTE: (old opp) There are duplicates where more than one warning or 
+    # citation is given within the same stop. We remove these by grouping by the 
+    # remaining fields by the stop key and date. In some cases, there are 
+    # multiple time stamps per unique (key, date) combination. In most of these 
+    # cases, the timestamps differ by a few minutes, but all other fields 
+    # (except for violation) are the same. In 0.1% of stops, the max span 
+    # between timestamps is more than 60 minutes. In those cases it looks like 
+    # the same officer stopped the same individual more than once in the same day.
     merge_rows(INDIVKEY, date) %>% 
     standardize(d$metadata)
 }
