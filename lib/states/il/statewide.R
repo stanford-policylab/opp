@@ -60,6 +60,9 @@ clean <- function(d, helpers) {
     mutate(
       date = coalesce(
         parse_date(DateOfStop, "%m/%d/%Y"),
+        parse_date(DateOfStop, "%m/%d/%Y %H:%M:%S"),
+        parse_date(DateOfStop, "%m-%d-%Y %H:%M:%S"),
+        parse_date(DateOfStop, "%m-%d-%Y"),
         parse_date(DateOfStop, "%Y-%m-%d %H:%M:%S"),
         parse_date(DateOfStop, "%Y-%m-%d")
       ),
