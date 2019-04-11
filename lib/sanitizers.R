@@ -63,5 +63,5 @@ sanitize_sensitive_information <- function(val) {
   any_id <- "\\d{6,}"
   pattern <- str_c(ssn, phone, email, any_id, sep = "|")
   replacement <- "[[redacted]]"
-  str_replace(val, pattern, replacement)
+  str_replace_all(val, pattern, replacement)
 }

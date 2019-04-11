@@ -1382,6 +1382,9 @@ We’re excited to see what you come up with!
 - Data is deduplicated on raw columns stop_date_time, stop_location_street,
   officer_employee_number, race, sex, and age_of_suspect, reducing the number
   of records by ~0.3%
+- reason_for_stop and violation are both translations of the original stop_type
+  column; this column is sometimes the pretextual reason for the stop and does
+  not always represent what the individual was ultimately cited for
 
 ## Arlington, TX
 **Data notes**:
