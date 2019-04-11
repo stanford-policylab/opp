@@ -273,6 +273,11 @@ create_title <- function(state, city) {
 }
 
 
+detect_ssn <- function(v) {
+  str_detect(as.character(v), ssn_regex())
+}
+
+
 disaggregate <- function(df, n, ...) {
   # Disaggregate `df` by creating `n` repetitions of the input rows.  Pass `n`
   # as the variable indicating how many times a row should be repeated, and
@@ -929,6 +934,11 @@ simple_map <- function(v, func) {
 
 sort_all <- function(tbl) {
   tbl %>% arrange_(.dots=colnames(.))
+}
+
+
+ssn_regex <- function() {
+  "([^\\d]|^)(\\d{3}[- ]?\\d{2}[- ]?\\d{4})([^\\d]|$)"
 }
 
 

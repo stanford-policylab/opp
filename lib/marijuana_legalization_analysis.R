@@ -21,11 +21,13 @@ ELIGIBLE_STATES <- tribble(
   "VT", "Statewide",
   "WI", "Statewide"
   # TODO(danj): add CT and MI as additional controls
+  # TODO(amyshoe): confirm eligibility matches
 )
 
 
 marijuana_legalization_analysis <- function() {
   tbl <- load()
+  # TODO(sharad): here
   test <- filter(tbl, state %in% c("CO", "WA"))
   control <- filter(tbl, !(state %in% c("CO", "WA")))
   list(
@@ -50,9 +52,8 @@ load <- function() {
     type == "vehicular",
     subject_race %in% c("black", "white", "hispanic"),
     year(date) >= 2011 & year(date) <= 2015,
-    # NOTE: collison stops are qualitatively different: they have 3x the search
-    # rate and lower hit rates with a larger impact on whites and hispanics
-    !(state == "SC" && reason_for_stop == "Collision")
+    # TODO(danj/amyshoe): make sure CO/WA results don't change with updated
+    # data, post 2015
   ) %>%
   opp_filter_out_non_highway_patrol_stops_from_states() %>%
   mutate(
@@ -66,11 +67,10 @@ add_legalization_info <- function(tbl) {
   mutate(
     tbl,
     # NOTE: default for control and WA is WA's legalization date
-    legalization_date = as.Date("2012-12-09"),
     legalization_date = if_else(
       state == "CO",
       as.Date("2012-12-10"),
-      legalization_date
+      as.Date("2012-12-09")
     ),
     is_before_legalization = date < legalization_date,
     is_test = state %in% c("WA", "CO"),

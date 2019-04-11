@@ -1,19 +1,16 @@
 1. clean up/paper
   - clean up data
-    - remove all digits from freeform text?
+    - running SSN checks across all raw data, flagging places
+    - replace digits with 'X' for all freeform text columns except violation and
+      location for all locations
     - locations with contraband_found to determine when NA can be defined as FALSE
       - do by location for analyses, develop heuristic, apply to other locations
     - improve pedestrian/vehicular classification in chicago
-    - nashville add back violation from stop_type
     - split up other/unknown
       - same time
     - pull out other raw columns?
       - look at columns and pull out raw --> only where ambiguous?
-  - process last 4
-  - address all responses from phoebe
-  - identify locations with potentially sensitive information
-  - santize all freeform text except violation and location for all locations
-  - running SSN checks across all raw data, flagging places
+    - address all responses from phoebe
   - go over analyses line by line
   - RIPA
     - post on website

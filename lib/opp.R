@@ -359,6 +359,20 @@ opp_data_paths <- function() {
 }
 
 
+opp_detect_ssns <- function() {
+  opp_apply(
+    function(state, city) {
+      tbl <-
+        opp_load_raw_data(state, city) %>%
+        summarize_all(function(v) { any(detect_ssn(v)) }) %>%
+        transpose_one_line_table() %>%
+        filter(values)
+      list(state = state, city = city, ssn = tbl)
+    }
+  )
+}
+
+
 opp_download_all_clean_data <- function() {
   opp_apply(opp_download_clean_data)
 }
