@@ -104,7 +104,7 @@ enforce_types_table
 ```
 
 ```{r correct_predicates_table}
-display_if_exists("correct_predicates_table")
+correct_predicates_table
 ```
 
 ```{r sanitize_table}

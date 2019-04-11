@@ -70,16 +70,15 @@ correct_predicates <- function(d) {
   print("correcting predicated columns...")
   # TODO(danj): add a function record not just change in null rates but
   # distribution of values, i.e. TRUE -> FALSE
-  f <- function(predicate_v, if_not) {
-    # NOTE: for some reason, the closure doesn't cpature the type of if_not
-    # unless it is a variable in the outer scope that is not a function
-    # parameter
+  f <- function(if_not) {
+    # hack to capture value
     default <- if_not
-    function(predicated_v) {
+    function(predicated_v, predicate_v) {
       if_else(predicate_v, predicated_v, default)
     }
   }
   predication_schema <- c()
+  predicates <- c()
   for (predicated_column in names(predicated_columns)) {
     if (predicated_column %in% colnames(d$data)) {
       predicate_column <- predicated_columns[[predicated_column]]$predicate
@@ -87,11 +86,16 @@ correct_predicates <- function(d) {
       predication_schema <- append_to(
         predication_schema,
         predicated_column,
-        f(d$data[[predicate_column]], if_not)
+        f(if_not)
       )
+      predicates[predicated_column] <- predicate_column
     }
   }
-  res <- apply_schema_and_collect_null_rates(predication_schema, d$data)
+  res <- apply_predicated_schema_and_collect_null_rates(
+    predication_schema,
+    predicates,
+    d$data
+  )
   d$data <- res$data
   d$metadata[["predication_correction"]] <- res$null_rates
   d

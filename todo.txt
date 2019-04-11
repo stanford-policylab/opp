@@ -11,6 +11,9 @@
       - look at columns and pull out raw --> only where ambiguous?
   - process last 4
   - address all responses from phoebe
+  - identify locations with potentially sensitive information
+  - santize all freeform text except violation and location
+  - running SSN checks across all raw data, flagging places
   - go over analyses line by line
   - RIPA
     - post on website

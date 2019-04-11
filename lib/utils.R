@@ -70,9 +70,9 @@ append_to <- function(v, name, val) {
 }
 
 
-apply_and_collect_null_rates <- function(f, v) {
+apply_and_collect_null_rates <- function(f, v, ...) {
 	null_rate_before <- null_rate(v)
-	v <- f(v)
+	v <- f(v, ...)
 	null_rate_after <- null_rate(v)
 	list(
 		v = v,
@@ -81,6 +81,35 @@ apply_and_collect_null_rates <- function(f, v) {
 			null_rate_after = null_rate_after
 		)
 	)
+}
+
+
+apply_predicated_schema_and_collect_null_rates <- function(
+  schema,
+  predicates,
+  data
+) {
+  # NOTE: because closures copy the data at the time they are composed, if you
+  # have cascading dependencies, they won't be observed, i.e. contraband_drugs
+  # depends on contraband_found, which in turn depends on search_conducted. If
+  # contraband_found is mutated based on search_conducted, when
+  # contraband_drugs is mutated, it will be using the original, unmutated copy
+  # of contraband_found, not the updated one. This function had to be added
+  # because apply_schema_and_collect_null_rates doesn't respect these dynamic
+  # dependencies.
+  null_rates <- list()
+  for (name in names(schema)) {
+		if (name %in% colnames(data)) {
+			x <- apply_and_collect_null_rates(
+        schema[[name]],
+        data[[name]],
+        data[[predicates[[name]]]]
+      )
+			data[[name]] <- x$v
+			null_rates[[name]] <- x$null_rates 
+		}
+  }
+  list(data = data, null_rates = create_null_rates_tbl(null_rates))
 }
 
 

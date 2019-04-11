@@ -609,15 +609,17 @@ We’re excited to see what you come up with!
   to pull it out from ReasonForEncounter; however, this breakdown is imprecise,
   because while one category is "Traffic Violation", another is "Probable
   Cause"; presumably, "Probable Cause" could be a reason for a vehicular stop;
-  so, the stop is vehicular if the encountertype was vehicular or the reason
-  for encounter involved a traffic violation; it was classified as pedestrian
-  if the encountertype was pedestrian or bicycle, otherwise this field is NA,
-  since we can't say whether "Probable Cause" or "Reasonable Suspicion" was a
-  vehicular or pedestrian stop
+  so, the stop is type vehicular if the encountertype was vehicular or the
+  reason for encounter involved a traffic violation; it was classified as
+  pedestrian if the encountertype was pedestrian or bicycle, otherwise this
+  field is NA, since we can't say whether "Probable Cause" or "Reasonable
+  Suspicion" was a vehicular or pedestrian stop
 - Contraband is encoded based on ResultOfSearch (pedestrian) and
   subject_resultofsearch (vehicular); None, NA, and anything with "Returned"
   after it are excluded, i.e. "Marijuana - Returned", "Other Weapons -
   Returned," under the assumption that returned items were not contraband
+- 2013 is missing the first 3 months of data and 2015 is missing the last 3
+  months of data
 
 ## San Bernardino, CA
 **Data notes**:

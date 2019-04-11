@@ -62,7 +62,7 @@ clean <- function(d, helpers) {
       subject_dob = parse_date(dob, "%m/%d/%Y"),
       subject_race = tr_race[race],
       subject_sex = tr_sex[sex],
-      violation = str_c(offense_1, offense_2, sep = "|")
+      violation = str_c_na(offense_1, offense_2, sep = "|")
     ) %>%
     # NOTE: 2010 data is extremely sparse and appears to be recording errors
     filter(year(date) > 2010) %>%
