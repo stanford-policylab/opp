@@ -19,15 +19,6 @@ load_raw <- function(raw_data_dir, n_max) {
 
 clean <- function(d, helpers) {
 
-  tr_race <- c(
-    A = "asian/pacific islander",
-    B = "black",
-    H = "hispanic",
-    I = "other/unknown",
-    U = "other/unknown",
-    W = "white"
-  )
-
   tr_yn = c(
     YES = TRUE,
     NO = FALSE
@@ -76,6 +67,11 @@ clean <- function(d, helpers) {
       ),
       subject_sex = tr_sex[sex],
       subject_race = tr_race[if_else(ethnicity_fixed == "H", "H", race_fixed)]
+    ) %>%
+    rename(
+      raw_charge = charge,
+      raw_ethnicity_fixed = ethnicity_fixed,
+      raw_race_fixed = race_fixed
     ) %>%
     standardize(d$metadata)
 }

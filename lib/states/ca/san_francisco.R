@@ -102,15 +102,6 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
-  print('cleaning')
-
-  tr_race <- c(
-    W = "white",
-    H = "hispanic",
-    A = "asian/pacific islander",
-    B = "black",
-    O = "other/unknown"
-  )
 
   d$data %>%
     merge_rows(
@@ -159,6 +150,10 @@ clean <- function(d, helpers) {
       )
     ) %>%
     helpers$add_lat_lng(
+    ) %>%
+    rename(
+      raw_search_vehicle_description = search_vehicle_description,
+      raw_result_of_contact_description = result_of_contact_description
     ) %>%
     standardize(d$metadata)
 }

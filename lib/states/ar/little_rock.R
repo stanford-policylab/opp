@@ -23,10 +23,10 @@ load_raw <- function(raw_data_dir, n_max) {
 clean <- function(d, helpers) {
   tr_race <- c(
     "AFRICAN AMERICAN" = "black",
-    "AMERICAN INDIAN" = "other/unknown",
+    "AMERICAN INDIAN" = "other",
     "ASIAN" = "asian/pacific islander",
     "CAUCASIAN" = "white",
-    "UNKNOWN" = "other/unknown"
+    "UNKNOWN" = "unknown"
   )
   tr_sex <- c(
     "Female" = "female",
@@ -75,6 +75,9 @@ clean <- function(d, helpers) {
     # NOTE: filter out rows where DateTime is null
     filter(
       !is.na(date)
+    ) %>%
+    rename(
+      raw_defendant_race = `Defendant Race`
     ) %>%
     merge_rows(
       datetime,

@@ -110,7 +110,12 @@ clean <- function(d, helpers) {
   helpers$add_lat_lng(
     "lower_location"
   ) %>%
-  saveRDS("~/oak.rds")
-  readRDS("~/oak.rds") %>%
+  rename(
+    raw_subject_resultofencounter = subject_resultofencounter,
+    raw_subject_typeofsearch = subject_typeofsearch,
+    raw_subject_searchconducted = subject_searchconducted,
+    raw_subject_resultofsearch = subject_resultofsearch,
+    raw_subject_sdrace = subject_sdrace
+  ) %>%
   standardize(d$metadata)
 }

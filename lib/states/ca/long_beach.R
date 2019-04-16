@@ -30,7 +30,7 @@ load_raw <- function(raw_data_dir, n_max) {
 clean <- function(d, helpers) {
 
   tr_race <- c(
-    "Amer Indian" = "other/unknown",
+    "Amer Indian" = "other",
     "Asian" = "asian/pacific islander",
     "Asian Indian" = "asian/pacific islander",
     "Black" = "black",
@@ -43,17 +43,12 @@ clean <- function(d, helpers) {
     "Korean" = "asian/pacific islander",
     "Laotian" = "asian/pacific islander",
     "Mex/Lat/Hisp" = "hispanic",
-    "Other" = "other/unknown",
+    "Other" = "other",
     "Pacific Isl" = "asian/pacific islander",
     "Samoan" = "asian/pacific islander",
-    "Unknown" = "other/unknown",
-    "Vietnamese" = "other/unknown",
+    "Unknown" = "unknown",
+    "Vietnamese" = "other",
     "White" = "white"
-  )
-
-  tr_sex <- c(
-    "Female" = "female",
-    "Male" = "male"
   )
 
   # TODO(phoebe): can we get reason_for_stop/search/contraband fields?
@@ -70,10 +65,6 @@ clean <- function(d, helpers) {
     ) %>%
     helpers$add_type(
       "violation_1_description"
-    ) %>%
-    filter(
-      Sex != "Business",
-      type != "other"
     ) %>%
     rename(
       location = Location,
@@ -114,7 +105,10 @@ clean <- function(d, helpers) {
       # PO_DIST_NO is just the first 2 digits of this
       district = PO_RD_NO,
       subdistrict = PO_SUBDIST,
-      division = PO_DIV
+      division = PO_DIV,
+      raw_race = Race,
+      raw_sex = Sex,
+      raw_officer_race = `Officer Race`
     ) %>%
     standardize(d$metadata)
 }

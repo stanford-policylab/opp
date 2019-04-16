@@ -527,6 +527,16 @@ reading prior to performing detailed analysis of a location.
 Our analysis only scratches the surface of what’s possible with these data.
 We’re excited to see what you come up with!
 
+## Little Rock, AR
+**Data notes**:
+- lat/lng data doesn't appear totally accurate, there are ~18k lat/lngs that
+  were coerced to NA because they all equalled "-1.79769313486232E+308"
+- Data is deduplicated on date, time, lat, lng, race, sex, and officer name,
+  reducing the number of records by ~30.6%
+- Data consists only of citations
+- raw_defendant_race represents `Defendant Race` in the raw data and is the
+  column from which subject_race is derived
+
 ## Gilbert, AZ
 **Data notes**:
 - Data is deduplicated on call_id, reducing the number of records 17.6%; this
@@ -536,6 +546,8 @@ We’re excited to see what you come up with!
 - Most important data is missing, including outcome (arrest, citation,
   warning), reason for stop, search, contraband, and demographic information
   on the subject (except name, which is redacted for privacy)
+- call_type was either TS (traffic stop) or SS (subject stop), which we
+  translated to 'vehicular' or 'pedestrian' stops
 
 ## Mesa, AZ
 **Data notes**:
@@ -544,14 +556,10 @@ We’re excited to see what you come up with!
   several underage teenagers; in other instances, the rows look nearly
   identical, but given this information and checking several other seeming
   duplicates, it appears as though there is one row per person per incident
-
-## Little Rock, AR
-**Data notes**:
-- lat/lng data doesn't appear totally accurate, there are ~18k lat/lngs that
-  were coerced to NA because they all equalled "-1.79769313486232E+308"
-- Data is deduplicated on date, time, lat, lng, race, sex, and officer name,
-  reducing the number of records by ~30.6%
-- Data consists only of citations
+- violation is charge_desc in the raw data, and raw_charge represents the
+  charge code in the raw data
+- subject_race was derived from ethnicity_fixed and race_fixed in the raw data,
+  provided in the clean data with raw__*
 
 ## Statewide, AZ
 **Data notes**:
@@ -589,6 +597,7 @@ We’re excited to see what you come up with!
 **Data notes**:
 - Very little information received, only a reference number, date, year, case
   type (with no translation), and a case type (with no translation)
+- reason_for_stop is `Final Case Type D` in the raw data
 
 ## Bakersfield, CA
 **Data notes**:
@@ -598,6 +607,10 @@ We’re excited to see what you come up with!
 - Data does not include reason for stop, search, contraband fields
 - Missing data dictionaries for ticket classes, ticket statuses, and
   statute section
+- subject_race is based on ethnicity and race, the raw columns are provided in
+  the clean data
+- We currently have no data dictionaries for statute_section and statute_name,
+  but they are passed through to the clean data
 - Data consists only of citations
 
 ## Oakland, CA
@@ -620,6 +633,15 @@ We’re excited to see what you come up with!
   Returned," under the assumption that returned items were not contraband
 - 2013 is missing the first 3 months of data and 2015 is missing the last 3
   months of data
+- Some of the raw columns were named similarly but not exactly the same across
+  years, i.e. ResultOfSearch in 2013, 2014, and 2015, but
+  subject_resultofsearch in 2016 and 2017; these were renamed to be consistent
+  with the latter years in the raw data loading function
+- subject__{resultofencounter,typeofsearch,search_conducted,resultofsearch}
+  formed the foundation for search and contraband fields and are passed
+  through in the clean data
+- subject_race is derived from subject_sdrace, which is passed through to the
+  clean data
 
 ## San Bernardino, CA
 **Data notes**:
@@ -628,12 +650,20 @@ We’re excited to see what you come up with!
 - Data does not include most useful information, including demographic,
   outcome, and search/contraband information, so the deduplication above
   potentially over-deduplicates
+- type is derived from CallType, which is passed through since we lack a data
+  dictionary for some of them
 
 ## Long Beach, CA
 **Data notes**:
 - Data is deduplicated on raw columns Date, Location, Race, Sex, and Officer
   DID, reducing the number of records by ~14.3%
 - Data does not include reason for stop, search, or contraband fields 
+- violation is a concatenation of 4 violation descriptions, separated by ';'
+- type is derived from violation_1_description
+- raw columns sex, race, and officer_race are passed through since our
+  translations may simplify them
+- There is a notable drop in stops from 2008 to 2016, unclear what the origin
+  of this may be
 
 ## Los Angeles, CA
 - Data is deduplicated on raw columns stop_date, stop_time, reporting_district,
@@ -641,6 +671,7 @@ We’re excited to see what you come up with!
   officer_2_serial_number, descent_description, sex_code, and stop_type,
   reducing the number of records by ~17.7%
 - Search/contraband, outcome, and location data are missing
+- subject_race is derived from descent_description, which is passed through
 
 ## San Diego, CA
 **Data notes**:
@@ -650,6 +681,14 @@ We’re excited to see what you come up with!
 - Data is deduplicated on raw columns timestamp, subject_race, subject_sex,
   subject_age, and service_area, reducing the number or records by ~2.0%
 - There are no locations, but service_area is provided
+- subject_race is derived from subject_race_description which is passed through
+- reason_for_search is named SearchBasis in the raw data and search_basis is
+  derived from this column
+- outcomes are based on ActionTaken, which is passed through as
+  raw_action_taken
+- search_conducted is named searched in the raw data
+- If search_conducted was true but contraband_found was NA, it was changed to
+  false, under the assumption that NA means false when a search is performed
 
 ## San Francisco, CA
 **Data notes**:
@@ -657,7 +696,9 @@ We’re excited to see what you come up with!
   (inventory, incident to arrest, and parole searches) 
 - Contraband found is derived from search_vehicle_description, which,
   unfortunately, only has the search basis and "Positive Result" or "Negative
-  Result", the former indicating when contraband found is true
+  Result", the former indicating when contraband found is true; it is passed
+  through to the clean data
+- outcomes are based on result_of_contact_description, which is passed through
 - Data is deduplicated on raw columns date, time, race_description, sex, age,
   location, removing ~0.3% of stops
 
@@ -667,10 +708,17 @@ We’re excited to see what you come up with!
   occur at the same time but have up to 16 duplicates; however, some of these
   involve different subjects, so it's unclear whether they are distinct
   incidents or large incidents involving many people
-- Data is deduplicated using date, time, location, and subject race; this
-  removes about ~5.0% of records, but many of these rows are lacking sufficient
-  information for differentiation, i.e. they have NA for many of their values
+- Data is deduplicated using date, time, location, subject race, and raw_search
+  (SEARCH in raw data); this removes about ~4.4% of records, but many of these
+  rows are lacking sufficient information for differentiation, i.e. they have
+  NA for many of their values
+- type is based on `TYCOD DESCRIPTION`, which is passed through as
+  raw_call_desc
+- race is passed through to provide access to greater granularity
+- a translation of `EVENT DISPO` is provided as raw_event_desc; this was used
+  for outcomes
 
+13
 ## Santa Ana, CA
 **Data notes**:
 - Deduping on raw columns Date, Race, Sex, Violation Description, Officer

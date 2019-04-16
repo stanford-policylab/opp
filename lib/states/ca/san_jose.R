@@ -40,39 +40,41 @@ clean <- function(d, helpers) {
     "W" = "white",
     "A" = "asian/pacific islander",
     "B" = "black",
-    "O" = "other/unknown",
-    "V" = "other/unknown",
-    "S" = "other/unknown",
-    "P" = "other/unknown",
-    "N" = "other/unknown",
-    "I" = "other/unknown",
-    "C" = "other/unknown",
-    "F" = "other/unknown",
-    "Z" = "other/unknown",
-    "M" = "other/unknown",
-    "1" = "other/unknown",
-    "2" = "other/unknown",
-    "D" = "other/unknown",
-    "U" = "other/unknown",
-    "E" = "other/unknown",
-    "X" = "other/unknown",
+    "O" = "other",
+    "V" = "other",
+    "S" = "other",
+    "P" = "other",
+    "N" = "other",
+    "I" = "other",
+    "C" = "other",
+    "F" = "other",
+    "Z" = "other",
+    "M" = "other",
+    "1" = "other",
+    "2" = "other",
+    "D" = "other",
+    "U" = "other",
+    "E" = "other",
+    "X" = "other",
     "J" = "asian/pacific islander",
-    "G" = "other/unknown",
-    "Q" = "other/unknown",
-    "0" = "other/unknown",
-    "3" = "other/unknown",
-    "5" = "other/unknown",
-    "L" = "other/unknown",
-    "4" = "other/unknown",
+    "G" = "other",
+    "Q" = "other",
+    "0" = "other",
+    "3" = "other",
+    "5" = "other",
+    "L" = "other",
+    "4" = "other",
     "K" = "asian/pacific islander",
-    "." = "other/unknown",
-    "6" = "other/unknown",
-    "a" = "other/unknown",
-    "R" = "other/unknown",
+    "." = "other",
+    "6" = "other",
+    "a" = "other",
+    "R" = "other",
     "w" = "white",
-    "Y" = "other/unknown"
+    "Y" = "other"
   )
 
+  # NOTE: translations are found in raw_csv directory; for example:
+  # detentions_oct_14_to_aug_17_sheet_1.csv
   tr_search <- c(
     "N" = FALSE, # no search
     "S" = TRUE,  # search, contraband_found
@@ -86,7 +88,7 @@ clean <- function(d, helpers) {
 
   tr_reason <- c(
     "B" = "BOL/APB/Watch Bulletin",
-    "C" = "Consensual ",
+    "C" = "Consensual",
     "M" = "Muni Code Violation",
     "P" = "Penal code, H&S, B&P violations, etc.",
     "V" = "Vehicle Code Violation"
@@ -185,6 +187,11 @@ clean <- function(d, helpers) {
       ),
       reason_for_stop = tr_reason[`REASON FOR STOP`],
       subject_race = tr_race[RACE],
+      raw_search = c(
+        N = "no search",
+        S = "search, contraband found",
+        Z = "search, no contraband found"
+      )[SEARCH],
       search_conducted = tr_search[SEARCH],
       contraband_found = tr_contraband[SEARCH],
       use_of_force_description = tr_force[`DETENTION TYPE`],
@@ -196,7 +203,13 @@ clean <- function(d, helpers) {
       date,
       time,
       location,
-      subject_race
+      subject_race,
+      raw_search
+    ) %>%
+    rename(
+      raw_call_desc = call_desc,
+      raw_event_desc = event_desc,
+      raw_race = RACE
     ) %>%
     standardize(d$metadata)
 }

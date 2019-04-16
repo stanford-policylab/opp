@@ -47,5 +47,8 @@ clean <- function(d, helpers) {
     ) %>%
     helpers$add_lat_lng(
     ) %>%
+    rename(
+      raw_CallType = CallType
+    ) %>%
     standardize(d$metadata)
 }

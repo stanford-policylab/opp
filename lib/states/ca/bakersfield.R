@@ -38,17 +38,6 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
-
-  tr_race <- c(
-    "W" = "white",
-    "B" = "black",
-    "U" = "other/unknown",
-    "A" = "other/unknown",
-    "I" = "other/unknown",
-    "O" = "other/unknown",
-    "H" = "hispanic"
-  )
-
   # TODO(phoebe): can we get reason_for_stop/search/contraband fields?
   # https://app.asana.com/0/456927885748233/645792862056543
   # TODO(phoebe): what are the following ticket classes: O, W, C, V, P?
@@ -89,7 +78,11 @@ clean <- function(d, helpers) {
     ) %>%
     rename(
       # NOTE: BEAT_ID is the id, USER_FLAG is the human-readable beat name
-      beat = USER_FLAG
+      beat = USER_FLAG,
+      raw_race = race,
+      raw_ethnicity = ethnicity,
+      raw_statute_section = statute_section,
+      raw_statute_name = statute_name
     ) %>%
     standardize(d$metadata)
 }

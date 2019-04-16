@@ -14,11 +14,11 @@ load_raw <- function(raw_data_dir, n_max) {
 clean <- function(d, helpers) {
 
   tr_race <- c(
-    "AMERICAN INDIAN" = "other/unknown",
+    "AMERICAN INDIAN" = "other",
     "ASIAN" = "asian/pacific islander",
     "BLACK" = "black",
     "HISPANIC" = "hispanic",
-    "OTHER" = "other/unknown",
+    "OTHER" = "other",
     "WHITE" = "white"
   )
   # TODO(phoebe): can we get reason_for_stop/search/contraband fields?
@@ -56,6 +56,9 @@ clean <- function(d, helpers) {
       time = parse_time(stop_time),
       subject_sex = tr_sex[sex_code],
       subject_race = tr_race[descent_description]
+    ) %>%
+    rename(
+      raw_descent_description = descent_description
     ) %>%
     standardize(d$metadata)
 }

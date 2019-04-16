@@ -15,16 +15,17 @@ tr_race <- c(
   A = "asian/pacific islander",
   B = "black",
   H = "hispanic",
-  W = "white",
-  U = "unknown",
-  O = "other",
   I = "other",
+  O = "other",
+  U = "unknown",
+  W = "white",
+  # TODO(danj): where did these come from?
   asian = "asian/pacific islander",
   black = "black",
   white = "white",
   hispanic = "hispanic",
-  other = "other/unknown",
-  unknown = "other/unknown"
+  other = "other",
+  unknown = "unknown"
 )
 
 tr_yn <- c(

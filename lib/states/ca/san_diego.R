@@ -132,9 +132,18 @@ clean <- function(d, helpers) {
         # waived their right to consent searches
         "other" = str_detect(sr, "4th|other|incident|waiver|inventory|warrant"),
         "probable cause" = search_conducted  # default
+      ),
+      contraband_found = if_else(
+        search_conducted & is.na(contraband_found),
+        F,
+        contraband_found
       )
     ) %>%
     # NOTE: there are shapefiles but no location data; fortunately, there is
     # service area
+    rename(
+      raw_action_taken = ActionTaken,
+      raw_subject_race_description = subject_race_description
+    ) %>%
     standardize(d$metadata)
 }
