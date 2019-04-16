@@ -717,8 +717,8 @@ We’re excited to see what you come up with!
 - race is passed through to provide access to greater granularity
 - a translation of `EVENT DISPO` is provided as raw_event_desc; this was used
   for outcomes
+- 2013 and 2018 only have partial data
 
-13
 ## Santa Ana, CA
 **Data notes**:
 - Deduping on raw columns Date, Race, Sex, Violation Description, Officer
@@ -730,6 +730,7 @@ We’re excited to see what you come up with!
   officer pulling over 16 people throughtout that day
 - Data does not include search or contraband information
 - Data includes only citations
+- 2014 and 2018 only contain partial data
 
 ## Statewide, CA
 **Data notes**:
@@ -791,13 +792,20 @@ We’re excited to see what you come up with!
   the entire city occasionally
 - officer_id is coalesced officer_id and officer_id2, the former being 90% null
   and the latter 50% null in the dataset
+- Outcomes are based on raw column result, which is passed through
+- search_conducted and search_basis are derived from the raw column search,
+  which is passed through
+- 2012 has suspiciously little data
 
 ## Aurora, CO
 **Data notes**:
 - Data is deduplicated on raw columns Ticket Date, Ticket Time, Ticket
   Location, First Name, Last Name, sex, and Date of Birth, reducing the number
   of records by ~1.0%
+- subject_race was based on Race and Ethnicity in the raw data, which are
+  passed through
 
+16
 ## Denver, CO
 **Data notes**:
 - MASTER_INCIDENT_NUMBER has many duplicates, but it's unclear what it

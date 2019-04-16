@@ -11,14 +11,7 @@ load_raw <- function(raw_data_dir, n_max) {
 
 clean <- function(d, helpers) {
 
-  tr_race <- c(
-    "H" = "hispanic",
-    "U" = "other/unknown",
-    "W" = "white",
-    "X" = "other/unknown",
-    "A" = "asian/pacific islander",
-    "B" = "black"
-  )
+  tr_race <- c(tr_race, "X" = "other")
 
   # TODO(phoebe): can we get search/contraband fields?
   # https://app.asana.com/0/456927885748233/663043550621580
@@ -47,7 +40,8 @@ clean <- function(d, helpers) {
     ) %>%
     rename(
       region = CITY_DISTR,
-      district = REPORT_DIS
+      district = REPORT_DIS,
+      raw_race = Race
     ) %>%
     standardize(d$metadata)
 }

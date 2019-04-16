@@ -32,7 +32,7 @@ clean <- function(d, helpers) {
     "Asian" = "asian/pacific islander",
     "Black/African American" = "black",
     "Hispanic" = "hispanic",
-    "Others" = "other/unknown",
+    "Others" = "other",
     "White/Caucasian" = "white"
   )
 
@@ -81,6 +81,10 @@ clean <- function(d, helpers) {
       # coalescing, there are 2,151 instances where both officers are listed
       # and we only take the first
       officer_id = coalesce(officer_id, officer2_id)
+    ) %>%
+    rename(
+      raw_result = result,
+      raw_search = search
     ) %>%
     # TODO(danj): add shapefile data after we figure out how to join the files
     # https://app.asana.com/0/456927885748233/722199186603264  

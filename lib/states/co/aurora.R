@@ -15,12 +15,12 @@ load_raw <- function(raw_data_dir, n_max) {
 clean <- function(d, helpers) {
 
   tr_race <- c(
-    "AMERICAN INDIAN/ALASKAN N" = "other/unknown",
+    "AMERICAN INDIAN/ALASKAN N" = "other",
     "ASIAN" = "asian/pacific islander",
     "BLACK/AFRICAN AMERICAN" = "black",
     "HISPANIC" = "hispanic",
     "NATIVE HAWAIIAN/PACIFIC I" = "asian/pacific islander",
-    "UNKNOWN" = "other/unknown",
+    "UNKNOWN" = "unknown",
     "WHITE" = "white"
   )
 
@@ -34,6 +34,8 @@ clean <- function(d, helpers) {
       `First Name`,
       `Last Name`,
       sex,
+      Ethnicity,
+      Race,
       `Date of Birth`
     ) %>%
     helpers$add_lat_lng(
@@ -55,12 +57,16 @@ clean <- function(d, helpers) {
     mutate(
       # TODO(phoebe): do we really only get citations?
       # https://app.asana.com/0/456927885748233/570989790365270
-      outcome = "citation",
       citation_issued = TRUE,
+      outcome = "citation",
       subject_race = tr_race[
-        ifelse(Ethnicity == "HISPANIC OR LATINO", "HISPANIC", Race)
+        if_else(Ethnicity == "HISPANIC OR LATINO", "HISPANIC", Race)
       ],
       subject_sex = tr_sex[sex]
+    ) %>%
+    rename(
+      raw_race = Race,
+      raw_ethnicity = Ethnicity
     ) %>%
     standardize(d$metadata)
 }

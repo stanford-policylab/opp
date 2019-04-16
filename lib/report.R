@@ -98,7 +98,8 @@ by_type_table <- kable(by_type)
 
 null_rates_table <- kable(
   predicated_null_rates(data, reporting_predicated_columns) %>%
-  mutate(`null rate` = pretty_percent(`null rate`, 2)),
+  mutate(`null rate` = pretty_percent(`null rate`, 2)) %>%
+  rename(`predicated null rates` = `null rate`),
   align = c("l", "r")
 )
 
