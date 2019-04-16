@@ -13,14 +13,6 @@ load_raw <- function(raw_data_dir, n_max) {
 
 clean <- function(d, helpers) {
 
-  tr_race <- c(
-    A = "asian/pacific islander",
-    B = "black",
-    I = "other/unknown",
-    W = "white",
-    H = "hispanic"
-  )
-
   tr_search_basis <- c(
     C = "consent",
     # NOTE: inventory
@@ -61,7 +53,7 @@ clean <- function(d, helpers) {
       # NOTE: all InterventionReasonCodes are vehicle related
       type = "vehicular",
       subject_race = tr_race[
-        ifelse(SubjectEthnicityCode == "H", "H", SubjectRaceCode)
+        if_else(SubjectEthnicityCode == "H", "H", SubjectRaceCode)
       ],
       subject_sex = tr_sex[SubjectSexCode],
       # TODO(phoebe): the search rate is ~30%, this seems extremely high, is
@@ -91,7 +83,11 @@ clean <- function(d, helpers) {
     ) %>%
     rename(
       # NOTE: no data provided here, so calling the names 'district's
-      district = `data[polygon_indices, ]`
+      district = `data[polygon_indices, ]`,
+      raw_subject_ethnicity_code = SubjectEthnicityCode,
+      raw_subject_race_code = SubjectRaceCode,
+      raw_search_authorization_code = SearchAuthorizationCode,
+      raw_intervention_disposition_code = InterventionDispositionCode
     ) %>%
     standardize(d$metadata)
 }

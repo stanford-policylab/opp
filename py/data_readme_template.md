@@ -805,7 +805,6 @@ We’re excited to see what you come up with!
 - subject_race was based on Race and Ethnicity in the raw data, which are
   passed through
 
-16
 ## Denver, CO
 **Data notes**:
 - MASTER_INCIDENT_NUMBER has many duplicates, but it's unclear what it
@@ -853,12 +852,20 @@ We’re excited to see what you come up with!
   ([link](http://ctrp3.ctdata.org/)), where new data will get uploaded going
   forward. We haven't processed this yet.
 
+17
 ## Hartford, CT
 **Data notes**:
 - Data is deduplicated on raw columns InterventionDateTime,
   ReportingOfficerIdentificationID, InterventionLocationDescriptionText,
   SubjectRaceCode, SubjectSexCode, and SubjectAge, reducing the number of rows
   by ~1.1%
+- search rate is suspiciously high
+- subject_race is based on SubjectEthnicityCode and SubjectRaceCode, which are
+  based on raw_subject_ethnicity_code and raw_subject_race_code
+- search_conducted and search_basis are derived from SearchAuthorizationCode,
+  which is passed through as raw_search_authorization_code
+- outcomes are based on InterventionDispositionCode, which is passed through as
+  raw_intervention_disposition_code
 
 ## Tampa, FL
 **Data notes**:
