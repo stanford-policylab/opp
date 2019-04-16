@@ -1031,6 +1031,9 @@ We’re excited to see what you come up with!
   well, when that also occurred
 - Provided longitude is lacking the negative sign, which we add (without which
   all points are in central China)
+- subject race is based on RACE in the raw data and passed through as raw_race
+- violation is a concatenation of `Violation Description X` where X is 1 to 9
+- type is based on `Violation Description 1`
 
 ## New Orleans, LA
 **Data notes**:

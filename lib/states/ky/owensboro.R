@@ -95,7 +95,18 @@ clean <- function(d, helpers) {
       lat = parse_double(`VIOLATION LAT DECIMAL`),
       # NOTE: without negating longitude, all stops are in central China
       lng = -parse_double(`VIOLATION LONG DECIMAL`),
-      reason_for_stop = `Violation Description 1`,
+      violation = str_c_na(
+        `Violation Description 1`,
+        `Violation Description 2`,
+        `Violation Description 3`,
+        `Violation Description 4`,
+        `Violation Description 5`,
+        `Violation Description 6`,
+        `Violation Description 7`,
+        `Violation Description 8`,
+        `Violation Description 9`,
+        sep = "; "
+      ),
       subject_race = tr_race[str_to_lower(RACE)],
       subject_sex = tr_sex[GENDER],
       subject_dob = parse_date(`BIRTH DATE`, "%Y/%m/%d"),
