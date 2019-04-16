@@ -28,8 +28,7 @@ ELIGIBLE_CITIES <- tribble(
   "CA", "San Francisco",
   "LA", "New Orleans",
   "PA", "Philadelphia",
-  "TN", "Nashville",
-  "TX", "San Antonio"
+  "TN", "Nashville"
 )
 
 

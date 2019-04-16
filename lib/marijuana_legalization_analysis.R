@@ -1,6 +1,7 @@
 library(here)
 source(here::here("lib", "opp.R"))
 
+# TODO(danj): global prepare
 
 ELIGIBLE_STATES <- tribble(
   ~state, ~city,
@@ -27,7 +28,6 @@ ELIGIBLE_STATES <- tribble(
 
 marijuana_legalization_analysis <- function() {
   tbl <- load()
-  # TODO(sharad): here
   test <- filter(tbl, state %in% c("CO", "WA"))
   control <- filter(tbl, !(state %in% c("CO", "WA")))
   list(
@@ -112,7 +112,7 @@ calculate_search_rate_difference_in_difference_coefficients <- function(tbl) {
       subject_race
     ) %>%
     summarize(
-      n_eligible_searches = sum(is_eligible_search, na.rm = T),
+      n_eligible_searches = sum(is_eligible_search),
       n_stops_with_search_data = n()
     ) %>%
     ungroup(

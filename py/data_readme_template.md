@@ -1020,7 +1020,7 @@ We’re excited to see what you come up with!
 - subject_race is based on the raw columns defendant_ethnicity and
   defendant_race, which are passed through
 
-23
+-23-
 ## Owensboro, KY
 **Data notes**:
 - There is a list_of_officers.csv as well as the excel spreadsheet

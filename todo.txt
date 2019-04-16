@@ -1,5 +1,6 @@
 1. clean up/paper
   - clean up data
+    - check NA rates for search_conducted across all locations
     - split up other/unknown
     - pull out other raw columns where ambiguous
     - locations with contraband_found to determine when NA can be defined as FALSE
