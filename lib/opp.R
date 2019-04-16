@@ -1073,7 +1073,7 @@ opp_state_demographics <- function(state) {
   tbl <-
     opp_load_acs_race_data("acs_2017_5_year_state_level_race_data.csv") %>%
     filter(state_abbreviation == state_query)
-  if (nrow(tbl) != length(valid_races))
+  if (nrow(tbl) != length(valid_races) - 1)
     stop(str_c("Demographic query for ", state_query, " failed!"))
   tbl
 }
