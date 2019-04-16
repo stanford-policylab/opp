@@ -852,32 +852,34 @@ We’re excited to see what you come up with!
   ([link](http://ctrp3.ctdata.org/)), where new data will get uploaded going
   forward. We haven't processed this yet.
 
-17
 ## Hartford, CT
 **Data notes**:
 - Data is deduplicated on raw columns InterventionDateTime,
   ReportingOfficerIdentificationID, InterventionLocationDescriptionText,
   SubjectRaceCode, SubjectSexCode, and SubjectAge, reducing the number of rows
   by ~1.1%
-- search rate is suspiciously high
+- search rate is suspiciously high, ~28%
 - subject_race is based on SubjectEthnicityCode and SubjectRaceCode, which are
   based on raw_subject_ethnicity_code and raw_subject_race_code
 - search_conducted and search_basis are derived from SearchAuthorizationCode,
   which is passed through as raw_search_authorization_code
 - outcomes are based on InterventionDispositionCode, which is passed through as
   raw_intervention_disposition_code
+- 2013 and 2016 have only partial data
 
 ## Tampa, FL
 **Data notes**:
 - Data is deduplicated on date, subject_race, subject_dob, officer_last_name,
   officer_first_name, and Driver License Number, reducing the number of rows by
-  ~13.2%
+  ~13.2%; it's possible this slightly over-deduplicates, if an officer pulls
+  over the same person in the same day
 - Data is missing search and contraband information, as well as outcomes other
   than citations
 - The data sources are public (it's unclear what the difference is between the
   stop types):
   - https://publicrec.hillsclerk.com/Traffic/Civil_Traffic_Name_Index_files/
   - https://publicrec.hillsclerk.com/Traffic/Criminal_Traffic_Name_Index_files/
+- subject_race is based on Race which is passed through as raw_race
 
 ## Saint Petersburg, FL
 **Data notes**:
@@ -989,6 +991,9 @@ We’re excited to see what you come up with!
   deduplicate, i.e. the time resolution is hourly driver_race is null 99% of
   the time
 - Data includes warnings and arrests, but is missing warnings
+- violation represents statute_description in the raw data
+- subject_race is based on raw columns race and driver_race, which are passed
+  through
 
 ## Fort Wayne, IN
 **Data notes**:
@@ -998,6 +1003,8 @@ We’re excited to see what you come up with!
   upon request.
 - Data is missing search/contraband information, as well as demographic
   information
+- disposition represents Description in the raw data; outcomes are derived from
+  this column
 
 ## Wichita, KS
 **Data notes**:
@@ -1008,7 +1015,12 @@ We’re excited to see what you come up with!
 - citation_number in the raw data doesn't appear to be unique. i.e. citation
   "07M000645" is associated with two different dates, locations, and people
 - Only citations are included
+- violation represents charge_description in the raw data
+- disposition represents charge_disposition in the raw data
+- subject_race is based on the raw columns defendant_ethnicity and
+  defendant_race, which are passed through
 
+23
 ## Owensboro, KY
 **Data notes**:
 - There is a list_of_officers.csv as well as the excel spreadsheet

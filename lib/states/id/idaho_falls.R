@@ -54,41 +54,41 @@ clean <- function(d, helpers) {
   # NOTE: reason_for_stop/search/contraband fields aren't recorded unless
   # a case is opened
   d$data %>%
-    rename(
-      # NOTE: sex, race are not on the ID driver's license
-      # the only extant values must have been filled in manually
-      # i.e. getting race and sex for the remaining stops is not possible;
-      # subject age is also 100% null
-      officer_id = officerid,
-      # TODO(phoebe): what is the difference between emunit and emdivision?
-      # https://app.asana.com/0/456927885748233/725342006247350 
-      division = emdivision,
-      disposition = csdisposit,
-      neighborhood = neighborhd,
-      subdivision = subdivisn
-    ) %>%
-    mutate(
-      # NOTE: TS is Traffic Stop; SS is Subject Stop
-      type = ifelse(naturecode == "TS", "vehicular", "pedestrian"),
-      date = parse_date(actdate, "%Y/%m/%d"),
-      time = parse_time_int(acttime),
-      location = str_trim(
-        str_c_na(
-          streetnbr,
-          street,
-          city,
-          state,
-          sep = ", "
-        )
+  rename(
+    # NOTE: sex, race are not on the ID driver's license
+    # the only extant values must have been filled in manually
+    # i.e. getting race and sex for the remaining stops is not possible;
+    # subject age is also 100% null
+    officer_id = officerid,
+    # TODO(phoebe): what is the difference between emunit and emdivision?
+    # https://app.asana.com/0/456927885748233/725342006247350 
+    division = emdivision,
+    disposition = csdisposit,
+    neighborhood = neighborhd,
+    subdivision = subdivisn
+  ) %>%
+  mutate(
+    # NOTE: TS is Traffic Stop; SS is Subject Stop
+    type = if_else(naturecode == "TS", "vehicular", "pedestrian"),
+    date = parse_date(actdate, "%Y/%m/%d"),
+    time = parse_time_int(acttime),
+    location = str_trim(
+      str_c_na(
+        streetnbr,
+        street,
+        city,
+        state,
+        sep = ", "
       )
-    ) %>%
-    # TODO(phoebe): what are geox and geoy? they aren't lat/lng, but never null
-    # https://app.asana.com/0/456927885748233/725342006247351
-    helpers$add_lat_lng(
-    ) %>%
-    select(
-      # NOTE: 100% null, so no use including in output
-      -district
-    ) %>%
-    standardize(d$metadata)
+    )
+  ) %>%
+  # TODO(phoebe): what are geox and geoy? they aren't lat/lng, but never null
+  # https://app.asana.com/0/456927885748233/725342006247351
+  helpers$add_lat_lng(
+  ) %>%
+  select(
+    # NOTE: 100% null, so no use including in output
+    -district
+  ) %>%
+  standardize(d$metadata)
 }
