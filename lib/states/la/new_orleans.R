@@ -94,7 +94,7 @@ clean <- function(d, helpers) {
     raw_actions_taken = ActionsTaken,
     raw_subject_race = SubjectRace
   ) %>%
-  fitler(
+  filter(
     # NOTE: data before 2010 is sparse and unreliable
     year(date) > 2009
   ) %>%

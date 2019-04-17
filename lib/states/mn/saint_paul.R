@@ -51,7 +51,7 @@ clean <- function(d, helpers) {
     # TODO(phoebe): if a citation wasn't issued, was it a warning?
     # https://app.asana.com/0/456927885748233/950796405221402 
     # warning_issued = !citation_issued,
-    frisk_performed = tr_yn[`DRIVER FRISKED?`],
+    frisk_performed = replace_na(tr_yn[`DRIVER FRISKED?`], F),
     search_vehicle = replace_na(tr_yn[`VEHICLE SEARCHED?`], F),
     search_conducted = search_vehicle,
     # TODO(phoebe): can we get other outcomes?

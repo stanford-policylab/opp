@@ -1070,6 +1070,7 @@ We’re excited to see what you come up with!
   raw_subject_race
 - data before 2010 is sparse and unreliable so it is removed from the clean
   dataset
+- 2018 only has partial data
 
 ## Statewide, MA
 **Data notes**:
@@ -1142,7 +1143,7 @@ We’re excited to see what you come up with!
 - search_conducted is based on `VEHICLE SEARCHED?`; "No Data" is assumed to be
   false because it is likely that "No Data" is an autofill value for NA, which
   we coerce to false elsewhere under the assumption that officers sometimes
-  don't record the absence of a search
+  don't record the absence of a search; the same is done for frisk_performed
 
 ## Statewide, MO
 **Data notes**:
