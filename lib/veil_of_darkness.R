@@ -61,6 +61,52 @@ ELIGIBLE_STATES <- tribble(
   "WY", "Statewide"
 )
 
+veil_of_darkness_daylight_savings <- function() {
+  
+  tbl <- prepare_veil_of_darkness_data(
+    dst = T,
+    week_radius = 4
+  )
+  print("Geographies after load:")
+  print(unique(tbl$geography))
+  print("Number of states:")
+  print(tbl %>% filter(is_state_patrol) %>% select(state) %>% n_distinct())
+  print("Number of cities:")
+  print(tbl %>% filter(!is_state_patrol) %>% select(geography) %>% n_distinct())
+  
+  print("Running model...")
+  # Run actual test
+  mod <- dst_model(
+    tbl, 
+    degree = 6, 
+    interact_dark_patrol = T,
+    interact_time_location = T
+  )
+  print("Saving model...")
+  write_rds(mod, here::here("cache", str_c("dst_mod_full.rds")))
+}
+
+prepare_veil_of_darkness_data <- function(dst = F, week_radius = 2) {
+  bind_rows(
+    prepare_veil_of_darkness_cities(
+      include_sg = F, 
+      dst = dst,
+      week_radius = week_radius,
+      min_stops_per_race = 100,
+      max_geos_per_state = 1
+    ) %>%
+      mutate(is_state_patrol = F),
+    prepare_veil_of_darkness_states(
+      dst = dst,
+      week_radius = week_radius,
+      min_stops_per_race = 100,
+      max_geos_per_state = 20
+    ) %>%
+      mutate(is_state_patrol = T)
+  )
+  
+}
+
 load_veil_of_darkness_cities <- function() {
   opp_load_all_clean_data(only = ELIGIBLE_CITIES) %>%
     mutate(yr = year(date)) %>%
@@ -135,17 +181,24 @@ load_veil_of_darkness_states <- function() {
       | (state == "TX"    & year(date) %in% 2011:2017)
       | (state == "WI"    & year(date) %in% 2011:2015)
       | (state == "WY"    & year(date) %in% 2011:2012)
-    )
+    ) %>% 
+    opp_filter_out_non_highway_patrol_stops_from_states()
 }
 
-prepare_veil_of_darkness_cities <- function(include_sg = T) {
+prepare_veil_of_darkness_cities <- function(
+  include_sg = T, 
+  dst = F,
+  week_radius = 2,
+  min_stops_per_race = 1000,
+  max_geos_per_state = 1
+) {
   
   city_geocodes <-
     read_csv(here::here("resources", "city_coverage_geocodes.csv")) %>%
     separate(loc, c("city", "state"), sep = ",") %>%
     rename(center_lat = lat, center_lng = lng)
   
-  print("loading data..")
+  print("Loading city data..")
   tbl <- load_veil_of_darkness_cities() %>% 
     left_join(city_geocodes) %>%
     mutate(city_state = str_c(city, state, sep = ", "))
@@ -202,46 +255,76 @@ prepare_veil_of_darkness_cities <- function(include_sg = T) {
     tbl_sg <- filter(tbl_sg, city_state %in% eligible_subeography_locations)
   }
   
-  print("preparing data for vod analysis..")
-  vod_tbl <- prepare_vod_data(tbl, city_state)$data
+  print("preparing city data for vod analysis..")
+  vod_tbl <- tbl %>% 
+    rename(geography = city_state) %>% 
+    prepare_vod_data(
+      state,
+      dst_filter = dst,
+      super_geo_col = geography,
+      week_radius = week_radius,
+      min_stops_per_race = min_stops_per_race,
+      max_geos_per_state = max_geos_per_state
+    )
+  
   if(include_sg) {
     vod_tbl_sg <- prepare_vod_data(tbl_sg, city_state)$data
     vod_tbl_sg_plus <- prepare_vod_data(tbl_sg, city_state_subgeography)$data
   
     list(
-      vod_tbl = vod_tbl,
+      vod_tbl = vod_tbl$data,
       vod_tbl_sg = vod_tbl_sg,
       vod_tbl_sg_plus = vod_tbl_sg_plus
     )
   } else {
-    vod_tbl
+    vod_tbl$data
   }
   
 }
 
-prepare_veil_of_darkness_states <- function() {
+prepare_veil_of_darkness_states <- function(
+  dst = F,
+  week_radius = 2,
+  min_stops_per_race = 1000,
+  max_geos_per_state = 50
+) {
   
   state_geocodes <-
     read_rds(here::here("resources", "state_county_geocodes.rds")) %>%
     rename(county_state = loc)
   
+  print("Loading state data...")
   tbl <- 
     load_veil_of_darkness_states() %>%
     left_join(
       state_geocodes, 
       by = c("state", "county_name")
     ) %>% 
-    filter(
-      county_state %in% eligible_counties(
-        ., 
-        min_stops_per_race = 100,
-        max_counties_per_state = 20
-      )
-    ) 
+    rename(geography = county_state)
+    # filter(
+    #   county_state %in% eligible_counties(
+    #     ., 
+    #     min_stops_per_race = 100,
+    #     max_counties_per_state = 20
+    #   )
+    # ) 
   
-  tbl <- tbl %>% prepare_vod_data(state, county_state)
+  print("preparing state data for vod analysis..")
+  
+  tbl <- tbl %>% 
+    prepare_vod_data(
+      state, 
+      dst_filter = dst,
+      super_geo_col = state,
+      week_radius = week_radius,
+      min_stops_per_race = min_stops_per_race,
+      max_geos_per_state = max_geos_per_state
+    )
+  
   tbl$data
 }
+
+
 
 veil_of_darkness_cities <- function() {
   
@@ -281,7 +364,6 @@ veil_of_darkness_cities <- function() {
 
   list(coefficients = coefficients, plots = compose_vod_plots(vod_tbl, city_state))
 }
-
 
 vod_coef <- function(tbl, control_col, degree, interact_time_location) {
   control_colq <- enquo(control_col)
@@ -329,85 +411,3 @@ veil_of_darkness_states <- function() {
 }
 
 
-eligible_counties <- function(
-  tbl,
-  state_col = state,
-  county_col = county_name, 
-  unique_geo_col = county_state, 
-  demographic_col = subject_race,
-  eligible_demographics = c("white", "black"),
-  min_stops_per_race = 1000,
-  max_counties_per_state = 50
-) {
-  # selects the top `max_counties` number of counties with at least `min_stops`
-  # number of stops per demographic in `eligible demographics`
-  state_colq <- enquo(state_col)
-  county_colq <- enquo(county_col)
-  unique_geo_colq <- enquo(unique_geo_col)
-  demographic_colq <- enquo(demographic_col)
-
-  counties_with_sufficient_stops <-
-    tbl %>%
-    filter(!!demographic_colq %in% eligible_demographics) %>% 
-    count(!!unique_geo_colq, !!demographic_colq) %>% 
-    spread(!!demographic_colq, n, fill = 0) %>% 
-    filter_at(
-      vars(2:(length(eligible_demographics) + 1)), 
-      all_vars(. > min_stops_per_race)
-    ) %>% 
-    pull(!!unique_geo_colq)
-  
-  tbl %>%
-    filter(
-      !!unique_geo_colq %in% counties_with_sufficient_stops
-    ) %>%
-    count(!!state_colq, !!county_colq, !!unique_geo_colq) %>%
-    group_by(!!state_colq) %>% 
-    top_n(max_counties_per_state, n) %>% 
-    pull(!!unique_geo_colq)
-}
-
-
-veil_of_darkness_daylight_savings <- function() {
-
-  # if(states) {
-  #   tbl <- prepare_veil_of_darkness_states() %>% 
-  #     rename(geography = state)
-  #   geo <- "states"
-  # }
-  # else {
-  #   tbl <- prepare_veil_of_darkness_cities()$vod_tbl %>% 
-  #     rename(geography = city_state)
-  #   geo <- "cities"
-  # }
-    
-  city_data <- prepare_veil_of_darkness_cities(include_sg = F)
-  print("City data prepped...")
-  state_data <- prepare_veil_of_darkness_states()
-  print("State data prepped...")
-
-  tbl <- bind_rows(
-    state_data %>%
-      rename(geography = county_state) %>% 
-      mutate(is_state_patrol = T) %>% 
-      select(-state),
-    city_data %>%
-      mutate(is_state_patrol = F) %>%
-      rename(geography = city_state)
-  )
-  
-  print("Geographies after load:")
-  print(unique(tbl$geography))
-  
-  print("Running model...")
-  # Run actual test
-  mod <- dst_model(
-    tbl, 
-    degree = 6, 
-    week_radius = 3,
-    interact_dark_patrol = T,
-    interact_time_location = T
-  )
-  print("Saving model...")
-  write_rds(mod, here::here("cache", str_c("dst_mod_full.rds")))
-}

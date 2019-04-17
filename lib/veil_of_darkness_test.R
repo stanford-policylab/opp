@@ -27,6 +27,7 @@ source(here::here("lib", "opp.R"))
 veil_of_darkness_test <- function(
   tbl,
   ...,
+  dst_filter = F,
   demographic_col = subject_race,
   geography_col_for_plot = city_state,
   date_col = date,
@@ -51,6 +52,7 @@ veil_of_darkness_test <- function(
   d <- prepare_vod_data(
       tbl,
       !!!control_colqs,
+      dst_filter = dst_filter,
       demographic_col = !!demographic_colq,
       date_col = !!date_colq,
       time_col = !!time_colq,
@@ -92,16 +94,24 @@ veil_of_darkness_test <- function(
 prepare_vod_data <- function(
   tbl,
   ...,
+  dst_filter = F,
+  geography_col = geography,
+  super_geo_col = state,
   demographic_col = subject_race,
   date_col = date,
   time_col = time,
   lat_col = center_lat,
   lng_col = center_lng,
   minority_demographic = "black",
-  majority_demographic = "white"
+  majority_demographic = "white",
+  week_radius = 2,
+  min_stops_per_race = 1000,
+  max_geos_per_super = 50
 ) {
   control_colqs <- enquos(...)
   demographic_colq <- enquo(demographic_col)
+  geography_colq <- enquo(geography_col)
+  super_geo_colq <- enquo(super_geo_col)
   date_colq <- enquo(date_col)
   time_colq <- enquo(time_col)
   lat_colq = enquo(lat_col)
@@ -112,9 +122,12 @@ prepare_vod_data <- function(
       data = tbl,
       metadata = list()
     ) %>%
+    # reports percent of rows drops and populates metadata with that info
     select_and_filter_missing(
       !!!control_colqs,
       !!demographic_colq,
+      !!geography_colq,
+      !!super_geo_colq,
       !!date_colq,
       !!time_colq,
       !!lat_colq,
@@ -122,28 +135,47 @@ prepare_vod_data <- function(
     )
 
   # NOTE: prefilter since calculating sunset times can take a while
-  tbl <-
+  d$data <-
     d$data %>%
     filter(
-      hour(hms(time)) > 15, # 3 PM
-      hour(hms(time)) < 22, # 10 PM
+      hour(hms(!!time_colq)) > 15, # 3 PM
+      hour(hms(!!time_colq)) < 22, # 10 PM
       !!demographic_colq %in% c(minority_demographic, majority_demographic)
+    ) %>% 
+    mutate(year = year(!!date_colq))
+  
+  if (dst_filter) {
+    d$data <- prep_dst_data(d$data, !!geography_colq, !!date_colq, week_radius)
+  }
+  
+  # Pre-filter to geographies with sufficient stops per race
+  # NOTE: We do this same filter again after intertwilight filter, but 
+  # since calculating sunset times is slow, so we do a pre-filter, too.
+  # Applying the filter now produces a superset of the geographies that will
+  # be let through when applying the filter again on the intertwilight stops.
+  d$data <-
+    filter_to_geography_years_with_sufficient_stops_per_race(
+      d$data, 
+      geography_col = !!geography_colq,
+      year_col = year,
+      demographic_col = !!demographic_colq,
+      min_stops_per_race = min_stops_per_race    
     )
-
+    
   sunset_times <- calculate_sunset_times(
-    tbl,
+    d$data,
     !!date_colq,
     !!lat_colq,
     !!lng_colq
   )
-
+  
   d$data <-
-    tbl %>%
+    d$data %>%
     left_join(
       sunset_times
     ) %>%
     mutate(
-      minute = time_to_minute(time),
+      minute = time_to_minute(!!time_colq),
       pre_sunset_minute = time_to_minute(pre_sunset),
       sunset_minute = time_to_minute(sunset),
       is_dark = minute >= sunset_minute,
@@ -161,9 +193,53 @@ prepare_vod_data <- function(
       is_minority_demographic = !!demographic_colq == minority_demographic,
       rounded_minute = plyr::round_any(minute, 5)
     )
+  
+  d$data <-
+    d$data %>% 
+      filter_to_geography_years_with_sufficient_stops_per_race(
+        geography_col = !!geography_colq,
+        year_col = year,
+        demographic_col = !!demographic_colq,
+        min_stops_per_race = min_stops_per_race    
+      ) %>% 
+      filter_to_top_n_geos_per_super_geo(
+        geography_col = !!geography_colq,
+        super_geo_col = !!super_geo_colq,
+        max_geos_per_super = max_geos_per_super
+      )
   d 
 }
 
+prep_dst_data <- function(
+  tbl, 
+  geography_col = geography,
+  date_col = date,
+  week_radius = 2
+) {
+  geography_colq <- enquo(geography_col)
+  date_colq <- enquo(date_col)
+  
+  tbl %>% 
+    # NOTE: not all states observe dst
+    filter(!str_detect(!!geography_colq, "AZ|HI")) %>% 
+    mutate(year = year(!!date_colq)) %>%
+    # TODO: build-in dst start/end date computations, since this resource rds 
+    # will become out-of-date
+    left_join(
+      read_rds(here::here("resources", "dst_start_end_dates.rds")), 
+      by = "year"
+    ) %>% 
+    mutate(
+      # define spring as the week_radius around start of DST
+      spring = !!date_colq >= dst_start - weeks(week_radius)
+                & !!date_colq <= dst_start + weeks(week_radius),
+      # define fall as the week_radius around end of DST
+      fall =  !!date_colq >= dst_end - weeks(week_radius) 
+                & !!date_colq <= dst_end + weeks(week_radius)
+    ) %>% 
+    filter(spring | fall) %>% 
+    mutate(season = if_else(spring, "spring", "fall"))
+}
 
 calculate_sunset_times <- function(
   tbl,
@@ -217,6 +293,56 @@ time_to_minute <- function(time) {
   hour(hms(time)) * 60 + minute(hms(time))
 }
 
+filter_to_geography_years_with_sufficient_stops_per_race <- function(
+  tbl,
+  geography_col = geography,
+  year_col = year,
+  demographic_col = subject_race,
+  eligible_demographics = c("white", "black"),
+  min_stops_per_race = 1000
+) {
+  geography_colq <- enquo(geography_col)
+  year_colq <- enquo(year_col)
+  demographic_colq <- enquo(demographic_col)
+  
+  tbl %>%
+    assert(in_set(eligible_demographics), !!demographic_colq) %>% 
+    inner_join(
+      tbl %>% 
+        count(!!geography_colq, !!year_colq, !!demographic_colq) %>% 
+        spread(!!demographic_colq, n, fill = 0) %>% 
+        filter_at(
+          vars(eligible_demographics), 
+          all_vars(. > min_stops_per_race)
+        ) %>% 
+        select(!!geography_colq, !!year_colq),
+      by = c(quo_name(geography_colq), quo_name(year_colq))
+    )
+}
+
+filter_to_top_n_geos_per_super_geo <- function(
+  # e.g., selects the top `max_geos_per_super` counties per state.
+  # NOTE: when `super_geo_col` == `geography_col`, 
+  #       OR when max_geos_per_super == 1,
+  #       then the effect is that all geographies are kept
+  tbl,
+  geography_col = geography,
+  super_geo_col = state,
+  max_geos_per_super = 50
+) {
+  super_geo_colq <- enquo(super_geo_col)
+  geography_colq <- enquo(geography_col)
+  
+  tbl %>% 
+    inner_join(
+      tbl %>%
+        count(!!super_geo_colq, !!geography_colq) %>%
+        group_by(!!super_geo_colq) %>% 
+        top_n(max_geos_per_super, n) %>% 
+        select(!!geography_colq),
+      by = c(quo_name(geography_colq))
+    )
+}
 
 train_vod_model <- function(
   tbl,
@@ -496,7 +622,6 @@ dst_model <- function(
   state_patrol_indicator_col = is_state_patrol,
   time_col = rounded_minute,
   degree = 6,
-  week_radius = 2,
   interact_dark_patrol = F,
   interact_time_location = F
 ) {
@@ -504,10 +629,6 @@ dst_model <- function(
   demographic_indicator_colq <- enquo(demographic_indicator_col)
   state_patrol_indicator_colq <- enquo(state_patrol_indicator_col)
   time_colq <- enquo(time_col)
-  
-  tbl <- prep_dst_data(tbl)
-  
-  print("DST prep complete.")
   
   agg <-
     tbl %>%
@@ -547,45 +668,9 @@ dst_model <- function(
     )
   )
   print("Fitting model...")
-  glm(fmla, data = agg, family = binomial, control = list(maxit = 100))
+  glm(fmla, data = agg, family = binomial)#, control = list(maxit = 100))
 }
 
-prep_dst_data <- function(tbl, week_radius = 2) {
-  tbl %>% 
-    # NOTE: not all states observe dst
-    filter(!str_detect(geography, "AZ|HI")) %>% 
-    mutate(year = year(date)) %>% 
-    left_join(
-      read_rds(here::here("resources", "dst_start_end_dates.rds")), 
-      by = "year"
-    ) %>% 
-    mutate(
-      spring = date >= dst_start - weeks(week_radius)
-        & date <= dst_start + weeks(week_radius),
-      fall =  date >= dst_end - weeks(week_radius) 
-        & date <= dst_end + weeks(week_radius)
-    ) %>% 
-    filter(spring | fall) %>% 
-    mutate(season = if_else(spring, "spring", "fall"))
+compute_dst_dates <- function(years) {
+ # TODO
 }
-
-# compute_dst_dates <- function(years) {
-#   tibble(
-#     date = seq(
-#       ymd(str_c(min(years), "-01-01")), 
-#       ymd(str_c(max(years), "-12-31")),
-#       by = "days"
-#     ),
-#     is_dst = lubridate::dst(as.character(date))
-#   ) %>% 
-#     mutate(year = year(date)) %>% 
-#     group_by(year, is_dst) %>% 
-#     summarize(
-#       dst_start = min(date),
-#       dst_end = max(date)
-#     ) #%>% 
-#     # group_by(year) %>% 
-#     # summarize(
-#     #   dst_start = if_else(is_dst, )
-#     # )
-# }
