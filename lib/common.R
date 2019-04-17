@@ -1,3 +1,4 @@
+library(assertr)
 library(digest)
 library(fs)
 library(functional)
