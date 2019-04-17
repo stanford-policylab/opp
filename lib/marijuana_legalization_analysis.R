@@ -1,8 +1,6 @@
 library(here)
 source(here::here("lib", "opp.R"))
 
-# TODO(danj): global prepare
-
 ELIGIBLE_STATES <- tribble(
   ~state, ~city,
   # test
@@ -28,7 +26,7 @@ ELIGIBLE_STATES <- tribble(
 
 marijuana_legalization_analysis <- function() {
   tbl <- load()
-  test <- filter(tbl, state %in% c("CO", "WA"))
+  treatment <- filter(tbl, state %in% c("CO", "WA"))
   control <- filter(tbl, !(state %in% c("CO", "WA")))
   list(
     tables = list(
@@ -36,11 +34,10 @@ marijuana_legalization_analysis <- function() {
         calculate_search_rate_difference_in_difference_coefficients(tbl)
     ),
     plots = list(
-      test_search_rates = compose_search_rate_plots(test),
-      control_search_rates = compose_search_rate_plots(control, is_test = F),
+      test_search_rates = compose_search_rate_plots(treatment),
+      control_search_rates = compose_search_rate_plots(control),
       test_misdemeanor_rates = compose_misdemeanor_rate_plots(test),
-      inferred_threshold_changes =
-        compose_inferred_threshold_changes_plot(test)
+      inferred_threshold_changes = compose_inferred_threshold_changes_plot(test)
     )
   )
 }
@@ -57,15 +54,7 @@ load <- function() {
   ) %>%
   opp_filter_out_non_highway_patrol_stops_from_states() %>%
   mutate(
-    subject_race = relevel(droplevels(subject_race), "white")
-  ) %>%
-  add_legalization_info()
-}
-
-
-add_legalization_info <- function(tbl) {
-  mutate(
-    tbl,
+    subject_race = relevel(droplevels(subject_race), "white"),
     # NOTE: default for control and WA is WA's legalization date
     legalization_date = if_else(
       state == "CO",
@@ -73,8 +62,36 @@ add_legalization_info <- function(tbl) {
       as.Date("2012-12-09")
     ),
     is_before_legalization = date < legalization_date,
-    is_test = state %in% c("WA", "CO"),
-    is_treatment = is_test & !is_before_legalization
+    is_treatment_state = state %in% c("WA", "CO"),
+    is_treatment = is_treatment_state & !is_before_legalization,
+    violation = str_to_lower(violation),
+    # NOTE: search_basis = NA is interpreted as an eligible search;
+    # excludes other (non-discretionary)
+    is_eligible_search = search_conducted & (is.na(search_basis)
+      | search_basis %in% c("k9", "plain view", "probable cause", "consent")),
+    is_drugs_infraction_or_misdemeanor = if_else(
+      state == "CO",
+      # NOTE: Details on Colorado's marijuana policies:
+      # https://www.colorado.gov/pacific/marijuana/driving-and-traveling
+      str_detect(
+        violation,
+        str_c(
+          "possession of 1 oz or less of marijuana",
+          # NOTE: these spike after legalization
+          # "open marijuana container",
+          sep = "|"
+        )
+      ),
+      # NOTE: WA violations
+      str_detect(
+        violation,
+        str_c(
+          "drugs - misdemeanor",
+          "drugs paraphernalia - misdemeanor",
+          sep = "|"
+        )
+      )
+    )
   )
 }
 
@@ -83,33 +100,16 @@ calculate_search_rate_difference_in_difference_coefficients <- function(tbl) {
   tbl <- 
     tbl %>%
     filter(
-      type == "vehicular",
-      !is.na(date),
-      !is.na(subject_race),
-      # NOTE: search_basis = NA is interpreted as an eligible search, so don't
-      # filter out
+      # NOTE: don't filter in global filter because violation and
+      # search_conducted may be NA in different places, so filter locally
       !is.na(search_conducted)
     ) %>%
-    select(
-      is_treatment,
-      state,
-      date,
-      legalization_date,
-      subject_race,
-      search_basis,
-      search_conducted
-    ) %>%
-    mutate(
-      # NOTE: excludes other (non-discretionary)
-      is_eligible_search = search_conducted & (is.na(search_basis)
-        | search_basis %in% c("k9", "plain view", "probable cause", "consent"))
-    ) %>%
     group_by(
-      is_treatment,
       state,
       date,
+      subject_race,
       legalization_date,
-      subject_race
+      is_treatment
     ) %>%
     summarize(
       n_eligible_searches = sum(is_eligible_search),
@@ -121,59 +121,65 @@ calculate_search_rate_difference_in_difference_coefficients <- function(tbl) {
       years_since_legalization = as.numeric(date - legalization_date) / 365
     )
 
-  m <- glm(
+  glm(
     cbind(n_eligible_searches, n_stops_with_search_data - n_eligible_searches)
       ~ state + years_since_legalization + subject_race +
         is_treatment:subject_race,
     binomial,
     tbl
-  )
-
-  coefs <- summary(m)$coefficients[, c("Estimate", "Std. Error")]
-
-  as_tibble(coefs) %>%
-    mutate(coefficient = rownames(coefs)) %>%
-    rename(estimate = Estimate, std_error = `Std. Error`) %>%
-    select(coefficient, estimate, std_error)
+  ) %>%
+  tidy()
 }
 
 
-compose_search_rate_plots <- function(tbl, is_test = T) {
+compose_search_rate_plots <- function(tbl) {
+  # NOTE: ensure only treatment or control is passed
+  stopifnot(length(unique(tbl$is_treatment_state)) == 1)
+
+  is_treatment_state <- tbl$is_treatment_state[[1]]
+
   tbl <-
     tbl %>%
     filter(
-      type == "vehicular",
-      !is.na(date),
-      !is.na(subject_race)
-    ) %>%
-    select(
-      state,
-      date,
-      legalization_date,
-      is_before_legalization,
-      subject_race,
-      search_basis,
-      search_conducted
-    ) %>%
-    mutate(
-      is_eligible_search = search_conducted & (is.na(search_basis)
-        # NOTE: excludes other (non-discretionary)
-        | search_basis %in% c("k9", "plain view", "probable cause", "consent"))
+      # NOTE: don't filter in global filter because violation and
+      # search_conducted may be NA in different places, so filter locally
+      !is.na(search_conducted)
     ) %>%
     group_by(
       state,
       date,
+      subject_race,
       legalization_date,
-      is_before_legalization,
-      subject_race
+      is_before_legalization
     ) %>%
     summarize(
-      n_eligible_searches = sum(is_eligible_search, na.rm = T),
-      n_stops_with_search_data = sum(!is.na(search_conducted))
+      n_eligible_searches = sum(is_eligible_search),
+      n_stops_with_search_data = n()
     ) %>%
     ungroup()
 
-  trends <- compute_trendlines(tbl)
+  endpoints <-
+    tbl %>%
+    group_by(state) %>%
+    do(compute_search_trendline(.)) %>%
+    group_by(state, subject_race, is_before_legalization) %>%
+    filter(date == min(date) | date == max(date)) %>%
+    mutate(position = if_else(date == min(date), "start", "end")) %>%
+    select(-n_eligible_searches, -n_stops_with_search_data)
+
+  # spread endpoints so it has cols start_date, end_date, start_rate, end_rate
+  trends <-
+    left_join(
+      endpoints %>%
+      select(-predicted_search_rate) %>%
+      spread(position, date) %>%
+      rename(start_date = start, end_date = end),
+
+      endpoints %>%
+      select(-date) %>%
+      spread(position, predicted_search_rate) %>%
+      rename(start_rate = start, end_rate = end),
+    )
 
   tbl <-
     tbl %>%
@@ -182,23 +188,7 @@ compose_search_rate_plots <- function(tbl, is_test = T) {
     # NOTE: remove data around legalization quarter since it will be mixed
     filter(quarter != as.Date("2012-11-15"))
 
-  compose_timeseries_rate_plot(tbl, "Search Rate", trends, is_test)
-}
-
-
-compute_trendlines <- function(tbl) {
-  trendlines <- group_by(tbl, state) %>% do(compute_search_trendline(.))
-  endpoints <-
-    trendlines %>%
-    group_by(state, subject_race, is_before_legalization) %>%
-    filter(date == min(date) | date == max(date)) %>%
-    mutate(position = if_else(date == min(date), "start", "end"))
-  dt <- select(endpoints, -predicted_search_rate) %>% spread(position, date)
-  rt <- select(endpoints, -date) %>% spread(position, predicted_search_rate)
-  left_join(
-    rename(dt, start_date = start, end_date = end),
-    rename(rt, start_rate = start, end_rate = end)
-  )
+  compose_timeseries_rate_plot(tbl, "Search Rate", is_treatment_state, trends)
 }
 
 
@@ -216,37 +206,31 @@ compute_search_trendline <- function(tbl) {
   m_before <- fit(filter(tbl, is_before_legalization))
   m_after <- fit(filter(tbl, !is_before_legalization))
   score <- function(model, tbl) { predict(model, tbl, type = "response") }
+
   tbl %>%
-    group_by(state, subject_race, is_before_legalization) %>%
-    filter(date == min(date) | date == max(date)) %>%
-    distinct() %>%
-    ungroup() %>%
-    mutate(
-      predicted_search_rate = if_else(
-        is_before_legalization,
-        score(m_before, .),
-        score(m_after, .)
-      )
-    ) %>%
-    select(
-      state,
-      subject_race,
-      date,
+  group_by(state, subject_race, is_before_legalization) %>%
+  filter(date == min(date) | date == max(date)) %>%
+  distinct() %>%
+  ungroup() %>%
+  mutate(
+    predicted_search_rate = if_else(
       is_before_legalization,
-      predicted_search_rate
+      score(m_before, .),
+      score(m_after, .)
     )
+  )
 }
 
 
 to_rates_by_quarter <- function(tbl, numerator_col, denominator_col) {
-  nq <- enquo(numerator_col)
-  dq <- enquo(denominator_col)
-  n_name <- quo_name(nq)
-  d_name <- quo_name(dq)
+  numerator_colq <- enquo(numerator_col)
+  denominator_colq <- enquo(denominator_col)
+  numerator_name <- quo_name(numerator_colq)
+  denominator_name <- quo_name(denominator_colq)
   group_by_colnames <- c(
     setdiff(
       colnames(tbl),
-      c(n_name, d_name, "date")
+      c(numerator_name, denominator_name, "date")
     ),
     "quarter"
   )
@@ -260,7 +244,7 @@ to_rates_by_quarter <- function(tbl, numerator_col, denominator_col) {
       ))
     ) %>%
     group_by(.dots = group_by_colnames) %>%
-    summarize(rate = sum(!!nq) / sum(!!dq)) %>%
+    summarize(rate = sum(!!numerator_colq) / sum(!!denominator_colq)) %>%
     ungroup()
 }
 
@@ -268,9 +252,10 @@ to_rates_by_quarter <- function(tbl, numerator_col, denominator_col) {
 compose_timeseries_rate_plot <- function(
   tbl,
   y_axis_label,
-  trends = NULL,
-  is_test = T
+  is_treatment_state = T,
+  trends = NULL
 ) {
+
   p <-
     ggplot(
       tbl,
@@ -307,11 +292,24 @@ compose_timeseries_rate_plot <- function(
     ) +
     theme(
       # NOTE: ifelse and if_else can't return vectors
-      legend.position = if (is_test) c(0.88, 0.88) else c(0.96, 0.95),
+      legend.position = if (is_treatment_state) c(0.88, 0.88) else c(0.96, 0.95),
       axis.title.x = element_blank(),
       panel.spacing = unit(0.5, "lines"),
       plot.margin = unit(c(0.1, 0.2, 0.1, 0.1), "in")
     )
+                  
+  # TODO(danj): try to do this with geom_smooth
+  # p <-
+  #   p +
+  #   geom_smooth(
+  #     data = trends,
+  #     method = "lm",
+  #     formula =
+  #       cbind(
+  #         n_eligible_searches,
+  #         n_stops_with_search_data - n_eligible_searches
+  #       ) ~ state + date + subject_race
+  #   )
 
   if (!is.null(trends)) {
     p <-
@@ -359,58 +357,20 @@ base_theme <- function() {
 
 
 compose_misdemeanor_rate_plots <- function(tbl) {
+  tbl %>%
   filter(
-    tbl,
-    type == "vehicular",
-    is_test,
-    !is.na(date),
-    !is.na(subject_race)
-  ) %>%
-  select(
-    state,
-    date,
-    legalization_date,
-    is_before_legalization,
-    subject_race,
-    violation
-  ) %>%
-  mutate(
-    violation = str_to_lower(violation),
-    is_drugs_infraction_or_misdemeanor = if_else(
-      state == "CO",
-      # NOTE: Details on Colorado's marijuana policies:
-      # https://www.colorado.gov/pacific/marijuana/driving-and-traveling
-      str_detect(
-        violation,
-        str_c(
-          "possession of 1 oz or less of marijuana",
-          # NOTE: these spike after legalization
-          # "open marijuana container",
-          sep = "|"
-        )
-      ),
-      # NOTE: WA violations
-      str_detect(
-        violation,
-        str_c(
-          "drugs - misdemeanor",
-          "drugs paraphernalia - misdemeanor",
-          sep = "|"
-        )
-      )
-    )
+    !is.na(violation)
   ) %>%
   group_by(
     state,
     date,
+    subject_race,
     legalization_date,
-    is_before_legalization,
-    subject_race
+    is_before_legalization
   ) %>%
   summarize(
-    n_drugs_infraction_or_misdemeanor =
-      sum(is_drugs_infraction_or_misdemeanor, na.rm = T),
-    n_stops_with_violation_data = sum(!is.na(violation))
+    n_drugs_infraction_or_misdemeanor = sum(is_drugs_infraction_or_misdemeanor),
+    n_stops_with_violation_data = n()
   ) %>%
   ungroup(
   ) %>%

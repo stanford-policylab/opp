@@ -1,3 +1,4 @@
+library(broom)
 library(digest)
 library(fs)
 library(functional)
