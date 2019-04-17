@@ -69,12 +69,7 @@ load_raw <- function(raw_data_dir, n_max) {
 
 clean <- function(d, helpers) {
 
-  tr_race <- c(
-    "AMER IND/ALASKAN" = "other/unknown",
-    "ASIAN" = "asian/pacific islander",
-    "BLACK" = "black",
-    "WHITE" = "white"
-  )
+  tr_race <- c(tr_race, "amer ind/alaskan" = "other")
 
   # TODO(phoebe): can we get search/contraband data?
   # https://app.asana.com/0/456927885748233/586847974785232
@@ -100,8 +95,19 @@ clean <- function(d, helpers) {
       lat = parse_double(`VIOLATION LAT DECIMAL`),
       # NOTE: without negating longitude, all stops are in central China
       lng = -parse_double(`VIOLATION LONG DECIMAL`),
-      reason_for_stop = `Violation Description 1`,
-      subject_race = tr_race[RACE],
+      violation = str_c_na(
+        `Violation Description 1`,
+        `Violation Description 2`,
+        `Violation Description 3`,
+        `Violation Description 4`,
+        `Violation Description 5`,
+        `Violation Description 6`,
+        `Violation Description 7`,
+        `Violation Description 8`,
+        `Violation Description 9`,
+        sep = "; "
+      ),
+      subject_race = tr_race[str_to_lower(RACE)],
       subject_sex = tr_sex[GENDER],
       subject_dob = parse_date(`BIRTH DATE`, "%Y/%m/%d"),
       # TODO(phoebe): all citations with sometimes arrests? warnings?
@@ -119,7 +125,8 @@ clean <- function(d, helpers) {
     helpers$add_shapefiles_data(
     ) %>%
     rename(
-      sector = SECTOR
+      sector = SECTOR,
+      raw_race = RACE
     ) %>%
     standardize(d$metadata)
 }

@@ -48,11 +48,11 @@ load_raw <- function(raw_data_dir, n_max) {
 clean <- function(d, helpers) {
 
   tr_race = c(
-    "AMER IND/ALASKAN NATIVE" = "other/unknown",
+    "AMER IND/ALASKAN NATIVE" = "other",
     "ASIAN/PACIFIC ISLANDER" = "asian/pacific islander",
     "BLACK" = "black",
     "HISPANIC" = "hispanic",
-    "UNKNOWN" = "other/unknown",
+    "UNKNOWN" = "unknown",
     "WHITE" = "white"
   )
 
@@ -64,7 +64,9 @@ clean <- function(d, helpers) {
     ) %>%
     mutate(
       type = if_else(
-        str_detect(violation, "PEDESTRIAN"),
+        str_detect(violation, "PEDEST")
+        & !str_detect(violation, "FAILURE TO YIELD TO PEDESTRIAN")
+        & !str_detect(violation, "PASS VEH STOPPED FOR PEDEST"),
         "pedestrian",
         "vehicular"
       ),
@@ -87,6 +89,10 @@ clean <- function(d, helpers) {
       )
     ) %>%
     helpers$add_lat_lng(
+    ) %>%
+    rename(
+      raw_race = race,
+      raw_driver_race = driver_race
     ) %>%
     standardize(d$metadata)
 }

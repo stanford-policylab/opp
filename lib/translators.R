@@ -19,7 +19,6 @@ tr_race <- c(
   O = "other",
   U = "unknown",
   W = "white",
-  # TODO(danj): where did these come from?
   asian = "asian/pacific islander",
   black = "black",
   white = "white",

@@ -12,15 +12,6 @@ load_raw <- function(raw_data_dir, n_max) {
 
 clean <- function(d, helpers) {
 
-  tr_race <- c(
-    "A" = "asian/pacific islander",
-    "B" = "black",
-    "I" = "other/unknown",
-    "U" = "other/unknown",
-    "W" = "white",
-    "H" = "hispanic"
-  )
-
   # TODO(phoebe): can we get reason_for_stop/search/contraband fields?
   # https://app.asana.com/0/456927885748233/595493946182532
   d$data %>%
@@ -92,6 +83,10 @@ clean <- function(d, helpers) {
       subject_sex = tr_sex[defendant_sex]
     ) %>%
     helpers$add_lat_lng(
+    ) %>%
+    rename(
+      raw_defendant_ethnicity = defendant_ethnicity,
+      raw_defendant_race = defendant_race
     ) %>%
     standardize(d$metadata)
 }

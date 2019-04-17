@@ -19,11 +19,11 @@ clean <- function(d, helpers) {
     "Asian" = "asian/pacific islander",
     "Black" = "black",
     "Hispanic" = "hispanic",
-    "Indian" = "other/unknown",
-    "Multiracial" = "other/unknown",
+    "Indian" = "other",
+    "Multiracial" = "other",
     "Native Hawaiian or Other Pacific Islander" = "asian/pacific islander",
-    "Other" = "other/unknown",
-    "Unavailable" = NA,
+    "Other" = "other",
+    "Unavailable" = "unknown",
     "White" = "white"
   )
 
@@ -87,6 +87,9 @@ clean <- function(d, helpers) {
       officer_last_name,
       officer_first_name,
       `Driver License Number`
+    ) %>%
+    rename(
+      raw_race = Race
     ) %>%
     standardize(d$metadata)
 }
