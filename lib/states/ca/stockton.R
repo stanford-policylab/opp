@@ -70,7 +70,7 @@ clean <- function(d, helpers) {
       # NOTE: all stops are traffic stops as per reply letter
       type = "vehicular",
       outcome = tr_outcome[result],
-      search_conducted = !startsWith(search, "1-No Search"),
+      search_conducted = replace_na(!startsWith(search, "1-No Search"), F),
       search_basis = tr_search_basis[search],
       subject_sex = tr_sex[gender],
       subject_race = tr_race[race],

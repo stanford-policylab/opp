@@ -686,9 +686,14 @@ We’re excited to see what you come up with!
   derived from this column
 - outcomes are based on ActionTaken, which is passed through as
   raw_action_taken
-- search_conducted is named searched in the raw data
+- search_conducted is named searched in the raw data; when searched is NA, this
+  is interpreted as FALSE for search_conducted under the assumption that
+  officers sometimes don't record the absence of a search. Furthermore, where
+  searched is NA, SearchBasis, SearchBasisOther, and SearchType are all NA, as
+  well, suggesting that no search occurred
 - If search_conducted was true but contraband_found was NA, it was changed to
   false, under the assumption that NA means false when a search is performed
+- 2017 only has data for part of the year
 
 ## San Francisco, CA
 **Data notes**:
@@ -712,6 +717,14 @@ We’re excited to see what you come up with!
   (SEARCH in raw data); this removes about ~4.4% of records, but many of these
   rows are lacking sufficient information for differentiation, i.e. they have
   NA for many of their values
+- search_conducted is derived from SEARCH (raw_search in clean data); NAs in
+  the original column and converted to FALSE, under the assumption that
+  officers sometimes don't record the absence of a search. However, there are
+  other values other than the ones provided in the data dictionary (and are not
+  NA), these are converted to NA for search_conducted but available in the
+  raw_search column for review; some of them appear to be the result malformed
+  rows and/or incorrect data entry, i.e. some of them could be race
+  classifications
 - type is based on `TYCOD DESCRIPTION`, which is passed through as
   raw_call_desc
 - race is passed through to provide access to greater granularity
@@ -794,7 +807,9 @@ We’re excited to see what you come up with!
   and the latter 50% null in the dataset
 - Outcomes are based on raw column result, which is passed through
 - search_conducted and search_basis are derived from the raw column search,
-  which is passed through
+  which is passed through; where SEARCH was NA, search_conducted as set to
+  false, under the assumption that sometimes officers don't record the absence
+  of a search
 - 2012 has suspiciously little data
 
 ## Aurora, CO
@@ -1020,7 +1035,6 @@ We’re excited to see what you come up with!
 - subject_race is based on the raw columns defendant_ethnicity and
   defendant_race, which are passed through
 
--23-
 ## Owensboro, KY
 **Data notes**:
 - There is a list_of_officers.csv as well as the excel spreadsheet
@@ -1034,12 +1048,28 @@ We’re excited to see what you come up with!
 - subject race is based on RACE in the raw data and passed through as raw_race
 - violation is a concatenation of `Violation Description X` where X is 1 to 9
 - type is based on `Violation Description 1`
+- 2015 and 2017 only have data for part of the year
 
 ## New Orleans, LA
 **Data notes**:
+- Data is deduplicated on EventDate, BlockAddress, and SubjectID, which reduces
+  the number of rows by ~0.07%
 - Addresses were partially anonymized by the department replacing the last two
   numbers of the address number with XX; these were replaced with 00 so we
   could at least geocode the block level address
+- search_conducted is true when the ActionsTaken includes "Search Occurred: Yes",
+  and it's false when that is not present or the ActionsTaken column is NA,
+  under the assumption that NA is equivalent to "Stop Results: No action
+  taken"
+- reason_for_stop is StopDescription in the raw data; type is based on this
+  column
+- outcomes, search, and contraband fields are all based on the ActionsTaken
+  column, which is passed through as raw_actions_taken; NA in this column is
+  assumed to be 'no actions taken'
+- subject_race is based on SubjectRace raw column, which is passed through as
+  raw_subject_race
+- data before 2010 is sparse and unreliable so it is removed from the clean
+  dataset
 
 ## Statewide, MA
 **Data notes**:
@@ -1107,6 +1137,12 @@ We’re excited to see what you come up with!
 - Data is lacking contraband and location information
 - If a citation was not issued, it's unclear whether a warning was issued or
   something else
+- subject_race is based on `RACE OF DRIVER` in the raw data, which is passed
+  through as raw_race_of_driver
+- search_conducted is based on `VEHICLE SEARCHED?`; "No Data" is assumed to be
+  false because it is likely that "No Data" is an autofill value for NA, which
+  we coerce to false elsewhere under the assumption that officers sometimes
+  don't record the absence of a search
 
 ## Statewide, MO
 **Data notes**:
@@ -1129,6 +1165,7 @@ We’re excited to see what you come up with!
 ## Statewide, MT
 **Data notes**: none
 
+27
 ## Raleigh, NC
 **Data notes**:
 - Data is pulled out of Statewide, NC data, so refer to that for processing

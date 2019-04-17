@@ -121,6 +121,8 @@ clean <- function(d, helpers) {
       ),
       subject_race = tr_race[tolower(subject_race_description)],
       subject_sex = tr_sex[subject_sex],
+      # NOTE: assuming FALSE is the same as NA for searched
+      search_conducted = replace_na(search_conducted, F),
       search_person = str_detect(SearchType, "Driver|Passenger"),
       search_vehicle = str_detect(SearchType, "Vehicle"),
       sr = tolower(reason_for_search),

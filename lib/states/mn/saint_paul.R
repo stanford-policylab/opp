@@ -22,52 +22,55 @@ clean <- function(d, helpers) {
     "Asian" = "asian/pacific islander",
     "Black" = "black",
     "Hispanic" = "hispanic",
-    "Native American" = "other/unknown",
+    "Native American" = "other",
     "White" = "white"
   )
 
   d$data %>%
-    merge_rows(
-      `DATE OF STOP`,
-      `RACE OF DRIVER`,
-      `AGE OF DRIVER`,
-      `GENDER OF DRIVER`,
-      `POLICE GRID NUMBER`
-    ) %>%
-    rename(
-      police_grid_number = `POLICE GRID NUMBER`,
-      subject_age = `AGE OF DRIVER`
-    ) %>%
-    extract_and_add_decimal_lat_lng(
-      "LOCATION OF STOP BY POLICE GRID"
-    ) %>%
-    mutate(
-      datetime = parse_datetime(`DATE OF STOP`, "%m/%d/%Y %I:%M:%S %p"),
-      date = as.Date(datetime),
-      time = format(datetime, "%H:%M:%S"),
-      # NOTE: all stops either involved driver or vehicle, so vehicular
-      type = "vehicular",
-      citation_issued = tr_yn[`CITATION ISSUED?`],
-      # TODO(phoebe): if a citation wasn't issued, was it a warning?
-      # https://app.asana.com/0/456927885748233/950796405221402 
-      # warning_issued = !citation_issued,
-      frisk_performed = tr_yn[`DRIVER FRISKED?`],
-      search_vehicle = tr_yn[`VEHICLE SEARCHED?`],
-      search_conducted = search_vehicle,
-      # TODO(phoebe): can we get other outcomes?
-      # https://app.asana.com/0/456927885748233/573247093484092
-      outcome = first_of(
-        "citation" = citation_issued
-        # "warning" = warning_issued
-      ),
-      # TODO(phoebe): can we get contraband?
-      # https://app.asana.com/0/456927885748233/573247093484095
-      # TODO(phoebe): can we get location?
-      # https://app.asana.com/0/456927885748233/573247093484094
-      # TODO(phoebe): can we get reason for stop?
-      # https://app.asana.com/0/456927885748233/573247093484093
-      subject_race = tr_race[`RACE OF DRIVER`],
-      subject_sex = tr_sex[`GENDER OF DRIVER`]
-    ) %>%
-    standardize(d$metadata)
+  merge_rows(
+    `DATE OF STOP`,
+    `RACE OF DRIVER`,
+    `AGE OF DRIVER`,
+    `GENDER OF DRIVER`,
+    `POLICE GRID NUMBER`
+  ) %>%
+  rename(
+    police_grid_number = `POLICE GRID NUMBER`,
+    subject_age = `AGE OF DRIVER`
+  ) %>%
+  extract_and_add_decimal_lat_lng(
+    "LOCATION OF STOP BY POLICE GRID"
+  ) %>%
+  mutate(
+    datetime = parse_datetime(`DATE OF STOP`, "%m/%d/%Y %I:%M:%S %p"),
+    date = as.Date(datetime),
+    time = format(datetime, "%H:%M:%S"),
+    # NOTE: all stops either involved driver or vehicle, so vehicular
+    type = "vehicular",
+    citation_issued = tr_yn[`CITATION ISSUED?`],
+    # TODO(phoebe): if a citation wasn't issued, was it a warning?
+    # https://app.asana.com/0/456927885748233/950796405221402 
+    # warning_issued = !citation_issued,
+    frisk_performed = tr_yn[`DRIVER FRISKED?`],
+    search_vehicle = replace_na(tr_yn[`VEHICLE SEARCHED?`], F),
+    search_conducted = search_vehicle,
+    # TODO(phoebe): can we get other outcomes?
+    # https://app.asana.com/0/456927885748233/573247093484092
+    outcome = first_of(
+      "citation" = citation_issued
+      # "warning" = warning_issued
+    ),
+    # TODO(phoebe): can we get contraband?
+    # https://app.asana.com/0/456927885748233/573247093484095
+    # TODO(phoebe): can we get location?
+    # https://app.asana.com/0/456927885748233/573247093484094
+    # TODO(phoebe): can we get reason for stop?
+    # https://app.asana.com/0/456927885748233/573247093484093
+    subject_race = tr_race[`RACE OF DRIVER`],
+    subject_sex = tr_sex[`GENDER OF DRIVER`]
+  ) %>%
+  rename(
+    raw_race_of_driver = `RACE OF DRIVER`
+  ) %>%
+  standardize(d$metadata)
 }

@@ -187,12 +187,8 @@ clean <- function(d, helpers) {
       ),
       reason_for_stop = tr_reason[`REASON FOR STOP`],
       subject_race = tr_race[RACE],
-      raw_search = c(
-        N = "no search",
-        S = "search, contraband found",
-        Z = "search, no contraband found"
-      )[SEARCH],
-      search_conducted = tr_search[SEARCH],
+      # NOTE: assume NAs are "N" - No search
+      search_conducted = tr_search[replace_na(SEARCH, "N")],
       contraband_found = tr_contraband[SEARCH],
       use_of_force_description = tr_force[`DETENTION TYPE`],
       use_of_force_reason = tr_force_reason[`DETENTION REASON`]
@@ -204,12 +200,13 @@ clean <- function(d, helpers) {
       time,
       location,
       subject_race,
-      raw_search
+      SEARCH
     ) %>%
     rename(
       raw_call_desc = call_desc,
       raw_event_desc = event_desc,
-      raw_race = RACE
+      raw_race = RACE,
+      raw_search = SEARCH
     ) %>%
     standardize(d$metadata)
 }
