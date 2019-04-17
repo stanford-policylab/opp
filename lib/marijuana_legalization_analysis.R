@@ -288,9 +288,26 @@ compose_timeseries_rate_plot <- function(
     expand_limits(
       y = -0.0001
     ) +
-    base_theme(
+    theme_bw(
+      base_size = 15
     ) +
     theme(
+      # NOTE: remove the title
+      plot.title = element_blank(),
+      # NOTE: make the background white
+      panel.background = element_rect(fill = "white", color = "white"),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      # NOTE: minimize margins
+      plot.margin = unit(rep(0.2, 4), "cm"),
+      panel.margin = unit(0.25, "lines"),
+      # NOTE: tiny space between axis labels and tick marks
+      axis.title.x = element_text(margin = ggplot2::margin(t = 6.0)),
+      axis.title.y = element_text(margin = ggplot2::margin(t = 6.0)),
+      # NOTE: simplify legend
+      legend.key = element_blank(),
+      legend.background = element_rect(fill = "transparent"),
+      legend.title = element_blank(),
       # NOTE: ifelse and if_else can't return vectors
       legend.position = if (is_treatment_state) c(0.88, 0.88) else c(0.96, 0.95),
       axis.title.x = element_blank(),
@@ -330,29 +347,6 @@ compose_timeseries_rate_plot <- function(
   }
 
   p
-}
-
-
-base_theme <- function() {
-    theme_bw(base_size = 15) +
-    theme(
-      # NOTE: remove the title
-      plot.title = element_blank(),
-      # NOTE: make the background white
-      panel.background = element_rect(fill = "white", color = "white"),
-      panel.grid.major = element_blank(),
-      panel.grid.minor = element_blank(),
-      # NOTE: minimize margins
-      plot.margin = unit(rep(0.2, 4), "cm"),
-      panel.margin = unit(0.25, "lines"),
-      # NOTE: tiny space between axis labels and tick marks
-      axis.title.x = element_text(margin = ggplot2::margin(t = 6.0)),
-      axis.title.y = element_text(margin = ggplot2::margin(t = 6.0)),
-      # NOTE: simplify legend
-      legend.key = element_blank(),
-      legend.background = element_rect(fill = "transparent"),
-      legend.title = element_blank()
-    )
 }
 
 
