@@ -152,8 +152,8 @@ clean <- function(d, helpers) {
   tr_race <- c(
     "A" = "asian/pacific islander",
     "B" = "black",
-    "I" = "other/unknown",
-    "U" = "other/unknown",
+    "I" = "other",
+    "U" = "unknown",
     "W" = "white",
     "H" = "hispanic"
   )
@@ -233,7 +233,17 @@ clean <- function(d, helpers) {
         gt_0(Weapons),
         NA
       )
+    ) %>%
+    rename(
+      raw_ethnicity = Ethnicity,
+      raw_race = Race,
+      raw_ounces = Ounces,
+      raw_pounds = pounds,
+      raw_kilos = Kilos,
+      raw_grams = Grams,
+      raw_dosages = Dosages
     )
+
     # NOTE: select only schema cols so merge rows has to merge fewer columns
     select_only_schema_cols(list(data = tbl))$data %>%
     merge_rows(
