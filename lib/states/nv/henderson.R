@@ -66,6 +66,9 @@ clean <- function(d, helpers) {
     ) %>%
     # NOTE: 2010 data is extremely sparse and appears to be recording errors
     filter(year(date) > 2010) %>%
+    rename(
+      raw_race = race
+    ) %>%
     helpers$add_lat_lng(
     ) %>%
     standardize(d$metadata)

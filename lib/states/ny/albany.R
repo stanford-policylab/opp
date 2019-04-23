@@ -18,10 +18,11 @@ load_raw <- function(raw_data_dir, n_max) {
 
 clean <- function(d, helpers) {
 
-  tr_race <- c(tr_race,
-    M = "other/unknown",
+  tr_race <- c(
+    tr_race,
+    M = "other",
     "H:" = "hispanic",
-    R = "other/unknown"
+    R = "other"
   )
 
   # TODO(phoebe): can we get reason_for_stop/search/contraband fields?
@@ -30,7 +31,12 @@ clean <- function(d, helpers) {
   # https://app.asana.com/0/456927885748233/758649899422595
   d$data %>%
     merge_rows(
-      incident
+      incident,
+      mapinfo_lo,
+      date,
+      dob,
+      sex,
+      race
     ) %>%
     rename(
       violation = crime_code_A,
@@ -46,11 +52,13 @@ clean <- function(d, helpers) {
       location = str_replace(mapinfo_lo, "&&", " & "),
       date = parse_date(date),
       subject_dob = parse_date(dob),
-      subject_age = age_at_date(subject_dob, date),
       subject_sex = tr_sex[sex],
       subject_race = tr_race[race],
     ) %>%
     helpers$add_lat_lng(
+    ) %>%
+    rename(
+      raw_race = race
     ) %>%
     standardize(d$metadata)
 }

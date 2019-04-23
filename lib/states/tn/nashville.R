@@ -14,16 +14,6 @@ load_raw <- function(raw_data_dir, n_max) {
 
 clean <- function(d, helpers) {
 
-  tr_race <- c(
-    A = "asian/pacific islander",
-    B = "black",
-    H = "hispanic",
-    I = "other/unknown",
-    O = "other/unknown",
-    U = "other/unknown",
-    W = "white"
-  )
-
   tr_stop_type <- c(
     "CR" = "child restraint",
     "INV" = "investigative stop",
@@ -54,12 +44,9 @@ clean <- function(d, helpers) {
     notes = officers_comments,
     officer_id = officer_employee_number,
     search_conducted = searchoccur,
-    search_incident_to_arrest = search_arrest,
     search_vehicle = vehicle_searched,
     subject_age = age_of_suspect,
-    subject_race = race,
-    subject_sex = sex,
-    vehicle_registration_state = vehicle_tag_state
+    vehicle_registration_state = vehicle_tag_state,
   ) %>%
   helpers$add_lat_lng(
   ) %>%
@@ -78,7 +65,7 @@ clean <- function(d, helpers) {
     "passenger_searched",
     "search_conducted",
     "search_consent",
-    "search_incident_to_arrest",
+    "search_arrest",
     "search_inventory",
     "search_plain_view",
     "search_probable_cause",
@@ -94,8 +81,13 @@ clean <- function(d, helpers) {
     type = "vehicular",
     date = parse_date(date, "%m/%d/%Y"),
     time = parse_time(time, "%I:%M:%S %p"),
-    citation_issued = traffic_citation_issued | misd_state_citation_issued,
-    warning_issued = verbal_warning_issued | written_warning_issued,
+    citation_issued =
+      traffic_citation_issued
+      # NOTE: misd_state_citation_issued is NA sometimes, assume this is false
+      | replace_na(misd_state_citation_issued, F),
+    warning_issued =
+      verbal_warning_issued
+      | replace_na(written_warning_issued, F),
     outcome = first_of(
       arrest = arrest_made,
       citation = citation_issued,
@@ -104,29 +96,39 @@ clean <- function(d, helpers) {
     reason_for_stop = tr_stop_type[stop_type],
     # NOTE: while
     violation = reason_for_stop,
+    contraband_found = replace_na(contraband_found),
     search_person = driver_searched | passenger_searched,
     subject_race = tr_race[if_else_na(
       (suspect_ethnicity == "H" | suspect_ethnicity == "LATINO"),
       "H",
       subject_race
     )],
-    subject_sex = tr_sex[subject_sex],
+    subject_sex = tr_sex[sex],
     search_basis = first_of(
       "plain view" = search_plain_view,
       "consent" = search_consent,
-      "other" = (
-        search_incident_to_arrest
+      "other" = 
+        search_arrest
         | search_warrant
-        | search_inventory
-      ),
-      "probable cause" = (
-        search_person
-        | search_vehicle
-        | search_probable_cause
-        | search_conducted  # default
-      )
+        | search_inventory,
+      "probable cause" = search_conducted # default
     ),
     precinct = substr(zone, 1, 1)
+  ) %>%
+  add_raw_colname_prefix(
+    traffic_citation_issued,
+    misd_state_citation_issued,
+    verbal_warning_issued,
+    written_warning_issued,
+    driver_searched,
+    passenger_searched,
+    suspect_ethnicity,
+    suspect_race,
+    search_plain_view,
+    search_consent,
+    search_arrest,
+    search_warrant,
+    search_inventory
   ) %>%
   standardize(d$metadata)
 }

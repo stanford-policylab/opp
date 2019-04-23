@@ -25,65 +25,79 @@ load_raw <- function(raw_data_dir, n_max) {
 
 clean <- function(d, helpers) {
 
-  tr_race <- c(tr_race,
+  tr_race <- c(
+    tr_race,
     "asian/pacific islndr" = "asian/pacific islander",
     "native hawaiian or other pacific islander" = "asian/pacific islander",
-    "unknown" = "other/unknown",
-    "american indian or alaska native" = "other/unknown"
+    "american indian or alaska native" = "other"
   )
 
   # TODO(phoebe): can we get reason_for_stop/search/contraband fields?
   # https://app.asana.com/0/456927885748233/757611127540101
   d$data %>%
-    merge_rows(
-      case_number
-    ) %>%
-    rename(
-      location = IncidentLocation,
-      vehicle_registration_state = `License State`,
-      vehicle_year = VehicleYear,
-      vehicle_color = Color,
-      vehicle_make = Make,
-      vehicle_model = Model,
-      # NOTE: all officer names are in last name since there are punctuation or
-      # spaces between the first and last names
-      officer_last_name = OfficerName,
-      unit = Unit
-    ) %>%
-    mutate(
-      # NOTE: There are TRAFFIC STOP and PEDESTRIAN STOP and what looks like
-      # some accidental free form text for this column, but most reference
-      # patrol so classifying as vehicular
-      type = if_else_na(
-        CFS_Code == "PEDESTRIAN STOP",
-        "pedestrian",
-        "vehicular"
-      ),
-      datetime = parse_datetime(`Incident Datetime`, "%Y/%m/%d %H:%M:%S"),
-      date = as.Date(datetime),
-      time = format(datetime, "%H:%M:%S"),
-      subject_sex = tr_sex[SubjectGender],
-      subject_race = tr_race[if_else_na(
-        Ethnicity == "Hispanic Or Latino",
-        "hispanic",
-        tolower(Race)
-      )],
-      subject_dob = parse_date(DateofBirth),
-      subject_age = age_at_date(subject_dob, date),
-      disposition = tolower(Disposition),
-      # NOTE: FIELD CONTACT CARD just records the event when no action was
-      # taken
-      warning_issued = str_detect(disposition, "warning"),
-      # NOTE: according to the PD, summons is a citation
-      citation_issued = str_detect(disposition, "summons"),
-      arrest_made = str_detect(disposition, "arrest"),
-      outcome = first_of(
-        arrest = arrest_made,
-        citation = citation_issued,
-        warning = warning_issued
-      )
-    ) %>%
-    helpers$add_lat_lng(
-    ) %>%
-    standardize(d$metadata)
+  merge_rows(
+    case_number,
+    `Incident Datetime`,
+    IncidentLocation,
+    OfficerName,
+    SubjectGender,
+    Race,
+    Ethnicity,
+    DateofBirth,
+    VehicleYear,
+    Color,
+    Make,
+    Model
+  ) %>%
+  rename(
+    location = IncidentLocation,
+    vehicle_registration_state = `License State`,
+    vehicle_year = VehicleYear,
+    vehicle_color = Color,
+    vehicle_make = Make,
+    vehicle_model = Model,
+    # NOTE: all officer names are in last name since there are punctuation or
+    # spaces between the first and last names
+    officer_last_name = OfficerName,
+    unit = Unit
+  ) %>%
+  mutate(
+    # NOTE: There are TRAFFIC STOP and PEDESTRIAN STOP and what looks like
+    # some accidental free form text for this column, but most reference
+    # patrol so classifying as vehicular
+    type = if_else_na(
+      CFS_Code == "PEDESTRIAN STOP",
+      "pedestrian",
+      "vehicular"
+    ),
+    datetime = parse_datetime(`Incident Datetime`, "%Y/%m/%d %H:%M:%S"),
+    date = as.Date(datetime),
+    time = format(datetime, "%H:%M:%S"),
+    subject_sex = tr_sex[SubjectGender],
+    subject_race = tr_race[if_else_na(
+      Ethnicity == "Hispanic Or Latino",
+      "hispanic",
+      tolower(Race)
+    )],
+    subject_dob = parse_date(DateofBirth),
+    disposition = tolower(Disposition),
+    # NOTE: FIELD CONTACT CARD just records the event when no action was
+    # taken
+    warning_issued = str_detect(disposition, "warning"),
+    # NOTE: according to the PD, summons is a citation
+    citation_issued = str_detect(disposition, "summons"),
+    arrest_made = str_detect(disposition, "arrest"),
+    outcome = first_of(
+      arrest = arrest_made,
+      citation = citation_issued,
+      warning = warning_issued
+    )
+  ) %>%
+  rename(
+    raw_ethnicity = Ethnicity,
+    raw_race = Race
+  ) %>%
+  helpers$add_lat_lng(
+  ) %>%
+  standardize(d$metadata)
 }
