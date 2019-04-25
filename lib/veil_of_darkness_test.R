@@ -1,6 +1,6 @@
 library(here)
 source(here::here("lib", "opp.R"))
-
+library(tictoc)
 
 #' Veil of Darkness Test
 #'
@@ -161,7 +161,7 @@ prepare_vod_data <- function(
       demographic_col = !!demographic_colq,
       min_stops_per_race = min_stops_per_race    
     )
-    
+
   sunset_times <- calculate_sunset_times(
     d$data,
     !!date_colq,
@@ -207,6 +207,12 @@ prepare_vod_data <- function(
         super_geo_col = !!super_geo_colq,
         max_geos_per_super = max_geos_per_super
       )
+  
+  print("States after final filter:")
+  print(d$data %>% select(state) %>% n_distinct())
+  print("Geographies after final filter:")
+  print(d$data %>% select(geography) %>% n_distinct())
+  
   d 
 }
 
@@ -315,8 +321,7 @@ filter_to_geography_years_with_sufficient_stops_per_race <- function(
           vars(eligible_demographics), 
           all_vars(. > min_stops_per_race)
         ) %>% 
-        select(!!geography_colq, !!year_colq),
-      by = c(quo_name(geography_colq), quo_name(year_colq))
+        select(!!geography_colq, !!year_colq)
     )
 }
 
@@ -339,8 +344,7 @@ filter_to_top_n_geos_per_super_geo <- function(
         count(!!super_geo_colq, !!geography_colq) %>%
         group_by(!!super_geo_colq) %>% 
         top_n(max_geos_per_super, n) %>% 
-        select(!!geography_colq),
-      by = c(quo_name(geography_colq))
+        select(!!geography_colq)
     )
 }
 

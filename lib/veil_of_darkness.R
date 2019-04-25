@@ -83,7 +83,7 @@ veil_of_darkness_daylight_savings <- function() {
     interact_time_location = T
   )
   print("Saving model...")
-  write_rds(mod, here::here("cache", str_c("dst_mod_full.rds")))
+  write_rds(mod, here::here("cache", "dst_mod_full.rds"))
 }
 
 prepare_veil_of_darkness_data <- function(dst = F, week_radius = 2) {
@@ -93,18 +93,154 @@ prepare_veil_of_darkness_data <- function(dst = F, week_radius = 2) {
       dst = dst,
       week_radius = week_radius,
       min_stops_per_race = 100,
-      max_geos_per_state = 1
+      max_geos_per_super = 1
     ) %>%
       mutate(is_state_patrol = F),
     prepare_veil_of_darkness_states(
       dst = dst,
       week_radius = week_radius,
       min_stops_per_race = 100,
-      max_geos_per_state = 20
+      max_geos_per_super = 20
     ) %>%
       mutate(is_state_patrol = T)
   )
   
+}
+
+prepare_veil_of_darkness_cities <- function(
+  include_sg = T, 
+  dst = F,
+  week_radius = 2,
+  min_stops_per_race = 200,
+  max_geos_per_super = 1
+) {
+  
+  city_geocodes <-
+    read_csv(here::here("resources", "city_coverage_geocodes.csv")) %>%
+    separate(loc, c("city", "state"), sep = ",") %>%
+    rename(center_lat = lat, center_lng = lng)
+  
+  print("Loading city data..")
+  tbl <- load_veil_of_darkness_cities() %>% 
+    left_join(city_geocodes) %>%
+    mutate(city_state = str_c(city, state, sep = ", "))
+  
+  if(include_sg) {
+    print("creating subgeography data..")
+    tbl_sg <-
+      tbl %>%
+      filter(
+        !(city == "Nashville" & precinct == "U"),
+        !(city == "Arlington" & !(district %in% c("N", "E", "S", "W"))),
+        !(city == "Plano"     & sector == "9999")
+      ) %>%
+      mutate(
+        subgeography = case_when(
+          city == "Bakersfield"     ~ beat,
+          city == "San Diego"       ~ service_area,
+          city == "San Francisco"   ~ district,
+          city == "Aurora"          ~ district,
+          city == "Hartford"        ~ district,
+          city == "New Orleans"     ~ district,
+          city == "Saint Paul"      ~ police_grid_number,
+          # NOTE: beat is 75% null
+          city == "Cincinnati"      ~ beat,
+          # NOTE: 5 zones and ~9 precincts
+          city == "Columbus"        ~ zone,
+          city == "Philadelphia"    ~ district,
+          # NOTE: 8 precincts, but 50+ reporting areas and zones each
+          city == "Nashville"       ~ precinct,
+          # NOTE: 4 districts, 40 beats
+          city == "Arlington"       ~ district,
+          # NOTE: 4 sectors, 25 beats, both null ~50% of the time
+          city == "Plano"           ~ sector,
+          # NOTE: 1 substations, 50+ districts
+          city == "San Antonio"     ~ substation,
+          # NOTE: district 2 is missing from shapefiles so NA; there are 6
+          # districts and 50+ sectors
+          city == "Madison"         ~ district
+        ),
+        city_state_subgeography = str_c(city_state, ": ", subgeography)
+      )
+    
+    eligible_subeography_locations <-
+      tbl_sg %>%
+      group_by(city_state) %>%
+      summarize(
+        subgeography_coverage = sum(!is.na(city_state_subgeography)) / n()
+      ) %>%
+      # TODO(danj): does 80% make sense?
+      filter(subgeography_coverage > 0.80) %>%
+      pull(city_state)
+    print("eligible subgeography locations: ")
+    print(eligible_subeography_locations)
+    tbl_sg <- filter(tbl_sg, city_state %in% eligible_subeography_locations)
+  }
+  
+  print("preparing city data for vod analysis..")
+  vod_tbl <- tbl %>% 
+    rename(geography = city_state) %>% 
+    prepare_vod_data(
+      state,
+      dst_filter = dst,
+      super_geo_col = geography,
+      week_radius = week_radius,
+      min_stops_per_race = min_stops_per_race,
+      max_geos_per_super = max_geos_per_super
+    )
+  
+  if(include_sg) {
+    vod_tbl_sg <- prepare_vod_data(
+        tbl_sg %>% rename(geography = city_state)
+      )$data
+    vod_tbl_sg_plus <- prepare_vod_data(
+        tbl_sg %>% rename(geography = city_state_subgeography)
+      )$data
+    
+    list(
+      vod_tbl = vod_tbl$data,
+      vod_tbl_sg = vod_tbl_sg,
+      vod_tbl_sg_plus = vod_tbl_sg_plus
+    )
+  } else {
+    vod_tbl$data
+  }
+  
+}
+
+prepare_veil_of_darkness_states <- function(
+  dst = F,
+  week_radius = 2,
+  min_stops_per_race = 200,
+  max_geos_per_super = 20
+) {
+  
+  state_geocodes <-
+    read_rds(here::here("resources", "state_county_geocodes.rds")) %>%
+    rename(county_state = loc)
+  
+  print("Loading state data...")
+  tbl <- 
+    load_veil_of_darkness_states() %>%
+    left_join(
+      state_geocodes, 
+      by = c("state", "county_name")
+    ) %>% 
+    rename(geography = county_state)
+  
+  print("preparing state data for vod analysis..")
+  
+  tbl <- tbl %>% 
+    prepare_vod_data(
+      state, 
+      dst_filter = dst,
+      super_geo_col = state,
+      week_radius = week_radius,
+      min_stops_per_race = min_stops_per_race,
+      max_geos_per_super = max_geos_per_super
+    )
+  
+  tbl$data
 }
 
 load_veil_of_darkness_cities <- function() {
@@ -185,146 +321,9 @@ load_veil_of_darkness_states <- function() {
     opp_filter_out_non_highway_patrol_stops_from_states()
 }
 
-prepare_veil_of_darkness_cities <- function(
-  include_sg = T, 
-  dst = F,
-  week_radius = 2,
-  min_stops_per_race = 1000,
-  max_geos_per_state = 1
-) {
-  
-  city_geocodes <-
-    read_csv(here::here("resources", "city_coverage_geocodes.csv")) %>%
-    separate(loc, c("city", "state"), sep = ",") %>%
-    rename(center_lat = lat, center_lng = lng)
-  
-  print("Loading city data..")
-  tbl <- load_veil_of_darkness_cities() %>% 
-    left_join(city_geocodes) %>%
-    mutate(city_state = str_c(city, state, sep = ", "))
-  
-  if(include_sg) {
-    print("creating subgeography data..")
-    tbl_sg <-
-      tbl %>%
-      filter(
-        !(city == "Nashville" & precinct == "U"),
-        !(city == "Arlington" & !(district %in% c("N", "E", "S", "W"))),
-        !(city == "Plano"     & sector == "9999")
-      ) %>%
-      mutate(
-        subgeography = case_when(
-          city == "Bakersfield"     ~ beat,
-          city == "San Diego"       ~ service_area,
-          city == "San Francisco"   ~ district,
-          city == "Aurora"          ~ district,
-          city == "Hartford"        ~ district,
-          city == "New Orleans"     ~ district,
-          city == "Saint Paul"      ~ police_grid_number,
-          # NOTE: beat is 75% null
-          city == "Cincinnati"      ~ beat,
-          # NOTE: 5 zones and ~9 precincts
-          city == "Columbus"        ~ zone,
-          city == "Philadelphia"    ~ district,
-          # NOTE: 8 precincts, but 50+ reporting areas and zones each
-          city == "Nashville"       ~ precinct,
-          # NOTE: 4 districts, 40 beats
-          city == "Arlington"       ~ district,
-          # NOTE: 4 sectors, 25 beats, both null ~50% of the time
-          city == "Plano"           ~ sector,
-          # NOTE: 1 substations, 50+ districts
-          city == "San Antonio"     ~ substation,
-          # NOTE: district 2 is missing from shapefiles so NA; there are 6
-          # districts and 50+ sectors
-          city == "Madison"         ~ district
-        ),
-        city_state_subgeography = str_c(city_state, ": ", subgeography)
-      )
-    
-    eligible_subeography_locations <-
-      tbl_sg %>%
-      group_by(city_state) %>%
-      summarize(
-        subgeography_coverage = sum(!is.na(city_state_subgeography)) / n()
-      ) %>%
-      # TODO(danj): does 80% make sense?
-      filter(subgeography_coverage > 0.80) %>%
-      pull(city_state)
-    print("eligible subgeography locations: ")
-    print(eligible_subeography_locations)
-    tbl_sg <- filter(tbl_sg, city_state %in% eligible_subeography_locations)
-  }
-  
-  print("preparing city data for vod analysis..")
-  vod_tbl <- tbl %>% 
-    rename(geography = city_state) %>% 
-    prepare_vod_data(
-      state,
-      dst_filter = dst,
-      super_geo_col = geography,
-      week_radius = week_radius,
-      min_stops_per_race = min_stops_per_race,
-      max_geos_per_state = max_geos_per_state
-    )
-  
-  if(include_sg) {
-    vod_tbl_sg <- prepare_vod_data(tbl_sg, city_state)$data
-    vod_tbl_sg_plus <- prepare_vod_data(tbl_sg, city_state_subgeography)$data
-  
-    list(
-      vod_tbl = vod_tbl$data,
-      vod_tbl_sg = vod_tbl_sg,
-      vod_tbl_sg_plus = vod_tbl_sg_plus
-    )
-  } else {
-    vod_tbl$data
-  }
-  
-}
-
-prepare_veil_of_darkness_states <- function(
-  dst = F,
-  week_radius = 2,
-  min_stops_per_race = 1000,
-  max_geos_per_state = 50
-) {
-  
-  state_geocodes <-
-    read_rds(here::here("resources", "state_county_geocodes.rds")) %>%
-    rename(county_state = loc)
-  
-  print("Loading state data...")
-  tbl <- 
-    load_veil_of_darkness_states() %>%
-    left_join(
-      state_geocodes, 
-      by = c("state", "county_name")
-    ) %>% 
-    rename(geography = county_state)
-    # filter(
-    #   county_state %in% eligible_counties(
-    #     ., 
-    #     min_stops_per_race = 100,
-    #     max_counties_per_state = 20
-    #   )
-    # ) 
-  
-  print("preparing state data for vod analysis..")
-  
-  tbl <- tbl %>% 
-    prepare_vod_data(
-      state, 
-      dst_filter = dst,
-      super_geo_col = state,
-      week_radius = week_radius,
-      min_stops_per_race = min_stops_per_race,
-      max_geos_per_state = max_geos_per_state
-    )
-  
-  tbl$data
-}
 
 
+################
 
 veil_of_darkness_cities <- function() {
   
@@ -341,9 +340,9 @@ veil_of_darkness_cities <- function() {
       # tibble(degree = rep(1:6, 2), interact = c(rep(T, 6), rep(F, 6))),
       function(degree, interact) {
         bind_rows(
-          vod_coef(vod_tbl, city_state, degree, interact),
-          vod_coef(vod_tbl_sg, city_state, degree, interact),
-          vod_coef(vod_tbl_sg_plus, city_state_subgeography, degree, interact)
+          vod_coef(vod_tbl, geography, degree, interact),
+          vod_coef(vod_tbl_sg, geography, degree, interact),
+          vod_coef(vod_tbl_sg_plus, geography, degree, interact)
         ) %>%
         mutate(
           data = c(
@@ -362,7 +361,7 @@ veil_of_darkness_cities <- function() {
       }
     ) %>% bind_rows()
 
-  list(coefficients = coefficients, plots = compose_vod_plots(vod_tbl, city_state))
+  list(coefficients = coefficients, plots = compose_vod_plots(vod_tbl, geography))
 }
 
 vod_coef <- function(tbl, control_col, degree, interact_time_location) {
@@ -381,19 +380,17 @@ veil_of_darkness_states <- function() {
   
   tbl <- prepare_veil_of_darkness_states()
 
-  coefficients <- bind_rows(
+  print("States prepared. Starting models.")
+  
+  coefficients <- 
     par_pmap(
       mc.cores = 3,
       tibble(degree = rep(6, 2), interact = c(T, F)),
       function(interact, degree = 6) {
         bind_rows(
           vod_coef(tbl, state, degree, interact),
-          vod_coef(tbl, county_state, degree, interact)
-        ) %>%
-        rename(
-          is_dark = Estimate,
-          std_error = `Std. Error`
-        ) %>%
+          vod_coef(tbl, geography, degree, interact)
+        ) %>% 
         mutate(
           controls = c(
             "time, state",
@@ -403,11 +400,9 @@ veil_of_darkness_states <- function() {
           interact = interact
         )
       }
-    )
-  )
+    ) %>% bind_rows()
   
-  # list(coefficients = coefficients, plots = compose_vod_plots(tbl, state))
-  list(coefficients = coefficients)
+  list(coefficients = coefficients, plots = compose_vod_plots(tbl, state))
 }
 
 
