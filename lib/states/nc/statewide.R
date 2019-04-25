@@ -149,102 +149,91 @@ load_raw <- function(raw_data_dir, n_max) {
 
 clean <- function(d, helpers) {
 
-  tr_race <- c(
-    "A" = "asian/pacific islander",
-    "B" = "black",
-    "I" = "other/unknown",
-    "U" = "other/unknown",
-    "W" = "white",
-    "H" = "hispanic"
-  )
+  gt_0 <- function(col) { !is.na(col) & col > 0 }
 
-  gt_0 <- function(col) {
-    !is.na(col) & col > 0
-  }
-
-  tbl <-
-    d$data %>%
-    rename(
-      department_name = AgencyDescription,
-      officer_id = OfficerId,
-      reason_for_search = Basis,
-      reason_for_stop = stop_purpose_description,
-      search_vehicle = VehicleSearch,
-      subject_age = Age
-    ) %>%
-    mutate(
-      # NOTE: all persons are either Drivers or Passengers (no Pedestrians)
-      type = "vehicular",
-      datetime = parse_datetime(StopDate),
-      date = as.Date(datetime),
-      time = format(datetime, "%H:%M:%S"),
-      # NOTE: the majority of times are midnight, which signify missing data
-      time = if_else(time == "00:00:00", NA_character_, time),
-      # TODO(phoebe): can we get better location data?
-      # https://app.asana.com/0/456927885748233/635930602677956
-      location = str_c_na(
-        StopCity,
-        county_name,
-        sep = ", "
-      ),
-      arrest_made = str_detect(action_description, "Arrest"),
-      citation_issued = str_detect(action_description, "Citation"),
-      warning_issued = str_detect(action_description, "Warning"),
-      # NOTE: a small percentage of these are "No Action Taken" which will
-      # be coerced to NAs during standardization
-      outcome = first_of(
-        "arrest" = arrest_made,
-        "citation" = citation_issued,
-        "warning" = warning_issued
-      ),
-      subject_race = tr_race[if_else(Ethnicity == "H", "H", Race)],
-      subject_sex = tr_sex[Gender],
-      search_conducted = !is.na(SearchID),
-      search_person = as.logical(DriverSearch) | as.logical(PassengerSearch),
-      frisk_performed = search_type_description == "Protective Frisk",
-      reason_for_frisk = if_else(
-        frisk_performed,
-        reason_for_search,
-        NA_character_
-      ),
-      search_basis = first_of(
-        "consent" = search_type_description == "Consent",
-        "probable cause" = search_type_description == "Probable Cause",
-        "other" = str_detect(
-          search_type_description,
-          "Search Incident to Arrest|Search Warrant"
-        )
-      ),
-      contraband_found = !is.na(ContrabandID),
-      # TODO(phoebe): what are "gallons" and "pints" typically of?
-      # https://app.asana.com/0/456927885748233/635930602677955
-      contraband_drugs = if_else(
-        contraband_found,
-        (gt_0(Ounces)
-         | gt_0(Pounds)
-         | gt_0(Kilos)
-         | gt_0(Grams)
-         | gt_0(Dosages)
-        ),
-        NA
-      ),
-      contraband_weapons = if_else(
-        contraband_found,
-        gt_0(Weapons),
-        NA
+  d$data %>%
+  rename(
+    department_name = AgencyDescription,
+    officer_id = OfficerId,
+    reason_for_search = Basis,
+    reason_for_stop = stop_purpose_description,
+    search_vehicle = VehicleSearch,
+    subject_age = Age
+  ) %>%
+  mutate(
+    # NOTE: all persons are either Drivers or Passengers (no Pedestrians)
+    type = "vehicular",
+    datetime = parse_datetime(StopDate),
+    date = as.Date(datetime),
+    time = format(datetime, "%H:%M:%S"),
+    # NOTE: the majority of times are midnight, which signify missing data
+    time = if_else(time == "00:00:00", NA_character_, time),
+    # TODO(phoebe): can we get better location data?
+    # https://app.asana.com/0/456927885748233/635930602677956
+    location = str_c_na(
+      StopCity,
+      county_name,
+      sep = ", "
+    ),
+    arrest_made = str_detect(action_description, "Arrest"),
+    citation_issued = str_detect(action_description, "Citation"),
+    warning_issued = str_detect(action_description, "Warning"),
+    # NOTE: a small percentage of these are "No Action Taken" which will
+    # be coerced to NAs during standardization
+    outcome = first_of(
+      "arrest" = arrest_made,
+      "citation" = citation_issued,
+      "warning" = warning_issued
+    ),
+    subject_race = tr_race[if_else(Ethnicity == "H", "H", Race)],
+    subject_sex = tr_sex[Gender],
+    search_conducted = !is.na(SearchID),
+    search_person = as.logical(DriverSearch) | as.logical(PassengerSearch),
+    frisk_performed = if_else_na(
+      search_type_description == "Protective Frisk",
+      T,
+      F
+    ),
+    reason_for_frisk = reason_for_search,
+    search_basis = first_of(
+      "consent" = search_type_description == "Consent",
+      "probable cause" = search_type_description == "Probable Cause",
+      "other" = str_detect(
+        search_type_description,
+        "Search Incident to Arrest|Search Warrant"
       )
-    )
-    # NOTE: select only schema cols so merge rows has to merge fewer columns
-    select_only_schema_cols(list(data = tbl))$data %>%
-    merge_rows(
-      date,
-      time,
-      location,
-      department_name,
-      officer_id,
-      subject_race,
-      subject_sex,
-      subject_age
-    ) %>%
-    standardize(d$metadata)
+    ),
+    # NOTE: if ContrabandID is not null, contraband was found
+    contraband_found = !is.na(ContrabandID),
+    # TODO(phoebe): what are "gallons" and "pints" typically of?
+    # https://app.asana.com/0/456927885748233/635930602677955
+    contraband_drugs =
+      gt_0(Ounces)
+      | gt_0(Pounds)
+      | gt_0(Kilos)
+      | gt_0(Grams)
+      | gt_0(Dosages),
+    contraband_weapons = gt_0(Weapons),
+  ) %>%
+  rename(
+    raw_ethnicity = Ethnicity,
+    raw_race = Race,
+    raw_driver_search = DriverSearch,
+    raw_passenger_search = PassengerSearch,
+    raw_action_description = action_description,
+    raw_search_type_description = search_type_description,
+    raw_dollar_amount = DollarAmt,
+    raw_dosages = Dosages,
+    raw_gallons = Gallons,
+    raw_grams = Grams,
+    raw_kilos = Kilos,
+    raw_money = Money,
+    raw_ounces = Ounces,
+    raw_pints = Pints,
+    raw_pounds = Pounds,
+    raw_weapons = Weapons,
+    raw_encounter_force = EncounterForce,
+    raw_engage_force = EngageForce
+  ) %>%
+  standardize(d$metadata)
 }

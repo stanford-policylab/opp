@@ -9,6 +9,7 @@
       location for all locations
     - address all responses from phoebe
     - sanitize_sensitive_information in locations not flagged?
+    - normalize county names? (NC)
   - go over analyses line by line
   - RIPA
     - post on website

@@ -24,8 +24,8 @@ clean <- function(d, helpers) {
     "Asian" = "asian/pacific islander",
     # NOTE: being hispanic/latino trumps other races in assignment
     "Black - Latino" = "hispanic",
-    "Unknown" = "other/unknown",
-    "American Indian" = "other/unknown"
+    "Unknown" = "unknown",
+    "American Indian" = "other"
   )
 
   tr_type <- c(
@@ -40,53 +40,64 @@ clean <- function(d, helpers) {
   # TODO(phoebe): can we get reason_for_stop?
   # https://app.asana.com/0/456927885748233/658391963833525
   d$data %>%
-    merge_rows(
-      datetimeoccur,
-      location,
-      districtoccur,
-      lat,
-      lng,
-      gender,
-      age,
-      race
-    ) %>%
-    rename(
-      subject_age = age,
-      location = location,
-      district = districtoccur,
-      arrest_made = individual_arrested,
-      search_person = individual_searched,
-      search_vehicle = vehicle_searched,
-      # police service area
-      service_area = psa
-    ) %>%
-    apply_translator_to(
-      tr_int_str_to_bool,
-      "arrest_made",
-      "search_person",
-      "search_vehicle",
-      "individual_contraband",
-      "vehicle_contraband",
-      "individual_frisked",
-      "vehicle_frisked"
-    ) %>%
-    mutate(
-      datetime = parse_datetime(datetimeoccur),
-      date = as.Date(datetime),
-      time = format(datetime, "%H:%M%S"),
-      type = tr_type[stoptype],
-      # TODO(phoebe): can we get other outcomes - citations/warnings?
-      # https://app.asana.com/0/456927885748233/658391963833527
-      outcome = first_of(
-        "arrest" = arrest_made
-      ),
-      contraband_found = individual_contraband | vehicle_contraband,
-      search_conducted = search_person | search_vehicle,
-      # TODO(ravi):  is a vehicle_frisk a frisk?
-      # https://app.asana.com/0/456927885748233/658391963833528
-      frisk_performed = individual_frisked | vehicle_frisked,
-      subject_sex = tr_sex[gender],
-      subject_race = tr_race[race]
-    ) %>%
-    standardize(d$metadata)
+  merge_rows(
+    datetimeoccur,
+    location,
+    districtoccur,
+    lat,
+    lng,
+    gender,
+    age,
+    race,
+    stoptype,
+    individual_frisked,
+    individual_searched,
+    individual_arrested,
+    individual_contraband,
+    vehicle_frisked,
+    vehicle_searched,
+    vehicle_contraband
+  ) %>%
+  rename(
+    subject_age = age,
+    location = location,
+    district = districtoccur,
+    arrest_made = individual_arrested,
+    search_person = individual_searched,
+    search_vehicle = vehicle_searched,
+    raw_individual_contraband = individual_contraband,
+    raw_vehicle_contraband = vehicle_contraband,
+    raw_race = race,
+    # police service area
+    service_area = psa
+  ) %>%
+  apply_translator_to(
+    tr_int_str_to_bool,
+    "arrest_made",
+    "search_person",
+    "search_vehicle",
+    "raw_individual_contraband",
+    "raw_vehicle_contraband",
+    "individual_frisked",
+    "vehicle_frisked"
+  ) %>%
+  mutate(
+    datetime = parse_datetime(datetimeoccur),
+    date = as.Date(datetime),
+    time = format(datetime, "%H:%M%S"),
+    type = tr_type[stoptype],
+    # TODO(phoebe): can we get other outcomes - citations/warnings?
+    # https://app.asana.com/0/456927885748233/658391963833527
+    outcome = first_of(
+      "arrest" = arrest_made
+    ),
+    search_conducted = search_person | search_vehicle,
+    contraband_found = raw_individual_contraband | raw_vehicle_contraband,
+    # TODO(ravi):  is a vehicle_frisk a frisk?
+    # https://app.asana.com/0/456927885748233/658391963833528
+    frisk_performed = individual_frisked | vehicle_frisked,
+    subject_sex = tr_sex[gender],
+    subject_race = tr_race[raw_race]
+  ) %>%
+  standardize(d$metadata)
 }

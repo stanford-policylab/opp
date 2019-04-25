@@ -1,3 +1,4 @@
+#!/usr/bin/env Rscript
 library(here)
 source(here::here("lib", "opp.R"))
 
@@ -32,3 +33,6 @@ data_readme_for <- function(state, city) {
     ))
   )
 }
+
+
+data_readme()

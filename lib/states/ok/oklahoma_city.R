@@ -32,76 +32,71 @@ clean <- function(d, helpers) {
   # TODO(phoebe): can we get search/contraband information?
   # https://app.asana.com/0/456927885748233/739362458819579 
   tr_race = c(
-    A = "asian/pacific islander",
-    B = "black",
-    I = "other/unknown",
-    M = "other/unknown",
-    O = "other/unknown",
-    S = "other/unknown",
-    U = "other/unknown",
-    W = "white",
-    X = "other/unknown"
+    tr_race,
+    M = "other",
+    S = "other",
+    X = "other"
   )
 
   d$data %>%
-    rename(
-      date = violDate,
-      time = violTime,
-      location = violLocation,
-      subject_race = DfndRace,
-      subject_sex = DfndSex,
-      subject_dob = DfndDOB,
-      violation = OffenseDesc,
-      officer_id = ofc_badge_no,
-      speed = viol_actl_spd,
-      posted_speed = viol_post_spd,
-      # NOTE: veh_color_2 is null 99.8% of the time
-      vehicle_color = veh_color_1,
-      vehicle_make = veh_make,
-      vehicle_model = veh_model,
-      # TODO(phoebe): what is veh_tag_st TU? roughly 10% are these
-      # https://app.asana.com/0/456927885748233/521735743717410
-      vehicle_registration_state = veh_tag_st,
-      vehicle_year = veh_year
-    ) %>%
-    helpers$add_lat_lng(
-    ) %>%
-    helpers$add_shapefiles_data(
-    ) %>%
-    rename(
-      division = DIVISION.x,
-      sector = SECTOR,
-      beat = BEAT
-    ) %>%
-    helpers$add_type(
-      "violation"
-    ) %>%
-    mutate(
-      # NOTE: these are all citations
-      citation_issued = TRUE,
-      # TODO(phoebe): can we get other types of outcomes?
-      # https://app.asana.com/0/456927885748233/739362458819581 
-      outcome = "citation",
-      date = parse_date(date, "%Y%m%d"),
-      time = parse_time_int(time),
-      subject_race = tr_race[subject_race],
-      subject_sex = tr_sex[subject_sex],
-      subject_dob = parse_date(subject_dob, "%Y%m%d"),
-      subject_age = age_at_date(subject_dob, date)
-    ) %>%
-    merge_rows(
-      date,
-      time,
-      location,
-      division,
-      subject_dob,
-      subject_race,
-      subject_sex,
-      officer_id
-    ) %>%
-    filter(
-      # NOTE: data before 2011 is partial
-      year(date) > 2010
-    ) %>%
-    standardize(d$metadata)
+  merge_rows(
+    violDate,
+    violTime,
+    violLocation,
+    DfndRace,
+    DfndSex,
+    DfndDOB,
+    ofc_badge_no
+  ) %>%
+  rename(
+    date = violDate,
+    time = violTime,
+    location = violLocation,
+    subject_dob = DfndDOB,
+    violation = OffenseDesc,
+    officer_id = ofc_badge_no,
+    speed = viol_actl_spd,
+    posted_speed = viol_post_spd,
+    # NOTE: veh_color_2 is null 99.8% of the time
+    vehicle_color = veh_color_1,
+    vehicle_make = veh_make,
+    vehicle_model = veh_model,
+    # TODO(phoebe): what is veh_tag_st TU? roughly 10% are these
+    # https://app.asana.com/0/456927885748233/521735743717410
+    vehicle_registration_state = veh_tag_st,
+    vehicle_year = veh_year
+  ) %>%
+  helpers$add_lat_lng(
+  ) %>%
+  helpers$add_shapefiles_data(
+  ) %>%
+  rename(
+    division = DIVISION.x,
+    sector = SECTOR,
+    beat = BEAT
+  ) %>%
+  helpers$add_type(
+    "violation"
+  ) %>%
+  mutate(
+    # NOTE: these are all citations
+    citation_issued = TRUE,
+    # TODO(phoebe): can we get other types of outcomes?
+    # https://app.asana.com/0/456927885748233/739362458819581 
+    outcome = "citation",
+    date = parse_date(date, "%Y%m%d"),
+    time = parse_time_int(time),
+    subject_race = tr_race[DfndRace],
+    subject_sex = tr_sex[DfndSex],
+    subject_dob = parse_date(subject_dob, "%Y%m%d"),
+    subject_age = age_at_date(subject_dob, date)
+  ) %>%
+  filter(
+    # NOTE: data before 2011 is partial
+    year(date) > 2010
+  ) %>%
+  rename(
+    raw_dfnd_race = DfndRace
+  ) %>%
+  standardize(d$metadata)
 }

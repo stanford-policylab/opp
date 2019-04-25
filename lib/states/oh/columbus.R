@@ -64,5 +64,8 @@ clean <- function(d, helpers) {
         warning = warning_issued
       )
     ) %>%
+    rename(
+      raw_enforcement_taken = `Enforcement Taken`
+    ) %>%
     standardize(d$metadata)
 }

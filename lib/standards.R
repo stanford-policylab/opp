@@ -239,6 +239,10 @@ predicated_columns <- list(
     predicate = "search_conducted",
     if_not = NA_character_
   ),
+  reason_for_frisk = list(
+    predicate = "frisk_performed",
+    if_not = NA_character_
+  ),
   reason_for_arrest = list(
     predicate = "arrest_made",
     if_not = NA_character_

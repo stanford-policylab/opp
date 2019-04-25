@@ -38,6 +38,15 @@ add_prefix <- function(v, prefix, skip = c()) {
 }
 
 
+add_raw_colname_prefix <- function(tbl, ...) {
+  colqs <- enquos(...)
+  nms <- quos_names(colqs)
+  new_nms <- simple_map(nms, function(nm) { str_c("raw_", nm) })
+  names(new_nms) <- nms
+  rename_cols(tbl, new_nms)
+}
+
+
 age_at_date <- function(birth_date, date) {
   # Calculate age at a certain date, given date of birth.
   # NOTE: age returned as floating point and will differ slightly from birthday
