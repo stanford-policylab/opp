@@ -13,22 +13,17 @@ load_raw <- function(raw_data_dir, n_max) {
 clean <- function(d, helpers) {
 
   tr_race <- c(
-    "H" = "hispanic",
-    "W" = "white",
-    "B" = "black",
+    tr_race,
     # TODO(phoebe): is this Latino?
     # https://app.asana.com/0/456927885748233/661513016681937
-    "L" = "other/unknown",
-    "A" = "asian/pacific islander",
+    "L" = "other",
     # TODO(phoebe): what is this?
     # https://app.asana.com/0/456927885748233/661513016681937
-    "M" = "other/unknown",
-    "I" = "other/unknown",
-    "U" = "other/unknown",
-    "X" = "other/unknown",
-    "0" = "other/unknown",
-    "1" = "other/unknown",
-    "9" = "other/unknown"
+    "M" = "other",
+    "X" = "other",
+    "0" = "other",
+    "1" = "other",
+    "9" = "other"
   )
 
   tr_search_basis <- c(
@@ -62,12 +57,12 @@ clean <- function(d, helpers) {
       time = parse_time(`Violation Time`),
       subject_race = tr_race[Race],
       subject_sex = tr_sex[Gender],
-      search_conducted = str_detect(
+      search_conducted = str_detect_na(
         `Search Reason`,
         str_c(names(tr_search_basis), collapse = "|")
       ),
       search_basis = tr_search_basis[`Search Reason`],
-      contraband_found = tr_yn[`Contraband Or Evidence`],
+      contraband_found = replace_na(tr_yn[`Contraband Or Evidence`], F),
       arrest_made = tr_yn[arrest_made],
       citation_issued = !is.na(`Citation #`),
       # NOTE: warnings are not recorded
@@ -85,7 +80,10 @@ clean <- function(d, helpers) {
     rename(
       district = DISTRICT,
       # NOTE: SUBCODE is just the first letter of SUBSTN
-      substation = SUBSTN.x
+      substation = SUBSTN.x,
+      raw_race = Race,
+      raw_search_reason = `Search Reason`,
+      raw_contraband_or_evidence = `Contraband Or Evidence`
     )
 
   # NOTE: select only schema cols to void merging columns that will be dropped

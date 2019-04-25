@@ -94,14 +94,15 @@ clean <- function(d, helpers) {
       warning = warning_issued
     ),
     reason_for_stop = tr_stop_type[stop_type],
-    # NOTE: while
+    # NOTE: sometimes the stop_type is pretextual, other times it is a
+    # violation, but it isn't always what the subject was ultimately cited for
     violation = reason_for_stop,
-    contraband_found = replace_na(contraband_found),
+    contraband_found = replace_na(contraband_found, F),
     search_person = driver_searched | passenger_searched,
     subject_race = tr_race[if_else_na(
       (suspect_ethnicity == "H" | suspect_ethnicity == "LATINO"),
       "H",
-      subject_race
+      race
     )],
     subject_sex = tr_sex[sex],
     search_basis = first_of(

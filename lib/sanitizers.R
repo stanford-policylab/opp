@@ -54,6 +54,11 @@ sanitize_vehicle_year_func <- function(dates) {
 }
 
 
+sanitize_speed <- function(v) {
+  if_else(v <= 0, NA_real_, v)
+}
+
+
 sanitize_sensitive_information <- function(val) {
   ssn <- "([^\\d]|^)(\\d{3}[- ]?\\d{2}[- ]?\\d{4})([^\\d]|$)"
   phone <- "\\(? *\\d{3} *\\)? *[.-]? *\\d{3} *[.-]? *[.-]? *\\d{4}"

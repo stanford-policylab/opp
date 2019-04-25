@@ -18,42 +18,42 @@ clean <- function(d, helpers) {
   # NOTE: search/contraband not in database, only in written reports
   # NOTE: subject race is not recorded
   d$data %>%
-    rename(
-      location = Location,
-      officer_id = Unit,
-      # NOTE: this is actually closer to outcome, but doesn't seem to have
-      # rigid categories, so passing through as reason_for_stop and providing
-      # the more standardized classification in `outcome`
-      reason_for_stop = Disposition
-    ) %>%
-    mutate(
-      # NOTE: T = "Traffic Stop", SS = "Subject Stop"
-      type = if_else(Type == "T", "vehicular", "pedestrian"),
-      d1 = parse_date(Date, "%Y/%m/%d"),
-      t1 = parse_time(Time, "%H:%M:%S"),
-      dt = parse_date(Date, "%Y/%m/%d %H:%M:%S"),
-      d2 = as.Date(dt),
-      t2 = parse_time(format(dt, "%H:%M:%S")),
-      date = coalesce(d1, d2),
-      time = coalesce(t1, t2),
-      warning_issued = str_detect(reason_for_stop, "Warning"),
-      citation_issued = str_detect(reason_for_stop, "Citation"),
-      arrest_made = str_detect(reason_for_stop, "Arrest"),
-      # TODO(ravi): do we want to filter out outcomes we don't care about?
-      # https://app.asana.com/0/456927885748233/590576541432184
-      outcome = first_of(
-        arrest = arrest_made,
-        citation = citation_issued,
-        warning = warning_issued
-      )
-    ) %>%
-    helpers$add_lat_lng(
-    ) %>%
-    helpers$add_shapefiles_data(
-    ) %>%
-    rename(
-      sector = SECTOR,
-      subsector = SUBSECTOR
-    ) %>%
-    standardize(d$metadata)
+  rename(
+    location = Location,
+    officer_id = Unit,
+    # NOTE: this is actually closer to outcome, but doesn't seem to have
+    # rigid categories, so passing through as reason_for_stop and providing
+    # the more standardized classification in `outcome`
+    disposition = Disposition
+  ) %>%
+  mutate(
+    # NOTE: T = "Traffic Stop", SS = "Subject Stop"
+    type = if_else(Type == "T", "vehicular", "pedestrian"),
+    d1 = parse_date(Date, "%Y/%m/%d"),
+    t1 = parse_time(Time, "%H:%M:%S"),
+    dt = parse_date(Date, "%Y/%m/%d %H:%M:%S"),
+    d2 = as.Date(dt),
+    t2 = parse_time(format(dt, "%H:%M:%S")),
+    date = coalesce(d1, d2),
+    time = coalesce(t1, t2),
+    warning_issued = str_detect(disposition, "Warning"),
+    citation_issued = str_detect(disposition, "Citation"),
+    arrest_made = str_detect(disposition, "Arrest"),
+    # TODO(ravi): do we want to filter out outcomes we don't care about?
+    # https://app.asana.com/0/456927885748233/590576541432184
+    outcome = first_of(
+      arrest = arrest_made,
+      citation = citation_issued,
+      warning = warning_issued
+    )
+  ) %>%
+  helpers$add_lat_lng(
+  ) %>%
+  helpers$add_shapefiles_data(
+  ) %>%
+  rename(
+    sector = SECTOR,
+    subsector = SUBSECTOR
+  ) %>%
+  standardize(d$metadata)
 }

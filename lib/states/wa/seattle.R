@@ -40,66 +40,70 @@ clean <- function(d, helpers) {
 
   # NOTE: pri in original dataset means 'priority'
   d$data %>%
-    # NOTE: when rin is null, almost every column is null, so filter out
-    filter(
-      !is.na(rin)
-    ) %>%
-    helpers$add_lat_lng(
-      "address"
-    ) %>%
-    helpers$add_shapefiles_data(
-    ) %>%
-    rename(
-      location = address,
-      violation = mir_description,
-      precinct = first_prec
-    ) %>%
-    separate_cols(
-      poss_race_sex = c("subject_race", "subject_sex"),
-      sep = 1
-    ) %>%
-    separate_cols(
-      date_time = c("date", "time"),
-      officer_no_1 = c("officer_id", "officer_name"),
-      sep = " "
-    ) %>%
-    separate_cols(
-      officer_name = c("officer_last_name", "officer_first_name"),
-      sep = ", "
-    ) %>%
-    mutate(
-      type = if_else(
-        str_detect(violation, "PEDESTRIAN")
-        | (str_detect(violation, "PURSUIT")
-           & !is.na(type_description)
-           & str_detect(type_description, ped_pattern))
-        | (str_detect(violation, "MISCELLANEOUS")
-           & !is.na(type_description)
-           & str_detect(type_description, ped_pattern)),
-        "pedestrian",
-        "vehicular"
-      ),
-      date = parse_date(date, "%Y/%m/%d"),
-      subject_race = tr_race[subject_race],
-      subject_sex = tr_sex[subject_sex],
-      subject_dob = parse_date(subj_dob, "%Y%m%d"),
-      arrest_made = str_sub(disposition_description, 1, 1) == "A",
-      # NOTE: includes criminal and non-criminal citations
-      citation_issued = str_detect(disposition_description, "CITATION"),
-      warning_issued = str_detect(disposition_description, "WARN"),
-      outcome = first_of(
-        arrest = arrest_made,
-        citation = citation_issued,
-        warning = warning_issued
-      ),
-      reason_for_stop = coalesce(type_description, violation),
-      v = coalesce(veh, vehcile),
-      vehicle_color = str_extract(v, str_c(vehicle$colors, collapse = "|")),
-      vehicle_make = str_extract(v, str_c(vehicle$makes, collapse = "|")),
-      vehicle_model = str_extract(v, str_c(vehicle$models, collapse = "|")),
-      vehicle_year = str_extract(v, "\\d{4}"),
-      vehicle_registration_state =
-        str_extract(v, str_c(valid_states, collapse = "|"))
-    ) %>%
-    standardize(d$metadata)
+  # NOTE: when rin is null, almost every column is null, so filter out
+  filter(
+    !is.na(rin)
+  ) %>%
+  helpers$add_lat_lng(
+    "address"
+  ) %>%
+  helpers$add_shapefiles_data(
+  ) %>%
+  rename(
+    location = address,
+    violation = mir_description,
+    precinct = first_prec,
+    disposition = disposition_description
+  ) %>%
+  separate_cols(
+    poss_race_sex = c("subject_race", "subject_sex"),
+    sep = 1
+  ) %>%
+  separate_cols(
+    date_time = c("date", "time"),
+    officer_no_1 = c("officer_id", "officer_name"),
+    sep = " "
+  ) %>%
+  separate_cols(
+    officer_name = c("officer_last_name", "officer_first_name"),
+    sep = ", "
+  ) %>%
+  mutate(
+    type = if_else(
+      str_detect(violation, "PEDESTRIAN")
+      | (str_detect(violation, "PURSUIT")
+         & !is.na(type_description)
+         & str_detect(type_description, ped_pattern))
+      | (str_detect(violation, "MISCELLANEOUS")
+         & !is.na(type_description)
+         & str_detect(type_description, ped_pattern)),
+      "pedestrian",
+      "vehicular"
+    ),
+    date = parse_date(date, "%Y/%m/%d"),
+    subject_race = tr_race[subject_race],
+    subject_sex = tr_sex[subject_sex],
+    subject_dob = parse_date(subj_dob, "%Y%m%d"),
+    arrest_made = str_sub(disposition, 1, 1) == "A",
+    # NOTE: includes criminal and non-criminal citations
+    citation_issued = str_detect(disposition, "CITATION"),
+    warning_issued = str_detect(disposition, "WARN"),
+    outcome = first_of(
+      arrest = arrest_made,
+      citation = citation_issued,
+      warning = warning_issued
+    ),
+    v = coalesce(veh, vehcile),
+    vehicle_color = str_extract(v, str_c(vehicle$colors, collapse = "|")),
+    vehicle_make = str_extract(v, str_c(vehicle$makes, collapse = "|")),
+    vehicle_model = str_extract(v, str_c(vehicle$models, collapse = "|")),
+    vehicle_year = str_extract(v, "\\d{4}"),
+    vehicle_registration_state =
+      str_extract(v, str_c(valid_states, collapse = "|"))
+  ) %>%
+  rename(
+    raw_type_description = type_description,
+    raw_vehicle_description = v
+  ) %>%
+  standardize(d$metadata)
 }

@@ -235,6 +235,14 @@ predicated_columns <- list(
     predicate = "search_conducted",
     if_not = schema$search_basis(NA)
   ),
+  search_person = list(
+    predicate = "search_conducted",
+    if_not = FALSE
+  ),
+  search_vehicle = list(
+    predicate = "search_conducted",
+    if_not = FALSE
+  ),
   reason_for_search = list(
     predicate = "search_conducted",
     if_not = NA_character_

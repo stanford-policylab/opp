@@ -516,7 +516,7 @@ reported after filtering to instances where search_conducted was true. In a
 similar fashion, search_basis and reason_for_search are only calculated when
 search conducted is true, reason_for_arrest when arrest_made is true, and
 contraband_drugs, contraband_weapons, and contraband_alcohol, and
-_contraband__other when contraband_found is true.
+_contraband_other when contraband_found is true.
 
 The notes are not intended to be a comprehensive
 description of all the data features in every state, since this would be
@@ -559,7 +559,7 @@ We’re excited to see what you come up with!
 - violation is charge_desc in the raw data, and raw_charge represents the
   charge code in the raw data
 - subject_race was derived from ethnicity_fixed and race_fixed in the raw data,
-  provided in the clean data with raw__*
+  provided in the clean data with raw_*
 
 ## Statewide, AZ
 **Data notes**:
@@ -637,7 +637,7 @@ We’re excited to see what you come up with!
   years, i.e. ResultOfSearch in 2013, 2014, and 2015, but
   subject_resultofsearch in 2016 and 2017; these were renamed to be consistent
   with the latter years in the raw data loading function
-- subject__{resultofencounter,typeofsearch,search_conducted,resultofsearch}
+- subject_{resultofencounter,typeofsearch,search_conducted,resultofsearch}
   formed the foundation for search and contraband fields and are passed
   through in the clean data
 - subject_race is derived from subject_sdrace, which is passed through to the
@@ -1207,28 +1207,23 @@ We’re excited to see what you come up with!
   there is a 1:1 correspondence between StopID and and SearchID, as well as
   between SearchID and PersonID (who, again, can be either the driver or
   passenger) and SearchID and ContrabandID 
-- raw__{ounces,pounds,kilos,grams,dosages,weapons} are provided for greater
-  resolution on contraband___{drugs,weapons},
-  raw___{gallons,pints,money,dollar__amount} are also provided, but it's
+- raw_{ounces,pounds,kilos,grams,dosages,weapons} are provided for greater
+  resolution on contraband__{drugs,weapons},
+  raw_{gallons,pints,money,dollar_amount} are also provided, but it's
   unclear what their relationship to contraband is
 - subject_race is based on Ethnicity and Race, which are passed through as
-  raw__*
-- outcomes are based on action__description, which is based on the raw column
+  raw_*
+- outcomes are based on action_description, which is based on the raw column
   Action and translated given the provided codes
 - frisk and search data is based on SearchID and search_type_description, which
-  is passed through with raw__*; the latter is based on the raw column
+  is passed through with raw_*; the latter is based on the raw column
   SearchType and translated using the given data dictionary
-- stop__purpose_description is based on raw column StopPurpose and is
+- stop_purpose_description is based on raw column StopPurpose and is
   translated using the given data dictionary and passed through as
   reason_for_stop
 - reason_for_search represents the raw column Basis
 - raw columns EncounterForce and EngageForce are passed through as
   raw_encounter_force and raw_engage_force
-- There were 619 cases (over half were from Goldsboro Police Department and NC
-  State Highway Patrol) where search_conducted was true but contraband_found
-  was NA, i.e. there was a SearchID but no ContrabandID, these NA were
-  converted to FALSE under the assumption that the absence of contraband may
-  not have been recorded by the officer
 
 ## Winston-Salem, NC
 **Data notes**:
@@ -1491,8 +1486,8 @@ We’re excited to see what you come up with!
   under the assumption that unrecorded search data represented the absence of a
   search
 - contraband_found is based on raw columns individual_contraband and
-  vehicle_contraband, which are passed through as raw__*; if both of these were
-  null and search__conducted was true, contraband_found was set to false
+  vehicle_contraband, which are passed through as raw_*; if both of these were
+  null and search_conducted was true, contraband_found was set to false
 - subject_race is based on the raw column race, which is passed through as
   raw_race
 - 2018 has only partial data, and it appears to be the same for early 2014
@@ -1507,25 +1502,23 @@ We’re excited to see what you come up with!
   we have an oustanding inquiry as to what evidencefound refers to; similarly,
   weaponsfound is sometimes true when contrabandfound is false and vice versa,
   so it's unclear whether the contraband is weapons or not, so for now we leave
-  out contraband_weapons and have another outstanding inquiry; in sum,
-  contraband_found is true when contrabandfound is true and false when
-  nothingfound is true
-- search_conducted is true when any one of objectsearched (pedestrian stops),
-  contrabandfound, evidencefound, weaponsfound, and nothingfound (vehicular
-  stops) is not NA; all these are passed on as raw__*
+  out contraband_weapons and have another outstanding inquiry
 - if a search was conducted and the stop type was vehicular (pedestrian stops
   don't provide search outcomes) and contrabandfound was NA, we set
   contraband_found to false, otherwise we use the value in the contrabandfound
   field. We do this under the assumption that false and NA for contraband_found
   are equivalent when a search occured, i.e. an officer conducted a search and
   either found nothing or recorded nothing
+- search_conducted is true when any one of objectsearched (pedestrian stops),
+  contrabandfound, evidencefound, weaponsfound, and nothingfound (vehicular
+  stops) is not NA; all these are passed on as raw_*
 - Sex and gender do not match 73% of the time in pedestrian data, and race and
   ethnicity mismatch often as well. In both cases, if sex != gender or race !=
   ethnicity, we set the value to NA, otherwise we coalesce(sex, gender) or
   coalesce(race, ethnicity) [this keeps values when one is NA but the other
-  isn't]; we pass through all the raw values as raw__*
+  isn't]; we pass through all the raw values as raw_*
 - There are 4 zone-related columns in the raw data: zone, zone_division,
-  policezone, and officerzone; we pass them through as raw__*
+  policezone, and officerzone; we pass them through as raw_*
 - The data is deduplicated on raw columns stop_date, stopstart, stopend,
   address, officer_id, and person_id, reducing the number of rows by ~21.1%
 - violation represents raw column crimedescription
@@ -1560,50 +1553,82 @@ We’re excited to see what you come up with!
 - It would be possible to map the highway and mile marker data to geo
   coordinates, as we did in Washington.
 
-HERE/pit/NC
 ## Nashville, TN
 **Data notes**:
 - Data is deduplicated on raw columns stop_date_time, stop_location_street,
   officer_employee_number, race, sex, and age_of_suspect, reducing the number
   of records by ~0.3%
+- There are 30 (of ~2.6M records) cases where search_conducted is ambiguous
+  after the merge and are left as NA, since it's unclear whether they are true
+  or false, since being NA after the above merge indicates that there were two
+  distinct values for raw column searchoccur
 - reason_for_stop and violation are both translations of the original stop_type
   column; this column is sometimes the pretextual reason for the stop and does
   not always represent what the individual was ultimately cited for
 - contraband_drugs is raw column drugs_seized, contraband_weapons is
   weapons_seized, and contraband_found is evidenceseized
 - citation_issued is derived from traffic_citation_issued and
-  misd_state_citation_issued, which are passed through as raw__*;
-  misd__state_citation_issued is sometimes NA, so for the purposes of defining
+  misd_state_citation_issued, which are passed through as raw_*;
+  misd_state_citation_issued is sometimes NA, so for the purposes of defining
   citation_issued, we consider NA to be false
 - warning_issued is derived from verbal_warning_issued and
-  written_warning_issued, which are passed through as raw__*;
+  written_warning_issued, which are passed through as raw_*;
   written_warning_issued is sometimes NA, so for the purposes of defining
   warning_issued, we consider NA to be false
 - search_basis is based on the raw columns search_plain_view, search_consent,
   search_incident_to_arrest, search_warrant, and search_inventory, which are
-  all passed on with the raw__* prefix
-- subject__race is derived from raw columns suspect_ethnicity and suspect_race,
-  which are passed through with the raw__* prefix
-- search__person is derived from search_driver and search_passenger, which are
-  passed through with the raw__* prefix
-- When contraband__found is NA, we fill it with false when a search occurred,
+  all passed on with the raw_* prefix
+- subject_race is derived from raw columns suspect_ethnicity and suspect_race,
+  which are passed through with the raw_* prefix
+- search_person is derived from search_driver and search_passenger, which are
+  passed through with the raw_* prefix
+- When contraband_found is NA, we fill it with false when a search occurred,
   under the assumption that the officer simply didn't record the absence of
   contraband
 
 ## Arlington, TX
 **Data notes**:
 - Unclear what PRA, xCoordinate, and yCoordinate are in the raw data
-- Missing data dictionaries for reason_for_stop, outcome, and search_ outcome
+- Missing data dictionaries for reason_for_stop, outcome, and search_ outcome,
+  the latter two are passed through as raw_*
+- subject_race is based on raw column `1st digit (Race)`, which is passed
+  through as raw_1st_digit_race
+- Only 2016 data was provided
 
 ## Austin, TX
 **Data notes**:
-- Data is deduplicated on raw column street_check_case_number, reducing the
-  number of records by ~10.3%
+- Data is deduplicated on raw column street_check_case_number, occurred_date,
+  officer, sex, race, ethnicity, yob, veh_type, veh_year, veh_make, veh_model,
+  veh_style, and soi, reducing the number of rows by ~0.5%
 - Data does not include location or outcomes
 - There are no clear pedestrian-only discretionary stops in
   reason_checked_description; SUSPICIOUS PERSON / VEHICLE is one category in
   reason_for_stop, but is included with "vehicular" stops; as such, it may over
   count vehicular stops
+- reason_for_stop represents raw column reason_checked_description
+- search_person and search_vehicle represent person_searched and
+  vehicle_searched in the raw data, which are passed through with raw_*; for
+  the canonical columns search_person and search_vehicle, NA values are changed
+  to false under the assumption that the absence of a search may not always be
+  recorded
+- frisk_performed is based on person_search_search_based_on, and is false when
+  that column is NA, on the assumption that the officer did not record the
+  absence of a frisk
+- search_basis is derived from person_search_search_based_on and
+  vehicle_search_search_based on, which are passed through with the raw_*
+  prefix
+- contraband_{found,drugs,weapons} are derived from
+  person_search_search_discovered and vehicle_search_search_discovered, which
+  are passed through with raw_* prefix; when these values are NA, they are
+  assumed to be FALSE for contraband discovery
+- reason_for_stop represents the raw column reason_checked_description;
+  although, the raw column street_check_description also seems to provide
+  information, so is passed through with the raw_ prefix
+- subject_race is based on raw columns race and ethnicity; there is also a raw
+  race_description column, which is passed through with the raw_ prefix
+  (instead of the race column, since it is just a nicer translation of the
+  single characters in race); ethnicity is also passed through with the raw_
+  prefix
 
 ## Garland, TX
 **Data notes**:
@@ -1614,8 +1639,20 @@ HERE/pit/NC
   inquiry here
 - We assume these are all citations since they appear to be indexed by ticket
   number, but we have an outstanding task to clarify this
-- violation represents `offense_title` in the original data
+- violation represents offense_title in the raw data
 - Data is lacking reason_for_stop/search/contraband information
+- officer_race is mostly NA or "U", the remainder are white or Asian/Pacific
+  Islander, so this data is probably unreliable
+- subject_race is based on raw column race, which is passed through with the
+  raw_ prefix
+- Sometimes the same stop has different speeds recorded; often a pair
+  of legitimate values, i.e. going 55 in a 40, but the others will have 0 and
+  0 or NA and NA, since possibly multiple tickets are issued for the same
+  stop; for each record, we take the max of each to represent the speeds; the
+  raw_alleged_speed and raw_posted_speed are passed through; when the values
+  were 0 or -Inf, we set them to NA under the assumption that this was a stop
+  unrelated to speed
+- 2012 and 2018 have only partial data
 
 ## Houston, TX
 **Data notes**:
@@ -1626,6 +1663,9 @@ HERE/pit/NC
   in the same day at the same location
 - Data is lacking search/contraband information
 - Data consists only of citations
+- When speed and posted_speed were 0, we set them to NA, under the assumption
+  that this was a default value and the stop was unrelated to speed
+- subject_race is based on the raw column Race, passed through as raw_race
 
 ## Lubbock, TX
 **Data notes**:
@@ -1640,14 +1680,27 @@ HERE/pit/NC
   data, since the incident number in those files is populate donly ~15% of the
   time; location data is spread across 4 columns in different files, and each
   is null at least 75% of the time
-- violation appears to be a combination of offense nad violation_description
-  based on the year, so they are coalesced to find the first non-null value;
-  violation_description is 73.81% null, primary_violation is 99.35% null, and
-  98.16% null, and offense is 49.69% null
+- violation is a concatenation of violation_description, primary_violation,
+  offense, and offense_[1-8], which are all null most of the time, the
+  separator is a comma
 - Data is deduplicated on date, time, location, officer_id, subject_age,
   subject_race, and subject_sex, reducing the number of records by ~0.0004%,
   but some of this may be over-deduplication because NAs are common in
   location, officer_id, and subject_age
+- location is a coalesced version of the raw columns location,
+  violation_location, offense_location, and arrest_location, all of which are
+  ~75% null independently
+- raw_results is a concatenation of officer_result, result, and result_[1-8],
+  separated by a comma; outcomes are based on this column, as well as the
+  warning, citation, and citation_number columns in the raw data
+- search_conducted represents search_conducted, search_performed, and searched
+  raw columns coalesced (they are mutually exclusive); similarly, consent in
+  search_basis is based on search_consent, search_consent_2, and consent in the
+  raw data, coalesced, and arrest_made is a coalesced version of arrest and
+  arrested
+- When the contraband and contraband_found raw columns are NA, they are assumed
+  to be false or no contraband found for the canonical contraband_found column
+  in the clean data
 
 ## Statewide, TX
 **Data notes**:
@@ -1671,6 +1724,16 @@ HERE/pit/NC
 - Data is deduplicated on date, time, location, subject_race, subject_sex, and
   subject_age, reducing the number of rows by ~25.3%
 - Data consists only of arrests and citations
+- contraband_found is based on the raw column `Contraband Or Evidence`; when
+  this is NA, it is set to false under the assumption that an officer may not
+  always record the absence of contraband found; the raw column is passed
+  through as raw_contraband_or_evidence
+- search_basis is based on the raw column `Search Reason`, which is passed
+  through as raw_search_reason
+- search_conducted is false when `Search Reason` is NA, "No Search", or one of
+  the ~200 entries that look like incorrect entries, i.e. A, 9, 6
+- subject_race is based on the raw column Race and is passed through as
+  raw_race
 
 ## Statewide, VA
 **Data notes**:
@@ -1693,6 +1756,15 @@ HERE/pit/NC
 - Data is deduplicated on raw columns issued_at, location, race, gender, city,
   dob, lat, lon, reducing the number of records by ~7.0%
 - Calls are also provided in the raw data, but aren't loaded here
+- subject_race is based on the raw column race which is passed through as
+  raw_race, and gender is passed through as raw_gender
+- reason_for_stop represents the raw column stop_based_on, and
+  reason_for_search represents the raw column search_based_on and forms the
+  basis for search_conducted and search_basis
+- When reason_for_search, i.e. search_based_on, is NA, we assume search
+  conducted is false
+- outcomes are based on raw column outcome_of_stop, which is passed through as
+  raw_outcome_of_stop
 
 ## Statewide, VT
 **Data notes**:
@@ -1703,6 +1775,11 @@ HERE/pit/NC
   cannot find analogues in other states.
 - Counties were mapped by running the cities in the `Stop City` field through
   Google's geocoder.
+- There are 30 cases where DOB was sanitized incorrectly because subtracting 10
+  years from 2012-02-29 creates NA values in R; dob is not released with the
+  public data, but this is something to be aware of if using our processing
+  script on the raw data
+
 
 ## Statewide, WA
 **Data notes**:
@@ -1730,7 +1807,16 @@ HERE/pit/NC
 ## Seattle, WA
 **Data notes**:
 - citation_issued includes criminal and non-criminal citations
+- violation represents raw column mir_description
+- type is based on violation (mir_description) and type_description, which is
+  passed through as raw_type_description
+- outcomes are based on disposition, which represents raw column
+  disposition_description
+- vehicle_* columns are based on a coalesced combination of veh and vehcile
+  (sic) columns in the raw data; this is passed through as
+  raw_vehicle_description
 
+HERE/San Antonio/Louisville
 ## Madison, WI
 **Data notes**:
 - Data is deduplicated on date, time, location, officer_last_name,

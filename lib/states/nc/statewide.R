@@ -194,6 +194,7 @@ clean <- function(d, helpers) {
       T,
       F
     ),
+    # NOTE: in standardize, this will be set to NA if a frisk wasn't conducted
     reason_for_frisk = reason_for_search,
     search_basis = first_of(
       "consent" = search_type_description == "Consent",

@@ -1007,6 +1007,11 @@ str_combine_cols <- function(
 }
 
 
+str_detect_na <- function(v, pattern, na_value = F) {
+  replace_na(str_detect(v, pattern), na_value)
+}
+
+
 str_to_expr <- function(expr_str) {
   eval(parse(text = expr_str))
 }

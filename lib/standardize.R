@@ -109,6 +109,7 @@ prefix <- function(s) {
 
 sanitize <- function(d) {
   print("sanitizing...")
+  # NOTE: be careful that these don't try to sanitize raw_* columns
   sanitize_schema <- c()
   for (col in colnames(d$data)) {
     if (endsWith(col, "date")) {
@@ -124,6 +125,13 @@ sanitize <- function(d) {
         sanitize_dob_func(d$data$date)
       )
     }
+    if (col == "speed" | col == "posted_speed") {
+      sanitize_schema <- append_to(
+        sanitize_schema,
+        col,
+        sanitize_speed
+      )
+    }
     if (col == "vehicle_year") {
       sanitize_schema <- append_to(
         sanitize_schema,
@@ -131,6 +139,7 @@ sanitize <- function(d) {
         sanitize_vehicle_year_func(d$data$date)
       )
     }
+    # TODO(danj): change this to all columns except violation and location
     # NOTE: sanitize any columns where the officer may intentionally or
     # inadvertantly include personally identifying information
     if (col %in% c(
