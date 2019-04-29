@@ -1035,6 +1035,45 @@ We’re excited to see what you come up with!
 - subject_race is based on the raw columns defendant_ethnicity and
   defendant_race, which are passed through
 
+HERE
+## Louisville, KY
+**Data notes**:
+- While we have raw csvs for all citations, we keep only those records that
+  join onto the stops data; the source of this data is here:
+  https://data.louisvilleky.gov/dataset/uniform-citation-data
+- subject_race is based on the raw column driver_race, since it is null 0.03%
+  of the time compared to 18.6% for persons_race and 18.60% for
+  persons_ethnicity; all are passed through with raw_ prefix
+- violation represents raw column charge_desc
+- All stops are not null for at least one of the driver_* columns or
+  number_of_passengers or was_vehicle_searched columns, implying all stops are
+  vehicular
+- location used for geocoding is activity_location, which had a lower null rate
+  than citation_location, but the latter was passed through as
+  raw_citation_location
+- subject_age is based on persons_age from the citation data, although it is
+  null more often than driver_age_range; the latter, however, only gives a
+  range, so couldn't be use for this column; it is passed through though as
+  raw_driver_age_range
+- search_conducted is based on was_vehcile_searched, which is passed through as
+  raw_was_vehcile_searched (sic); there were 3 NAs that were coerced to false
+  under the assumption that the officers may simply not have recorded the
+  absence of a search
+- search_basis was based on reason_for_search; k9 searches matched the pattern
+  "K9|K-9|DOG", plain view searches matched anything mentioning plain
+  view/smell or anything that could be seen in plain sight and matched the
+  following pattern "BAGGIES|DRUGS|GUN|MARIJUANA|ODOR|PILLS|PIPE|PLAIN
+  VIEW|SMELL", consent matched "CONSENT|CONSE", probable cause matched
+  "PROB|P/C|PC|P.C.", and everything else was classified as "other"; this was
+  verified to be accurate for 99.8% of entries; the long tail was not checked,
+  but anyone viewing the data can see the original values in the
+  reason_for_search column
+- data is lacking explicit contraband information, but some of this can be
+  inferred from reason_for_search
+- frisk_performed is true with reason_for_search matches the pattern "TERRY|PAT",
+  it is false otherwise (NA and no match)
+- 2018 has data only from January
+
 ## Owensboro, KY
 **Data notes**:
 - There is a list_of_officers.csv as well as the excel spreadsheet
@@ -1721,8 +1760,16 @@ We’re excited to see what you come up with!
 
 ## San Antonio, TX
 **Data notes**:
-- Data is deduplicated on date, time, location, subject_race, subject_sex, and
-  subject_age, reducing the number of rows by ~25.3%
+- Data is deduplicated on citation_number, reducing the number of rows by
+  23.3%; deduping on date, time, location, subject_race, subject_sex, and
+  subject age instead reduces the number of records by 25.3%, roughly 2% more
+  than only citation number, but, curiously, there are often rows that have
+  identical information on those columns but different recorded speeds; so,
+  it's unclear whether these are duplicates with misentries or distinct events;
+  we air on the side of caution and consider them distinct events; there also
+  appears to be multiple offenses related to each citation, and those not
+  involving speed are set to 0; accordingly, we take the maximum speed and
+  posted speed to represent the speeds for every citation/record
 - Data consists only of arrests and citations
 - contraband_found is based on the raw column `Contraband Or Evidence`; when
   this is NA, it is set to false under the assumption that an officer may not
@@ -1734,6 +1781,10 @@ We’re excited to see what you come up with!
   the ~200 entries that look like incorrect entries, i.e. A, 9, 6
 - subject_race is based on the raw column Race and is passed through as
   raw_race
+- arrest_made is based on raw column `Custodial Arrest Made`, which is passed
+  through as raw_custodial_arrest made; arrest_made true when `Custodial Arrest
+  Made` is true and false when it is false or NA
+- 2018 has only the first 4 months of data
 
 ## Statewide, VA
 **Data notes**:
@@ -1816,15 +1867,19 @@ We’re excited to see what you come up with!
   (sic) columns in the raw data; this is passed through as
   raw_vehicle_description
 
-HERE/San Antonio/Louisville
 ## Madison, WI
 **Data notes**:
-- Data is deduplicated on date, time, location, officer_last_name,
-  officer_first_name, subject_race, subject_sex, vehicle_make, vehicle_model,
-  reducing the number of records by ~0.88%
+- Data is deduplicated on raw columns Date, Time, onStreet, onStreetName,
+  OfficerName, Race, Sex, Make, Model, Year, State, Limit, and OverLimit,
+  reducing the numbe rof rows by ~0.7%
+- violation represents raw column `Statute Description`
 - Search/contraband information is missing
 - Data only includes warnings and citations, no arrests
+- If there was no `Ticket #`, this was assumed to be a warning
 - Shapefiles don't include district 2 and it's accompanying sectors
+- subject_race is based on raw column Race, passed through as raw_race
+- 2007 has partial data and looks suspect; 2017 is missing October, November,
+  and December
 
 ## Statewide, WI
 **Data notes**:

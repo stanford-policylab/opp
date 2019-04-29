@@ -6,6 +6,7 @@ source("common.R")
 # of stops seems reasonable if not a little low for a state of 1.4M people.
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_years(raw_data_dir, n_max = n_max)
+  d$data <- make_ergonomic_colnames(d$data)
   bundle_raw(d$data, d$loading_problems)
 }
 
@@ -34,67 +35,70 @@ clean <- function(d, helpers) {
     "Evidence" = "probable cause"
   )
 
-  tbl <-
+  speeds <-
     d$data %>%
-    rename(
-      subject_age = `Age At Time Of Violation`,
-      location = `Violation Location`,
-      vehicle_registration_state = `License Plate State`,
-      vehicle_year = `Vehicle Year`,
-      vehicle_make = `Vehicle Make`,
-      vehicle_model = `Vehicle Model`,
-      vehicle_color = `Vehicle Color`,
-      arrest_made = `Custodial Arrest Made`,
-      speed = `Actual Speed`,
-      posted_speed = `Posted Speed`,
-      violation = Offense
-    ) %>%
-    helpers$add_type(
-      "violation"
-    ) %>%
-    mutate(
-      date = parse_date(`Violation Date`),
-      time = parse_time(`Violation Time`),
-      subject_race = tr_race[Race],
-      subject_sex = tr_sex[Gender],
-      search_conducted = str_detect_na(
-        `Search Reason`,
-        str_c(names(tr_search_basis), collapse = "|")
-      ),
-      search_basis = tr_search_basis[`Search Reason`],
-      contraband_found = replace_na(tr_yn[`Contraband Or Evidence`], F),
-      arrest_made = tr_yn[arrest_made],
-      citation_issued = !is.na(`Citation #`),
-      # NOTE: warnings are not recorded
-      outcome = first_of(
-        "arrest" = arrest_made,
-        "citation" = citation_issued
-      ),
-      # NOTE: 0 seems to indicate not recorded rather than 2000
-      vehicle_year = if_else(vehicle_year == "0", NA_character_, vehicle_year)
-    ) %>%
-    helpers$add_lat_lng(
-    ) %>%
-    helpers$add_shapefiles_data(
-    ) %>%
-    rename(
-      district = DISTRICT,
-      # NOTE: SUBCODE is just the first letter of SUBSTN
-      substation = SUBSTN.x,
-      raw_race = Race,
-      raw_search_reason = `Search Reason`,
-      raw_contraband_or_evidence = `Contraband Or Evidence`
+    group_by(citation_number) %>%
+    summarize(
+      max_speed = max(as.integer(actual_speed), na.rm = T),
+      max_posted_speed = max(as.integer(actual_speed), na.rm = T)
     )
 
-  # NOTE: select only schema cols to void merging columns that will be dropped
-  select_only_schema_cols(list(data = tbl))$data %>%
+  d$data %>%
+  helpers$add_type(
+    "offense"
+  ) %>%
   merge_rows(
-    date,
-    time,
-    location,
-    subject_race,
-    subject_sex,
-    subject_age
+    citation_number
+  ) %>%
+  left_join(
+    speeds
+  ) %>%
+  rename(
+    date = violation_date,
+    time = violation_time,
+    location = violation_location,
+    subject_age = age_at_time_of_violation,
+    vehicle_registration_state = license_plate_state,
+    raw_search_reason = search_reason,
+    raw_actual_speed = actual_speed,
+    raw_posted_speed = posted_speed,
+    speed = max_speed,
+    posted_speed = max_posted_speed,
+    violation = offense
+  ) %>%
+  mutate(
+    subject_race = tr_race[race],
+    subject_sex = tr_sex[gender],
+    search_conducted = str_detect_na(
+      raw_search_reason,
+      str_c(names(tr_search_basis), collapse = "|")
+    ),
+    search_basis = tr_search_basis[raw_search_reason],
+    contraband_found = replace_na(tr_yn[contraband_or_evidence], F),
+    arrest_made = replace_na(tr_yn[custodial_arrest_made], F),
+    citation_issued = !is.na(citation_number),
+    # NOTE: warnings are not recorded
+    outcome = first_of(
+      "arrest" = arrest_made,
+      "citation" = citation_issued
+    ),
+    # NOTE: 0 in vehicle year seems to indicate not recorded rather than 2000;
+    # this is set to NA in standardization
+  ) %>%
+  helpers$add_lat_lng(
+  ) %>%
+  helpers$add_shapefiles_data(
+  ) %>%
+  rename(
+    district = DISTRICT,
+    # NOTE: SUBCODE is just the first letter of SUBSTN
+    substation = SUBSTN.x,
+  ) %>%
+  add_raw_colname_prefix(
+    race,
+    search_reason,
+    contraband_or_evidence,
+    custodial_arrest_made
   ) %>%
   standardize(d$metadata)
 }

@@ -28,10 +28,12 @@ tr_race <- c(
 )
 
 tr_yn <- c(
+  YES = TRUE,
   Yes = TRUE,
   Y = TRUE,
   yes = TRUE,
   y = TRUE,
+  NO = FALSE,
   No = FALSE,
   N = FALSE,
   no = FALSE,

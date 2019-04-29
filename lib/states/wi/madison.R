@@ -30,6 +30,21 @@ clean <- function(d, helpers) {
   # TODO(phoebe): can we get reason_for_stop/search/contraband data?
   # https://app.asana.com/0/456927885748233/595493946182539
   d$data %>%
+  merge_rows(
+    Date,
+    Time,
+    onStreet,
+    onStreetName,
+    OfficerName,
+    Race,
+    Sex,
+    Make,
+    Model,
+    Year,
+    State,
+    Limit,
+    OverLimit
+  ) %>%
   rename(
     violation = `Statute Description`,
     vehicle_make = Make,
@@ -71,18 +86,8 @@ clean <- function(d, helpers) {
   # sectors
   rename(
     sector = Sector,
-    district = District
-  ) %>%
-  merge_rows(
-    date,
-    time,
-    location,
-    officer_last_name,
-    officer_first_name,
-    subject_race,
-    subject_sex,
-    vehicle_make,
-    vehicle_model
+    district = District,
+    raw_race = Race
   ) %>%
   standardize(d$metadata)
 }

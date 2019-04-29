@@ -272,6 +272,8 @@ opp_city_demographics <- function(state, city) {
   # NOTE: https://en.wikipedia.org/wiki/Nashville-Davidson_(balance),_Tennessee
   if (city_fmt == "Nashville")
     city_query <- "Nashville-Davidson metropolitan government"
+  if (city_fmt == "Louisville")
+    city_query <- "Louisville/Jefferson County metro government"
   tbl <-
     opp_load_acs_race_data("acs_2017_5_year_city_level_race_data.csv") %>%
     filter(state_abbreviation == state_query, str_detect(place, city_query))
