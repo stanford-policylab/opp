@@ -16,6 +16,7 @@ clean <- function(d, helpers) {
 
   tr_race <- c(
     tr_race,
+    "asian/pacific islander" = "asian/pacific islander",
     "middle eastern descent" = "other",
     "indian/india/burmese" = "other",
     "american indian" = "other",
