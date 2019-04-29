@@ -139,24 +139,14 @@ sanitize <- function(d) {
         sanitize_vehicle_year_func(d$data$date)
       )
     }
-    # TODO(danj): change this to all columns except violation and location
-    # NOTE: sanitize any columns where the officer may intentionally or
-    # inadvertantly include personally identifying information
-    if (col %in% c(
-      "disposition",
-      "reason_for_arrest",
-      "reason_for_frisk",
-      "reason_for_search",
-      "reason_for_stop",
-      "use_of_force_description",
-      "use_of_force_reason",
-      "notes"
-    )) {
-      sanitize_schema <- append_to(
-        sanitize_schema,
-        col,
-        sanitize_sensitive_information
-      )
+    # NOTE: sanitize digits in free form character fields except location and
+    # violation under the assumption that they may include sensitive
+    # information, i.e. driver's license numbers, etc
+    if (
+      !(col %in% c("violation", "location"))
+      & class(d$data[[col]]) == "character"
+    ) {
+      sanitize_schema <- append_to(sanitize_schema, col, sanitize_digits)
     }
   }
   x <- apply_schema_and_collect_null_rates(sanitize_schema, d$data)

@@ -1041,6 +1041,12 @@ HERE
 - While we have raw csvs for all citations, we keep only those records that
   join onto the stops data; the source of this data is here:
   https://data.louisvilleky.gov/dataset/uniform-citation-data
+- Data is deduplicated on raw columns officer_gender, officer_race,
+  officer_age_range, activity_date, activity_time, activity_location,
+  activity_division, division, activity_beat, beat, driver_gender, persons_sex,
+  driver_race, persons_race, persons_ethnicity, driver_age_range, person_age,
+  persons_home_city, persons_home_state, person_home_zip, reducing the number
+  of rows by ~%
 - subject_race is based on the raw column driver_race, since it is null 0.03%
   of the time compared to 18.6% for persons_race and 18.60% for
   persons_ethnicity; all are passed through with raw_ prefix
