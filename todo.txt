@@ -1,6 +1,6 @@
 1. clean up/paper
   - clean up data
-    - process Lousiville, Kentucky
+    - improve digit sanitizer / limit fields it operates on
     - check NA rates for search_conducted across all locations
     - split up other/unknown
     - pull out other raw columns where ambiguous

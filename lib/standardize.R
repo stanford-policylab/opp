@@ -143,7 +143,7 @@ sanitize <- function(d) {
     # violation under the assumption that they may include sensitive
     # information, i.e. driver's license numbers, etc
     if (
-      !(col %in% c("violation", "location"))
+      !(col %in% c("raw_row_number", "violation", "location"))
       & class(d$data[[col]]) == "character"
     ) {
       sanitize_schema <- append_to(sanitize_schema, col, sanitize_digits)
