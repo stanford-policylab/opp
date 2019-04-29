@@ -115,8 +115,7 @@ clean <- function(d, helpers) {
       warning = warning_issued
     )
   ) %>%
-  # TODO(danj): add once geocoded
-  # helpers$add_lat_lng(
-  # ) %>%
+  helpers$add_lat_lng(
+  ) %>%
   standardize(d$metadata)
 }
