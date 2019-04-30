@@ -1035,7 +1035,6 @@ We’re excited to see what you come up with!
 - subject_race is based on the raw columns defendant_ethnicity and
   defendant_race, which are passed through
 
-HERE
 ## Louisville, KY
 **Data notes**:
 - While we have raw csvs for all citations, we keep only those records that
