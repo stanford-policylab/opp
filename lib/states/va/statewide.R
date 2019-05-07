@@ -48,7 +48,7 @@ load_raw <- function(raw_data_dir, n_max) {
     'number_of_search_stops_unknown',
     'officer_last_name',
     'officer_first_name',
-    'trooper_race'
+    'officer_race'
   )
 
   # NOTE: The source data aggregates data by week. In the following pipeline we
@@ -64,7 +64,7 @@ load_raw <- function(raw_data_dir, n_max) {
       officer_id,
       officer_last_name,
       officer_first_name,
-      trooper_race
+      officer_race
     ) %>%
     # NOTE: De-duplicate by taking the last row in a group.
     slice(
@@ -143,6 +143,10 @@ clean <- function(d, helpers) {
   # the stop (reason_for_stop/search/contraband fields)?
   # https://app.asana.com/0/456927885748233/740254831051062
   d$data %>%
+    add_raw_colname_prefix(
+      officer_race,
+      race
+    ) %>% 
     mutate(
       # NOTE: Date is the Saturday ending a given week of data, per the
       # documentation included in the raw data directory.
@@ -160,8 +164,8 @@ clean <- function(d, helpers) {
         str_c(str_to_title(jurisdiction_name), " County"),
         NA_character_
       ),
-      officer_race = tr_race[trooper_race],
-      subject_race = tr_race[race],
+      officer_race = tr_race[raw_officer_race],
+      subject_race = tr_race[raw_race],
       # NOTE: Source files are all traffic stops.
       type = "vehicular"
     ) %>%
