@@ -1843,17 +1843,20 @@ We’re excited to see what you come up with!
   coordinate of the highway post that was recorded for the stop, then mapping
   that latitude and longitude to a county using a shapefile. Details are in the
   `WA_map_locations.R` script.
-- We created an officer ID field based on officer name. Duplicates are possible
-  if officers have the same first and last name, however this is unlikely.
 - Arrests and citations are grouped together in the `stop_outcome`, so we
   cannot reliably identify arrests. There is data on incident to arrest
   searches, but this does not necessarily identify all arrests.
-- (danj): there may be duplicates, deduping on  employee_last, employee_first,
-  officer_race_raw, officer_gender, contact_date, contact_hour, highway_type,
-  road_number, milepost, driver_race_orig, driver_age_orig, driver_gender_orig
-  yields ~3.4% fewer rows; however, many of these have NA for the driver
-  demographics; at the same time, it's hard to believe an officer could stop 45
-  people in an hour..
+- If one were to dedupe on employee_last, employee_first, officer_race, 
+  officer_gender, contact_date, contact_hour, highway_type, road_number, milepost, 
+  driver_race, driver_age, driver_gender it would yield ~3.4% fewer rows. Without
+  deduping, there are a few officers who seem to stop a suspiciously high, but
+  not altogether unreasonable, number of people in a an hour. However, we 
+  ultimately choose not to dedupe since most of the "duplicate" rows have NA for 
+  the driver demographics and other fields. 
+- Weigh station stops were removed.
+- `raw_enforcements` is simply a concatenation of 12 enforcement columns in the
+  raw data.
+- Additional columns in the raw data that may be of interest: officer name
 
 ## Tacoma, WA
 **Data notes**:
@@ -1899,23 +1902,38 @@ We’re excited to see what you come up with!
   are only 6 of them.
 - There are very few consent searches relative to other states, suggesting a
   potential difference in recording policy. 
-- `countyDMV` field refers to the county of the stop, as the WI police
-  clarified for us. 
+- `raw_[individual/vehicle]Contraband` were mapped using a data dictionary 
+  provided by the department: 01 = WEAPON(S); 02 = EXCESSIVE CASH;
+  03 = ILLICIT DRUG(S)/PARAPHERNALIA; 04 = EVIDENCE OF A CRIME; 05 = INTOXICANT(S);
+  06 = STOLEN GOODS; 99 = OTHER; 00 = NONE
+- `raw_[individual/vehicle]SearchBasis` were mapped using a data dictionary.
+  There is no code for "plain view". 1 = Consent; 2 = Probable Cause; the rest 
+  of the search basis categories are are Warrant, Incident to Arrest, Inventory, 
+  and Exigent Circumstances
+- `violation` was mapped directly from `StatuteDescription` in the raw data.
+- `location` is a concatenation of `raw_onHighwayDirection`, `raw_onHighwayName`,
+   `raw_fromAtStreetName`, and `county_name`
+- There are about 150 columns in the raw data (many columns about road
+  type and conditions, many about vehicle details, etc.), however, the vast 
+  majority of the columns are 95-100% empty.
 
 ## Statewide, WY
 **Data notes**:
-- Only citations are included in the data, so we exclude Wyoming from our
-  analysis. 
-- The `police_department` field is populated by the state trooper division.
+- Only citations are included in the data.
+- The `department_name` field is populated by the state trooper division.
 - The violation field is populated by violated statute codes.
-- We found an external mapping of statute codes and provide them in the raw
-  data.
-- Some county names were misrecorded and required editing.
 - Rows represent citations, not stops, so we remove duplicates by grouping by
   the other fields. 
 - `contraband_found` could potentially be derived from violation codes
   (drug/alcohol/weapons), but it would be less reliable and not necessarily
-  comparable to how we defined contraband_found for other states. 
+  comparable to how we defined contraband_found for other states, so we do not.
+- `department_id` was mapped directly from `emdivision` in the raw data.
+- `violation` was mapped directly from `charge` in the raw data.
+- `location` is a concatenation of `raw_streetnbr`, `raw_street`, and `city`
+  (and note that `city` is actually county, and is mapped to `county_name` 
+  with light standardization).
+- Additional columns in raw data that may be of interest: `statute`, 
+  `is_acciden`.
 
 
 CHANGE LOG FOR NEXT UPDATE:
