@@ -36,12 +36,15 @@ clean <- function(d, helpers) {
   # date/location/reason_for_stop/search/contraband, etc.
   # https://app.asana.com/0/456927885748233/743138732675745
   d$data %>%
+    add_raw_colname_prefix(
+      Race
+    ) %>% 
     mutate(
       # NOTE: The only date information we have is year. Set the date as the
       # first day of the year, similar to how we treat coarse time units for
       # other states.
       date = parse_date(str_c(Year, "0101"), "%Y%m%d"),
-      subject_race = tr_race[Race],
+      subject_race = tr_race[raw_Race],
       # NOTE: Source file is for traffic stops.
       type = "vehicular"
     ) %>%

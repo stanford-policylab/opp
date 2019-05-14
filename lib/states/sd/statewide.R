@@ -1,9 +1,6 @@
 source(here::here("lib", "common.R"))
-# NOTE: there still appear to be slight count differences between old opp and our 
-# cleaned data. However, it appears that our data formats have changed since the last
-# pull/process (of old opp), which may account for some of the differences. Furthermore,
-# the data has no race or outcome information, so it was not used in the old analysis and
-# will not be used in our analysis.
+# Data has no race or outcome information, so is not used in our analysis.
+
 load_raw <- function(raw_data_dir, n_max) {
   # NOTE: For 2012 we only have the last quarter or so of stops. For 2016 we
   # only have the first quarter. The years in between are complete, except for
@@ -12,7 +9,7 @@ load_raw <- function(raw_data_dir, n_max) {
   # asterisk rows and which column contains true county name is not a problem
   # anymore and leads to improper filterings. We import months thereafter separately to 
   # deal with them accordingly.
-  # TODO(amy): The format changes within the month of Sept 2015, so at some point we should
+  # TODO: The format changes within the month of Sept 2015, so at some point we should
   # address that month in a more nuanced way (right now it's being processed in the format
   # that corresponds to the majority of rows, but in doing so we lose some data)
   warnings <- load_regex(raw_data_dir, "warnings.csv", n_max = n_max)
@@ -52,7 +49,7 @@ load_raw <- function(raw_data_dir, n_max) {
 
 clean <- function(d, helpers) {
 
-  # TODO(phoebe): can we get reason_for_stop/search/contraband/race/etc fields?
+  # TODO: can we get reason_for_stop/search/contraband/race/etc fields?
   # https://app.asana.com/0/456927885748233/733449078894622
   d$data %>%
     rename(
@@ -69,7 +66,7 @@ clean <- function(d, helpers) {
     mutate(
       date = parse_date(date, "%Y/%m/%d"),
       time = parse_time(time, "%H:%M:%S"),
-      county_name = str_to_title(county_name),
+      county_name = str_c(str_to_title(county_name), " County"),
       subject_sex = tr_sex[Sex],
       # NOTE: only have vehicular data for SD
       type = "vehicular",

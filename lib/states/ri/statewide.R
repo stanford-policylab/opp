@@ -46,6 +46,15 @@ clean <- function(d, helpers) {
   )
 
   d$data %>%
+    add_raw_colname_prefix(
+      OperatorRace,
+      OperatorSex,
+      ResultOfStop,
+      SearchResultOne,
+      SearchResultTwo,
+      SearchResultThree,
+      BasisForStop
+    ) %>% 
     rename(
       # NOTE: Best lead on mapping trooper zone to location:
       # http://www.scannewengland.net/wiki/index.php?title=Rhode_Island_State_Police
@@ -58,31 +67,32 @@ clean <- function(d, helpers) {
       date = parse_date(StopDate, "%Y%m%d"),
       time = parse_time(StopTime, "%H%M"),
       subject_yob = YearOfBirth,
-      subject_race = fast_tr(OperatorRace, tr_race),
-      subject_sex = fast_tr(OperatorSex, tr_sex),
+      subject_race = fast_tr(raw_OperatorRace, tr_race),
+      subject_sex = fast_tr(raw_OperatorSex, tr_sex),
       # NOTE: Data received in Apr 2016 were specifically from a request for
       # vehicular stops.
       type = "vehicular",
-      arrest_made = ResultOfStop == "D" | ResultOfStop == "P",
-      citation_issued = ResultOfStop == "M",
-      warning_issued = ResultOfStop == "W",
+      arrest_made = raw_ResultOfStop == "D" | raw_ResultOfStop == "P",
+      citation_issued = raw_ResultOfStop == "M",
+      warning_issued = raw_ResultOfStop == "W",
       outcome = first_of(
         "arrest" = arrest_made,
         "citation" = citation_issued,
         "warning" = warning_issued
       ),
-      contraband_drugs = (SearchResultOne == 'D') | (SearchResultTwo == 'D') | (SearchResultThree == 'D'),
-      contraband_alcohol = (SearchResultOne == 'A') | (SearchResultTwo == 'A') | (SearchResultThree == 'A'),
-      contraband_weapons = (SearchResultOne == 'W') | (SearchResultTwo == 'W') | (SearchResultThree == 'W'),
-      contraband_other = (SearchResultOne %in% c('M','O')) | 
-                         (SearchResultTwo %in% c('M','O')) | 
-                         (SearchResultThree %in% c('M','O')),
+      contraband_drugs = (raw_SearchResultOne == 'D') | (raw_SearchResultTwo == 'D') | (raw_SearchResultThree == 'D'),
+      contraband_alcohol = (raw_SearchResultOne == 'A') | (raw_SearchResultTwo == 'A') | (raw_SearchResultThree == 'A'),
+      contraband_weapons = (raw_SearchResultOne == 'W') | (raw_SearchResultTwo == 'W') | (raw_SearchResultThree == 'W'),
+      contraband_other = (raw_SearchResultOne %in% c('M','O')) | 
+                         (raw_SearchResultTwo %in% c('M','O')) | 
+                         (raw_SearchResultThree %in% c('M','O')),
       contraband_true = contraband_drugs | contraband_weapons | contraband_alcohol | contraband_other,
       contraband_false = is.na(contraband_true) &
           (!contraband_drugs | !contraband_weapons | !contraband_alcohol | !contraband_other),
       contraband_found = if_else(contraband_false, FALSE, contraband_true),
       frisk_performed = Frisked == "Y",
-      search_conducted = Searched == "Y" | frisk_performed,
+      # NOTE: only 10 Searched are NA -- we assume these to be F
+      search_conducted = Searched == "Y" & !is.na(Searched),
       multi_search_reasons = str_c_na(
         SearchReasonOne,
         SearchReasonTwo,
@@ -91,7 +101,7 @@ clean <- function(d, helpers) {
       ),
       search_basis = first_of(
         "plain view" = str_detect(multi_search_reasons, "C"),
-        "probable cause" = str_detect(multi_search_reasons, "O|P|R|T"),
+        "probable cause" = str_detect(multi_search_reasons, "O|P|R"),
         "other" = str_detect(multi_search_reasons, "A|I"),
         "probable cause" = search_conducted
       ),
@@ -106,7 +116,7 @@ clean <- function(d, helpers) {
         NA_character_,
         reason_for_search
       ),
-      reason_for_stop = fast_tr(BasisForStop, tr_reason_for_stop)
+      reason_for_stop = fast_tr(raw_BasisForStop, tr_reason_for_stop)
     ) %>%
     standardize(d$metadata)
 }

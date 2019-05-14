@@ -24,6 +24,12 @@ clean <- function(d, helpers) {
   )
 
   d$data %>%
+    add_raw_colname_prefix(
+      ORIG_TRFC_VIOL_CDE,
+      CNTY_NBR,
+      RACE_IND,
+      SEX_IND
+    ) %>% 
     rename(
       department_id = AGY_CDE,
       vehicle_make = VHCL_MAKE,
@@ -50,9 +56,9 @@ clean <- function(d, helpers) {
         prefix_right = "milepost: ",
         sep = ", "
       ),
-      county_name = fast_tr(CNTY_NBR, tr_county),
-      subject_race = fast_tr(RACE_IND, tr_race),
-      subject_sex = fast_tr(SEX_IND, tr_sex),
+      county_name = fast_tr(raw_CNTY_NBR, tr_county),
+      subject_race = fast_tr(raw_RACE_IND, tr_race),
+      subject_sex = fast_tr(raw_SEX_IND, tr_sex),
       department_name = if_else(
         department_id == "T",
         "Tennessee Highway Patrol",
@@ -62,7 +68,7 @@ clean <- function(d, helpers) {
       type = "vehicular",
       citation_issued = TRUE,
       outcome = "citation",
-      violation = fast_tr(ORIG_TRFC_VIOL_CDE, tr_violation)
+      violation = fast_tr(raw_ORIG_TRFC_VIOL_CDE, tr_violation)
     ) %>%
     standardize(d$metadata)
 }

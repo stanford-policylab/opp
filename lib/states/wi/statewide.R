@@ -95,48 +95,6 @@ load_raw <- function(raw_data_dir, n_max) {
     wi_warn,
     wi_cit
   ) %>%
-  # NOTE: Each row represents a single violation for a stop; an entire stop
-  # may span multiple rows. Collapse to one row per stop, combining
-  # violations into a list. Note that we're grouping by all the columns
-  # except for those containing statute info, so that each group represents
-  # a single stop and the items within that group represent individual charges
-  # alleged in that stop.
-  group_by(
-    summaryDateOccurred,
-    summaryTimeOccurred,
-    onHighwayDirection,
-    onHighwayName,
-    fromAtStreetName,
-    agencyJurisdiction,
-    agencyDOTOfficerIdentificationNumber,
-    agencyOfficerNameFirst,
-    agencyOfficerNameLast,
-    agencyNameDepartment,
-    agencyBFUNCAgencyCode,
-    race,
-    sex,
-    longitude,
-    latitude,
-    countyDMV,
-    individualSearchConducted,
-    vehicleSearchConducted,
-    individualContraband,
-    vehicleContraband,
-    summaryOutcome,
-    bodyStyle,
-    vehicle_make,
-    color,
-    model,
-    modelYear,
-    individualSearchBasis,
-    vehicleSearchBasis,
-    registrationIssuanceState
-  ) %>%
-  summarize(
-    all_violations = str_c_na(StatuteDescription, collapse = "|")
-  ) %>%
-  ungroup(
-  ) %>%
   # NOTE: County column mostly uses two-digit codes, but some use the format
   # `<NAME> - <CODE>`. Normalize column to use two-digit codes to join with
   # county data.
@@ -170,6 +128,55 @@ load_raw <- function(raw_data_dir, n_max) {
 clean <- function(d, helpers) {
 
   d$data %>%
+    # NOTE: Each row represents a single violation for a stop; an entire stop
+    # may span multiple rows. Collapse to one row per stop, combining
+    # violations into a list. Note that we're grouping by all the columns
+    # except for those containing statute info, so that each group represents
+    # a single stop and the items within that group represent individual charges
+    # alleged in that stop.
+    merge_rows(
+      summaryDateOccurred,
+      summaryTimeOccurred,
+      onHighwayDirection,
+      onHighwayName,
+      fromAtStreetName,
+      agencyJurisdiction,
+      agencyDOTOfficerIdentificationNumber,
+      agencyOfficerNameFirst,
+      agencyOfficerNameLast,
+      agencyNameDepartment,
+      agencyBFUNCAgencyCode,
+      race,
+      sex,
+      longitude,
+      latitude,
+      CountyName,
+      individualSearchConducted,
+      vehicleSearchConducted,
+      individualContraband,
+      vehicleContraband,
+      summaryOutcome,
+      bodyStyle,
+      vehicle_make,
+      color,
+      model,
+      modelYear,
+      individualSearchBasis,
+      vehicleSearchBasis,
+      registrationIssuanceState
+    ) %>%
+    add_raw_colname_prefix(
+      individualSearchBasis,
+      vehicleSearchBasis,
+      individualContraband,
+      vehicleContraband,
+      summaryOutcome,
+      race,
+      sex,
+      onHighwayDirection,
+      onHighwayName,
+      fromAtStreetName
+    ) %>% 
     rename(
       department_id = agencyBFUNCAgencyCode,
       department_name = agencyNameDepartment,
@@ -180,7 +187,7 @@ clean <- function(d, helpers) {
       vehicle_color = color,
       vehicle_registration_state = registrationIssuanceState,
       vehicle_year = modelYear,
-      violation = all_violations
+      violation = StatuteDescription
     ) %>%
     mutate(
       # NOTE: Date and time columns are both full `datetime` columns, but only
@@ -196,42 +203,43 @@ clean <- function(d, helpers) {
         parse_time(summaryTimeOccurred, "%H:%M"),
         parse_time(str_sub(summaryTimeOccurred, 12, 19), "%H:%M:%S")
       ),
+      county_name = str_c(str_to_title(CountyName), "County", sep = ", "),
       location = str_c_na(
-        onHighwayDirection,
-        onHighwayName,
-        fromAtStreetName,
+        raw_onHighwayDirection,
+        raw_onHighwayName,
+        raw_fromAtStreetName,
         county_name
       ),
       lat = as.numeric(latitude),
       lng = as.numeric(longitude),
       # NOTE: Sources only include vehicle stops.
       type = "vehicular",
-      subject_race = tr_race[race],
-      subject_sex = tr_sex[sex],
+      subject_race = tr_race[raw_race],
+      subject_sex = tr_sex[raw_sex],
       # NOTE: Outcome codes come from data dictionary. A stop may have one or
       # more of these codes.
-      arrest_made = str_detect(summaryOutcome, "5"),
-      citation_issued = str_detect(summaryOutcome, "4"),
-      warning_issued = str_detect(summaryOutcome, "[23]"),
+      arrest_made = str_detect(raw_summaryOutcome, "5"),
+      citation_issued = str_detect(raw_summaryOutcome, "4"),
+      warning_issued = str_detect(raw_summaryOutcome, "[23]"),
       outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued,
         warning = warning_issued
       ),
-      search_person = tr_yn[individualSearchConducted],
-      search_vehicle = tr_yn[vehicleSearchConducted],
+      search_person = tr_yn[raw_individualSearchConducted],
+      search_vehicle = tr_yn[raw_vehicleSearchConducted],
       search_conducted = search_person | search_vehicle,
       # NOTE: Search codes come from data dictionary. There is no code for
       # "plain view." 
       # the rest of the search basis categories are are Warrant, Incident to 
       # Arrest, Inventory, and Exigent Circumstances
       search_basis = first_of(
-        "consent" = str_detect(individualSearchBasis, "1")
-          | str_detect(vehicleSearchBasis, "1"),
-        "probable cause" = str_detect(individualSearchBasis, "2")
-          | str_detect(vehicleSearchBasis, "2"),
-        "other" = str_detect(individualSearchBasis, "[34569]")
-          | str_detect(vehicleSearchBasis, "[34569]")
+        "consent" = str_detect(raw_individualSearchBasis, "1")
+          | str_detect(raw_vehicleSearchBasis, "1"),
+        "probable cause" = str_detect(raw_individualSearchBasis, "2")
+          | str_detect(raw_vehicleSearchBasis, "2"),
+        "other" = str_detect(raw_individualSearchBasis, "[34569]")
+          | str_detect(raw_vehicleSearchBasis, "[34569]")
       ),
       # NOTE: Contraband codes come from data dictionary:
       #03,"ILLICIT DRUG(S)/PARAPHERNALIA"
@@ -250,7 +258,8 @@ clean <- function(d, helpers) {
       | str_detect(vehicleContraband, "5"),
       contraband_other = str_detect(individualContraband, "4|6|2|99")
       | str_detect(vehicleContraband, "4|6|2|99"),
-      contraband_found = contraband_drugs | contraband_weapons | contraband_alcohol | contraband_other
+      contraband_found = contraband_drugs | contraband_weapons | 
+        contraband_alcohol | contraband_other
     ) %>%
     standardize(d$metadata)
 }
