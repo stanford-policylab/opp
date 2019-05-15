@@ -24,11 +24,14 @@ clean <- function(d, helpers) {
   )
   
   d$data %>%
+    add_raw_colname_prefix(
+      RACE
+    ) %>% 
     mutate(
       date = parse_date(str_sub(VIOLATION_DATE, 1, 8), format = "%m/%d/%y"),
       time = parse_time(str_sub(VIO_TIME, 10, 17), format = "%H:%M:%S"),
       subject_age = as.integer(AGE),
-      subject_race = tr_race[RACE],
+      subject_race = tr_race[raw_RACE],
       subject_sex = tr_sex[GENDER],
       county_name = str_c(str_to_title(COUNTY), " County"),
       location = str_c(VIO_STREET, HWY_NUM, HWY_TYPE, sep = "|"),

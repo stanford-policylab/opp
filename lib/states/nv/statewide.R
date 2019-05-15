@@ -32,18 +32,21 @@ clean <- function(d, helpers) {
     U = "other/unknown"
   )
 
-  # TODO(phoebe): can we get reason_for_stop/search/contraband fields?
+  # TODO(phoebe): can we get search/contraband fields?
   # https://app.asana.com/0/456927885748233/749213148338105
   d$data %>%
+    add_raw_colname_prefix(
+      Race
+    ) %>% 
     rename(
-      violation = Code,
       subject_age = Age
     ) %>%
     mutate(
       date = parse_date(Date, "%Y/%m/%d"),
       # NOTE: Source data are all state police traffic stops.
       type = "vehicular",
-      subject_race = tr_race[Race],
+      subject_race = tr_race[raw_Race],
+      violation = str_c(Code, str_to_lower(Offense), sep = ": "),
       warning_issued = Result == "WARNING",
       citation_issued = Result == "CITATION",
       arrest_made = Result == "ARREST",

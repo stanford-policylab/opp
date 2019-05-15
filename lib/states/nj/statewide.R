@@ -37,23 +37,29 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
-  # NOTE: race differs slightly from old opp (far fewer asians, far more na/other),
-  # but categorizations are from raw to clean are identical; old opp mentioned new
-  # data that they hadn't used? perhaps this accounts for the discrepancy? it's also
-  # not a large enough discrepancy to be too worrisome, and counts of overall number
-  # of stops are the same, by month
   tr_race <- c(
     "W - WHITE" = "white",
     "B - BLACK" = "black",
     "H - HISPANIC" = "hispanic",
-    "AS - ASIAN INDIAN" = "asian/pacfic islander",
+    "AS - ASIAN INDIAN" = "asian/pacific islander",
     "OA - OTHER ASIAN" = "asian/pacific islander",
     "AI - AMERICAN INDIAN" = "other/unknown",
     "UO - UNABLE TO OBSERVE" = "other/unknown",
     "NP - NOT PROVIDED" = "other/unknown",
     "UA - UNATTENDED" = "other/unknown" 
   )
-
+  
+  # NOTE: race and ethnicity conflict in about 1% of stops
+  tr_ethnicity <- c(
+    "White" = "white",
+    "Black" = "black",
+    "Hispanic / Latino" = "hispanic",
+    "Asian Indian" = "asian/pacific islander",
+    "Other Asian" = "asian/pacific islander",
+    "American Indian" = "other/unknown",
+    "Unknown" = "other/unknown"
+  )
+  
   tr_sex <- c(
     "M - MALE" = "male",
     "F - FEMALE" = "female"
@@ -62,6 +68,11 @@ clean <- function(d, helpers) {
   # TODO(phoebe): can we get reason_for_stop/search/contraband fields?
   # https://app.asana.com/0/456927885748233/722133259228547
   d$data %>%
+    add_raw_colname_prefix(
+      RACE,
+      Ethnicity,
+      TOWNSHIP
+    ) %>% 
     separate_cols(
       DATE_TIME = c("date", "time")
     ) %>%
@@ -79,9 +90,12 @@ clean <- function(d, helpers) {
       time = parse_time(time, "%I:%M:%S%p"),
       # TODO(jnu): Geocode locations.
       # https://app.asana.com/0/456927885748233/722133259228546
-      location = str_c_na(LOCATION, TOWNSHIP, sep = ", "),
-      subject_race = tr_race[RACE],
-      subject_sex = tr_sex[GENDER],
+      location = str_c_na(LOCATION, raw_TOWNSHIP, sep = ", "),
+      subject_race = fast_tr(raw_RACE, tr_race),
+      # Since raw race and ethnicity columns agree most of the time, we
+      # use ethnicity to populate race when race is NA
+      subject_race = replace_na(fast_tr(raw_Ethnicity, tr_ethnicity)),
+      subject_sex = fast_tr(GENDER, tr_sex),
       type = "vehicular"
     ) %>%
     group_by(
@@ -97,6 +111,8 @@ clean <- function(d, helpers) {
       warning_issued = any(ACTION == "WARNING"),
       frisk_performed = any(Frisk == "Y"),
       search_conducted = any(Searched == "Y"),
+      contraband_found = any(`Search Evid Seized` == "Y") | 
+        any(`Frisk Evid Seized` == "Y"),
       has_driver = any(INVOLVEMENT == "DRIVER")
     ) %>%
     # NOTE: Data are grouped by stop ID; rows represent individuals. We need

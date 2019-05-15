@@ -1358,7 +1358,7 @@ We’re excited to see what you come up with!
 
 ## Statewide, NJ
 **Data notes**:
-- New Jersey data may be updated: we received the data very recently, and still
+- New Jersey data may be updated: we still
   have a number of questions we are waiting on the state to answer. 
 - New Jersey uses sofware produced by [LawSoft
   Inc.](http://www.lawsoft-inc.com). There are two sets of data: CAD (computer
@@ -1366,8 +1366,13 @@ We’re excited to see what you come up with!
   system, recorded later). They have almost completely disjoint fields, and
   only RMS records have information on searches. We believe the data from the
   two systems should really be joined, but according to the NJSP there is not a
-  programmatic way to do so. Therefore, we process just the CAD data, which
-  appears to be the dataset which corresponds to traffic stops. 
+  programmatic way to do so. Therefore, we process the CAD data fully, which
+  appear to be the dataset which corresponds to traffic stops. We did noticed 
+  that you could join the RMS file if you combine a few of the fields in a certain 
+  way. This method isn't perfect, and there are lots of nulls; but we include it
+  in hopes that some data is better than no data.
+- Becuase of the above, we only know search/frisk/contraband information in
+  about 13% of stops.
 - In the CAD data, there are often multiple rows per incident. Some of these
   are identical duplicates, which we remove. For the remaining records, we
   group by `CAD_INCIDENT`, because the NJSP told us that each `CAD_INCIDENT` ID
@@ -1378,8 +1383,14 @@ We’re excited to see what you come up with!
   the passenger. 
 - Statutes are mapped using the [traffic
   code](http://law.justia.com/codes/new-jersey/2013/title-39), where possible.
-- The CAD records were mapped to a county by running the `TOWNSHIP` values
-  through the Google geocoder. 
+- The CAD records contain `TOWNSHIP` which could be mapped to a county by 
+  running the values through the Google geocoder. 
+- Additional raw data columns that might be of interest (note, these are
+  only in 13% of data since they come from the spotty, impossible matching
+  described above): `Sobriety Test`, `CCH Check`, `NCIC Check`, `Warrant Check`,
+  `Warrant`. Note that since we do not have a guarantee that these 13% of rows
+  with data are a random or representative sample, we do not recommend drawing
+  conclusions from this information.
 
 ## Camden, NJ
 **Data notes**:
@@ -1422,13 +1433,23 @@ We’re excited to see what you come up with!
 **Data notes**:
 - Nevada does not seem to record Ethnicity or have any records of Hispanic
   drivers, so we exclude it from our analysis. 
-- The violation field is populated by infraction codes.
+- The violation field is a concatenation of two fields in the raw data:
+  infraction codes and offense description.
+- Additional columns in the raw data that may be of interest: `Citation Number`.
 
 ## Statewide, NY
 **Data notes**:
 - The data include only citations.
 - There is no data on searches.
-- The data stops at 2017-12-13.
+- The data stops at 2017-12-14.
+- `subject_race` is mapped from a raw data column which was passed through as
+  `raw_RACE`.
+- `location` is simply a concatenation of three raw data columns:
+  `VIO_STREET`, `HWY_NUM`, `HWY_TYPE`.
+- Additional columns in the raw data that may be of interest: `LAW_SECTION`,
+  and `DCJS_CODE` (we do, however, provide `violation` in the clean data,
+  which is called `LAW_DESCRIPTION` in the raw data, and appears to simply
+  be the human readable description of `LAW_SECTION` and `DCJS_CODE`).
 
 ## Albany, NY
 **Data notes**:
@@ -1458,13 +1479,15 @@ We’re excited to see what you come up with!
   laws can be read [here](http://codes.ohio.gov/orc/).
 - There is no data for contraband being found, but a related field could
   potentially be reconstructed by looking at searches involving drugs and an
-  arrest.
+  arrest. We mark contraband_found as TRUE for drug-related arrests (extracted 
+  from `raw_ORC_STRING`, but we cannot determine if the remainder are FALSE or
+  simply some other type of contraband was recovered).
 - Counties were mapped using the provided dictionary, which is included in the
   raw data folder.
 - We cannot find disposition codes (in `DISP_STRING`) which clearly indicate
   whether a citation as opposed to a warning was given, although there is a
   disposition for warnings.
-- The data contains stops of both type TS and TSA, standing for "traffic stop""
+- The data contains stops of both type TS and TSA, standing for "traffic stop"
   and "traffic stop additional". The latter have a higher search rate and tend
   to have additional information (i.e., `ASINC_STRING` is not NA). We include
   both types in analysis, as they do not appear to be duplicates (addresses and
@@ -1475,6 +1498,12 @@ We’re excited to see what you come up with!
   example).
 - `officer_id` refers to a single officer throughout their tenure on the state
   patrol, but it is re-assigned to a new trooper upon an officer's retirement.
+- `raw_DISP_STRING` is used to determine subject race, sex, stop outcome, and
+  search information. See processing script for mappings.
+- Violations were mapped from `raw_ORC_STRING`.
+- 2017 data has a slightly different format: information from DISP_STRING and 
+  ORC_STRING exist in `raw_DISPOSITIONS` for that year.
+- Additional columns from raw data that may be of interest: `ASINC_STRING`
 
 ## Cincinnati, OH
 **Data notes**:
@@ -1516,6 +1545,7 @@ We’re excited to see what you come up with!
 - There is basically no data, including no data on Hispanic drivers, so we
   exclude Oregon from our analysis.
 - Counts for 2015 and 2016 are much lower than in earlier years. 
+- subject_race is mapped from `raw_Race`
 
 ## Philadelphia, PA
 **Data notes**:
@@ -1575,6 +1605,17 @@ We’re excited to see what you come up with!
   juridisdiction areas. However, there is no simple mapping between zones and
   counties. We store state patrol zones in the `district` column and use this
   column in our granular location analyses. 
+- contraband information was mapped from `raw_SearchResult[One/Two/Three]`. 
+- Column `search_basis` is a standardized version of `reason_for_search`, which, 
+  if multiple reasons are provided, uses the hierarchy of: plain view, probable 
+  cause, other. And if no search reason is given, we default to probable cause.
+  Note that while the raw data contains a `ConsentRequested` column, we have no
+  information about whether consent was given.
+- Additional columns in the raw data that may be of interest: `SearchFrisk[One/Two/Three]`
+  (says whether searches and frisks were of the driver, passenger, or vehicle),
+  `Duration` (A/B/C/NA), `AdditionalOccupants`, `Road` (I/S/N/NA), `PlateType`,
+  `PriorRecord` (Y/N/T/NA), `ConsentRequested`.
+  
 
 ## Statewide, SC
 **Data notes**:
@@ -1582,20 +1623,39 @@ We’re excited to see what you come up with!
 - More data on local stops is available
   [here](http://afc5102.scdps.gov/SCDPS_Exweb/SCDPS/PublicContact/PublicContact-012).
   It is aggregated by race and age group — potentially scrapable if useful.
-- While there is data on violation, many of the stops have missing data, so we
-  exclude South Carolina from our speeding analysis. 
+- While there is data on violation, many of the stops have missing data.
+- Violation is a concatenation of `sectionnum` and `offensecode` in the raw data.
+- Additional columns in the raw data that may be of interest (Note, many of these
+  were used to construct search/contraband/arrest/outcome information in the 
+  clean data. See processing script for details.): `jailed`, `felonyarrest`,
+  `armedwith` (messy free field), `using[drugs/alcohol]`, 
+  `contraband[drugs/drugparaphenalia/weapons/other]` (sic), 
+  `[passenger/subject/vehicle]searched`.
 
 ## Statewide, SD
 **Data notes**:
 - Race data is missing, so we exclude South Dakota from our analysis. 
-- Some county names were misrecorded and needed editing.
+- Some county names were misrecorded.
+- Additional columns in raw data that may be of interest: `Eye Color`, `Insurance`,
+  `Commerical Vehicle` (sic), `Is Accident`, `Haz Mat Vehicle`.
 
 ## Statewide, TN
 **Data notes**:
 - The data contain only citations, so we exclude Tennessee from our analysis. 
 - The codes in the `CNTY_NBR` field represent counties ordered alphabetically.
-- It would be possible to map the highway and mile marker data to geo
-  coordinates, as we did in Washington.
+- `location` is a concatenation of raw fields `UP_STR_HWY` (highway/street) and 
+  `MLE_MRK_NBR` (mile marker). It would be possible to map the highway and mile 
+  marker data to geo coordinates, as we did in Washington. However, since we are 
+  often missing mile marker or even mile marker and highway, we did not do so 
+  (as most would be NA).
+- `raw_ORIG_TRFC_VIOL_CDE` maps to `violation`, `raw_CNTY_NBR` maps to 
+  `county_name`, `raw_RACE_IND` maps to `subject_race`, `raw_SEX_IND` maps
+  to `subject_sex`.
+- Additional raw data columns that may be of interest: `SPEED`, `SPEED_LMT`, 
+  `TN_RSDNT_IND` (resident boolean), `HZRD_MTRL_IND` (hazardous material boolean), 
+  `MTR_CYCL_IND` (motorcycle boolean), `CNSTR_ZNE` (construction zone boolean), 
+  `WRKR_PRSNT` (worker present in construction zone boolean), `TRVL_DRCT` (travel 
+  direction), `ACCD_IND` (accident boolean), `CMV_IND` (commercial vehicle boolean)
 
 ## Nashville, TN
 **Data notes**:
@@ -1793,8 +1853,7 @@ We’re excited to see what you come up with!
 
 ## Statewide, VA
 **Data notes**:
-- The original data was aggregated.
-- The data is aggregated by week, not by day.
+- The original data was aggregated by week.
 - Some rows have an unlikely high number of stops or searches. We have an
   outstanding inquiry on this, but for now it is assumed to be correct.
 - Counties were mapped using the provided dictionary, which is included in the
@@ -1806,6 +1865,7 @@ We’re excited to see what you come up with!
 - In the raw data, "Traffic arrests" refer to citations without a search.
   "Search arrests" refer to a citation and a search (either before or after the
   citation). "Search stops" refer to searches without a corresponding citation.
+- Additional columns in raw data that may be of interest: officer name.
 
 ## Burlington, VT
 **Data notes**:
@@ -1825,16 +1885,16 @@ We’re excited to see what you come up with!
 ## Statewide, VT
 **Data notes**:
 - Stop purpose information is not very granular — there are only five
-  categories, and we have no way of identifying speeding. 
+  categories, and we have no way of identifying speeding. See 
+  `raw_stop_reason_description`.
 - The search type field includes "Consent search — probable cause" and “Consent
   search — reasonable suspicion". It is not entirely clear what these mean; we
   cannot find analogues in other states.
-- Counties were mapped by running the cities in the `Stop City` field through
-  Google's geocoder.
-- There are 30 cases where DOB was sanitized incorrectly because subtracting 10
-  years from 2012-02-29 creates NA values in R; dob is not released with the
-  public data, but this is something to be aware of if using our processing
-  script on the raw data
+- Counties could be mapped by running the cities in the `raw_stop_city` field 
+  through Google's geocoder.
+- `location` is a simple concatenation of address, city, state, zip.
+- `search_conducted` was mapped from `raw_stop_search_description`.
+- `contraband_found` was mapped from `raw_stop_contraband_description`.
 
 
 ## Statewide, WA
