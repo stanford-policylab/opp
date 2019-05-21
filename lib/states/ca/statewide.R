@@ -10,7 +10,28 @@ load_raw <- function(raw_data_dir, n_max) {
 clean <- function(d, helpers) {
   tr_county <- json_to_tr(helpers$load_json("CA_counties.json"))
   tr_district <- json_to_tr(helpers$load_json("CA_districts.json"))
-
+  
+  tr_race_raw <- c(
+    A = "Other Asian",
+    B = "Black", 
+    C = "Chinese",
+    D = "Cambodian", 
+    F = "Filipino", 
+    G = "Guamanain", 
+    H = "Hispanic", 
+    I = "Indian",  
+    J = "Japanese", 
+    K = "Korean", 
+    L = "Laotian", 
+    O = "Other", 
+    P = "Other Pacific Islander", 
+    S = "Samoan", 
+    U = "Hawaiian", 
+    V = "Vietnamese", 
+    W = "White", 
+    Z = "Asian Indian" 
+  )
+  
   tr_race <- c(
     A = "asian/pacific islander", # Other Asian
     B = "black", # Black
@@ -19,7 +40,7 @@ clean <- function(d, helpers) {
     F = "asian/pacific islander", # Filipino
     G = "asian/pacific islander", # Guamanian
     H = "hispanic", # Hispanic
-    I = "asian/pacific islander", # Indian
+    I = "other/unknown", # Indian (presumably native american, since Z)
     J = "asian/pacific islander", # Japanese
     K = "asian/pacific islander", # Korean
     L = "asian/pacific islander", # Laotian
@@ -61,8 +82,8 @@ clean <- function(d, helpers) {
     "8" = "other", # Other
     "9" = "other" # Pat Down / Frisk
   )
-
-  tr_reason_for_search <- c(
+  
+  tr_search_basis_raw <- c(
     "1" = "Probable Cause (positive)",
     "2" = "Probable Cause (negative)",
     "3" = "Consent (positive), 202D Required",
@@ -88,6 +109,7 @@ clean <- function(d, helpers) {
       # NOTE: subject_age is provided, but only as an enum representing age
       # ranges: "0-14","15-25","25-32","33-39","40-48","49+".
       subject_race = fast_tr(Ethnicity, tr_race),
+      raw_race = fast_tr(Ethnicity, tr_race_raw),
       subject_sex = fast_tr(Gender, tr_sex),
       # NOTE: Data is for California Highway Patrol vehicular stops.
       department_name = "California Highway Patrol",
@@ -110,7 +132,7 @@ clean <- function(d, helpers) {
       search_conducted = Description != "0",
       search_person = frisk_performed,
       search_basis = fast_tr(Description, tr_search_basis),
-      reason_for_search = fast_tr(Reason, tr_reason_for_search),
+      raw_search_basis = fast_tr(Reason, tr_search_basis_raw),
       reason_for_stop = violation
     ) %>%
     standardize(d$metadata)

@@ -27,6 +27,12 @@ clean <- function(d, helpers) {
   )
 
   d$data %>%
+    add_raw_colname_prefix(
+      SubjectRaceCode,
+      SubjectEthnicityCode,
+      SearchAuthorizationCode,
+      InterventionDispositionCode
+    ) %>% 
     rename(
       subject_age = SubjectAge,
       officer_id = ReportingOfficerIdentificationID,
@@ -48,15 +54,17 @@ clean <- function(d, helpers) {
       lng = replace(lng, lng == 0, NA_real_),
       county_name = fast_tr(tolower(InterventionLocationName), tr_county),
       subject_race = tr_race[if_else(
-        SubjectEthnicityCode == "H",
+        raw_SubjectEthnicityCode == "H",
         "H",
-        SubjectRaceCode
+        raw_SubjectRaceCode
       )],
       subject_sex = tr_sex[SubjectSexCode],
       contraband_found = ContrabandIndicator == "True",
       search_vehicle = VehicleSearchedIndicator == "True",
-      search_conducted = search_vehicle | SearchAuthorizationCode != "N",
-      search_basis = tr_search_basis[SearchAuthorizationCode]
+      search_conducted = search_vehicle | raw_SearchAuthorizationCode != "N",
+      # 5 NA search instances, cast to false
+      search_conducted = replace_na(search_conducted, FALSE),
+      search_basis = tr_search_basis[raw_SearchAuthorizationCode]
     ) %>%
     # NOTE: Some rows belong to the same stop.  We dedup below with a group_by
     # and aggregate to potentially have multiple violations and multiple
@@ -76,6 +84,8 @@ clean <- function(d, helpers) {
       search_vehicle,
       subject_age,
       subject_race,
+      raw_SubjectRaceCode,
+      raw_SubjectEthnicityCode,
       subject_sex,
       time
     ) %>%
@@ -84,7 +94,7 @@ clean <- function(d, helpers) {
       # the individual was cited for.
       violation = StatuteCodeIdentificationID,
       reason_for_stop = StatutoryReasonForStop,
-      multi_outcome = InterventionDispositionCode
+      multi_outcome = raw_InterventionDispositionCode
     ) %>%
     mutate(
       arrest_made = CustodialArrestIndicator == "True"

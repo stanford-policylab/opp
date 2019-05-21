@@ -577,22 +577,34 @@ We’re excited to see what you come up with!
   Milepost), and 89% of stops overall.
 - It would be possible to map the highway and mile marker data to geo
   coordinates, like we did in Washington.
-- Data for violation reason is largely missing. 
-- VehicleSearchAuthority might provide search type but we lack a mapping for
-  the codes. TypeOfSearch includes information on whom was searched (e.g.,
-  driver vs. passenger), but does not provide information on the type of search
-  (e.g., probable cause vs. consent). ConsentSearchAccepted gives us
-  information on search type for a small fraction of searches.  
 - There is a two-week period in October 2012 and a two-week period in November
-  2013 when no stops are recorded. Dates are sparse in 2009–2010 (and even up
-  until mid-2011).
+  2013 when no stops are recorded. We also are missing December 2015.
+  Dates are sparse in 2009–2010 (and even up until mid-2011). 
 - We also received a file with partial data on traffic stops pre-2009; this is
-  not included in the cleaned dataset. 
+  not included in the dataset. 
+- Data for violation reason is largely missing. 
+- Raw column `VehicleSearchAuthority` and `DriverSearchAuthority` seem to provide 
+  search basis but we lack a mapping for the codes. `ConsentSearchAccepted` 
+  gives us information on search type for a small fraction of searches. 
+- `raw_TypeOfSearch` includes information on who was 
+  searched (e.g., driver vs. passenger), but does not provide information on the 
+  type of search (e.g., probable cause vs. consent).  
 - Some contraband information is available and so we define a contraband_found
   column in case it is useful to other researchers. But the data is messy and
   there are multiple ways contraband_found might be defined, and so we do not
   include Arizona in our contraband analysis. 
-
+- Additional raw data columns that may be of interest: `ConsentSearchRequested`
+  (note that there is also a raw column `ConsentSearchAccepted` -- which populates
+  the clean values `search_basis == "consent"`), `IfConsentRequestGranted`,
+  (FS, RS, NA), `SubjectDemeanor` (CO, UN, CM, NA), `StopDuration` (A-F, NA),
+  `DistractedDriving` (1-2 word free field), `ImmigrationStatusCheck` (boolean, 
+  nearly all NA), `VehicleImpounded` (Y, N, I, NA), `ImpoundReason` (LI, NL,
+  CN, DE, DM, II, UA, NA), `TypeOfContact` (D, P, E, N, C, NA), `DrugSeizureType`
+  (combinations of P, S, T), `DUIBAC`, `DUICharges`, `DUITests` (combinations of
+  B, I, U), `PreStopIndicator` (VT = "Vehicle Type, Condition or Modification",
+  BL = "Driver Body Language", PB = "Passenger Behavior", DB = "Driving Behavior",
+  OT = "Other", NO = "None")
+  
 ## Anaheim, CA
 **Data notes**:
 - Very little information received, only a reference number, date, year, case
@@ -773,6 +785,7 @@ We’re excited to see what you come up with!
     * V = Vietnamese
     * W = White
     * Z = Asian Indian
+  `subject_race` is mapped from `raw_race` above.
 - Search basis was recorded more finely in raw data. Raw mapping:
     * 1 = Probable Cause (positive)
     * 2 = Probable Cause (negative)
@@ -783,6 +796,7 @@ We’re excited to see what you come up with!
     * 7 = Parole / Probation / Warrant
     * 8 = Other
     * 9 = Pat Down / Frisk
+  `search_basis` is mapped from `raw_search_basis` above.
 - Very few consent searches are conducted relative to other states. 
 - Contraband found information is only available for a small subset of
   searches: the raw data can tell you if a probable cause search or a consent

@@ -259,7 +259,13 @@ clean <- function(d, helpers) {
       contraband_other = str_detect(individualContraband, "4|6|2|99")
       | str_detect(vehicleContraband, "4|6|2|99"),
       contraband_found = contraband_drugs | contraband_weapons | 
-        contraband_alcohol | contraband_other
+        contraband_alcohol | contraband_other,
+      # 4,704 instances
+      contraband_found = if_else(
+        search_conducted & is.na(contraband_found),
+        FALSE,
+        contraband_found
+      )
     ) %>%
     standardize(d$metadata)
 }

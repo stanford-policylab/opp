@@ -1,15 +1,8 @@
-# NOTE: January 2013 looks suspiciously low in both the old OPP data and in this cleaned version
-# NOTE: search/hit counts are a bit different between old opp and this version, because the old
-# opp counted all search NAs as FALSE, whereas we check other fields when NA. (i believe our new
-# method to be more accurate)
-# NOTE: there are also some slight discrepancy in by-month numbers throughout 2013 and 2014, between
-# old opp and this cleaned data (even after filtering to the patrol-only data); 
-# though the total counts and race breakdowns are identical between
-# old opp and newly cleaned data. it is unclear to me where these discrepancies arise from. it is 
-# possible that 2013 sheets 23467 should be used instead of sheet 1, however when merging the two,
-# they line up identically, so i can't see that helping.
-# TODO(amyshoe): figure out what is causing discrepancies between old and new opp data in by-month 
-# 2013 counts 
+# NOTE: January 2013 looks suspiciously low in both the old OPP data and in this 
+# cleaned version
+# NOTE: search/hit counts are a bit different between old opp and this version, 
+# because the old opp counted all search NAs as FALSE, whereas we check other 
+# fields when NA. (i believe our new method to be more accurate)
 source(here::here("lib", "common.R"))
 
 load_raw <- function(raw_data_dir, n_max) {
@@ -198,6 +191,11 @@ clean <- function(d, helpers) {
   )
 
   d$data %>%
+    add_raw_colname_prefix(
+      Race,
+      Outcome,
+      `Arrest Made`
+    ) %>% 
     rename(
       location = Location,
       department_name = Agency,
@@ -222,16 +220,20 @@ clean <- function(d, helpers) {
       subject_dob = parse_date(dob_raw, "%Y/%m/%d"),
       subject_age = age_at_date(subject_dob, date),
       subject_sex = fast_tr(Gender, tr_sex),
-      subject_race = fast_tr(str_to_lower(Race), tr_race),
+      subject_race = fast_tr(str_to_lower(raw_Race), tr_race),
       # NOTE: Source data only include vehicle stops.
       type = "vehicular",
       # NOTE: `Arrest Made` column isn't complete, so supplement with "arrest"
       # values from the Outcome column when missing.
-      outcome_arrest = str_detect(Outcome, fixed("arr", ignore_case = TRUE)),
-      arrest_made_explicit = is_true(`Arrest Made`),
-      arrest_made = if_else(is.na(`Arrest Made`), outcome_arrest, arrest_made_explicit),
-      citation_issued = str_detect(Outcome, fixed("cit", ignore_case = TRUE)),
-      warning_issued = str_detect(Outcome, fixed("warn", ignore_case = TRUE)),
+      outcome_arrest = str_detect(raw_Outcome, fixed("arr", ignore_case = TRUE)),
+      arrest_made_explicit = is_true(`raw_Arrest Made`),
+      arrest_made = if_else(
+        is.na(`raw_Arrest Made`), 
+        outcome_arrest, 
+        arrest_made_explicit
+      ),
+      citation_issued = str_detect(raw_Outcome, fixed("cit", ignore_case = TRUE)),
+      warning_issued = str_detect(raw_Outcome, fixed("warn", ignore_case = TRUE)),
       outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued,
@@ -259,5 +261,6 @@ clean <- function(d, helpers) {
         "other" = str_detect(reason_for_search, fixed("arr|invent", ignore_case = TRUE))
       )
     ) %>%
+    rename(raw_Arrest_Made = `raw_Arrest Made`) %>% 
     standardize(d$metadata)
 }

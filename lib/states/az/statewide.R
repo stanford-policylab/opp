@@ -1,17 +1,23 @@
 source(here::here("lib", "common.R"))
-# NOTE: Data is too sparse in 2009, 2010, and part of 2011; don't trust it until mid 2011. 
+# NOTE: Data is too sparse in 2009, 2010, and part of 2011; don't trust it until 
+# mid 2011. 
 # TODO: Missing two weeks of data in 2012 (oct 1-14), and two weeks of data in 
 # 2013 (nov 2-14) - see: https://app.asana.com/0/456927885748233/1110901769782597
-# NOTE from old opp: "Some contraband information is available and so we define a 
-# contraband_found column in case it is useful to other researchers. But the data is 
-# messy and there are multiple ways contraband_found might be defined, and so we do 
-# not include Arizona in our contraband analysis."
+# We're also missing Dec 2015.
+# NOTE from old opp: "Some contraband information is available and so we define 
+# a contraband_found column in case it is useful to other researchers. But the 
+# data is messy and there are multiple ways contraband_found might be defined, 
+# and so we do not include Arizona in our contraband analysis."
 
 load_raw <- function(raw_data_dir, n_max) {
   d <- load_years(raw_data_dir, n_max)
-  bundle_raw(d$data, d$loading_problems)
+  d_16_17 <- load_regex(raw_data_dir, "^contact_form", n_max)
+  # 2016-2017 data is really messy and has a long tail of gibberish columns
+  d_16_17$data <- d_16_17$data %>% 
+    select(intersect(colnames(d$data), colnames(d_16_17$data)))
+  d$data <- bind_rows(d$data, d_16_17$data)
+  bundle_raw(d$data, c(d$loading_problems, d_16_17$loading_problems))
 }
-
 
 clean <- function(d, helpers) {
 
@@ -73,12 +79,30 @@ clean <- function(d, helpers) {
     M = "other/unknown",
     X = "other/unknown"
   )
-
+  
+  tr_reason_for_stop <- c(
+    H = "Moving violation",
+    N = "Non-moving violation",
+    V = "Vehicle equipment",
+    I = "Investigative stop",
+    E = "Externally generated contact",
+    C = "Collision",
+    O = "Criminal offense",
+    M = "Motorist assist",
+    W = "Wrong way"
+  )
   # TODO(phoebe): what are kots_* and dots_* files vs the yearly data?
   # https://app.asana.com/0/456927885748233/727769678078699
   # TODO(phoebe): can we get a data dictionary for ReasonForStop?
   # https://app.asana.com/0/456927885748233/750432191394464
   d$data %>%
+    add_raw_colname_prefix(
+      TypeOfSearch,
+      Ethnicity,
+      ReasonForStop,
+      ViolationsObserved,
+      OutcomeOfStop
+    ) %>% 
     rename(
       date = DateOfStop,
       time = TimeOfStop,
@@ -95,7 +119,7 @@ clean <- function(d, helpers) {
       # was a pedestrian stop; presumably this is quite low, since these are
       # state patrol stops; PE = Pedestrian, BI = Bicyclist
       type = if_else_na(
-        str_detect(TypeOfSearch, "PE|BI"),
+        str_detect(raw_TypeOfSearch, "PE|BI"),
         "pedestrian",
         "vehicular"
       ),
@@ -115,20 +139,16 @@ clean <- function(d, helpers) {
         OtherLocation,
         str_c_na(Highway, Milepost, sep = " ")
       ),
-      subject_race = tr_race[Ethnicity],
-      subject_sex = tr_sex[Gender],
-      reason_for_stop = translate_by_char_group(
-        PreStopIndicators,
-        tr_pre_stop_indicator,
-        ","
-      ),
+      subject_race = fast_tr(raw_Ethnicity, tr_race),
+      subject_sex = fast_tr(Gender, tr_sex),
+      reason_for_stop = fast_tr(raw_ReasonForStop, tr_reason_for_stop),
       violation = translate_by_char_group(
-        ViolationsObserved,
+        raw_ViolationsObserved,
         tr_violations,
         ","
       ),
       # NOTE: DR = Driver, PS = Passenger, PE = Pedestrian, BI = Bicyclist
-      search_person = str_detect(TypeOfSearch, "DR|PS|PE|BI")
+      search_person = str_detect(raw_TypeOfSearch, "DR|PS|PE|BI")
         | tr_yn[SearchOfDriver],
       search_vehicle = tr_yn[SearchOfVehicle],
       search_conducted = tr_yn[SearchPerformed],
@@ -141,9 +161,9 @@ clean <- function(d, helpers) {
       contraband_other = (DriverItemsSeized != 'N' & !is.na(DriverItemsSeized)) |
         (VehicleItemsSeized != 'N' & !is.na(VehicleItemsSeized)),
       contraband_found = contraband_drugs | contraband_other,
-      warning_issued = str_detect(OutcomeOfStop, "WA"),
-      citation_issued = str_detect(OutcomeOfStop, "CI|DV|TC"),
-      arrest_made = str_detect(OutcomeOfStop, "AR|WR"),
+      warning_issued = str_detect(raw_OutcomeOfStop, "WA"),
+      citation_issued = str_detect(raw_OutcomeOfStop, "CI|DV|TC"),
+      arrest_made = str_detect(raw_OutcomeOfStop, "AR|WR"),
       outcome = first_of(
         arrest = arrest_made,
         citation = citation_issued,

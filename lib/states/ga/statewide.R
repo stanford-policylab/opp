@@ -6,11 +6,15 @@ load_raw <- function(raw_data_dir, n_max) {
 }
 
 clean <- function(d, helpers) {
-  # Value dictionaries
-  race_keys <- c("A","B","H","I","O","W","")
-  race_vals <- c("Asian","Black","Hispanic","Native American","Other","White",NA)
-  race_vals_clean <- c("Asian","Black","Hispanic","Other","Other","White",NA)
-  # Dictionaries
+  tr_race_raw = c(
+    # Race column keys
+    "A" = "Asian",
+    "B" = "Black",
+    "H" = "Hispanic",
+    "I" = "Native American",
+    "O" = "Other",
+    "W" = "White"
+  )
   tr_race = c(
     # Race column keys
     "A" = "asian/pacific islander",
@@ -36,8 +40,9 @@ clean <- function(d, helpers) {
       location = str_c(loc, ", ", X11), 
       county_name = str_c(str_to_title(as.character(X9)), " County"),
       department_name = X13,
-      subject_race = tr_race[race],
-      subject_sex = tr_sex[sex],
+      subject_race = fast_tr(race, tr_race),
+      raw_race = fast_tr(race, tr_race_raw),
+      subject_sex = fast_tr(sex, tr_sex),
       outcome = "warning",
       lat = if_else(X48 == "0", NA_real_, as.double(X48)),
       lng = if_else(X49 == "0", NA_real_, as.double(X49)),
