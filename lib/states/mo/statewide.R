@@ -23,7 +23,7 @@ load_raw <- function(raw_data_dir, n_max) {
     dept$data %>% 
       select(AgencyID, PoliceDepartment, WorkCity) %>% 
       # NOTE: to standardize city spellings; 
-      # TODO(amyshoe): needs more standardization if it's to be trust
+      # TODO: needs more standardization if it's to be trusted
       mutate(WorkCity = str_to_title(str_replace_all(WorkCity, "'", ""))) %>%
       distinct(),
     by = 'AgencyID'
@@ -99,11 +99,14 @@ clean <- function(d, helpers) {
   # subject (gender, age, etc). Can we get all the raw data (not aggregated)?
   # https://app.asana.com/0/456927885748233/750432191393464 
   d$data %>%
+    add_raw_colname_prefix(
+      race
+    ) %>% 
     mutate(
       # NOTE: all source data are traffic stops.
       type = "vehicular",
       date = parse_date(str_c(year, "0101"), "%Y%m%d"),
-      subject_race = tr_race[race]
+      subject_race = tr_race[raw_race]
     ) %>%
     standardize(d$metadata)
 }

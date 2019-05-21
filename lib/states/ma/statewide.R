@@ -34,11 +34,13 @@ clean <- function(d, helpers) {
   )
 
   d$data %>%
+    add_raw_colname_prefix(
+      Race
+    ) %>% 
     rename(
-      county_name = County,
       vehicle_type = RegType,
       vehicle_registration_state = State,
-      # TODO(jnu): there are route numbers that we might be able to turn into
+      # TODO: there are route numbers that we might be able to turn into
       # more granular locations.
       # https://app.asana.com/0/456927885748233/714838053596540
       location = CITY_TOWN_NAME
@@ -47,8 +49,9 @@ clean <- function(d, helpers) {
       # NOTE: Time is always midnight UTC, so we drop it.
       date = parse_date(str_sub(DateIssue, 1, 10), "%Y-%m-%d"),
       subject_age = year(date) - format_two_digit_year(DOBYr),
-      subject_race = fast_tr(Race, tr_race),
+      subject_race = fast_tr(raw_Race, tr_race),
       subject_sex = tolower(Sex),
+      county_name = str_c(County, " County"),
       # NOTE: dataset does not include pedestrian stops.
       type = "vehicular",
       arrest_made = str_detect("Arrest", ResultDescr),
@@ -67,8 +70,10 @@ clean <- function(d, helpers) {
       contraband_other = (RsltSrchMny == "1" | RsltSrchOth == "1") & RsltSrchNo == "0",
       contraband_found = contraband_drugs | contraband_weapons | 
         contraband_alcohol | contraband_other,
-      search_conducted = SearchYN == "Yes" | !is.na(SearchDescr),
-      frisk_performed = search_conducted & SearchDescr == "Terry Frisk",
+      search_conducted = (SearchYN == "Yes" & !is.na(SearchYN)) | 
+        # we label these as frisks, not searches.
+        (!is.na(SearchDescr) & SearchDescr != "Terry Frisk"),
+      frisk_performed = SearchDescr == "Terry Frisk",
       search_basis = fast_tr(SearchType, tr_search_basis),
       # NOTE: If a reason for stop is not given we record the value as NA.
       reason_for_stop_raw = str_c_na(

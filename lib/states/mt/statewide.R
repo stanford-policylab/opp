@@ -23,8 +23,6 @@ clean <- function(d, helpers) {
     W = "white"
   )
 
-  # TODO(walterk): Verify that these search bases are mapped correctly.
-  # https://app.asana.com/0/456927885748233/748076854773116
   tr_search_basis <- c(
     "CONSENT SEARCH CONDUCTED" = "consent",
     "INVENTORY" = "other",
@@ -33,17 +31,23 @@ clean <- function(d, helpers) {
     "PROBATION/PAROLE OFFICER CONSENT" = "other",
     "SEARCH INCIDENT TO ARREST" = "other",
     "SEARCH WARRANT" = "other",
-    "STOP AND FRISK (OFFICER SAFETY) (S.901.151, F.S.)" = "other"
+    # NOTE: we mark this as NA because we categorize protective frisks as
+    # separate from searches, and assume they have RAS (or consent) as the basis
+    "STOP AND FRISK (OFFICER SAFETY) (S.901.151, F.S.)" = NA_character_
   )
 
   # NOTE: Replacing "NULL" with NA everywhere.
   d$data[d$data == "NULL"] <- NA
 
   d$data %>%
+    add_raw_colname_prefix(
+      Ethnicity,
+      Race,
+      SearchType
+    ) %>% 
     rename(
       lat = Latitude,
       lng = Longitude,
-      county_name = County,
       subject_age = Age,
       reason_for_stop = ReasonForStop,
       vehicle_make = VehicleMake,
@@ -56,10 +60,11 @@ clean <- function(d, helpers) {
       date = parse_date(StopTime, format = "%Y-%m-%dT%H:%M:%S"),
       time = parse_time(StopTime, format = "%Y-%m-%dT%H:%M:%S"),
       location = str_c_na(Location, City, sep=", "),
+      county_name = str_c(str_to_title(County), " County"),
       subject_race = if_else(
-        Ethnicity == "H",
+        raw_Ethnicity == "H",
         "hispanic",
-        fast_tr(Race, tr_race)
+        fast_tr(raw_Race, tr_race)
       ),
       subject_sex = fast_tr(Sex, tr_sex),
       # NOTE: The public records request for the data received in Feb 2017 were
@@ -79,18 +84,19 @@ clean <- function(d, helpers) {
         sep = "|"
       ),
       arrest_made = str_detect(multi_outcome, "ARREST"),
-      citation_issued = str_detect(multi_outcome, "CITATION"),
+      citation_issued = str_detect(multi_outcome, "CITATION|NOTICE"),
       warning_issued = str_detect(multi_outcome, "WARNING"),
       outcome = first_of(
         "arrest" = arrest_made,
         "citation" = citation_issued,
         "warning" = warning_issued
       ),
-      search_conducted = !(SearchType %in% c(
+      frisk_performed = str_detect(raw_SearchType, "FRISK"),
+      search_conducted = !(raw_SearchType %in% c(
         "NO SEARCH REQUESTED",
         "NO SEARCH / CONSENT DENIED"
       )),
-      search_basis = fast_tr(SearchType, tr_search_basis)
+      search_basis = fast_tr(raw_SearchType, tr_search_basis)
     ) %>%
     standardize(d$metadata)
 }

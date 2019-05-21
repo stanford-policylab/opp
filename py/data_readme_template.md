@@ -1134,6 +1134,10 @@ We’re excited to see what you come up with!
   years as they are clearly unreliable. It appears that the first few months
   (nearly half) of 2007 are also incomplete, but we have not attempted to remove
   the incomplete months.
+- `subject_race` was mapped from `raw_Race`
+- Additional columns in the raw data that may be of interest: `SpecialEvent`
+  (GHSB Speed Detail, Road Block, Blue Blitz; 99% NA), `PlateReader` (boolean),
+  `OwnTruckPass` (O, W, T, P)
 
 ## Baltimore, MD
 **Data notes**:
@@ -1155,12 +1159,17 @@ We’re excited to see what you come up with!
 - Time resolution of the data varies by year. Prior to 2013, data is reported
   annually. From 2013 onward, data is reported daily. So stop dates prior to
   2013 are not precise to the nearest day and are just reported as Jan 1. 
-- Counties were mapped by running the police departments in the `Agency` field
-  through Google's geocoder, but this does not work for state patrol stops, for
-  which we have no county information. 
-- While there is information on violation, speeding stops constitute a very
-  small fraction of stops compared to other states, and we therefore exclude
-  Maryland from our speeding analysis. 
+- Counties could theoretically be mapped by running the police departments in 
+  the `Agency` field through Google's geocoder, but this does not work for 
+  state patrol stops, for which we have no county information. Maryland's
+  data is not good enough for us to include in our analysis, so we chose not
+  to do this.
+- `subject_race` is mapped from `raw_Race`.
+- `outcome` and `arrest_made` are mapped from `raw_Outcome` and `raw_Arrest Made`;
+  see processing script for details.
+- `search_basis` is a cleaned up version of `reason_for_search` which is a free
+  field populated by raw column `Search Reason`. 
+- Additional columns from the raw data that may be of interest: `Duration of Search`
 
 ## Statewide, MI
 **Data notes**:
@@ -1196,9 +1205,9 @@ We’re excited to see what you come up with!
   the other fields.
 - Because this is aggregate data, stop date is only precise to the nearest
   year, and is recorded as Jan 1 for all stops. 
-- Counties for local stops were mapped by running the cities in the city field
-  through Google's geocoder, but there is no county information for state
-  patrol stops. 
+- Note that the `location` column comes from the department's work location,
+  which is coarse; and highway patrol stops thus all get mapped to Jefferson 
+  City. 
 
 ## Statewide, MS
 **Data notes**:
@@ -1206,9 +1215,31 @@ We’re excited to see what you come up with!
   data folder. Counties are numbered alphabetically.
 - There is no data on Hispanic drivers, so we exclude Mississippi from our main
   analysis. 
+- `subject_race` was mapped from `raw_race`.
+- `violation` was populated with raw column `acd`.
+- Additional columns in the raw data that may be of interest: `acdoos` and `aamva`
+  have alpha-numeric codes like `acd` (i.e., `violation` in the clean data),
+  `acdsev` (0-3; NA for 65%), `acc` (boolean), `court` (mostly MUN or JUS), 
+  `elect` (E or NA), `disp` (G, P, D, S, N), `fine`.
 
 ## Statewide, MT
-**Data notes**: none
+**Data notes**: 
+- `subject_race` was mapped from `raw_Ethnicity` and `raw_Race`.
+- `search_conducted` and `search_basis` were mapped from `raw_SearchType`.
+- `violation` is a concatenation of `Violation[1-3]` from the raw data.
+- `stop_outcome` is derived from raw columns `EnforcementAction[1-3]`, see
+  processing script for details.
+- `reason_for_stop` is populated from raw column `ReasonForStop`.
+- Additional columns in the raw data that may be of interest: 
+  `VehicleIsCommercial`, `VehicleIsMotorcycle`, `ViolationDescription` (which
+  gives a bit more detail than the violation columns we pull through into the
+  clean data), `ViolationUnlawfulSpeed` (boolean), `AggressiveDriving` (boolean),
+  `FaultyOtherDescription` (free field description of equipment violations),
+  `WarningOtherViolations[1,2]` (free field description of warning), 
+  `WarningsThisRecord` (0-3, indicating how many warnings were given), 
+  `CitationsThisRecord` (0-3 indicating how many citations were given),
+  `EnforcementAction[1-3]` (gives slightly more detail than `stop_outcome`, 
+  e.g., misdemeanor arrest vs felony arrest).
 
 ## Raleigh, NC
 **Data notes**:
@@ -1322,18 +1353,23 @@ We’re excited to see what you come up with!
   North Dakota from our analysis.
 - Rows represent individual citations, not stops, so we remove duplicates by
   grouping by the other fields.
-- The `stop_purpose` field is populated by citation codes.
-- (danj): deduping by violation_date_time, Age, sex, Race, county_name,
+- The `violation` field is populated by citation codes and their descriptions.
+- `subject_race` is mapped from `raw_Race`.
+- Note that deduping by violation_date_time, Age, sex, Race, county_name,
   street_cnty_rd_location, desc_of_area, highway, ref_point reduces rows by
-  ~16.6%
+  ~16.6%.
 
 ## Statewide, NE
 **Data notes**:
 - The original data was aggregated. It was grouped by stop reason, outcome and
   whether there was a search separately. Therefore, it is not possible to cross
   tabulate them together. We only use the last grouping.
-- State and local stops are mixed together, but identifiable by the `dept_lvl`
-  field.
+- State and local stops are mixed together, identifiable by the `raw_dept_lvl`
+  field. We map levels 1, 5, 9, 10, 11 to "Nebraska State Agency" in the 
+  `deparment_name` field; for the other levels, we fill `department_name` with
+  `raw_dept`. Note that levels 1, 2, and 3 are state patrol, local P.D. and 
+  sheriff P.D.s, respectively; levels 5-12 are special agencies or sectors of
+  some sort; there are no stops for level 4.
 - The data is by quarter, not by day. So all stop_dates are the first date of
   the quarter.
 - For state patrol stops, there is a strange jump (Q1) and then dip (Q2–4) in
@@ -1350,8 +1386,8 @@ We’re excited to see what you come up with!
   ambiguous, we do not want to make assumptions, and it does not significantly
   improve the data. We exclude this dataset from our analysis because it has
   too much missing race data. 
-- The stop_purpose field is populated by infraction codes. Code descriptions
-  can be found [here](http://www.gencourt.state.nh.us/rsa/html/)
+- We determine stop outcome (citation, warning, etc) using 
+  `raw_CITATION_RESPONSE_DSC`, and we determine subject_race from `raw_RACE_CDE`.
 - The driver_age field was not populated for the 2014.2 dataset.
 - Rows represent violations, not stops, so we remove duplicates by grouping by
   the other fields.

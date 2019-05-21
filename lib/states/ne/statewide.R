@@ -184,30 +184,32 @@ clean <- function(d, helpers) {
   # Also can we get data at the stop level (not aggregated by quarter)?
   # https://app.asana.com/0/456927885748233/737933462134621
   d$data %>%
-    rename(
-      department_name = dept
-    ) %>%
+    add_raw_colname_prefix(
+      dept_lvl,
+      dept,
+      Race
+    ) %>% 
     mutate(
-      county = if_else(
+      county_name = if_else(
         county %in% c("Inactive", "NSP and Other", "Private"),
         NA_character_,
-        county
+        str_c(county, " County")
       ),
-      location = county,
-      subject_race = tr_race[Race],
+      subject_race = tr_race[raw_Race],
       search_conducted = Outcome == "Search Conducted",
       # NOTE: All stops in these sources are vehicular.
-      type = "vehicular"
-      # NOTE: old opp filters out dept_lvl 4, 7, 12; however, we won't be able 
-      # to distinguish in our cleaned data; if this is important, maybe add
-      # dept_lvl classification to location? or concatenate with dept categorization
-      # department_name = case_when(
-      #   dept_lvl %in% c(1,5,9,10,11) ~ "Nebraska State Agency",
-      #   dept_lvl == 4 ~ "Federal Agency",
-      #   dept_lvl == 12 ~ "Private Agency",
-      #   dept_lvl == 7 ~ "Other",
-      #   TRUE ~ NA_character_
-      # )
+      type = "vehicular",
+      department_name = if_else(
+        # Note: 1, 9, 10 are different State Patrol sectors,
+        # 2 is local P.D., 3 is local Sheriff, 
+        # 5 and 11 are parks/ag/national monuments, 
+        # 12 is union pacific railroad,
+        # 6 is Tribal (a corner of winnebago and omaha reservations are in iowa),
+        # 7 is airport, 8 is university/campus P.D.
+        raw_dept_lvl %in% c(1,5,9,10,11),
+        "Nebraska State Agency",
+        raw_dept
+      )
     ) %>%
     standardize(d$metadata)
 }

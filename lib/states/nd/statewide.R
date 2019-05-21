@@ -20,24 +20,26 @@ clean <- function(d, helpers) {
   # NOTE: Each row in the dataset corresponds to a citation. We dedup to have
   # one row per stop.
   d$data %>%
+    add_raw_colname_prefix(
+      Race
+    ) %>% 
+    mutate(
+      violation = str_c(century_code_viol, description_50, sep = ": ")
+    ) %>%
     merge_rows(
       Age,
       county_name,
       desc_of_area,
       highway,
       hwy_suffix,
-      Race,
+      raw_Race,
       ref_point,
       sex,
       street_cnty_rd_location,
       violation_date_time
     ) %>% 
-    rename(
-      violation = century_code_viol,
-      reason_for_stop = description_50,
-      subject_age = Age
-    ) %>%
     mutate(
+      subject_age = Age,
       date = as.Date(parse_datetime(violation_date_time, "%m/%d/%y %H:%M")),
       time = parse_time(violation_date_time, "%m/%d/%y %H:%M"),
       location = if_else(
@@ -54,7 +56,8 @@ clean <- function(d, helpers) {
       # NOTE: If all values feeding into location are NA, str_c_na returns "".
       # We convert to NA here.
       location = if_else(location == "", NA_character_, location),
-      subject_race = tr_race[Race],
+      county_name = str_c(county_name, " County"),
+      subject_race = tr_race[raw_Race],
       subject_sex = tr_sex[sex],
       type = if_else(
         # NOTE: Inferring type "vehicular" based on century_code_viol and
@@ -64,9 +67,6 @@ clean <- function(d, helpers) {
         "vehicular",
         NA_character_
       )
-      # TODO(walterk): The old code seems to indicate that this is all state
-      # patrol stops. Figure out if this is really true, in which case
-      # department_name is "North Dakota State Highway Patrol".
     ) %>%
     standardize(d$metadata)
 }

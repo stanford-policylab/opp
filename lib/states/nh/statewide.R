@@ -86,18 +86,13 @@ load_raw <- function(raw_data_dir, n_max) {
       .after = "CITATION_SOURCE_TXT"
     )
 
-  nh <- rbind(nh14, nh15)
-  
-  # Remove duplicates
-  nh <- nh %>% 
-    group_by(INFRACTION_DATE, INFRACTION_TIME, INFRACTION_COUNTY_NAME, INFRACTION_CITY_NME,
-             INFRACTION_LOCATION_TXT, GENDER_CDE, DEF_BIRTH_DATE, RACE_CDE, LATITUDE,
-             LONGITUDE, LICENSE_STATE_CDE, AIRCRAFT_EVENT_ID) %>%
-    summarize(
-      INFRACTION_RSA_CDE        = paste(unique(INFRACTION_RSA_CDE), collapse=','),
-      DMV_INFRACTION_REASON_CDE = paste(unique(DMV_INFRACTION_REASON_CDE), collapse=','),
-      CITATION_RESPONSE_DSC     = paste(unique(CITATION_RESPONSE_DSC), collapse=',')) %>%
-    ungroup() 
+  nh <- rbind(nh14, nh15) %>% 
+    select(
+      INFRACTION_DATE, INFRACTION_TIME, INFRACTION_COUNTY_NAME, 
+      INFRACTION_CITY_NME, INFRACTION_LOCATION_TXT, GENDER_CDE, DEF_BIRTH_DATE, 
+      RACE_CDE, LATITUDE, LONGITUDE, LICENSE_STATE_CDE, AIRCRAFT_EVENT_ID,
+      INFRACTION_RSA_CDE, DMV_INFRACTION_REASON_CDE, CITATION_RESPONSE_DSC
+    ) 
 
   loading_problems <- c(
     nh14_1$loading_problems,
@@ -155,8 +150,17 @@ clean <- function(d, helpers) {
   # fields?
   # https://app.asana.com/0/456927885748233/729261812716291
   d$data %>%
+    # Remove duplicates
+    merge_rows(
+      INFRACTION_DATE, INFRACTION_TIME, INFRACTION_COUNTY_NAME, 
+      INFRACTION_CITY_NME, INFRACTION_LOCATION_TXT, GENDER_CDE, DEF_BIRTH_DATE, 
+      RACE_CDE, LATITUDE, LONGITUDE, LICENSE_STATE_CDE, AIRCRAFT_EVENT_ID
+    ) %>%
+    add_raw_colname_prefix(
+      RACE_CDE,
+      CITATION_RESPONSE_DSC
+    ) %>% 
     rename(
-      county_name = INFRACTION_COUNTY_NAME,
       violation = DMV_INFRACTION_REASON_CDE
     ) %>%
     mutate(
@@ -167,18 +171,19 @@ clean <- function(d, helpers) {
         INFRACTION_CITY_NME,
         sep=", "
       ),
+      county_name = str_c(str_to_title(INFRACTION_COUNTY_NAME), " County"),
       lat = parse_coord(LATITUDE),
       lng = parse_coord(LONGITUDE),
       subject_dob = parse_date(DEF_BIRTH_DATE, "%m/%d/%Y"),
       subject_age = age_at_date(subject_dob, date),
-      subject_race = fast_tr(RACE_CDE, tr_race),
+      subject_race = fast_tr(raw_RACE_CDE, tr_race),
       subject_sex = fast_tr(GENDER_CDE, tr_sex),
       # NOTE: only vehicular stops in data
       type = "vehicular",
-      citation_issued = str_detect(CITATION_RESPONSE_DSC, "PBM"),
-      warning_issued = str_detect(CITATION_RESPONSE_DSC, "W"),
+      citation_issued = str_detect(raw_CITATION_RESPONSE_DSC, "PBM"),
+      warning_issued = str_detect(raw_CITATION_RESPONSE_DSC, "W"),
       outcome = first_of(
-        summons = str_detect(CITATION_RESPONSE_DSC, "MA"),
+        summons = str_detect(raw_CITATION_RESPONSE_DSC, "MA"),
         citation = citation_issued,
         warning = warning_issued
       )

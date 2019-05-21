@@ -33,6 +33,9 @@ clean <- function(d, helpers) {
       # NOTE: acd descriptions are listed in "acd alpha listing.pdf"
       violation = acd
     ) %>%
+    add_raw_colname_prefix(
+      race
+    ) %>% 
     mutate(
       date = as.Date(parse_datetime(tikdate, "%Y/%m/%d")),
       # NOTE: Instructions for decoding "agency" column in "agency decode.docx".
@@ -44,8 +47,10 @@ clean <- function(d, helpers) {
       county_name = fast_tr(county_code, tr_county),
       subject_dob = as.Date(parse_datetime(dob, "%Y/%m/%d")),
       subject_age = age_at_date(subject_dob, date),
-      subject_race = fast_tr(race, tr_race),
+      subject_race = fast_tr(raw_race, tr_race),
       subject_sex = fast_tr(sex, tr_sex),
+      speed = if_else(mph == 0, NA_integer_, as.integer(mph)),
+      posted_speed = if_else(spdzone == 0, NA_integer_, as.integer(spdzone)),
       # NOTE: Instructions for decoding "agency" column in "agency decode.docx".
       department_name = if_else(
         substr(department_id, 1, 2) == "90",
