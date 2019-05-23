@@ -117,7 +117,7 @@ load_raw <- function(raw_data_dir, n_max) {
 
 clean <- function(d, helpers) {
 
-  re_yes <- regex("Y|T|1", ignore_case = TRUE)
+  re_yes <- regex("Y|T|1|Both|Other", ignore_case = TRUE)
   is_true <- function(col) str_detect(col, re_yes)
 
   tr_search <- c(
@@ -242,6 +242,12 @@ clean <- function(d, helpers) {
       contraband_drugs = is_true(contra_narc),
       contraband_weapons = is_true(contra_prop),
       contraband_found = contraband_drugs | contraband_weapons,
+      # If one of drugs/weapons is F, other is NA, cast contraband_found to F
+      contraband_found = if_else(
+        is.na(contraband_found) & (!contraband_drugs | !contraband_weapons),
+        FALSE,
+        contraband_found
+      ) %>% 
       # NOTE: the `Search Conducted` field is not totally reliable. Check
       # there if possible, but if it is NA check also whether the `Search`
       # field indicates that a search took place.

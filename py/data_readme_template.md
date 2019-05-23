@@ -801,8 +801,11 @@ We’re excited to see what you come up with!
 - Contraband found information is only available for a small subset of
   searches: the raw data can tell you if a probable cause search or a consent
   search yielded contraband, but cannot tell you if contraband was located
-  during a search conducted incident to arrest. We therefore exclude California
-  from our contraband analysis. 
+  during a search conducted incident to arrest. (Note that in many cases we
+  cast NA contraband to F, but in this case we do not, because we simply do not
+  have contraband recovery data for non-discretionary searches). We still include
+  California in our contraband analysis because exclude non-discretionary 
+  searches like those incident to arrest. 
 - Raw data contains shift time is included, but is not sufficiently granular 
   to yield reliable stop time. 
 
@@ -864,16 +867,15 @@ We’re excited to see what you come up with!
   duplicates. We don't want to be overly aggressive in grouping together stops,
   so we only group if the other fields are the same. 
 - While there is some search type data, a high fraction of searches are marked
-  as "Other", so we exclude Connecticut from our consent search analysis.
-- While there is some violation data, we exclude Connecticut from the speeding
-  analysis because it has too much missing data in the violation field.
-- Race (`SubjectRaceCode`, `SubjectEthnicityCode`) mapping:
+  as "Other".
+- While there is some violation data, too much is missing.
+- Race (`raw_SubjectRaceCode`, `raw_SubjectEthnicityCode`) mapping:
     * A = Asian/Pacific Islander
     * B = Black
     * H = Hispanic
     * W = White
     * I = Native American
-- Search basis (`SearchAuthorizationCode`) mapping:
+- Search basis (`raw_SearchAuthorizationCode`) mapping:
     * C = consent
     * O = probable cause
     * I = inventory
@@ -918,18 +920,23 @@ We’re excited to see what you come up with!
 ## Statewide, FL
 **Data notes**:
 - The raw data is very messy. Two different data sets were supplied, both with
-  slightly different schemas. However, they were joined by uniquely identifying
-  features. The second data dump goes until 2016, while the first only goes
-  until 2015. The fields missing in the second data set are thus missing for
-  some rows.
+  slightly different schemas, just for 2010 to part of 2016. A third dataset
+  was supplied for 2016 through 2018. However, they were joined by uniquely
+  identifying features. The second data dump goes until 2016, while the first 
+  only goes until 2015. The fields missing in the second or third data sets are 
+  thus missing for some rows.
 - There are many duplicates in the raw data, which we remove in two stages.
   First, we remove identical duplicate rows. Second, we group together rows
   which correspond to the same stop but to different violations or passengers. 
 - The original data has a few parsing errors, but they don't seem important as
   they are spurious new lines in the last 'Comments' field.
 - The Florida PD clarified to us that both UCC Issued and DVER Issued in the
-  `EnforcementAction` column indicated citations, and we consequently coded
+  `raw_EnforcementAction` column indicated citations, and we consequently coded
   them as such. 
+- `subject_race` was mapped from `raw_Ethnicity` and `raw_Race` (the different
+  data sets have different practices in terms of recording Hispanic in race vs
+  ethnicity fields).
+- `raw_SearchType` was used to conclude `search_conducted` and `search_basis`.
 - While there is some data on whether items were seized, it is not clear if
   these are generally seized as a result of a search, and we thus do not define
   a contraband_found column for consistency with other states. 
@@ -942,7 +949,9 @@ We’re excited to see what you come up with!
   columns.
 - Rows represent individual warnings, and thus need to be aggregated to
   represent a single stop.
-- The race field on the warnings form is optional.
+- The race field on the warnings form is optional; we have only about 50% race
+  coverage, so GA is omitted from all analyses.
+- `subject_race` was mapped from `raw_race`.
 
 ## Statewide, IA
 **Data notes**: 

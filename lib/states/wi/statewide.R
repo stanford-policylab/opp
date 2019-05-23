@@ -168,6 +168,8 @@ clean <- function(d, helpers) {
     add_raw_colname_prefix(
       individualSearchBasis,
       vehicleSearchBasis,
+      individualSearchConducted,
+      vehicleSearchConducted,
       individualContraband,
       vehicleContraband,
       summaryOutcome,
@@ -203,7 +205,7 @@ clean <- function(d, helpers) {
         parse_time(summaryTimeOccurred, "%H:%M"),
         parse_time(str_sub(summaryTimeOccurred, 12, 19), "%H:%M:%S")
       ),
-      county_name = str_c(str_to_title(CountyName), "County", sep = ", "),
+      county_name = str_c(str_to_title(county_name), "County", sep = ", "),
       location = str_c_na(
         raw_onHighwayDirection,
         raw_onHighwayName,
@@ -250,14 +252,14 @@ clean <- function(d, helpers) {
       #02,"EXCESSIVE CASH"
       #00,NONE
       #99,OTHER
-      contraband_drugs = str_detect(individualContraband, "3")
-        | str_detect(vehicleContraband, "3"),
-      contraband_weapons = str_detect(individualContraband, "1")
-        | str_detect(vehicleContraband, "1"),
-      contraband_alcohol = str_detect(individualContraband, "5")
-      | str_detect(vehicleContraband, "5"),
-      contraband_other = str_detect(individualContraband, "4|6|2|99")
-      | str_detect(vehicleContraband, "4|6|2|99"),
+      contraband_drugs = str_detect(raw_individualContraband, "3")
+        | str_detect(raw_vehicleContraband, "3"),
+      contraband_weapons = str_detect(raw_individualContraband, "1")
+        | str_detect(raw_vehicleContraband, "1"),
+      contraband_alcohol = str_detect(raw_individualContraband, "5")
+      | str_detect(raw_vehicleContraband, "5"),
+      contraband_other = str_detect(raw_individualContraband, "4|6|2|99")
+      | str_detect(raw_vehicleContraband, "4|6|2|99"),
       contraband_found = contraband_drugs | contraband_weapons | 
         contraband_alcohol | contraband_other,
       # 4,704 instances

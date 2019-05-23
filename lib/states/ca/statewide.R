@@ -73,26 +73,32 @@ clean <- function(d, helpers) {
 
   tr_search_basis <- c(
     "1" = "probable cause", # Probable Cause (positive)
+    "01" = "probable cause", # Probable Cause (positive)
     "2" = "probable cause", # Probable Cause (negative)
+    "02" = "probable cause", # Probable Cause (negative)
     "3" = "consent", # Consent (positive), 202D Required
     "4" = "consent", # Consent (negative), 202D Required
     "5" = "other", # Incidental to Arrest
     "6" = "other", # Vehicle Inventory
     "7" = "other", # Parole / Probation / Warrant
     "8" = "other", # Other
-    "9" = "other" # Pat Down / Frisk
+    "9" = "other", # Pat Down / Frisk
+    "09" = "other" # Pat Down / Frisk
   )
   
   tr_search_basis_raw <- c(
     "1" = "Probable Cause (positive)",
+    "01" = "Probable Cause (positive)",
     "2" = "Probable Cause (negative)",
+    "02" = "Probable Cause (negative)",
     "3" = "Consent (positive), 202D Required",
     "4" = "Consent (negative), 202D Required",
     "5" = "Incidental to Arrest",
     "6" = "Vehicle Inventory",
     "7" = "Parole / Probation / Warrant",
     "8" = "Other",
-    "9" = "Pat Down / Frisk"
+    "9" = "Pat Down / Frisk",
+    "09" = "Pat Down / Frisk"
   )
 
   d$data %>%
@@ -119,17 +125,17 @@ clean <- function(d, helpers) {
       arrest_made = outcome == "arrest",
       citation_issued = outcome == "citation",
       warning_issued = outcome == "warning",
+      frisk_performed = if_else(Description == "9", TRUE, NA),
+      search_conducted = Description != "0",
       contraband_found = if_else(
-        Description == "1" | Description == "3",
+        Description == "1" | Description == "3" | Description == "01",
         TRUE,
         if_else(
-          Description == "2" | Description == "4",
+          Description == "2" | Description == "4" | Description == "02",
           FALSE,
           NA
         )
       ),
-      frisk_performed = if_else(Description == "9", TRUE, NA),
-      search_conducted = Description != "0",
       search_person = frisk_performed,
       search_basis = fast_tr(Description, tr_search_basis),
       raw_search_basis = fast_tr(Reason, tr_search_basis_raw),
