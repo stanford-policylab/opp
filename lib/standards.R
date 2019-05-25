@@ -215,6 +215,7 @@ schema <- c(
   # other
   speed                         = as.numeric,
   posted_speed                  = as.numeric,
+  charged_speed                 = as.numeric,
   use_of_force_description      = as.character,
   use_of_force_reason           = as.character,
   vehicle_color                 = as.character,
