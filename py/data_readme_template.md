@@ -865,7 +865,7 @@ We’re excited to see what you come up with!
   `VehicleInspected`, `Recoveries`, `TrafficOral`, `AssistOral`, `AllOtherOral`,
   `GrantCategory`, `GrantLabel`, `Assists`, `AssistsMultiple`, 
   `AssistsCount`, `ContrabandCharge` (petty offense, felony, misdemeanor,
-  none, traffic), `Warrant`, `MisdemeanorOrFelony` (M or F), 
+  none, traffic), `Warrant`, `MisdemeanorOrFelony` (M or F)
 
 ## Statewide, CT
 **Data notes**:
