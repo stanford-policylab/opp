@@ -229,6 +229,7 @@ clean <- function(d, helpers) {
         warning = warning_issued
       ),
       search_person = tr_yn[raw_individualSearchConducted],
+      search_person = replace_na(search_person, FALSE),
       search_vehicle = tr_yn[raw_vehicleSearchConducted],
       search_conducted = search_person | search_vehicle,
       # NOTE: Search codes come from data dictionary. There is no code for

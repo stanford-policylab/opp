@@ -3,6 +3,10 @@
 # NOTE: search/hit counts are a bit different between old opp and this version, 
 # because the old opp counted all search NAs as FALSE, whereas we check other 
 # fields when NA. (i believe our new method to be more accurate)
+# NOTE: prior to 2013, there are quite a few NAs for contraband; we do not cast
+# these to false because it seems to be too many to assume they're all False --
+# it feels more believable that there is actual missing data in these annually
+# reported, messy datasets.
 source(here::here("lib", "common.R"))
 
 load_raw <- function(raw_data_dir, n_max) {
@@ -247,7 +251,7 @@ clean <- function(d, helpers) {
         is.na(contraband_found) & (!contraband_drugs | !contraband_weapons),
         FALSE,
         contraband_found
-      ) %>% 
+      ),
       # NOTE: the `Search Conducted` field is not totally reliable. Check
       # there if possible, but if it is NA check also whether the `Search`
       # field indicates that a search took place.

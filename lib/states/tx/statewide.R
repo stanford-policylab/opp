@@ -188,12 +188,6 @@ clean <- function(d, helpers) {
     search_conducted = HA_SEARCHED_boolean,
     search_vehicle = HA_VEH_SEARCH_boolean,
     contraband_found = HA_CONTRABAN_boolean,
-    # 29 instances 
-    contraband_found = if_else(
-      search_conducted & is.na(contraband_found),
-      FALSE,
-      contraband_found
-    ),
     contraband_drugs = HA_CONTRAB_DRUGS_boolean,
     contraband_weapons = HA_CONTRAB_WEAPON_boolean,
     vehicle_color = HA_VEH_COLOR,
@@ -237,7 +231,13 @@ clean <- function(d, helpers) {
       "probable cause" = HA_SEARCH_PC_boolean,
       "other" = HA_INCIDTO_ARREST_boolean | HA_VEHICLE_INVENT_boolean
     ),
-    contraband_found = contraband_found | contraband_drugs | contraband_weapons
+    contraband_found = contraband_found | contraband_drugs | contraband_weapons,
+    # 29 instances 
+    contraband_found = if_else(
+      search_conducted & is.na(contraband_found),
+      FALSE,
+      contraband_found
+    )
   ) %>%
   left_join(
     surnames,

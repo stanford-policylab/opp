@@ -36,10 +36,12 @@ clean <- function(d, helpers) {
   # Some pertain to different passengers, and hence we sometimes cannot uniquely
   # identify the race of the driver.
   old_data <- old_data %>%
-    merge_rows(ReportDateTime, County, OfficerIDNo) %>% 
-    select(raw_row_number, ReportDateTime, County, OfficerIDNo, City, Race, Ethnicity,
-           Sex, Age, VehicleTagNo, VehicleTagNoState, OfficerOrgUnit, OfficerAgency,
-           OfficerName, Comments)
+    select(
+      raw_row_number, ReportDateTime, County, OfficerIDNo, City, Race, Ethnicity,
+      Sex, Age, VehicleTagNo, VehicleTagNoState, OfficerOrgUnit, OfficerAgency,
+      OfficerName, Comments
+    ) %>% 
+    merge_rows(ReportDateTime, County, OfficerIDNo)
   
   print("Old data processed.")
   
@@ -50,30 +52,55 @@ clean <- function(d, helpers) {
         schema_type == "SRIS",
         !is.na(ReportDateTime)
       ) %>%
+      select(
+        raw_row_number, ReportDateTime, County, OfficerIDNo, City, Race, Ethnicity, 
+        Off_Age_At_Stop, Off_YrsExp_At_Stop, Off_Sex, Off_Race, OfficerOrgUnit, 
+        ReasonForStop, starts_with("EnforcementAction"), starts_with("Violation"), 
+        SearchType, starts_with("SearchRationale"), Comments
+      ) %>% 
       merge_rows(ReportDateTime, County, OfficerIDNo) %>% 
-      select(raw_row_number, ReportDateTime, County, OfficerIDNo, City, Race, Ethnicity, 
-             Off_Age_At_Stop, Off_YrsExp_At_Stop, Off_Sex, Off_Race, OfficerOrgUnit, 
-             ReasonForStop, starts_with("EnforcementAction"), starts_with("Violation"), 
-             SearchType, starts_with("SearchRationale"), Comments) %>% 
       mutate(
-        EnforcementAction1 = str_replace_all(EnforcementAction1, "NOT INDICATED", NA_character_),
-        EnforcementAction1 = str_replace_all(EnforcementAction1, "NOT APPLICABLE", NA_character_),
-        EnforcementAction2 = str_replace_all(EnforcementAction2, "NOT INDICATED", NA_character_),
-        EnforcementAction2 = str_replace_all(EnforcementAction2, "NOT APPLICABLE", NA_character_),
-        EnforcementAction3 = str_replace_all(EnforcementAction3, "NOT INDICATED", NA_character_),
-        EnforcementAction3 = str_replace_all(EnforcementAction3, "NOT APPLICABLE", NA_character_),
+        EnforcementAction1 = str_replace_all(
+          EnforcementAction1, "NOT INDICATED", NA_character_
+        ),
+        EnforcementAction1 = str_replace_all(
+          EnforcementAction1, "NOT APPLICABLE", NA_character_
+        ),
+        EnforcementAction2 = str_replace_all(
+          EnforcementAction2, "NOT INDICATED", NA_character_),
+        EnforcementAction2 = str_replace_all(
+          EnforcementAction2, "NOT APPLICABLE", NA_character_
+        ),
+        EnforcementAction3 = str_replace_all(
+          EnforcementAction3, "NOT INDICATED", NA_character_
+        ),
+        EnforcementAction3 = str_replace_all(
+          EnforcementAction3, "NOT APPLICABLE", NA_character_
+        ),
         Violation1 = str_replace_all(Violation1, "NOT INDICATED", NA_character_),
         Violation1 = str_replace_all(Violation1, "NOT APPLICABLE", NA_character_),
         Violation2 = str_replace_all(Violation2, "NOT INDICATED", NA_character_),
         Violation2 = str_replace_all(Violation2, "NOT APPLICABLE", NA_character_),
         Violation3 = str_replace_all(Violation3, "NOT INDICATED", NA_character_),
         Violation3 = str_replace_all(Violation3, "NOT APPLICABLE", NA_character_),
-        SearchRationale1 = str_replace_all(SearchRationale1, "NOT INDICATED", NA_character_),
-        SearchRationale1 = str_replace_all(SearchRationale1, "NOT APPLICABLE", NA_character_),
-        SearchRationale2 = str_replace_all(SearchRationale2, "NOT INDICATED", NA_character_),
-        SearchRationale2 = str_replace_all(SearchRationale2, "NOT APPLICABLE", NA_character_),
-        SearchRationale3 = str_replace_all(SearchRationale3, "NOT INDICATED", NA_character_),
-        SearchRationale3 = str_replace_all(SearchRationale3, "NOT APPLICABLE", NA_character_),
+        SearchRationale1 = str_replace_all(
+          SearchRationale1, "NOT INDICATED", NA_character_
+        ),
+        SearchRationale1 = str_replace_all(
+          SearchRationale1, "NOT APPLICABLE", NA_character_
+        ),
+        SearchRationale2 = str_replace_all(
+          SearchRationale2, "NOT INDICATED", NA_character_
+        ),
+        SearchRationale2 = str_replace_all(
+          SearchRationale2, "NOT APPLICABLE", NA_character_
+        ),
+        SearchRationale3 = str_replace_all(
+          SearchRationale3, "NOT INDICATED", NA_character_
+        ),
+        SearchRationale3 = str_replace_all(
+          SearchRationale3, "NOT APPLICABLE", NA_character_
+        ),
         EnforcementAction = str_c_na(
           EnforcementAction1, 
           EnforcementAction2,
@@ -90,9 +117,11 @@ clean <- function(d, helpers) {
           SearchRationale1,
           SearchRationale2,
           SearchRationale3,
+          SearchRationale4,
           sep = "|"
         )
-      )
+      ) %>% 
+      select(-ends_with("1"), -ends_with("2"), -ends_with("3"), -ends_with("4"))
   
   print("Updated data processed.")
   
@@ -142,9 +171,11 @@ clean <- function(d, helpers) {
         SearchRationale1,
         SearchRationale2,
         SearchRationale3,
+        SearchRationale4,
         sep = "|"
       )
-    )
+    ) %>% 
+    select(-ends_with("1"), -ends_with("2"), -ends_with("3"), -ends_with("4"))
   
   print("New years of data processed.")
   
@@ -177,7 +208,12 @@ clean <- function(d, helpers) {
           "ReportDateTime",
           "County",
           "OfficerIDNo",
-          "Race"
+          "Race",
+          "EnforcementAction",
+          "Violation",
+          "SearchRationale",
+          "ReasonForStop",
+          "SearchType"
         ),
       suffix = c("_10_to_16", "_16_to_18")
     )
@@ -196,6 +232,7 @@ clean <- function(d, helpers) {
       department_name = OfficerAgency,
       violation = Violation,
       reason_for_search = SearchRationale,
+      reason_for_stop = ReasonForStop,
       vehicle_registration_state = VehicleTagNoState
     ) %>%
     add_raw_colname_prefix(
@@ -206,9 +243,9 @@ clean <- function(d, helpers) {
     ) %>% 
     mutate(
       raw_row_number = str_c_na(
-        raw_row_number_old_10_to_16, 
-        raw_row_number_new_10_to_16,
-        raw_row_number_16_to_18,
+        raw_row_number_old, 
+        raw_row_number_new,
+        raw_row_number,
         sep = "|"),
       date = coalesce(
         parse_date(ReportDateTime, "%Y-%m-%d %H:%M:%S"),
@@ -224,6 +261,7 @@ clean <- function(d, helpers) {
         fast_tr(raw_Race, tr_race)
       ),
       subject_sex = fast_tr(Sex, tr_sex),
+      county_name = str_c(str_to_title(county_name), " County"),
       unit = if_else(
         is.na(OfficerOrgUnit_new),
         OfficerOrgUnit_old,
@@ -233,34 +271,40 @@ clean <- function(d, helpers) {
       officer_sex = fast_tr(Off_Sex, tr_sex),
       # NOTE: Only vehicular traffic stops were requested in the data request.
       type = "vehicular",
-      arrest_made = str_detect(
-        tolower(raw_EnforcementAction),
-        "felony arrest|misdemeanor arrest"
-      ),
-      citation_issued = str_detect(Comments_old_10_to_16, "Citation")
+      notes = str_c_na(Comments_old, Comments_new, sep = ";"),
+      arrest_made = str_detect(notes, fixed("arrest", ignore_case = T)) 
         | str_detect(
-          tolower(raw_EnforcementAction),
-          # NOTE: These are all actually citations per Florida PD's
-          # clarification.
-          "infraction arrest|ucc issued|dver issued"
-        ),
-      warning_issued = str_detect(Comments_old_10_to_16, "Warning")
-        | str_detect(
-          tolower(raw_EnforcementAction),
-          "warning"
-        ),
+            raw_EnforcementAction,
+            # Note: Infraction Arrest we think is just a citation (quite common)
+            fixed("felony arrest|misdemeanor arrest", ignore_case = T)
+          ),
+      citation_issued = 
+        str_detect(notes, fixed("citation", ignore_case = T))
+        | str_detect(raw_EnforcementAction,
+            # NOTE: These are all actually citations per Florida PD's
+            # clarification.
+            fixed("infraction arrest|ucc issued|dver issued", ignore_case = T)
+          ),
+      warning_issued = str_detect(notes, fixed("warning", ignore_case = T))
+        | str_detect(raw_EnforcementAction, fixed("warning", ignore_case = T)),
       outcome = first_of(
         "arrest" = arrest_made,
         "citation" = citation_issued,
         "warning" = warning_issued
       ),
       search_basis = first_of(
-        "plain view" = str_detect(raw_SearchType, "PLAIN VIEW"),
-        "consent" = str_detect(raw_SearchType, "CONSENT SEARCH CONDUCTED"),
-        "probable cause" = str_detect(raw_SearchType, "PROBABLE CAUSE"),
+        "plain view" = str_detect(
+          raw_SearchType, fixed("PLAIN VIEW", ignore_case = T)
+        ),
+        "consent" = str_detect(
+          raw_SearchType, fixed("CONSENT SEARCH CONDUCTED", ignore_case = T)
+        ),
+        "probable cause" = str_detect(
+          raw_SearchType, fixed("PROBABLE CAUSE", ignore_case = T)
+        ),
         "other" = str_detect(
           raw_SearchType,
-          "SEARCH INCIDENT TO ARREST|SEARCH WARRANT|INVENTORY"
+          fixed("SEARCH INCIDENT TO ARREST|SEARCH WARRANT|INVENTORY", ignore_case = T)
         )
       ),
       search_conducted = if_else(
@@ -275,7 +319,9 @@ clean <- function(d, helpers) {
           NA
         )
       ),
-      frisk_performed = str_detect(raw_SearchType, "STOP AND FRISK")
+      frisk_performed = str_detect(
+        raw_SearchType, fixed("STOP AND FRISK", ignore_case = T)
+      )
       # NOTE: Regarding contraband_found, there is data on items seized, but it
       # is not really clear how much this is as a result of a search.
     ) %>%

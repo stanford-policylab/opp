@@ -47,6 +47,12 @@ clean <- function(d, helpers) {
   )
 
   d$data %>%
+    add_raw_colname_prefix(
+      DriverRace,
+      ResultOfStop,
+      ReasonForStop,
+      TypeOfMovingViolation
+    ) %>% 
     rename(
       location = ZIP,
       # TODO(walterk): Determine whether Chicago should be removed from this
@@ -73,7 +79,7 @@ clean <- function(d, helpers) {
       ),
       subject_age = year(date) - subject_yob,
       subject_sex = tr_sex[parse_character(DriverSex)],
-      subject_race = tr_race[parse_character(DriverRace)],
+      subject_race = tr_race[parse_character(raw_DriverRace)],
       beat = if_else(
         department_name == "ILLINOIS STATE POLICE",
         str_pad(BeatLocationOfStop, width = "2", side = "left", pad = "0"),
@@ -83,9 +89,9 @@ clean <- function(d, helpers) {
       # subject and search related columns are prefaced with Vehicle, Driver, or
       # Passenger.
       type = "vehicular",
-      citation_issued = ResultOfStop == 1,
-      warning_issued = ResultOfStop == 2 | ResultOfStop == 3,
-      outcome = tr_outcome[parse_character(ResultOfStop)],
+      citation_issued = raw_ResultOfStop == 1,
+      warning_issued = raw_ResultOfStop == 2 | raw_ResultOfStop == 3,
+      outcome = tr_outcome[parse_character(raw_ResultOfStop)],
       contraband_drugs = VehicleDrugsFound == 1
         | VehicleDrugParaphernaliaFound == 1
         | VehicleDrugAmount > 0
@@ -105,7 +111,7 @@ clean <- function(d, helpers) {
         | PoliceDogVehicleSearched == 1,
       search_conducted = search_person | search_vehicle,
       search_basis = if_else(
-        PoliceDogAlertIfSniffed == 1,
+        PoliceDogAlertIfSniffed == 1 | PoliceDogPerformSniffOfVehicle == 1,
         "k9",
         if_else(
           VehicleConsentGiven == 1
@@ -116,13 +122,13 @@ clean <- function(d, helpers) {
         )
       ),
       reason_for_stop = if_else(
-        ReasonForStop == 1,
+        raw_ReasonForStop == 1,
         str_c_na(
-          tr_reason_for_stop[parse_character(ReasonForStop)],
-          tr_moving_violation[parse_character(TypeOfMovingViolation)],
+          tr_reason_for_stop[parse_character(raw_ReasonForStop)],
+          tr_moving_violation[parse_character(raw_TypeOfMovingViolation)],
           sep=": "
         ),
-        tr_reason_for_stop[parse_character(ReasonForStop)]
+        tr_reason_for_stop[parse_character(raw_ReasonForStop)]
       ),
       violation = reason_for_stop
     ) %>%

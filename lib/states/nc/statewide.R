@@ -214,27 +214,12 @@ clean <- function(d, helpers) {
       | gt_0(Kilos)
       | gt_0(Grams)
       | gt_0(Dosages),
-    contraband_weapons = gt_0(Weapons),
+    contraband_weapons = gt_0(Weapons)
   ) %>%
-  rename(
-    raw_ethnicity = Ethnicity,
-    raw_race = Race,
-    raw_driver_search = DriverSearch,
-    raw_passenger_search = PassengerSearch,
-    raw_action_description = action_description,
-    raw_search_type_description = search_type_description,
-    raw_dollar_amount = DollarAmt,
-    raw_dosages = Dosages,
-    raw_gallons = Gallons,
-    raw_grams = Grams,
-    raw_kilos = Kilos,
-    raw_money = Money,
-    raw_ounces = Ounces,
-    raw_pints = Pints,
-    raw_pounds = Pounds,
-    raw_weapons = Weapons,
-    raw_encounter_force = EncounterForce,
-    raw_engage_force = EngageForce
+  add_raw_colname_prefix(
+    Ethnicity,
+    Race,
+    action_description
   ) %>%
   standardize(d$metadata)
 }

@@ -8,6 +8,13 @@ load_raw <- function(raw_data_dir, n_max) {
     col_types = cols(.default = "c"),
     n_max = n_max
   )
+  d_2016 <- load_single_file(
+    raw_data_dir,
+    "2016_data.csv",
+    na = c("", "NA","NULL", "N/A"),
+    col_types = cols(.default = "c"),
+    n_max = n_max
+  )
   d_2017 <- load_single_file(
     raw_data_dir,
     "2017_data.csv",
@@ -38,6 +45,17 @@ load_raw <- function(raw_data_dir, n_max) {
   colnames(d$data)[146] <- "officer_gender"
 
   d$data %>%
+    filter(year(IncidentDate) < 2016) %>%
+    mutate_at(vars(LocationCounty), as.character) %>%
+    bind_rows(
+      d_2016$data %>%
+        mutate_at(vars(Warrant, ActivityID), as.character) %>% 
+        rename(Age = AGE) %>% 
+        mutate(
+          # change / to - in order to match main data pull, for parsing
+          IncidentDate = str_replace_all(IncidentDate, "/", "-")
+        )
+    ) %>%
     bind_rows(
       d_2017$data %>% 
         rename(Age = AGE) %>% 
@@ -49,7 +67,8 @@ load_raw <- function(raw_data_dir, n_max) {
     ) %>% 
     left_join(
       counties$data %>% 
-        select(LocationCounty, county_name),
+        select(LocationCounty, county_name) %>% 
+        mutate(LocationCounty = as.character(LocationCounty)),
       by = "LocationCounty"
     ) %>%
     # NOTE: fill in 2017 county with LocationCounty, 
@@ -120,8 +139,11 @@ clean <- function(d, helpers) {
       LocationRoad,
       LocationMilePost
     ) %>%
+    add_raw_colname_prefix(
+      Ethnicity
+    ) %>% 
     mutate(
-      # NOTE: Source data all describe state police traffic stops.
+      # NOTE: Source data all should describe state police traffic stops.
       type = "vehicular",
       location = str_c_na(LocationMilePost, LocationRoad, LocationCounty, sep = ", "),
       date = parse_date(IncidentDate, "%Y-%m-%d"),
@@ -131,10 +153,10 @@ clean <- function(d, helpers) {
       time = parse_time(str_sub(1, 8, IncidentTime), "%H:%M:%S"),
       subject_dob = parse_date(DOB, "%Y-%m-%d"),
       subject_age = age_at_date(subject_dob, date),
-      subject_race = tr_race[Ethnicity],
-      subject_sex = tr_sex[driver_gender],
-      officer_sex = tr_sex[officer_gender],
-      # TODO(jnu): The original analysis suggests outcome / arrest data after
+      subject_race = fast_tr(raw_Ethnicity, tr_race),
+      subject_sex = fast_tr(driver_gender, tr_sex),
+      officer_sex = fast_tr(officer_gender, tr_sex),
+      # TODO: The original analysis suggests outcome / arrest data after
       # 2013 is bad. Follow up on this to clarify what's wrong and remove it
       # here as necessary.
       # https://app.asana.com/0/456927885748233/747485709822349
@@ -149,8 +171,9 @@ clean <- function(d, helpers) {
       violation = StatuteDesc,
       # NOTE: missing specific contraband type column.
       contraband_found = SearchContraband == "1",
-      search_conducted = !is.na(SearchBase) | coalesce(Search == "1", FALSE),
-      search_basis = tr_search_basis[SearchBase]
+      search_conducted = !is.na(SearchBase) | 
+        coalesce(Search == "1" | Search == "TRUE", FALSE),
+      search_basis = fast_tr(SearchBase, tr_search_basis)
     ) %>%
     standardize(d$metadata)
 }

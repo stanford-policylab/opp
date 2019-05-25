@@ -25,11 +25,14 @@ clean <- function(d, helpers) {
   # NOTE: Replacing "NULL" with NA everywhere.
   d$data[d$data == "NULL"] <- NA
 
-  # NOTE: Deduping because each row corresponds to a violation, not to a stop.
   d$data %>%
+    add_raw_colname_prefix(
+      Race
+    ) %>% 
     mutate(
       Warning = parse_logical(Warning)
     ) %>%
+    # NOTE: Deduping because each row corresponds to a violation, not to a stop.
     merge_rows(
       ArrestNum,
       CountyCode,
@@ -37,7 +40,7 @@ clean <- function(d, helpers) {
       DepartmentNum,
       NearStreet,
       PrimaryOfficerID,
-      Race,
+      raw_Race,
       TicketDate,
       UponStreet,
       VehicleID
@@ -54,7 +57,7 @@ clean <- function(d, helpers) {
     mutate(
       date = date(parse_datetime(TicketDate)),
       time = parse_time(TicketDate, "%Y-%m-%d %H:%M:%S"),
-      # TODO(walterk): To geocode, we would need to translate CityTownshipCode
+      # TODO: To geocode, we would need to translate CityTownshipCode
       # and add to location.
       # https://app.asana.com/0/456927885748233/727769678078689
       location = str_combine_cols(
@@ -64,7 +67,7 @@ clean <- function(d, helpers) {
         sep = " "
       ),
       county_name = fast_tr(CountyCode, tr_county),
-      subject_race = fast_tr(Race, tr_race),
+      subject_race = fast_tr(raw_Race, tr_race),
       # NOTE: All rows have a non-NULL VehicleID or have a ConfiscatedPlate and
       # a non-zero VehicleImpounded code.
       type = "vehicular",
@@ -83,7 +86,10 @@ clean <- function(d, helpers) {
         "arrest" = arrest_made,
         "citation" = citation_issued,
         "warning" = warning_issued
-      )
+      ),
+      speed = SpeedDetected,
+      posted_speed = SpeedPosted,
+      charged_speed = SpeedCharged
     ) %>%
     standardize(d$metadata)
 }

@@ -151,7 +151,7 @@ clean <- function(d, helpers) {
       search_person = str_detect(raw_TypeOfSearch, "DR|PS|PE|BI")
         | tr_yn[SearchOfDriver],
       search_vehicle = tr_yn[SearchOfVehicle],
-      search_conducted = tr_yn[SearchPerformed],
+      search_conducted = replace_na(tr_yn[SearchPerformed], FALSE),
       search_basis = first_of(
         "consent" = tr_yn[ConsentSearchAccepted],
         "other" = tr_yn[DUISearchWarrant],

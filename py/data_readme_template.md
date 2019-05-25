@@ -856,6 +856,16 @@ We’re excited to see what you come up with!
   state patrol.
 - Rows in raw data represent violations, not stops, so we remove duplicates by
   grouping by the other fields.
+- `subject_race` was mapped from `raw_Ethnicity`. 
+- Note that data from 2016 came with about 80 fewer columns than the data before and   after, so many values for that year will be NA.
+- Additional columns in the raw data that may be of interest: `MMJCard`,
+  `DUIDType`, `NonUS`, `NonUSDL`, `NonUSDLLocation`, `DLCheck`, 
+  `TrafficAccident`, `AccidentSeverity` (0-4), `DUIArrest`, `HVPTCitation`, 
+  `SeatBeltCitation`, `FelonyArrest`, `Misdemeanors`, `Felonies` (count),
+  `VehicleInspected`, `Recoveries`, `TrafficOral`, `AssistOral`, `AllOtherOral`,
+  `GrantCategory`, `GrantLabel`, `Assists`, `AssistsMultiple`, 
+  `AssistsCount`, `ContrabandCharge` (petty offense, felony, misdemeanor,
+  none, traffic), `Warrant`, `MisdemeanorOrFelony` (M or F), 
 
 ## Statewide, CT
 **Data notes**:
@@ -940,6 +950,8 @@ We’re excited to see what you come up with!
 - While there is some data on whether items were seized, it is not clear if
   these are generally seized as a result of a search, and we thus do not define
   a contraband_found column for consistency with other states. 
+- `raw_EnforcementAction` and `notes` were used to determine `outcome`.
+  
 
 ## Statewide, GA
 **Data notes**:
@@ -974,13 +986,19 @@ We’re excited to see what you come up with!
   were mapped by comparing the identifiers in the `LOCKCOUNTY` field with the
   cities in the `LOCKCITY` field.
 - The codes in the county field represent counties ordered alphabetically.
+- Additional columns in the raw data that may be of interest: `EQUIPVIOL` 
+  (free field -- usually a two-digit code, but some text descriptions of
+  the violation), `SCHEDULEDFINE`, `SURCHARGE`, `TOTALCOST`, along with a 
+  bunch of columns that are >=99.9% NA, many of which have prefix "DISP" and
+  pertain to data that would happen post-arrest.
+)
 
 ## Idaho Falls, ID
 **Data notes**:
 - Race and gender are not on the ID driver's license and filled in only rarely,
   subject age is also 100% null
 - There is 'reptspec' data, but the values are extrenely vague, i.e. "PAST",
-  "SATURATION", "PERSON", "OTHER AGENCY"
+  "SATURATION", "PERSON", "OTHER AGENCY",
 - There are 6 more months of data unprocessed with the main files since they
   are of a completely different format, but are available upon request
 - The data is missing demographic information as well as search/contraband
@@ -1008,18 +1026,35 @@ We’re excited to see what you come up with!
 - The `search_type_raw` field is occasionally "Consent search denied", when a
   search was conducted. This occurs because the search request might be denied
   but a search was conducted anyway. Many searches have missing search type
-  data, so we exclude Illinois from our search type analysis. 
-- Race (`DriverRace`) mapping:
+  data, so we do not rely on `search_basis` when analyzing Illinois searches.
+- Race (`raw_DriverRace`) mapping:
     * 1 = White
     * 2 = Black
     * 3 = American Indian or Alaska Native
     * 4 = Hispanic
     * 5 = Asian
     * 6 = Native Hawaiian or Other Pacific Islander
-- Outcome (`ResultOfStop`) mapping:
+- Outcome (`raw_ResultOfStop`) mapping:
     * 1 = Citation
     * 2 = Written Warning
     * 3 = Verbal Warning (stop card)
+- We also pull through raw columns `raw_ReasonForStop` and
+  `raw_TypeOfMovingViolation` to populate the `reason_for_stop` and `violation`
+  columns in the clean data. We received dictionaries to help do so.
+- Note that IL contains state patrol and municipal police departments, but we
+  use only the state patrol data in our anlaysis. There are occasional issues
+  with some of the municipal P.D. data to watch out for: for example, the 
+  search and contraband data is fairly detailed and robust, except for Chicago
+  Police, which has lots of NAs for search info (in 2012-2013) and lots of NAs
+  for contraband info (in 2014). We do not alter these NA values, 
+  but recommend looking more closely into the Chicago city data (see below)
+  rather than using the data given to us through the state records request.
+- Additional columns in the raw data that may be of interest: IL has really
+  detailed search/contraband information. There are about 40 raw columns with
+  search/contraband info; they fall into four categories `Vehicle*`, `Driver*`,
+  `Passenger*`, and `PoliceDog*`, where `*` delineates things like what type 
+  of contraband was found or how much contraband was found, whether consent was 
+  requested, whether consent was given, who performed the search, etc. 
 
 ## Chicago, IL
 **Data notes**:
@@ -1192,6 +1227,10 @@ We’re excited to see what you come up with!
   see processing script for details.
 - `search_basis` is a cleaned up version of `reason_for_search` which is a free
   field populated by raw column `Search Reason`. 
+- Prior to 2013, there are quite a few NAs for contraband; we do not cast
+  these to false because it seems to be too many to assume they're all false --
+  it feels more believable that there is actual missing data in these annually
+  reported, messy datasets.
 - Additional columns from the raw data that may be of interest: `Duration of Search`
 
 ## Statewide, MI
@@ -1205,6 +1244,25 @@ We’re excited to see what you come up with!
   alphabetically.
 - Rows represent violations, not stops, so we remove duplicates by grouping by
   the other fields.
+- Michigan data has loads of additional columns, a cluster we find very 
+  interesting are `SpeedPosted` (pulled through as `posted_speed`), 
+  `SpeedDetected` (pulled through as `speed`), and `SpeedCharged` (pulled
+  through as `charged_speed`). Most places with speeding information give just
+  speed and posted speed; analyses like the [bunching analysis](http://www.princeton.edu/~fmg/JMP) try to infer the true speed, and 
+  whether drivers of different races were discounted at different rates. 
+  Michigan's transparency about discounting (from detected speed to charged speed)
+  could make this process much easier to analyze. However, we do not do so because
+  race information is insufficient. 
+- Since all rows have a `TicketNum`, we assume that if any ticket is
+  not a warning, then it is a citation.  But then potentially for outcome,
+  anything that is not an arrest or warning could have a court summons.
+  It's possible raw data columns `Felony`, `Misdemeanor`, `CivilInfraction`
+  could help disambiguate.
+- Additional raw data columns that may be of interest: Michigan has over 160 
+  columns in the raw data, though many of them are >99.9% NA. There are ID columns
+  for everything from violation codes, citation codes, infraction codes, incident
+  numbers, court code, etc. Other columns: `VehicleImpounded`, `Injury`,
+  `Felony`, `Misdemeanor`, `CivilInfraction`.
 
 ## Saint Paul, MN
 **Data notes**:
@@ -1305,23 +1363,22 @@ We’re excited to see what you come up with!
   there is a 1:1 correspondence between StopID and and SearchID, as well as
   between SearchID and PersonID (who, again, can be either the driver or
   passenger) and SearchID and ContrabandID 
-- raw_{ounces,pounds,kilos,grams,dosages,weapons} are provided for greater
-  resolution on contraband__{drugs,weapons},
-  raw_{gallons,pints,money,dollar_amount} are also provided, but it's
-  unclear what their relationship to contraband is
 - subject_race is based on Ethnicity and Race, which are passed through as
   raw_*
-- outcomes are based on action_description, which is based on the raw column
+- outcomes are based on `raw_action_description`, which is based on the raw column
   Action and translated given the provided codes
 - frisk and search data is based on SearchID and search_type_description, which
   is passed through with raw_*; the latter is based on the raw column
   SearchType and translated using the given data dictionary
 - stop_purpose_description is based on raw column StopPurpose and is
   translated using the given data dictionary and passed through as
-  reason_for_stop
-- reason_for_search represents the raw column Basis
-- raw columns EncounterForce and EngageForce are passed through as
-  raw_encounter_force and raw_engage_force
+  `reason_for_stop`
+- `reason_for_search` represents the raw column Basis
+- Additional columns in the raw data that may be of interest:
+  `Ounces`, `Pounds`, `Kilos`, `Grams`, `Dosages`, `Weapons` provide 
+  greater resolution on contraband; `Gallons`, `Pints`, `Money`,
+  `DollarAmt` may also do so; `EncounterForce` (boolean), `EngageForce`
+  (boolean); `[Officer,Driver,Passenger]Inury` (all booleans)
 
 ## Winston-Salem, NC
 **Data notes**:
@@ -1881,6 +1938,7 @@ We’re excited to see what you come up with!
   warnings.
 - The data only records when citations and warnings were issued, but not
   arrests.
+- We did not receive any search information in the 2017 data.
 
 ## San Antonio, TX
 **Data notes**:
