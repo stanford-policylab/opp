@@ -66,7 +66,9 @@ clean <- function(d, helpers) {
         str_detect(violation, "(^|\\|)39"),
         "vehicular",
         NA_character_
-      )
+      ),
+      # All rows are citations
+      outcome = "citation"
     ) %>%
     standardize(d$metadata)
 }
