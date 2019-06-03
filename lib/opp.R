@@ -461,7 +461,6 @@ opp_filter_out_non_highway_patrol_stops_from_states <- function(tbl) {
     tbl
   }
   tbl %>%
-    f("FL", exclude, "FLORIDA DEPARTMENT OF AGRICULTURE") %>%
     f("NC", only, "NC State Highway Patrol") %>%
     f("IL", only, "ILLINOIS STATE POLICE") %>%
     f("CT", only, "State Police") %>% 
