@@ -72,12 +72,20 @@ clean <- function(d, helpers) {
 
   tr_race <- c(
     W = "white",
+    WHITE = "white",
+    # Mapping middle easter to white is in accordance with census categorization
+    M = "white",
+    `MIDDLE EASTERN` = "white",
     H = "hispanic",
+    HISPANIC = "hispanic",
     B = "black",
-    N = "other/unknown",
+    BLACK = "black",
     A = "asian/pacific islander",
-    M = "other/unknown",
-    X = "other/unknown"
+    `ASIAN / PACIFIC ISLANDER` = "asian/pacific islander",
+    N = "other/unknown",
+    `NATIVE AMERICAN` = "other/unknown",
+    X = "other/unknown",
+    `OTHER OR UNDETERMINED` = "other/unknown"
   )
   
   tr_reason_for_stop <- c(
@@ -148,7 +156,7 @@ clean <- function(d, helpers) {
         ","
       ),
       # NOTE: DR = Driver, PS = Passenger, PE = Pedestrian, BI = Bicyclist
-      search_person = str_detect(raw_TypeOfSearch, "DR|PS|PE|BI")
+      search_person = str_detect(raw_TypeOfSearch, "DR|PS|PE|BI|PAS")
         | tr_yn[SearchOfDriver],
       search_vehicle = tr_yn[SearchOfVehicle],
       search_conducted = replace_na(tr_yn[SearchPerformed], FALSE),
