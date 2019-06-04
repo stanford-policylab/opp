@@ -102,7 +102,7 @@ clean <- function(d, helpers) {
       date = as.Date(datetime),
       time = format(datetime, "%H:%M:%S"),
       county_name = fast_tr(COUNTY_CODE, tr_county),
-      disp_info = str_c(raw_DISP_STRING, raw_DISPOSITIONS, sep = "|"),
+      disp_info = str_c_na(raw_DISP_STRING, raw_DISPOSITIONS, sep = "|"),
       sex_and_race_codes = str_extract(disp_info, "[1-6][FM]"),
       subject_race = fast_tr(substr(sex_and_race_codes, 1, 1), tr_race),
       raw_race = fast_tr(substr(sex_and_race_codes, 1, 1), tr_race_raw),
