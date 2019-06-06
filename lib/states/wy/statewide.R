@@ -86,7 +86,9 @@ clean <- function(d, helpers) {
       subject_race = tr_race[raw_race],
       subject_sex = tr_sex[raw_sex],
       # NOTE: All stops in data are vehicle stops.
-      type = "vehicular"
+      type = "vehicular",
+      # NOTE: Only citations
+      outcome = "citation"
     ) %>%
     standardize(d$metadata)
 }
