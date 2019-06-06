@@ -2,7 +2,9 @@ library(here)
 source(here::here("lib", "opp.R"))
 
 
-prima_facie_stats <- function(only = opp_locations_used_in_analyses()) {
+prima_facie_stats <- function(
+  only = opp_locations_used_in_analyses(remove_locs_missing_hispanic = T)
+) {
   list(
     stop_rates = aggregate_stop_stats_all_combined(only),
     search_rates = aggregate_stats_all_combined(only, "search_conducted"),
@@ -32,12 +34,12 @@ prima_facie_stats <- function(only = opp_locations_used_in_analyses()) {
 
 aggregate_stop_stats_all_combined <- function(
   only = opp_locations_used_in_analyses(),
-  years = 2011:2017,
+  years = 2011:2018,
   max_null_rate = 0.35,
   weighted_average = F
 ) {
   v <-
-    aggregate_stop_stats_all(only, years max_null_rate) %>%
+    aggregate_stop_stats_all(only, years, max_null_rate) %>%
     mutate(is_state = city == "Statewide") %>%
     group_by(is_state, subject_race)
   if (weighted_average)
@@ -51,7 +53,7 @@ aggregate_stop_stats_all_combined <- function(
 
 aggregate_stop_stats_all <- function(
   only = opp_locations_used_in_analyses(),
-  years = 2011:2017,
+  years = 2011:2018,
   max_null_rate = 0.35
 ) {
   opp_apply(
@@ -67,7 +69,7 @@ aggregate_stop_stats_all <- function(
 aggregate_stop_stats <- function(
   state,
   city,
-  years = 2011:2017,
+  years = 2011:2018,
   max_null_rate = 0.35
 ) {
   tbl <- stop_stats(state, city, years, max_null_rate)
@@ -87,7 +89,7 @@ aggregate_stop_stats <- function(
 
 stop_stats_all <- function(
   only = opp_locations_used_in_analyses(),
-  years = 2011:2017,
+  years = 2011:2018,
   max_null_rate = 0.35
 ) {
   opp_apply(
@@ -103,7 +105,7 @@ stop_stats_all <- function(
 stop_stats <- function(
   state,
   city,
-  years = 2011:2017,
+  years = 2011:2018,
   max_null_rate = 0.35
 ) {
   empty <- tibble(state = state, city = city)
@@ -181,7 +183,7 @@ filter_to_complete_years <- function(tbl, min_monthly_stops = 100) {
 aggregate_stats_all_combined <- function(
   only = opp_locations_used_in_analyses(),
   col = "search_conducted",
-  years = 2011:2017,
+  years = 2011:2018,
   max_null_rate = 0.35,
   predicate = NA_character_,
   weighted_average = F
@@ -203,7 +205,7 @@ aggregate_stats_all_combined <- function(
 aggregate_stats_all <- function(
   only = opp_locations_used_in_analyses(),
   col = "search_conducted",
-  yearas = 2011:2017,
+  years = 2011:2018,
   max_null_rate = 0.35,
   predicate = NA_character_
 ) {
@@ -229,7 +231,7 @@ aggregate_stats <- function(
   state,
   city,
   col = "search_conducted",
-  years = 2011:2017,
+  years = 2011:2018,
   max_null_rate = 0.35,
   predicate = NA_character_
 ) {
@@ -253,7 +255,7 @@ aggregate_stats <- function(
 stats_all <- function(
   only = opp_locations_used_in_analyses(),
   col = "search_conducted",
-  years = 2011:2017,
+  years = 2011:2018,
   max_null_rate = 0.35,
   predicate = NA_character_
 ) {
@@ -278,7 +280,7 @@ stats <- function(
   state,
   city,
   col = "search_conducted",
-  years = 2011:2017,
+  years = 2011:2018,
   max_null_rate = 0.35,
   predicate = NA_character_
 ) {
