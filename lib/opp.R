@@ -1,7 +1,6 @@
 library(here)
 source(here::here("lib", "common.R"))
 
-
 clear <- function() {
   env = globalenv()
   rm(list=ls(envir = env), envir = env)
@@ -466,7 +465,8 @@ opp_filter_out_non_highway_patrol_stops_from_states <- function(tbl) {
     f("CT", only, "State Police") %>% 
     f("MD", is_in, c("Maryland State Police", "MSP")) %>% 
     f("MS", only, "Mississippi Highway Patrol") %>% 
-    f("MO", only, "Missouri State Highway Patrol") 
+    f("MO", only, "Missouri State Highway Patrol") %>%  
+    f("NE", only, "Nebraska State Agency")  
 } 
 
 
@@ -706,26 +706,36 @@ opp_load_state_fips <- function() {
 }
 
 
-opp_locations_used_in_analyses <- function() {
-  bind_rows(
-    opp_locations_used_in_analysis("veil_of_darkness"),
-    opp_locations_used_in_analysis("marijuana_legalization_analysis"),
-    opp_locations_used_in_analysis("disparity")
-  ) %>%
-  distinct()
+opp_locations_used_in_analyses <- function(remove_locs_missing_hispanic = F) {
+  if(!exists("VOD_ELIGIBLE_CITIES") | !exists("VOD_ELIGIBLE_STATES")
+     | !exists("DISPARITY_ELIGIBLE_CITIES") | !exists("DISPARITY_ELIGIBLE_STATES")
+     | !exists("MJ_ELIGIBLE_STATES")) 
+    {
+      source(here::here("lib", "eligible_locations.R"))
+    }
+  tbl <- bind_rows(
+    VOD_ELIGIBLE_CITIES, VOD_ELIGIBLE_STATES, 
+    DISPARITY_ELIGIBLE_CITIES, DISPARITY_ELIGIBLE_STATES, 
+    MJ_ELIGIBLE_STATES
+  ) 
+  if(remove_locs_missing_hispanic)
+    tbl <- filter(tbl, !no_hispanics)
+  tbl %>% 
+    select(state, city) %>% 
+    distinct()
 }
 
-
-opp_locations_used_in_analysis <- function(analysis_name) {
-  source(here::here("lib", str_c(analysis_name, ".R")), local = T)
-  states <- tibble()
-  cities <- tibble()
-  if (exists("ELIGIBLE_STATES"))
-    states <- ELIGIBLE_STATES
-  if (exists("ELIGIBLE_CITIES"))
-    cities <- ELIGIBLE_CITIES
-  bind_rows(states, cities)
-}
+#### DEPRECATED ####
+# opp_locations_used_in_analysis <- function(analysis_name) {
+#   source(here::here("lib", str_c(analysis_name, ".R")), local = T)
+#   states <- tibble()
+#   cities <- tibble()
+#   if (exists("ELIGIBLE_STATES"))
+#     states <- ELIGIBLE_STATES
+#   if (exists("ELIGIBLE_CITIES"))
+#     cities <- ELIGIBLE_CITIES
+#   bind_rows(states, cities)
+# }
 
 
 opp_package_for_archive <- function(dir = "/share/data/opp-for-archive") {
@@ -1025,11 +1035,11 @@ opp_run_prima_facie_stats <- function() {
 
 
 opp_run_paper_analyses <- function() {
-  # TODO(danj): uncomment
-  # opp_run_prima_facie_stats()
-  # opp_run_veil_of_darkness()
-  # opp_run_disparity()
-  # opp_run_marijuana_legalization_analysis()
+  source(here::here("lib", "eligible_locations.R"))
+  opp_run_prima_facie_stats()
+  opp_run_veil_of_darkness()
+  opp_run_disparity()
+  opp_run_marijuana_legalization_analysis()
   output_path <- opp_results_path("paper_results.pdf")
   render("paper_results.Rmd", "pdf_document", output_path)
   print(str_c("saved paper results to ", output_path))
@@ -1040,6 +1050,7 @@ opp_run_veil_of_darkness <- function() {
   output_path <- opp_results_path("veil_of_darkness.rds")
   source(here::here("lib", "veil_of_darkness.R"), local = T)
   vod <- list(
+    dst = veil_of_darkness_daylight_savings(),
     cities = veil_of_darkness_cities(),
     states = veil_of_darkness_states()
   )
