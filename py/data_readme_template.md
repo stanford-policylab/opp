@@ -1147,7 +1147,8 @@ We’re excited to see what you come up with!
   well, when that also occurred
 - Provided longitude is lacking the negative sign, which we add (without which
   all points are in central China)
-- subject race is based on RACE in the raw data and passed through as raw_race
+- subject race is based on RACE in the raw data and passed through as raw_race;
+  data does not include Hispanic.
 - violation is a concatenation of `Violation Description X` where X is 1 to 9
 - type is based on `Violation Description 1`
 - 2015 and 2017 only have data for part of the year
@@ -1425,12 +1426,12 @@ We’re excited to see what you come up with!
   May or early June, i.e. 2010-05-08, 2011-06-02, 2012-05-05, 2013-05-04,
   2014-05-10, 2015-05-09, 2016-05-20; it's unclear what these correspond to and
   the PD has not yet responded to our inquiry
-- subject_race is based on raw_race, which is passed through
+- subject_race is based on raw_race, which is passed through; the data does not 
+  appear to include Hispanic.
 
 ## Statewide, ND
 **Data notes**:
-- The data contain records only for citations, not warnings, so we exclude
-  North Dakota from our analysis.
+- The data contain records only for citations, not warnings.
 - Rows represent individual citations, not stops, so we remove duplicates by
   grouping by the other fields.
 - The `violation` field is populated by citation codes and their descriptions.
@@ -1452,9 +1453,10 @@ We’re excited to see what you come up with!
   some sort; there are no stops for level 4.
 - The data is by quarter, not by day. So all stop_dates are the first date of
   the quarter.
-- For state patrol stops, there is a strange jump (Q1) and then dip (Q2–4) in
-  the data for 2012. It looks like for 2012 all stops are recorded as happening
-  in the first quarter.
+- There is a strange jump (Q1) and then dip (Q2–4) in the data for 2012. This
+  stems from all state patrol stops for 2012 being recorded as happening
+  in the first quarter. Municipal departments seem to have okay dated data for
+  2012.
 
 ## Statewide, NH
 **Data notes**:
@@ -1549,6 +1551,7 @@ We’re excited to see what you come up with!
 **Data notes**:
 - Nevada does not seem to record Ethnicity or have any records of Hispanic
   drivers, so we exclude it from our analysis. 
+- Nevada does not record time of stop, making it ineligible for VOD analysis.
 - The violation field is a concatenation of two fields in the raw data:
   infraction codes and offense description.
 - Additional columns in the raw data that may be of interest: `Citation Number`.
@@ -1637,6 +1640,7 @@ We’re excited to see what you come up with!
 - type is based on field_subject_cid, which is passed through as
   raw_field_subject_cid
 - subject_race is based on race, which is passed through as raw_race
+- There are zero stops of Hispanic individuals reported after 2010.
 
 ## Oklahoma City, OK
 **Data notes**:
@@ -1646,7 +1650,8 @@ We’re excited to see what you come up with!
   seems to have missing/partial data; the last few months of 2017 are also
   missing
 - Search/contraband information is missing
-- subject_race is based on DfndRace, which is passed through as raw_dfnd_race
+- subject_race is based on DfndRace, which is passed through as raw_dfnd_race;
+  though the data do not include classification of drivers as Hispanic.
 
 ## Tulsa, OK
 **Data notes**:
@@ -1757,7 +1762,7 @@ We’re excited to see what you come up with!
 
 ## Statewide, TN
 **Data notes**:
-- The data contain only citations, so we exclude Tennessee from our analysis. 
+- The data contain only citations. 
 - The codes in the `CNTY_NBR` field represent counties ordered alphabetically.
 - `location` is a concatenation of raw fields `UP_STR_HWY` (highway/street) and 
   `MLE_MRK_NBR` (mile marker). It would be possible to map the highway and mile 
@@ -1977,8 +1982,7 @@ We’re excited to see what you come up with!
   raw data folder.
 - There are no written warnings in Virginia and verbal warnings are not
   recorded, so all records are citations or searches without further action
-  taken. We, therefore, exclude Virginia from our analysis, because they do not
-  record the same set of stops as other states. 
+  taken. 
 - In the raw data, "Traffic arrests" refer to citations without a search.
   "Search arrests" refer to a citation and a search (either before or after the
   citation). "Search stops" refer to searches without a corresponding citation.
@@ -2068,7 +2072,7 @@ We’re excited to see what you come up with!
 
 ## Statewide, WI
 **Data notes**:
-- The data come from two systems ("7.3" and “10.0”) that succeeded each other.
+- The data come from two systems ("7.3" and "10.0") that succeeded each other.
   They have different field names and are differently coded. This is
   particularly relevant for the violation field, which has a different encoding
   between the two systems; in order to map violations, we used the dictionaries
