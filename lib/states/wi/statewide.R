@@ -205,7 +205,7 @@ clean <- function(d, helpers) {
         parse_time(summaryTimeOccurred, "%H:%M"),
         parse_time(str_sub(summaryTimeOccurred, 12, 19), "%H:%M:%S")
       ),
-      county_name = str_c(str_to_title(county_name), "County", sep = ", "),
+      county_name = str_c(str_to_title(county_name), "County", sep = " "),
       location = str_c_na(
         raw_onHighwayDirection,
         raw_onHighwayName,
