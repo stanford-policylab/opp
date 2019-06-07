@@ -1,31 +1,15 @@
 library(here)
 source(here::here("lib", "opp.R"))
 
-ELIGIBLE_STATES <- tribble(
-  ~state, ~city,
-  # test
-  "CO", "Statewide",
-  "WA", "Statewide",
-  # control
-  "AZ", "Statewide",
-  "CA", "Statewide",
-  "FL", "Statewide",
-  "MA", "Statewide",
-  "MT", "Statewide",
-  "NC", "Statewide",
-  "OH", "Statewide",
-  "RI", "Statewide",
-  "SC", "Statewide",
-  "TX", "Statewide",
-  "VT", "Statewide",
-  "WI", "Statewide"
-  # TODO(danj): add CT and MI as additional controls
-  # TODO(amyshoe): confirm eligibility matches
-)
-
-
 marijuana_legalization_analysis <- function() {
-  tbl <- load()
+  
+  if(!exists("MJ_ELIGIBLE_STATES")) {
+    source(here::here("lib", "eligible_locations.R"))
+    MJ_ELIGIBLE_STATES <- filter(MJ_ELIGIBLE_STATES, !no_hispanics)
+  }
+  MJ_ELIGIBLE_STATES <- MJ_ELIGIBLE_STATES %>% select(state, city)
+  
+  tbl <- load(MJ_ELIGIBLE_STATES)
   treatment <- filter(tbl, state %in% c("CO", "WA"))
   control <- filter(tbl, !(state %in% c("CO", "WA")))
   list(
@@ -34,21 +18,24 @@ marijuana_legalization_analysis <- function() {
         calculate_search_rate_difference_in_difference_coefficients(tbl)
     ),
     plots = list(
-      test_search_rates = compose_search_rate_plots(treatment),
+      treatment_search_rates = compose_search_rate_plots(treatment),
       control_search_rates = compose_search_rate_plots(control),
-      test_misdemeanor_rates = compose_misdemeanor_rate_plots(test),
-      inferred_threshold_changes = compose_inferred_threshold_changes_plot(test)
+      treatment_misdemeanor_rates = compose_misdemeanor_rate_plots(treatment),
+      inferred_threshold_changes = compose_inferred_threshold_changes_plot(treatment)
     )
   )
 }
 
 
-load <- function() {
-  opp_load_all_clean_data(ELIGIBLE_STATES) %>%
+load <- function(only) {
+  d <- opp_load_all_clean_data(only) 
+  print("Data loaded.")
+  d %>% write_rds(here::here("cache", "mj_data.rds"))
+  d %>% 
   filter(
     type == "vehicular",
     subject_race %in% c("black", "white", "hispanic"),
-    year(date) >= 2011 & year(date) <= 2015,
+    year(date) >= 2011 & year(date) <= 2018
     # TODO(danj/amyshoe): make sure CO/WA results don't change with updated
     # data, post 2015
   ) %>%
@@ -300,7 +287,7 @@ compose_timeseries_rate_plot <- function(
       panel.grid.minor = element_blank(),
       # NOTE: minimize margins
       plot.margin = unit(rep(0.2, 4), "cm"),
-      panel.margin = unit(0.25, "lines"),
+      # panel.margin = unit(0.25, "lines"),
       # NOTE: tiny space between axis labels and tick marks
       axis.title.x = element_text(margin = ggplot2::margin(t = 6.0)),
       axis.title.y = element_text(margin = ggplot2::margin(t = 6.0)),
@@ -310,9 +297,9 @@ compose_timeseries_rate_plot <- function(
       legend.title = element_blank(),
       # NOTE: ifelse and if_else can't return vectors
       legend.position = if (is_treatment_state) c(0.88, 0.88) else c(0.96, 0.95),
-      axis.title.x = element_blank(),
-      panel.spacing = unit(0.5, "lines"),
-      plot.margin = unit(c(0.1, 0.2, 0.1, 0.1), "in")
+      # axis.title.x = element_blank(),
+      panel.spacing = unit(0.25, "lines")
+      # plot.margin = unit(c(0.1, 0.2, 0.1, 0.1), "in")
     )
                   
   # TODO(danj): try to do this with geom_smooth
@@ -401,13 +388,18 @@ collect_aggregate_thresholds_for_state <- function(tbl, s) {
 
 
 summarise_for_stan <- function(tbl) {
+  # TODO(amy): redo this parsing based one load() refactor
   filter(
     tbl,
     !is.na(subject_race), 
-    !is.na(county_name)
+    !is.na(county_name) ### todo(amy): keep this one
+    # TODO: check this doesn't change anything
+    # # NOTE: don't filter in global filter because violation and
+    # # search_conducted may be NA in different places, so filter locally
+    # !is.na(search_conducted)
   ) %>% 
   mutate(
-    # NOTE: excludes consent and other (non-discretionary)
+    # NOTE: excludes other (non-discretionary)
     eligible_search_conducted = search_conducted & (is.na(search_basis) | 
       search_basis %in% c("k9", "consent", "plain view", "probable cause")),
     race_cd = as.integer(subject_race),
@@ -420,7 +412,7 @@ summarise_for_stan <- function(tbl) {
   ) %>%
   summarize(
     num_stops = n(),
-    num_searches = sum(eligible_search_conducted, na.rm = T),
+    num_searches = sum(eligible_search_conducted, na.rm = T), #TODO(amy): make sure we can remove these
     num_hits = sum(eligible_search_conducted & contraband_found, na.rm = T)
   ) %>% 
   ungroup()
@@ -428,11 +420,13 @@ summarise_for_stan <- function(tbl) {
 
 
 format_data_summary_for_stan <- function(d) {
+  # TODO: is pull necessary? --> dollars or with()
   list(
     n_groups = nrow(d),
     n_sub_geographies = n_distinct(pull(d, county_name)),
     n_races = n_distinct(pull(d, subject_race)),
     sub_geography = pull(d, county_cd),
+    # TODO: check this
     legal = pull(d, as.integer(legal)),
     race = pull(d, race_cd),
     stop_count = pull(d, num_stops),

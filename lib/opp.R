@@ -1050,9 +1050,9 @@ opp_run_veil_of_darkness <- function() {
   output_path <- opp_results_path("veil_of_darkness.rds")
   source(here::here("lib", "veil_of_darkness.R"), local = T)
   vod <- list(
-    dst = veil_of_darkness_daylight_savings(),
-    cities = veil_of_darkness_cities(),
-    states = veil_of_darkness_states()
+    dst = veil_of_darkness_daylight_savings()
+    # cities = veil_of_darkness_cities(),
+    # states = veil_of_darkness_states()
   )
   saveRDS(vod, output_path)
   print(str_c("saved veil of darkness results to ", output_path))
