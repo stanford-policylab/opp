@@ -8,11 +8,21 @@ header-includes:
 
 ```{r setup, echo = FALSE}
 opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
-library(here)
+
 pfs <- readRDS(here::here("results", "prima_facie_stats.rds"))
-# vod <- readRDS(here::here("results", "veil_of_darkness.rds"))
+vod <- readRDS(here::here("results", "veil_of_darkness.rds"))
 disp <- readRDS(here::here("results", "disparity.rds"))
 mj <- readRDS(here::here("results", "marijuana_legalization_analysis.rds"))
+```
+
+\begin{center}
+\section{Basic Numbers}
+\end{center}
+
+TODO 
+
+```{r basic_numbers}
+# TODO(danj/amyshoe)
 ```
 
 \begin{center}
@@ -20,10 +30,15 @@ mj <- readRDS(here::here("results", "marijuana_legalization_analysis.rds"))
 \end{center}
 
 ```{r stop_rates}
-kable(pfs$stop_rates)
+pfs$stop_rates %>% 
+  filter(subject_race %in% c("black", "white", "hispanic")) %>% 
+  kable()
 ```
+
 ```{r search_rates}
-kable(pfs$search_rates)
+pfs$search_rates %>% 
+  filter(subject_race %in% c("black", "white", "hispanic")) %>% 
+  kable()
 ```
 
 
@@ -32,10 +47,24 @@ kable(pfs$search_rates)
 \section{Veil of Darkness}
 \end{center}
 
-```{r veil_of_darkness}
-# TODO(danj/amyshoe):
+
+```{r veil_of_darkness-plot}
+vod$states$plots$time_sliced$`Statewide, TX`
 ```
 
+```{r veil_of_darkness-mod}
+bind_rows(
+  vod$dst$coefficients %>% 
+    mutate(model = "DST: cities and counties"),  
+  vod$cities$coefficients %>% 
+    mutate(model = "Full year: cities"),
+  vod$states$coefficients %>% 
+    mutate(model = "Full year: states")
+) %>% 
+  select(model, is_dark, std_error, everything()) %>% 
+  kable()
+
+```
 \newpage
 \begin{center}
 \section{Disparity Analysis}
