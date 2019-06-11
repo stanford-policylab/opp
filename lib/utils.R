@@ -1,12 +1,47 @@
 library(digest)
 library(getopt)
 library(here)
+library(lazyeval)
 library(lubridate)
 library(parallel)
 library(rlang)
 library(stringi)
 library(stringr)
+library(tidylog)
 library(tidyverse)
+
+
+`%|%` <- function(d, func) {
+  # logging pipe; use is identical to %>% except each function in the pipeline
+  # must have the signature <func_name>(tbl, log) where log is a function that
+  # allows a user defined function to log to a global metadata object.
+  # examples:
+  # f <- function(tbl, log) { log("banana"); filter(tbl, v > 5) }
+  # f <- function(tbl, log) { log(list(apple = "banana")); filter(tbl, v > 5) }
+  # the function only needs to return the data tibble
+
+  func_name <- lazyeval::expr_text(func)
+
+  if (get_primary_class(d) != "list") {
+    d <- list(data = d, metadata = list())
+  }
+
+  # add call number suffix to avoid overwriting metadata
+  n <- sum(str_detect(names(d$metadata), str_c("^", func_name)))
+  func_name <- str_c(func_name, "_", n + 1)
+
+  d$metadata[[func_name]] <- list()
+  log_to_metadata <- function(key) {
+    function(info) {
+      d$metadata[[func_name]][[key]] <<- info
+    }
+  }
+  options("tidylog.display" = list(log_to_metadata("dplyr")))
+
+  d$data <- func(d$data, log_to_metadata("custom"))
+
+  d
+}
 
 
 add_data <- function(
