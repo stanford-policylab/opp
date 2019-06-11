@@ -46,7 +46,7 @@ library(tidylog)
   else {
     log_to_metadata("error")("table has 0 rows; no operation performed")
   }
-  d$metadata[[func_name]]$dplyr
+  print(d$metadata[[func_name]]$dplyr)
 
   d
 }
