@@ -28,7 +28,7 @@ library(tidyverse)
 
   # add call number suffix to avoid overwriting metadata
   n <- sum(str_detect(names(d$metadata), str_c("^", func_name)))
-  func_name <- str_c(func_name, "_", n + 1)
+  if (n > 0) { func_name <- str_c(func_name, "_", n + 1) }
 
   d$metadata[[func_name]] <- list()
   log_to_metadata <- function(key) {
