@@ -7,8 +7,9 @@ library(parallel)
 library(rlang)
 library(stringi)
 library(stringr)
-library(tidylog)
 library(tidyverse)
+# NOTE: tidylog ust be loaded after tidyverse
+library(tidylog)
 
 
 `%|%` <- function(d, func) {
@@ -36,9 +37,16 @@ library(tidyverse)
       d$metadata[[func_name]][[key]] <<- info
     }
   }
-  options("tidylog.display" = list(log_to_metadata("dplyr")))
+  options("tidylog.display" = list(message, log_to_metadata("dplyr")))
 
-  d$data <- func(d$data, log_to_metadata("custom"))
+  if (nrow(d$data) > 0) {
+    print(str_c("Running ", func_name, "..."))
+    d$data <- func(d$data, log_to_metadata("custom"))
+  }
+  else {
+    log_to_metadata("error")("table has 0 rows; no operation performed")
+  }
+  d$metadata[[func_name]]$dplyr
 
   d
 }
