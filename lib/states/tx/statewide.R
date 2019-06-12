@@ -13,7 +13,7 @@ load_raw <- function(raw_data_dir, n_max) {
   )
   county_codes$data <- select(
     county_codes$data,
-    HA_COUNTY = LK_Code,
+    HA_COUNTY = LK_Code, 
     county_name = LK_Description,
     county_fips = FIPS_County_Code
   )
@@ -206,6 +206,7 @@ clean <- function(d, helpers) {
       prefix_right = "milepost: ",
       sep=", "
     ),
+    county_name = str_c(county_name, " County"),
     lat = parse_number(HA_LATITUDE) / 1e6,
     lng = parse_number(HA_LONGITUDE) / 1e6,
     subject_first_name = str_to_title(HA_N_FIRST_DRVR),
