@@ -39,14 +39,14 @@ library(tidylog)
   }
   options("tidylog.display" = list(message, log_to_metadata("dplyr")))
 
-  if (nrow(d$data) > 0) {
-    print(str_c("Running ", func_name, "..."))
-    d$data <- func(d$data, log_to_metadata("custom"))
-  }
-  else {
-    log_to_metadata("error")("table has 0 rows; no operation performed")
-  }
-  print(d$metadata[[func_name]]$dplyr)
+  d$data <- func(d$data, log_to_metadata("custom"))
+  # if (nrow(d$data) > 0) {
+  #   print(str_c("Running ", func_name, "..."))
+  #   d$data <- func(d$data, log_to_metadata("custom"))
+  # }
+  # else {
+  #   log_to_metadata("error")("table has 0 rows; no operation performed")
+  # }
 
   d
 }
