@@ -597,6 +597,7 @@ opp_load_all_clean_data <- function(only = NULL) {
 
 
 opp_load_all_data <- function(only = NULL, include_raw = T) {
+  warning("raw_* columns will be removed due to type conflicts")
   load_func <- ifelse(include_raw, opp_load_data, opp_load_clean_data)
   if (is.null(only)) { only <- opp_available() }
     par_pmap(
@@ -606,7 +607,8 @@ opp_load_all_data <- function(only = NULL, include_raw = T) {
           load_func(state, city),
           state = state,
           city = city
-        )
+        ) %>%
+        select(-matches("raw_"))
       }
     ) %>% bind_rows()
 }

@@ -9,13 +9,13 @@ load <- function(analysis_name = "vod") {
   } else if (analysis_name == "mj") {
     # TODO(danj)
   }
-  tbl <- tribble(
-    ~state, ~city,
-    "WA", "Seattle",
-    "WA", "Statewide",
-    "CT", "Hartford"
-  )
-  # tbl <- opp_available()
+  # tbl <- tribble(
+  #   ~state, ~city,
+  #   "WA", "Seattle",
+  #   "WA", "Statewide",
+  #   "CT", "Hartford"
+  # )
+  tbl <- opp_available()
   d <-
     opp_apply(
       function(state, city) {
@@ -41,6 +41,8 @@ load_vod_for <- function(state, city) {
 
 load_base_for <- function(state, city) {
   opp_load_clean_data(state, city) %>%
+  # NOTE: raw columns are not used in the analyses
+  select(-matches("raw_")) %>%
   mutate(state = state, city = city) %|%
   filter_to_vehicular_stops %|%
   filter_to_analysis_years %|%
