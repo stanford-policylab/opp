@@ -34,13 +34,13 @@ library(tidylog)
   d$metadata[[func_name]] <- list()
   log_to_metadata <- function(key) {
     function(info) {
-      d$metadata[[func_name]][[key]] <<- info
+      d$metadata[[func_name]][[key]] <<- c(d$metadata[[func_name]][[key]], info)
     }
   }
-  options("tidylog.display" = list(message, log_to_metadata("dplyr")))
+  options("tidylog.display" = list(log_to_metadata("dplyr")))
 
   if (nrow(d$data) > 0) {
-    print(str_c("Running ", func_name, "..."))
+    print(str_c(func_name, "..."))
     d$data <- func(d$data, log_to_metadata("custom"))
   }
   else {
@@ -722,6 +722,15 @@ null_rates <- function(tbl) {
     nulls_tbl,
     colnames = c("feature", "null rate"),
     f = pretty_percent
+  )
+}
+
+
+n_distinct_values <- function(tbl) {
+  dvals_tbl <- tbl %>% summarize_all(funs(n_distinct))
+  transpose_one_line_table(
+    dvals_tbl,
+    colnames = c("feature", "n distinct values"),
   )
 }
 
