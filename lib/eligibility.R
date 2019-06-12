@@ -9,7 +9,12 @@ load <- function(analysis_name = "vod") {
   } else if (analysis_name == "mj") {
     # TODO(danj)
   }
-  tbl <- tribble(~state, ~city, "WA", "Seattle", "CT", "Hartford")
+  tbl <- tribble(
+    ~state, ~city,
+    "WA", "Seattle",
+    "WA", "Statewide",
+    "CT", "Hartford"
+  )
   # tbl <- opp_available()
   d <-
     opp_apply(
@@ -53,6 +58,7 @@ filter_to_vehicular_stops <- function(tbl, log) {
 
 
 filter_to_analysis_years <- function(tbl, log) {
+  # TODO: add a minimum number of records?
   tbl <- filter(tbl, year(date) %in% 2011:2018)
   log(list(date_range = range(tbl$date)))
   tbl
@@ -61,14 +67,14 @@ filter_to_analysis_years <- function(tbl, log) {
 
 filter_to_analysis_races <- function(tbl, log) {
   if (!("subject_race") %in% colnames(tbl)) {
-    log("subject_race undefined")
+    log(list(reason_eliminated = "subject_race undefined"))
     return(tibble())
   }
   log(list(type_proportion = count_pct(tbl, subject_race)))
   threshold <- 0.65
   if (coverage_rate(tbl$subject_race) < threshold) {
     pct <- threshold * 100
-    msg <- sprintf("subject_race covered less than %g% of the time", pct)
+    msg <- sprintf("subject_race non-null less than %g%% of the time", pct)
     log(list(reason_eliminated = msg))
     return(tibble())
   }
@@ -78,8 +84,9 @@ filter_to_analysis_races <- function(tbl, log) {
 
 
 keep_only_highway_patrol_if_state <- function(tbl, log) {
-
-  if (tbl$city[[1]] == "Statewide") {
+  # NOTE: if it's a state and there are multiple departments listed,
+  # filter to only the highway patrol stops
+  if (tbl$city[[1]] == "Statewide" & "department_name" %in% colnames(tbl)) {
     filter(
       tbl,
       case_when(
