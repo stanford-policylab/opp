@@ -19,11 +19,15 @@ mj <- readRDS(here::here("results", "marijuana_legalization_analysis.rds"))
 \section{Basic Numbers}
 \end{center}
 
-TODO 
+We have collected and released a dataset of 
+`r pfs$basic_counts$n_stops_collected` traffic stops carried out by 
+`r pfs$basic_counts$n_states_collected` state patrol agencies and 
+`r pfs$basic_counts$n_cities_collected` municipal police departments.
 
-```{r basic_numbers}
-# TODO(danj/amyshoe)
-```
+We analyzed a unique dataset detailing 
+`r pfs$basic_counts$n_stops_analyzed` traffic stops carried out by 
+`r pfs$basic_counts$n_states_analyzed` state patrol agencies and 
+`r pfs$basic_counts$n_cities_analyzed` municipal police departments.
 
 \begin{center}
 \section{Prima Facie Stats}
@@ -63,15 +67,19 @@ bind_rows(
 ) %>% 
   select(model, is_dark, std_error, everything()) %>% 
   kable()
-
 ```
+
+
 \newpage
+
 \begin{center}
-\section{Disparity Analysis}
+\section{Search Disparity Analysis}
 \end{center}
+
 \begin{center}
 \subsection{Outcome test results}
 \end{center}
+
 ```{r disparity-city-hit_rates-table}
 kable(disp$city$outcome$results$aggregate_hit_rates)
 ```
