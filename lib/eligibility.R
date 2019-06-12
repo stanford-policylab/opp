@@ -5,6 +5,14 @@ eligibility <- function() {
   d <- opp_apply(load, opp_available())
 }
 
+t <- function() {
+  as_tibble(mtcars) %|%
+  f
+}
+
+f <- function(tbl, log) {
+  filter(tbl, disp > 100)
+}
 
 load <- function(state, city) {
   opp_load_clean_data(state, city) %|%
