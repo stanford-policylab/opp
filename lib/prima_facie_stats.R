@@ -6,6 +6,7 @@ prima_facie_stats <- function(
   only = opp_locations_used_in_analyses(remove_locs_missing_hispanic = T)
 ) {
   list(
+    basic_counts = count_stops_and_locations(only),
     stop_rates = aggregate_stop_stats_all_combined(only),
     search_rates = aggregate_stats_all_combined(only, "search_conducted"),
     # NOTE: example steps for
@@ -31,6 +32,23 @@ prima_facie_stats <- function(
   )
 }
 
+count_stops_and_locations <- function(only = opp_locations_used_in_analyses()) {
+  d <- opp_load_all_clean_data(only)
+  d_all <- opp_load_all_clean_data()
+  available_locations <- opp_available()
+  list(
+    n_stops_analyzed = nrow(d),
+    n_states_analyzed = only %>% filter(city == "Statewide") %>% nrow(),
+    n_cities_analyzed = only %>% filter(city != "Statewide") %>% nrow(),
+    n_stops_collected = nrow(d_all),
+    n_states_collected = available_locations %>% 
+      filter(city == "Statewide") %>% 
+      nrow(),
+    n_cities_collected = available_locations %>% 
+      filter(city != "Statewide") %>% 
+      nrow()
+  )
+}
 
 aggregate_stop_stats_all_combined <- function(
   only = opp_locations_used_in_analyses(),
