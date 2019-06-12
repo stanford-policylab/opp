@@ -82,6 +82,28 @@ clean <- function(d, helpers) {
         str_to_title(city),
         str_c(str_to_title(city), " County")
       ),
+      # NOTE: deal with all the many many typos
+      county_name = str_replace(county_name, "Ablany|Alabany", "Albany"),
+      county_name = str_replace(county_name, "Bighorn", "Big Horn"),
+      county_name = str_replace(
+        county_name, 
+        "Cambell|Campell|Campbelle|Capmbell", 
+        "Campbell"
+      ),
+      county_name = str_replace(
+        county_name, 
+        "Carban|Carbn|Carboncounty", 
+        "Carbon"
+      ),
+      county_name = str_replace(county_name, "Coverse", "Converse"),
+      county_name = str_replace(county_name, "Laramia |Larami |Laram ", "Laramie "),
+      county_name = str_replace(county_name, "Linciln|Lincon", "Lincoln"),
+      county_name = str_replace(
+        county_name, 
+        " Coutny| Counry| Coundy| Coutry| Couinty| Country| Ounty| Cunty|( Count$)", 
+        ""
+      ),
+      county_name = str_replace(county_name, " Co | Wy ", " "),
       department_id = emdivision,
       subject_race = tr_race[raw_race],
       subject_sex = tr_sex[raw_sex],

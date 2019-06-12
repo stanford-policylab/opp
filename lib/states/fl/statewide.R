@@ -262,6 +262,8 @@ clean <- function(d, helpers) {
       ),
       subject_sex = fast_tr(Sex, tr_sex),
       county_name = str_c(str_to_title(county_name), " County"),
+      # Correct typo in Flagler County
+      county_name = str_replace_all(county_name, "Flager", "Flagler"),
       unit = if_else(
         is.na(OfficerOrgUnit_new),
         OfficerOrgUnit_old,
