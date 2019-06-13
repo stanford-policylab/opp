@@ -900,6 +900,10 @@ We’re excited to see what you come up with!
   SubjectRaceCode, SubjectSexCode, and SubjectAge, reducing the number of rows
   by ~1.1%
 - search rate is suspiciously high, ~28%
+- hit rate is suspiciously low, ~1%; we exclude Hartford from outcome and
+  threshold tests because contraband recovered is so suspiciously low that we
+  don't trust it, plus it's so low that it's not even enough data to run the 
+  statistical tests reliably.
 - subject_race is based on SubjectEthnicityCode and SubjectRaceCode, which are
   based on raw_subject_ethnicity_code and raw_subject_race_code
 - search_conducted and search_basis are derived from SearchAuthorizationCode,
