@@ -5,7 +5,7 @@ load <- function(analysis_name = "vod") {
   if (analysis_name == "vod") {
     load_func <- load_vod_for
   } else if (analysis_name == "disparity") {
-    # TODO(amyshoe)
+    load_func <- load_disparity_for
   } else if (analysis_name == "mj") {
     # TODO(danj)
   }
@@ -36,8 +36,17 @@ load <- function(analysis_name = "vod") {
 
 load_vod_for <- function(state, city) {
   load_base_for(state, city)
+  # TODO(danj/amyshoe): Do we want to add the dst and non-dst filters here?
+  # (two separate functions, one filtering to complete years, on filtering 
+  # to complete season-ranges)
 }
 
+load_disparity_for <- function(state, city) {
+  load_base_for(state, city) %|%
+    filter_to_sufficient_search_info %|%
+    filter_to_discretionary_searches %|%
+    filter_to_sufficient_contraband_info
+}
 
 load_base_for <- function(state, city) {
   opp_load_clean_data(state, city) %>%
@@ -132,3 +141,76 @@ add_subgeography <- function(tbl, log) {
 
   bind_cols(tbl, subgeography)
 }
+
+filter_to_sufficient_search_info <- function(tbl, log) {
+  if (!("search_conducted") %in% colnames(tbl)) {
+    log(list(reason_eliminated = "search info not collected"))
+    return(tibble())
+  }
+  log(list(type_proportion = count_pct(tbl, search_conducted)))
+  threshold <- 0.5
+  if (coverage_rate(tbl$search_conducted) < threshold) {
+    pct <- threshold * 100
+    msg <- sprintf("search_conducted non-null less than %g%% of the time", pct)
+    log(list(reason_eliminated = msg))
+    return(tibble())
+  }
+  tbl <- filter(tbl, !is.na(search_conducted))
+  tbl
+}
+
+filter_to_discretionary_searches <- function(tbl, log) {
+  if (!("search_basis") %in% colnames(tbl)) {
+    log(list(missing_info = "search basis not given; keeping all searches"))
+    return(tbl)
+  }
+  if (tbl$state[1] == "IL") {
+    log(list(exception = 
+      "search basis unreliable (see data readme); keeping all searches"
+    ))
+    return(tbl)
+  }
+  log(list(type_proportion = tbl %>% 
+             filter(search_conducted) %>% 
+             count_pct(search_basis)
+  ))
+  threshold <- 0.5
+  if (tbl %>% 
+      filter(search_conducted) %>% 
+      pull(search_basis) %>% 
+      coverage_rate() < threshold) {
+    pct <- threshold * 100
+    msg <- sprintf(
+      "search_basis non-null less than %g%% of the time when search_conducted;
+      keeping all searches", pct)
+    log(list(reason_eliminated = msg))
+    return(tbl)
+  }
+  # NOTE: Excludes "other" (i.e., arrest/warrant, probation/parole, inventory)
+  tbl <- filter(tbl, search_basis %in% 
+                  c("plain view", "consent", "probable cause", "k9"))
+  tbl
+}
+
+filter_to_sufficient_contraband_info <- function(tbl, log) {
+  if (!("contraband_found") %in% colnames(tbl)) {
+    log(list(reason_eliminated = "contraband info not collected"))
+    return(tibble())
+  }
+  log(list(type_proportion = count_pct(tbl, search_conducted, contraband_found)))
+  threshold <- 0.5
+  if (tbl %>% 
+        filter(search_conducted) %>% 
+        pull(contraband_found) %>% 
+        coverage_rate() < threshold) { 
+    pct <- threshold * 100
+    msg <- sprintf(
+      "contraband_found non-null less than %g%% of the time when search_conducted", 
+      pct
+    )
+    log(list(reason_eliminated = msg))
+    return(tibble())
+  }
+  tbl
+}
+
