@@ -52,6 +52,15 @@ load_disparity_for <- function(state, city) {
 }
 
 
+load_mj_for <- function(state, city) {
+  load_base_for(state, city) %|%
+  filter_to_state_data_only %|%
+  filter_to_locations_with_data_before_and_after_legalization %|%
+  filter_out_states_with_unreliable_search_data %|%
+  filter_to_sufficient_search_info %|%
+}
+
+
 load_base_for <- function(state, city) {
   opp_load_clean_data(state, city) %>%
   # NOTE: raw columns are not used in the analyses
@@ -240,4 +249,34 @@ filter_to_sufficient_contraband_info <- function(tbl, log) {
     return(tibble())
   }
   tbl
+}
+
+
+filter_to_state_data_only <- function(tbl, log) {
+  filter(tbl, city == "Statewide")
+}
+
+
+filter_to_locations_with_data_before_and_after_legalization <- function(tbl, log) {
+  date_range <- range(tbl$date, na.rm = TRUE)
+  start_year <- year(date_range[1])
+  end_year <- year(date_range[2])
+  if (start_year < 2012 & end_year > 2012) {
+    return(tbl)
+  } else {
+    log("state does not have data before and after 2012")
+    return(tibble())
+  }
+}
+
+
+filter_out_states_with_unreliable_search_data <- function(tbl, log) {
+  msg <- c(
+    "IL removed because search recording policy changes year to year",
+    "MD removed because before 2013 we are only given annual data",
+    "MO removed because it's all annual data",
+    "NE removed because it has unreliable quarterly dates, i.e. in 2012 all patrol stops are in Q1"
+  )
+  log(msg)
+  filter(tbl, !(state %in% c("IL", "MD", "MO", "NE")))
 }
