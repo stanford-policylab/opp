@@ -151,7 +151,7 @@ filter_to_sufficient_search_info <- function(tbl, log) {
     log(list(reason_eliminated = "search info not collected"))
     return(tibble())
   }
-  log(list(type_proportion = count_pct(tbl, search_conducted)))
+  log(list(search_proportion = count_pct(tbl, search_conducted)))
   threshold <- 0.5
   if (coverage_rate(tbl$search_conducted) < threshold) {
     pct <- threshold * 100
@@ -169,16 +169,13 @@ filter_to_discretionary_searches <- function(tbl, log) {
     log(list(missing_info = "search basis not given; keeping all searches"))
     return(tbl)
   }
-  if (tbl$state[1] == "IL") {
-    log(list(exception = 
-      "search basis unreliable (see data readme); keeping all searches"
-    ))
-    return(tbl)
-  }
-  log(list(type_proportion = tbl %>% 
+  log(list(search_basis_proportion = tbl %>% 
              filter(search_conducted) %>% 
              count_pct(search_basis)
   ))
+  # NOTE: If, among searches, we have search_basis info less than 50% of the 
+  # time, we consider the search_basis column too unreliable to use, and 
+  # simply use all searches.
   threshold <- 0.5
   if (tbl %>% 
       filter(search_conducted) %>% 
@@ -188,7 +185,7 @@ filter_to_discretionary_searches <- function(tbl, log) {
     msg <- sprintf(
       "search_basis non-null less than %g%% of the time when search_conducted;
       keeping all searches", pct)
-    log(list(reason_eliminated = msg))
+    log(list(exception = msg))
     return(tbl)
   }
   # NOTE: Excludes "other" (i.e., arrest/warrant, probation/parole, inventory)
@@ -203,7 +200,8 @@ filter_to_sufficient_contraband_info <- function(tbl, log) {
     log(list(reason_eliminated = "contraband info not collected"))
     return(tibble())
   }
-  log(list(coverage = count_pct(tbl, search_conducted, contraband_found)))
+  log(list(contraband_proportion = 
+             count_pct(tbl, search_conducted, contraband_found)))
   threshold <- 0.5
   if (tbl %>% 
         filter(search_conducted) %>% 
