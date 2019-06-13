@@ -9,12 +9,13 @@ load <- function(analysis_name = "vod") {
   } else if (analysis_name == "mj") {
     load_func <- load_mj_for
   }
-  tbl <- tribble(
-    ~state, ~city,
-    "CT", "Hartford",
-    "MD", "Statewide",
-    "MD", "Baltimore"
-  )
+  # NOTE: test locations
+  # tbl <- tribble(
+  #   ~state, ~city,
+  #   "WA", "Seattle",
+  #   "WA", "Statewide",
+  #   "CT", "Hartford"
+  # )
   tbl <- opp_available()
   d <-
     opp_apply(
@@ -31,7 +32,18 @@ load <- function(analysis_name = "vod") {
       tbl
     ) %>% purrr::transpose()
 
-  list(data = bind_rows(d$data), metadata = c(d$metadata))
+  # NOTE: metadata has multiple keys with the same value, i.e.
+  # list(WA = list(Seattle = ...), WA = list(Statewide = ...))
+  # this consolidates them to
+  # list(WA = list(Seattle = ..., Statewide = ...))
+  nested_metadata <- list()
+  for (key in unique(names(d$metadata))) {
+    v <- unlist(d$metadata[names(d$metadata) == key], recursive = F)
+    names(v) <- str_replace(names(v), "^\\w+\\.", "")
+    nested_metadata[[key]] <- v
+  }
+
+  list(data = bind_rows(d$data), metadata = nested_metadata)
 }
 
 
@@ -271,7 +283,8 @@ filter_to_locations_with_data_before_and_after_legalization <- function(tbl, log
   if (start_year < 2012 & end_year > 2012) {
     return(tbl)
   } else {
-    log("state does not have data before and after 2012")
+    msg <- "state does not have data before and after 2012"
+    log(list(elimination_reason = msg))
     return(tibble())
   }
 }
