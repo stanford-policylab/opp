@@ -34,6 +34,7 @@ load <- function(analysis_name = "vod") {
   list(data = bind_rows(d$data), metadata = c(d$metadata))
 }
 
+
 load_vod_for <- function(state, city) {
   load_base_for(state, city)
   # TODO(danj/amyshoe): Do we want to add the dst and non-dst filters here?
@@ -41,12 +42,14 @@ load_vod_for <- function(state, city) {
   # to complete season-ranges)
 }
 
+
 load_disparity_for <- function(state, city) {
   load_base_for(state, city) %|%
     filter_to_sufficient_search_info %|%
     filter_to_discretionary_searches %|%
     filter_to_sufficient_contraband_info
 }
+
 
 load_base_for <- function(state, city) {
   opp_load_clean_data(state, city) %>%
@@ -142,6 +145,7 @@ add_subgeography <- function(tbl, log) {
   bind_cols(tbl, subgeography)
 }
 
+
 filter_to_sufficient_search_info <- function(tbl, log) {
   if (!("search_conducted") %in% colnames(tbl)) {
     log(list(reason_eliminated = "search info not collected"))
@@ -158,6 +162,7 @@ filter_to_sufficient_search_info <- function(tbl, log) {
   tbl <- filter(tbl, !is.na(search_conducted))
   tbl
 }
+
 
 filter_to_discretionary_searches <- function(tbl, log) {
   if (!("search_basis") %in% colnames(tbl)) {
@@ -192,12 +197,13 @@ filter_to_discretionary_searches <- function(tbl, log) {
   tbl
 }
 
+
 filter_to_sufficient_contraband_info <- function(tbl, log) {
   if (!("contraband_found") %in% colnames(tbl)) {
     log(list(reason_eliminated = "contraband info not collected"))
     return(tibble())
   }
-  log(list(type_proportion = count_pct(tbl, search_conducted, contraband_found)))
+  log(list(coverage = count_pct(tbl, search_conducted, contraband_found)))
   threshold <- 0.5
   if (tbl %>% 
         filter(search_conducted) %>% 
@@ -213,4 +219,3 @@ filter_to_sufficient_contraband_info <- function(tbl, log) {
   }
   tbl
 }
-
