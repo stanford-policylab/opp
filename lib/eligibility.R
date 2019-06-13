@@ -38,6 +38,10 @@ load <- function(analysis_name = "vod") {
   # list(WA = list(Seattle = ..., Statewide = ...))
   nested_metadata <- list()
   for (key in unique(names(d$metadata))) {
+    # NOTE: unlist either removes the top and next level names when
+    # use.names = F or it combines them when use.names = T, i.e.
+    # WA.Seattle and WA.Statewide; so, we do a little gymnastics here
+    # to get a clean WA$Seattle and WA$Statewide type access
     v <- unlist(d$metadata[names(d$metadata) == key], recursive = F)
     names(v) <- str_replace(names(v), "^\\w+\\.", "")
     nested_metadata[[key]] <- v
