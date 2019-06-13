@@ -7,7 +7,7 @@ load <- function(analysis_name = "vod") {
   } else if (analysis_name == "disparity") {
     load_func <- load_disparity_for
   } else if (analysis_name == "mj") {
-    # TODO(danj)
+    load_func <- load_mj_for
   }
   tbl <- tribble(
     ~state, ~city,
@@ -48,7 +48,7 @@ load_disparity_for <- function(state, city) {
     filter_to_locations_with_subgeography %|%
     filter_to_sufficient_search_info %|%
     filter_to_discretionary_searches %|%
-    filter_to_sufficient_contraband_info
+    filter_to_sufficient_contraband_info 
 }
 
 
@@ -57,7 +57,7 @@ load_mj_for <- function(state, city) {
   filter_to_state_data_only %|%
   filter_to_locations_with_data_before_and_after_legalization %|%
   filter_out_states_with_unreliable_search_data %|%
-  filter_to_sufficient_search_info %|%
+  filter_to_sufficient_search_info 
 }
 
 
@@ -235,16 +235,23 @@ filter_to_sufficient_contraband_info <- function(tbl, log) {
   }
   log(list(contraband_proportion = 
              count_pct(tbl, search_conducted, contraband_found)))
-  threshold <- 0.5
+  null_rate_threshold <- 0.5
   if (tbl %>% 
         filter(search_conducted) %>% 
         pull(contraband_found) %>% 
-        coverage_rate() < threshold) { 
-    pct <- threshold * 100
+        coverage_rate() < null_rate_threshold) { 
+    pct <- null_rate_threshold * 100
     msg <- sprintf(
       "contraband_found non-null less than %g%% of the time when search_conducted", 
       pct
     )
+    log(list(reason_eliminated = msg))
+    return(tibble())
+  }
+  hit_rate_threshold <- 0.02
+  if (mean(filter(tbl, search_conducted)$contraband_found) < hit_rate_threshold) {
+    pct <- hit_rate_threshold * 100
+    msg <- sprintf("hit rate is less than %g%%; suspiciously low", pct)
     log(list(reason_eliminated = msg))
     return(tibble())
   }
@@ -280,3 +287,4 @@ filter_out_states_with_unreliable_search_data <- function(tbl, log) {
   log(msg)
   filter(tbl, !(state %in% c("IL", "MD", "MO", "NE")))
 }
+
