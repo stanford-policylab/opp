@@ -9,12 +9,12 @@ load <- function(analysis_name = "vod") {
   } else if (analysis_name == "mj") {
     # TODO(danj)
   }
-  # tbl <- tribble(
-  #   ~state, ~city,
-  #   "WA", "Seattle",
-  #   "WA", "Statewide",
-  #   "CT", "Hartford"
-  # )
+  tbl <- tribble(
+    ~state, ~city,
+    "CT", "Hartford",
+    "MD", "Statewide",
+    "MD", "Baltimore"
+  )
   tbl <- opp_available()
   d <-
     opp_apply(
@@ -45,6 +45,7 @@ load_vod_for <- function(state, city) {
 
 load_disparity_for <- function(state, city) {
   load_base_for(state, city) %|%
+    filter_to_locations_with_subgeography %|%
     filter_to_sufficient_search_info %|%
     filter_to_discretionary_searches %|%
     filter_to_sufficient_contraband_info
@@ -60,7 +61,8 @@ load_base_for <- function(state, city) {
   filter_to_analysis_years %|%
   filter_to_analysis_races %|%
   keep_only_highway_patrol_if_state %|%
-  add_subgeography
+  add_subgeography %|%
+  filter_out_specific_subgeographies
 }
 
 
@@ -141,10 +143,32 @@ add_subgeography <- function(tbl, log) {
     ) %>%
     mutate(selected = feature == subgeography_selected)
   ))
-
+  
+  colnames(subgeography) <- "subgeography"
   bind_cols(tbl, subgeography)
 }
 
+filter_out_specific_subgeographies <- function(tbl, log) {
+  if(tbl$city[[1]] == "Philadelphia")
+    # NOTE: This is not a real district; it's mostly airport and HQ
+    tbl <- filter(tbl, subgeography != "77")
+  if(tbl$city[[1]] == "San Diego")
+    tbl <- filter(tbl, subgeography != "Unknown")
+  if(tbl$city[[1]] == "Nashville")
+    tbl <- filter(tbl, subgeography != "U")
+  tbl
+}
+
+filter_to_locations_with_subgeography <- function(tbl, log) {
+  threshold <- 0.6
+  if(coverage_rate(tbl$subgeography) < threshold) {
+    pct <- threshold * 100
+    msg <- sprintf("subgeography non-null less than %g%% of the time", pct)
+    log(list(reason_eliminated = msg))
+    return(tibble())
+  }
+  tbl
+}
 
 filter_to_sufficient_search_info <- function(tbl, log) {
   if (!("search_conducted") %in% colnames(tbl)) {
