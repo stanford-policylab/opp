@@ -187,7 +187,7 @@ filter_to_discretionary_searches <- function(tbl, log) {
     return(tbl)
   }
   # NOTE: Excludes "other" (i.e., arrest/warrant, probation/parole, inventory)
-  tbl <- filter(tbl, search_basis %in% 
+  tbl <- filter(tbl, is.na(search_basis) | search_basis %in% 
                   c("plain view", "consent", "probable cause", "k9"))
   tbl
 }
