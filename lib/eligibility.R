@@ -2,6 +2,16 @@ source("opp.R")
 
 
 load <- function(analysis_name = "vod") {
+
+  # NOTE: test locations
+  tbl <- tribble(
+    ~state, ~city,
+    "WA", "Seattle",
+    "WA", "Statewide",
+    "CT", "Hartford"
+  )
+  # tbl <- opp_available()
+
   if (analysis_name == "vod") {
     load_func <- load_vod_for
   } else if (analysis_name == "disparity") {
@@ -9,14 +19,7 @@ load <- function(analysis_name = "vod") {
   } else if (analysis_name == "mj") {
     load_func <- load_mj_for
   }
-  # NOTE: test locations
-  # tbl <- tribble(
-  #   ~state, ~city,
-  #   "WA", "Seattle",
-  #   "WA", "Statewide",
-  #   "CT", "Hartford"
-  # )
-  tbl <- opp_available()
+
   d <-
     opp_apply(
       function(state, city) {
@@ -32,22 +35,10 @@ load <- function(analysis_name = "vod") {
       tbl
     ) %>% purrr::transpose()
 
-  # NOTE: metadata has multiple keys with the same value, i.e.
-  # list(WA = list(Seattle = ...), WA = list(Statewide = ...))
-  # this consolidates them to
-  # list(WA = list(Seattle = ..., Statewide = ...))
-  nested_metadata <- list()
-  for (key in unique(names(d$metadata))) {
-    # NOTE: unlist either removes the top and next level names when
-    # use.names = F or it combines them when use.names = T, i.e.
-    # WA.Seattle and WA.Statewide; so, we do a little gymnastics here
-    # to get a clean WA$Seattle and WA$Statewide type access
-    v <- unlist(d$metadata[names(d$metadata) == key], recursive = F)
-    names(v) <- str_replace(names(v), "^\\w+\\.", "")
-    nested_metadata[[key]] <- v
-  }
-
-  list(data = bind_rows(d$data), metadata = nested_metadata)
+  list(
+    data = bind_rows(d$data),
+    metadata = collapse_duplicate_keys(d$metadata)
+  )
 }
 
 
@@ -61,16 +52,15 @@ load_vod_for <- function(state, city) {
 
 load_disparity_for <- function(state, city) {
   load_base_for(state, city) %|%
-    filter_to_locations_with_subgeography %|%
-    filter_to_sufficient_search_info %|%
-    filter_to_discretionary_searches %|%
-    filter_to_sufficient_contraband_info 
+  filter_to_locations_with_subgeography %|%
+  filter_to_sufficient_search_info %|%
+  filter_to_discretionary_searches %|%
+  filter_to_sufficient_contraband_info 
 }
 
 
 load_mj_for <- function(state, city) {
   load_base_for(state, city) %|%
-  filter_to_state_data_only %|%
   filter_to_locations_with_data_before_and_after_legalization %|%
   filter_out_states_with_unreliable_search_data %|%
   filter_to_sufficient_search_info 
@@ -82,12 +72,12 @@ load_base_for <- function(state, city) {
   # NOTE: raw columns are not used in the analyses
   select(-matches("raw_")) %>%
   mutate(state = state, city = city) %|%
+  keep_only_highway_patrol_if_state %|%
   filter_to_vehicular_stops %|%
   filter_to_analysis_years %|%
   filter_to_analysis_races %|%
-  keep_only_highway_patrol_if_state %|%
   add_subgeography %|%
-  filter_out_specific_subgeographies
+  filter_out_anomalous_subgeographies
 }
 
 
@@ -173,16 +163,20 @@ add_subgeography <- function(tbl, log) {
   bind_cols(tbl, subgeography)
 }
 
-filter_out_specific_subgeographies <- function(tbl, log) {
-  if(tbl$city[[1]] == "Philadelphia")
-    # NOTE: This is not a real district; it's mostly airport and HQ
-    tbl <- filter(tbl, subgeography != "77")
-  if(tbl$city[[1]] == "San Diego")
-    tbl <- filter(tbl, subgeography != "Unknown")
-  if(tbl$city[[1]] == "Nashville")
-    tbl <- filter(tbl, subgeography != "U")
-  tbl
+
+filter_out_anamolous_subgeographies <- function(tbl, log) {
+  filter(
+    tbl,
+    case_when(
+      # NOTE: This is not a real district; it's mostly airport and HQ
+      city == "Philadelphia" ~ subgeography != "77",
+      city == "San Diego" ~ subgeography != "Unknown",
+      city == "Nashville" ~ subgeography != "U",
+      TRUE ~ TRUE
+    )
+  )
 }
+
 
 filter_to_locations_with_subgeography <- function(tbl, log) {
   threshold <- 0.6
@@ -194,6 +188,7 @@ filter_to_locations_with_subgeography <- function(tbl, log) {
   }
   tbl
 }
+
 
 filter_to_sufficient_search_info <- function(tbl, log) {
   if (!("search_conducted") %in% colnames(tbl)) {
@@ -275,11 +270,6 @@ filter_to_sufficient_contraband_info <- function(tbl, log) {
 }
 
 
-filter_to_state_data_only <- function(tbl, log) {
-  filter(tbl, city == "Statewide")
-}
-
-
 filter_to_locations_with_data_before_and_after_legalization <- function(tbl, log) {
   date_range <- range(tbl$date, na.rm = TRUE)
   start_year <- year(date_range[1])
@@ -305,3 +295,7 @@ filter_out_states_with_unreliable_search_data <- function(tbl, log) {
   filter(tbl, !(state %in% c("IL", "MD", "MO", "NE")))
 }
 
+
+filter_out_subeographies_with_insufficent_data <- function(tbl, log) {
+  # TODO
+}

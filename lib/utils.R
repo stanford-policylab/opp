@@ -250,6 +250,21 @@ calculate_if <- function(pred_fun, func) {
 }
 
 
+collapse_duplicate_keys <- function(lst) {
+  new_lst <- list()
+  for (key in unique(names(lst))) {
+    # NOTE: unlist either removes the top and next level names when
+    # use.names = F or it combines them when use.names = T, i.e.
+    # WA.Seattle and WA.Statewide; so, we do a little gymnastics here
+    # to get a clean WA$Seattle and WA$Statewide type access
+    v <- unlist(lst[names(lst) == key], recursive = F)
+    names(v) <- str_replace(names(v), "^\\w+\\.", "")
+    new_lst[[key]] <- v
+  }
+  new_lst
+}
+
+
 comma_num <- function(n) {
 	prettyNum(n, big.mark = ",")
 }
