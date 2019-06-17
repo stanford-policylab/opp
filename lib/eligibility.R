@@ -52,7 +52,7 @@ load_vod_for <- function(state, city) {
 
 load_disparity_for <- function(state, city) {
   load_base_for(state, city) %|%
-  filter_to_locations_with_subgeography %|%
+  filter_to_locations_with_subgeography_by_year %|%
   filter_to_sufficient_search_info %|%
   filter_to_discretionary_searches %|%
   filter_to_sufficient_contraband_info 
@@ -75,7 +75,7 @@ load_base_for <- function(state, city) {
   keep_only_highway_patrol_if_state %|%
   filter_to_vehicular_stops %|%
   filter_to_analysis_years %|%
-  filter_to_analysis_races %|%
+  filter_to_analysis_races_by_year %|%
   add_subgeography %|%
   filter_out_anomalous_subgeographies
 }
@@ -104,7 +104,7 @@ filter_to_analysis_years <- function(tbl, log) {
   tbl
 }
 
-filter_to_analysis_races <- function(tbl, log) {
+filter_to_analysis_races_by_year <- function(tbl, log) {
   if (!("subject_race") %in% colnames(tbl)) {
     log(list(reason_eliminated = "subject_race undefined"))
     return(tibble())
@@ -193,14 +193,20 @@ filter_out_anomalous_subgeographies <- function(tbl, log) {
 }
 
 
-filter_to_locations_with_subgeography <- function(tbl, log) {
+filter_to_locations_with_subgeography_by_year <- function(tbl, log) {
   threshold <- 0.6
-  if(coverage_rate(tbl$subgeography) < threshold) {
-    pct <- threshold * 100
-    msg <- sprintf("subgeography non-null less than %g%% of the time", pct)
-    log(list(reason_eliminated = msg))
-    return(tibble())
-  }
+  years_to_remove <- tbl %>% 
+    mutate(yr = year(date)) %>% 
+    group_by(yr) %>% 
+    summarize(coverage_rate = coverage_rate(subgeography)) %>% 
+    filter(coverage_rate < threshold) %>% 
+    pull(year)
+  pct <- threshold * 100
+  msg <- sprintf(
+    "Removing year %d because subgeography non-null less than %g%% of the time", 
+    years_to_remove, pct)
+  log(list(years_eliminated = msg))
+  tbl <- tbl %>% filter(!(year(date) %in% years_to_remove))
   tbl
 }
 
