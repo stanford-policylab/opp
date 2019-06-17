@@ -171,7 +171,7 @@ add_subgeography <- function(tbl, log) {
 }
 
 
-filter_out_anamolous_subgeographies <- function(tbl, log) {
+filter_out_anomalous_subgeographies <- function(tbl, log) {
   filter(
     tbl,
     case_when(
