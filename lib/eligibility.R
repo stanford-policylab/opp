@@ -34,7 +34,7 @@ load <- function(analysis_name = "vod") {
       },
       tbl
     ) %>% purrr::transpose()
-
+  
   list(
     data = bind_rows(d$data),
     metadata = collapse_duplicate_keys(d$metadata)
@@ -267,7 +267,8 @@ filter_to_sufficient_contraband_info <- function(tbl, log) {
     return(tibble())
   }
   hit_rate_threshold <- 0.02
-  if (mean(filter(tbl, search_conducted)$contraband_found) < hit_rate_threshold) {
+  
+  if (mean(filter(tbl, search_conducted)$contraband_found, na.rm = T) < hit_rate_threshold) {
     pct <- hit_rate_threshold * 100
     msg <- sprintf("hit rate is less than %g%%; suspiciously low", pct)
     log(list(reason_eliminated = msg))
