@@ -100,6 +100,7 @@ filter_to_analysis_years <- function(tbl, log) {
     years_to_remove, threshold
   )
   log(list(years_eliminated = msg))
+  tbl <- tbl %>% filter(!(year(date) %in% years_to_remove))
   tbl
 }
 
@@ -110,12 +111,19 @@ filter_to_analysis_races <- function(tbl, log) {
   }
   log(list(type_proportion = count_pct(tbl, subject_race)))
   threshold <- 0.65
-  if (coverage_rate(tbl$subject_race) < threshold) {
-    pct <- threshold * 100
-    msg <- sprintf("subject_race non-null less than %g%% of the time", pct)
-    log(list(reason_eliminated = msg))
-    return(tibble())
-  }
+  years_to_remove <- tbl %>% 
+    mutate(yr = year(date)) %>% 
+    group_by(yr) %>% 
+    summarize(coverage_rate = coverage_rate(subject_race)) %>% 
+    filter(coverage_rate < threshold) %>% 
+    pull(year)
+  pct <- threshold * 100
+  msg <- sprintf(
+    "Removing year %d because subject_race non-null less than %g%% of the time", 
+    years_to_remove, pct)
+  log(list(years_eliminated = msg))
+  tbl <- tbl %>% filter(!(year(date) %in% years_to_remove))
+  
   tbl <- filter(tbl, subject_race %in% c("white", "black", "hispanic"))
   tbl
 }
