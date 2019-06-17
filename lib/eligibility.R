@@ -105,7 +105,7 @@ filter_to_analysis_years <- function(tbl, log) {
 }
 
 filter_to_analysis_races_by_year <- function(tbl, log) {
-  if (!("subject_race") %in% colnames(tbl)) {
+  if (!("subject_race") %in% colnames(tbl) | coverage_rate(tbl$subject_race) == 0) {
     log(list(reason_eliminated = "subject_race undefined"))
     return(tibble())
   }
@@ -116,7 +116,7 @@ filter_to_analysis_races_by_year <- function(tbl, log) {
     group_by(yr) %>% 
     summarize(coverage_rate = coverage_rate(subject_race)) %>% 
     filter(coverage_rate < threshold) %>% 
-    pull(year)
+    pull(yr)
   pct <- threshold * 100
   msg <- sprintf(
     "Removing year %d because subject_race non-null less than %g%% of the time", 
