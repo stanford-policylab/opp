@@ -200,7 +200,7 @@ filter_to_locations_with_subgeography_by_year <- function(tbl, log) {
     group_by(yr) %>% 
     summarize(coverage_rate = coverage_rate(subgeography)) %>% 
     filter(coverage_rate < threshold) %>% 
-    pull(year)
+    pull(yr)
   pct <- threshold * 100
   msg <- sprintf(
     "Removing year %d because subgeography non-null less than %g%% of the time", 
