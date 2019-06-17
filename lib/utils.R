@@ -42,6 +42,8 @@ library(tidylog)
   if (nrow(d$data) > 0) {
     print(str_c(func_name, "..."))
     d$data <- func(d$data, log_to_metadata("custom"))
+    log_to_metadata("ncols")(ncol(d$data))
+    log_to_metadata("nrows")(nrow(d$data))
   }
   else {
     log_to_metadata("error")("table has 0 rows; no operation performed")

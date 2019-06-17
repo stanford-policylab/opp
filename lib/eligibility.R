@@ -4,13 +4,13 @@ source("opp.R")
 load <- function(analysis_name = "vod") {
 
   # NOTE: test locations
-  # tbl <- tribble(
-  #   ~state, ~city,
-  #   "WA", "Seattle",
-  #   "WA", "Statewide",
-  #   "CT", "Hartford"
-  # )
-  tbl <- opp_available()
+  tbl <- tribble(
+    ~state, ~city,
+    "WA", "Seattle",
+    "WA", "Statewide",
+    "CT", "Hartford"
+  )
+  # tbl <- opp_available()
 
   if (analysis_name == "vod") {
     load_func <- load_vod_for
@@ -23,14 +23,14 @@ load <- function(analysis_name = "vod") {
   d <-
     opp_apply(
       function(state, city) {
-          d <- load_func(state, city)
-          # NOTE: opp_apply already uses state as key for each process/output
-          city <- str_to_title(city)
-          metadata <- list()
-          metadata[[city]] <- list()
-          metadata[[city]] <- d$metadata
-          d$metadata <- metadata
-          d
+        d <- load_func(state, city)
+        # NOTE: opp_apply already uses state as key for each process/output
+        city <- str_to_title(city)
+        metadata <- list()
+        metadata[[city]] <- list()
+        metadata[[city]] <- d$metadata
+        d$metadata <- metadata
+        d
       },
       tbl
     ) %>% purrr::transpose()
@@ -43,7 +43,8 @@ load <- function(analysis_name = "vod") {
 
 
 load_vod_for <- function(state, city) {
-  load_base_for(state, city)
+  load_base_for(state, city) %>%
+  filter_to_locations_with_subgeography
   # TODO(danj/amyshoe): Do we want to add the dst and non-dst filters here?
   # (two separate functions, one filtering to complete years, on filtering 
   # to complete season-ranges)
@@ -55,7 +56,8 @@ load_disparity_for <- function(state, city) {
   filter_to_locations_with_subgeography_by_year %|%
   filter_to_sufficient_search_info %|%
   filter_to_discretionary_searches %|%
-  filter_to_sufficient_contraband_info 
+  filter_to_sufficient_contraband_info %|%
+  filter_to_locations_with_subgeography
 }
 
 
