@@ -4,13 +4,13 @@ source("opp.R")
 load <- function(analysis_name = "vod") {
 
   # NOTE: test locations
-  tbl <- tribble(
-    ~state, ~city,
-    "WA", "Seattle",
-    "WA", "Statewide",
-    "CT", "Hartford"
-  )
-  # tbl <- opp_available()
+  # tbl <- tribble(
+  #   ~state, ~city,
+  #   "WA", "Seattle",
+  #   "WA", "Statewide",
+  #   "CT", "Hartford"
+  # )
+  tbl <- opp_available()
 
   if (analysis_name == "vod") {
     load_func <- load_vod_for
@@ -89,12 +89,19 @@ filter_to_vehicular_stops <- function(tbl, log) {
 
 
 filter_to_analysis_years <- function(tbl, log) {
-  # TODO: add a minimum number of records?
   tbl <- filter(tbl, year(date) %in% 2011:2018)
   log(list(date_range = range(tbl$date)))
+  threshold <- 500
+  years_to_remove <- count(tbl, yr = year(date)) %>%
+    filter(n < threshold) %>% 
+    pull(yr)
+  msg <- sprintf(
+    "Year %d has fewer than %d stops recorded; removing year",
+    years_to_remove, threshold
+  )
+  log(list(years_eliminated = msg))
   tbl
 }
-
 
 filter_to_analysis_races <- function(tbl, log) {
   if (!("subject_race") %in% colnames(tbl)) {
@@ -227,8 +234,8 @@ filter_to_discretionary_searches <- function(tbl, log) {
       coverage_rate() < threshold) {
     pct <- threshold * 100
     msg <- sprintf(
-      "search_basis non-null less than %g%% of the time when search_conducted;
-      keeping all searches", pct)
+      "search_basis non-null less than %g%% of the time when search_conducted; keeping all searches", 
+      pct)
     log(list(exception = msg))
     return(tbl)
   }
