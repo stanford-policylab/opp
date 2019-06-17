@@ -1,11 +1,11 @@
 data {
   int<lower=1> n_groups;
   int<lower=1> n_races;
-  int<lower=1> n_sub_geographies;
+  int<lower=1> n_subgeographies;
   int<lower=1> n_geographies;
   
   int<lower=1, upper=n_races> race[n_groups];
-  int<lower=1, upper=n_sub_geographies> sub_geography[n_groups];
+  int<lower=1, upper=n_subgeographies> subgeography[n_groups];
   int<lower=1, upper=n_geographies*n_races> geography_race[n_groups];
   
   int<lower=1> stop_count[n_groups];
@@ -24,18 +24,18 @@ parameters {
   // parameters for signal distribution
   // vector[n_races] phi_race;
   vector[n_geographies * n_races] phi_race; // try race per city
-  vector[n_sub_geographies - 1] phi_sub_geography_raw;
+  vector[n_subgeographies - 1] phi_subgeography_raw;
   real mu_phi;
 
   // vector[n_races] delta_race;
   vector[n_geographies * n_races] delta_race; // try race per city
-  vector[n_sub_geographies - 1] delta_sub_geography_raw;
+  vector[n_subgeographies - 1] delta_subgeography_raw;
   real mu_delta;
 }
 
 transformed parameters {
-  vector[n_sub_geographies] phi_sub_geography;
-  vector[n_sub_geographies] delta_sub_geography;
+  vector[n_subgeographies] phi_subgeography;
+  vector[n_subgeographies] delta_subgeography;
   vector[n_groups] phi;
   vector[n_groups] delta;
   vector[n_groups] threshold;
@@ -44,10 +44,10 @@ transformed parameters {
   real successful_search_rate;
   real unsuccessful_search_rate;
 
-  phi_sub_geography[1] = 0;
-  phi_sub_geography[2:n_sub_geographies] = phi_sub_geography_raw;
-  delta_sub_geography[1] = 0;
-  delta_sub_geography[2:n_sub_geographies] = delta_sub_geography_raw;
+  phi_subgeography[1] = 0;
+  phi_subgeography[2:n_subgeographies] = phi_subgeography_raw;
+  delta_subgeography[1] = 0;
+  delta_subgeography[2:n_subgeographies] = delta_subgeography_raw;
 
   threshold = threshold_race[race]
     + threshold_raw * sigma_threshold;
@@ -57,12 +57,12 @@ transformed parameters {
     // indicated by the outcome, i.e. whites carrying a weapon
     // phi[i] = inv_logit(phi_race[race[i]]
     phi[i] = inv_logit(phi_race[geography_race[i]] // try race per city
-      + phi_sub_geography[sub_geography[i]]);
+      + phi_subgeography[subgeography[i]]);
 
     // mu is the center of the `outcome` distribution
     // delta[i] = exp(delta_race[race[i]]
     delta[i] = exp(delta_race[geography_race[i]] // try race per city
-      + delta_sub_geography[sub_geography[i]]);
+      + delta_subgeography[subgeography[i]]);
 
     successful_search_rate =
       phi[i] * (1 - normal_cdf(threshold[i], delta[i], 1));
@@ -88,8 +88,8 @@ model {
   threshold_race ~ normal(0, 1);
 
   // draw control division parameters (for un-pinned divisions)
-  phi_sub_geography_raw ~ normal(0, 0.1);
-  delta_sub_geography_raw ~ normal(0, 0.1);
+  phi_subgeography_raw ~ normal(0, 0.1);
+  delta_subgeography_raw ~ normal(0, 0.1);
 
   // thresholds
   threshold_raw ~ normal(0, 1);

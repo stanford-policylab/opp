@@ -1,42 +1,47 @@
 source(here::here("lib", "opp.R"))
+source(here::here("lib", "eligibility.R"))
 source(here::here("lib", "outcome_test.R"))
 source(here::here("lib", "threshold_test.R"))
 source(here::here("lib", "disparity_plot.R"))
 
-# NOTE: AZ, MA, OH, and VT also have contraband info and thus could have these
-# tests run, but for various reasons (contraband info unreliable or messy,
-# or too large a white population to be able to compare at the county level)
-# we omit them because we wouldn't trust analysis on those states.
-ELIGIBLE_STATES <- tribble(
-  ~state, ~city,
-  "CO", "Statewide",
-  "CT", "Statewide",
-  "IL", "Statewide",
-  "NC", "Statewide",
-  "RI", "Statewide",
-  "SC", "Statewide",
-  "TX", "Statewide",
-  "WA", "Statewide",
-  "WI", "Statewide"
-)
-
-# NOTE: Cities in NC can also be used for aggregate disparity tests, but
-# do not have sub-geography and thus we do not use them in our paper.
-ELIGIBLE_CITIES <- tribble(
-  ~state, ~city,
-  "CA", "San Diego",
-  "CA", "San Francisco",
-  "LA", "New Orleans",
-  "PA", "Philadelphia",
-  "TN", "Nashville"
-)
+# # NOTE: AZ, MA, OH, and VT also have contraband info and thus could have these
+# # tests run, but for various reasons (contraband info unreliable or messy,
+# # or too large a white population to be able to compare at the county level)
+# # we omit them because we wouldn't trust analysis on those states.
+# ELIGIBLE_STATES <- tribble(
+#   ~state, ~city,
+#   "CO", "Statewide",
+#   "CT", "Statewide",
+#   "IL", "Statewide",
+#   "NC", "Statewide",
+#   "RI", "Statewide",
+#   "SC", "Statewide",
+#   "TX", "Statewide",
+#   "WA", "Statewide",
+#   "WI", "Statewide"
+# )
+# 
+# # NOTE: Cities in NC can also be used for aggregate disparity tests, but
+# # do not have sub-geography and thus we do not use them in our paper.
+# ELIGIBLE_CITIES <- tribble(
+#   ~state, ~city,
+#   "CA", "San Diego",
+#   "CA", "San Francisco",
+#   "LA", "New Orleans",
+#   "PA", "Philadelphia",
+#   "TN", "Nashville"
+# )
 
 
 disparity <- function() {
   datasets <- list()
   print("Preparing data...")
-  # datasets$state <- load_eligible_state_disparity_data()
-  datasets$city <- load_eligible_city_disparity_data()
+  d <- load(analysis_name = "disparity")
+  output = here::here("cache", "disparity_data.rds")
+  write_rds(d, output)
+  sprintf("Saving data to %s", output)
+  datasets$state <- filter(d$data, city == "Statewide")
+  datasets$city <- filter(d$data, city != "Statewide")
  
   results <- list()
   for (dataset_name in names(datasets)) {
@@ -45,7 +50,7 @@ disparity <- function() {
     print("Running outcome test...")
     v$outcome <- outcome_test(
       datasets[[dataset_name]],
-      sub_geography,
+      subgeography,
       geography_col = geography
     )
     print("Composing outcome plots...")
@@ -59,7 +64,7 @@ disparity <- function() {
     print("Running threshold test...")
     v$threshold <- threshold_test(
       datasets[[dataset_name]],
-      sub_geography,
+      subgeography,
       geography_col = geography
     )
     print("Composing threshold plots...")
@@ -138,12 +143,13 @@ load_eligible_city_disparity_data <- function() {
         T
       ),
       # NOTE: San Antonio looks good
-      subject_race %in% c("white", "black", "hispanic"),
-      year(date) >= 2011,
-      year(date) <= 2017,
-      type == "vehicular"
+      # subject_race %in% c("white", "black", "hispanic"),
+      # year(date) >= 2011,
+      # year(date) <= 2017,
+      # type == "vehicular"
     ) %>%
     mutate(
+      # TODO(danj): maybe delete this because we reprocessed
       # If a search was conducted but we don't have contraband info,
       # assume no contraband was found (unless dealt with otherwise above)
       contraband_found = if_else(
@@ -156,8 +162,7 @@ load_eligible_city_disparity_data <- function() {
       sg = if_else(city == "San Francisco", district, sg),
       sg = if_else(city == "New Orleans", district, sg),
       sg = if_else(city == "Philadelphia", district, sg),
-      sg = if_else(city == "Nashville", precinct, sg),
-      sg = if_else(city == "San Antonio", substation, sg)
+      sg = if_else(city == "Nashville", precinct, sg)    
     ) %>%
     unite(
       col = geography, 
@@ -165,7 +170,7 @@ load_eligible_city_disparity_data <- function() {
       remove = FALSE
     ) %>% 
     rename(
-      sub_geography = sg
+      subgeography = sg
     )
 }
 
@@ -236,61 +241,61 @@ load_eligible_state_disparity_data <- function() {
       if_else(state == "WI", sg %in% eligible_sgs(., "WI"), T)
     ) %>% 
     rename(
-      sub_geography = sg,
+      subgeography = sg,
       geography = state
     ) 
 }
 
-# selects the top `max_sub_geographies` number of sub geographies with at 
+# selects the top `max_subgeographies` number of sub geographies with at 
 # least `min_stops` number of stops per demographic in `eligible demographics`
 eligible_sgs <- function(
   tbl,
   state_abbr,
-  sub_geography_col = sg, 
+  subgeography_col = sg, 
   demographic_col = subject_race,
   eligible_demographics = c("white", "black", "hispanic"),
   action_col = search_conducted,
   min_stops = 500,
   min_actions = 0,
-  max_sub_geographies = 100
+  max_subgeographies = 100
 ) {
-  sub_geography_colq <- enquo(sub_geography_col)
+  subgeography_colq <- enquo(subgeography_col)
   demographic_colq <- enquo(demographic_col)
   action_colq <- enquo(action_col)
   tbl <- tbl %>% filter(state == state_abbr)
-  sub_geographies_with_sufficient_stops <-
+  subgeographies_with_sufficient_stops <-
     tbl %>%
     filter(!!demographic_colq %in% eligible_demographics) %>% 
-    count(!!sub_geography_colq, !!demographic_colq) %>% 
+    count(!!subgeography_colq, !!demographic_colq) %>% 
     spread(!!demographic_colq, n, fill = 0) %>% 
     filter_at(
       vars(2:(length(eligible_demographics) + 1)), 
       all_vars(. > min_stops)
     ) %>% 
-    pull(!!sub_geography_colq)
-  sub_geographies_with_sufficient_actions <-
+    pull(!!subgeography_colq)
+  subgeographies_with_sufficient_actions <-
     tbl %>%
     filter(!!action_colq, !!demographic_colq %in% eligible_demographics) %>%
-    count(!!sub_geography_colq, !!demographic_colq) %>%
+    count(!!subgeography_colq, !!demographic_colq) %>%
     filter(n > min_actions) %>%
-    pull(!!sub_geography_colq)
+    pull(!!subgeography_colq)
   
   tbl %>%
     filter(
-      !!sub_geography_colq %in% sub_geographies_with_sufficient_stops,
-      !!sub_geography_colq %in% sub_geographies_with_sufficient_actions
+      !!subgeography_colq %in% subgeographies_with_sufficient_stops,
+      !!subgeography_colq %in% subgeographies_with_sufficient_actions
     ) %>%
-    count(!!sub_geography_colq) %>%
-    top_n(max_sub_geographies, n) %>% 
-    pull(!!sub_geography_colq)
+    count(!!subgeography_colq) %>%
+    top_n(max_subgeographies, n) %>% 
+    pull(!!subgeography_colq)
 }
 
 plt <- function(d, prefix) {
   if (str_detect(prefix, "outcome")) {
-    p <- disparity_plot(d, geography, sub_geography, title = prefix)
+    p <- disparity_plot(d, geography, subgeography, title = prefix)
   } else {
     p <- disparity_plot(
-      d, geography, sub_geography,
+      d, geography, subgeography,
       rate_col = threshold,
       size_col = n_action,
       title = prefix,
@@ -306,13 +311,13 @@ plt_all <- function(tbl, prefix) {
     title <- str_c(prefix, ": ", str_geo)
     if (str_detect(prefix, "outcome")) {
       p <- disparity_plot(
-        grp, geography, sub_geography, 
+        grp, geography, subgeography, 
         title = str_c(str_geo, " hit rates")
       )
     } else {
       p <- disparity_plot(
         grp,
-        geography, sub_geography,
+        geography, subgeography,
         demographic_col = subject_race,
         rate_col = threshold,
         size_col = n_action,
@@ -395,7 +400,7 @@ plt_ppc_rates <- function(
       legend.title = element_blank(),
       legend.background = element_rect(fill = 'transparent')
     ) +
-    scale_color_manual(values=c('black','red','blue')) +
+    # scale_color_manual(values=c('black','red','blue')) +
     guides(size=FALSE) +
     labs(title = title)
   plt

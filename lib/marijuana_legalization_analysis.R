@@ -1,15 +1,17 @@
 library(here)
 source(here::here("lib", "opp.R"))
+source(here::here("lib", "eligibility.R"))
 
 marijuana_legalization_analysis <- function() {
   
-  if(!exists("MJ_ELIGIBLE_STATES")) {
-    source(here::here("lib", "eligible_locations.R"))
-    MJ_ELIGIBLE_STATES <- filter(MJ_ELIGIBLE_STATES, !no_hispanics)
-  }
-  MJ_ELIGIBLE_STATES <- MJ_ELIGIBLE_STATES %>% select(state, city)
-  
-  tbl <- load(MJ_ELIGIBLE_STATES)
+  # if(!exists("MJ_ELIGIBLE_STATES")) {
+  #   source(here::here("lib", "eligible_locations.R"))
+  #   MJ_ELIGIBLE_STATES <- filter(MJ_ELIGIBLE_STATES, !no_hispanics)
+  # }
+  # MJ_ELIGIBLE_STATES <- MJ_ELIGIBLE_STATES %>% select(state, city)
+  tbl <- load("mj")
+  write_rds(tbl, here::here("cache", "mj_data_and_metadata.rds"))
+  tbl <- prepare_mj_data(tbl$data)
   treatment <- filter(tbl, state %in% c("CO", "WA"))
   control <- filter(tbl, !(state %in% c("CO", "WA")))
   list(
@@ -27,21 +29,25 @@ marijuana_legalization_analysis <- function() {
 }
 
 
-load <- function(only) {
-  d <- opp_load_all_clean_data(only) 
-  print("Data loaded.")
-  d %>% write_rds(here::here("cache", "mj_data.rds"))
-  d %>% 
-  filter(
-    type == "vehicular",
-    subject_race %in% c("black", "white", "hispanic"),
-    year(date) >= 2011 & year(date) <= 2018
-    # TODO(danj/amyshoe): make sure CO/WA results don't change with updated
-    # data, post 2015
-  ) %>%
-  opp_filter_out_non_highway_patrol_stops_from_states() %>%
+prepare_mj_data <- function(tbl) {
+  # NOTE: This portion commented out below should be able to be removed now that
+  # we've refactored eligibility; i'm keeping it around until we're finished
+  # testing -- just to be sure.
+  # d <- opp_load_all_clean_data(only) 
+  # print("Data loaded.")
+  # d %>% write_rds(here::here("cache", "mj_data.rds"))
+  # d %>% 
+  # filter(
+  #   type == "vehicular",
+  #   subject_race %in% c("black", "white", "hispanic"),
+  #   year(date) >= 2011 & year(date) <= 2018
+  #   # TODO(danj/amyshoe): make sure CO/WA results don't change with updated
+  #   # data, post 2015
+  # ) %>%
+  # opp_filter_out_non_highway_patrol_stops_from_states() %>%
+  tbl %>% 
   mutate(
-    subject_race = relevel(droplevels(subject_race), "white"),
+    subject_race = relevel(factor(subject_race), "white"),
     # NOTE: default for control and WA is WA's legalization date
     legalization_date = if_else(
       state == "CO",
@@ -161,11 +167,10 @@ compose_search_rate_plots <- function(tbl) {
       select(-predicted_search_rate) %>%
       spread(position, date) %>%
       rename(start_date = start, end_date = end),
-
       endpoints %>%
       select(-date) %>%
       spread(position, predicted_search_rate) %>%
-      rename(start_rate = start, end_rate = end),
+      rename(start_rate = start, end_rate = end)
     )
 
   tbl <-
@@ -388,20 +393,23 @@ collect_aggregate_thresholds_for_state <- function(tbl, s) {
 
 
 summarise_for_stan <- function(tbl) {
-  # TODO(amy): redo this parsing based one load() refactor
-  filter(
-    tbl,
-    !is.na(subject_race), 
-    !is.na(county_name) ### todo(amy): keep this one
-    # TODO: check this doesn't change anything
-    # # NOTE: don't filter in global filter because violation and
-    # # search_conducted may be NA in different places, so filter locally
-    # !is.na(search_conducted)
-  ) %>% 
+  # NOTE: Probable don't need these after refactor; keeping temporarily while
+  # testing, just in case
+  # filter(
+  #   tbl,
+  #   !is.na(subject_race), 
+  #   !is.na(county_name) ### todo(amy): keep this one
+  #   # TODO: check this doesn't change anything
+  #   # # NOTE: don't filter in global filter because violation and
+  #   # # search_conducted may be NA in different places, so filter locally
+  #   # !is.na(search_conducted)
+  # ) %>%
+  tbl %>%
+  # NOTE: Needed for threshold test; no included in global filter, because
+  # it's not needed for statewide search rates and some control states dont
+  # have county
+  filter(!is.na(county_name)) %>%
   mutate(
-    # NOTE: excludes other (non-discretionary)
-    eligible_search_conducted = search_conducted & (is.na(search_basis) | 
-      search_basis %in% c("k9", "consent", "plain view", "probable cause")),
     race_cd = as.integer(subject_race),
     county_cd = as.integer(as.factor(county_name)),
     legal = !is_before_legalization
@@ -412,8 +420,8 @@ summarise_for_stan <- function(tbl) {
   ) %>%
   summarize(
     num_stops = n(),
-    num_searches = sum(eligible_search_conducted, na.rm = T), #TODO(amy): make sure we can remove these
-    num_hits = sum(eligible_search_conducted & contraband_found, na.rm = T)
+    num_searches = sum(is_eligible_search, na.rm = T), #TODO(amy): make sure we can remove these
+    num_hits = sum(is_eligible_search & contraband_found, na.rm = T)
   ) %>% 
   ungroup()
 }
@@ -423,9 +431,9 @@ format_data_summary_for_stan <- function(d) {
   # TODO: is pull necessary? --> dollars or with()
   list(
     n_groups = nrow(d),
-    n_sub_geographies = n_distinct(pull(d, county_name)),
+    n_subgeographies = n_distinct(pull(d, county_name)),
     n_races = n_distinct(pull(d, subject_race)),
-    sub_geography = pull(d, county_cd),
+    subgeography = pull(d, county_cd),
     # TODO: check this
     legal = pull(d, as.integer(legal)),
     race = pull(d, race_cd),

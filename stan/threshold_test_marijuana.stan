@@ -1,13 +1,12 @@
 data {
   int<lower=1> n_groups;
   int<lower=1> n_races;
-  int<lower=1> n_sub_geographies;
+  int<lower=1> n_subgeographies;
 
   int<lower=1, upper=n_races> race[n_groups];
-  int<lower=1, upper=n_sub_geographies> sub_geography[n_groups];
+  int<lower=1, upper=n_subgeographies> subgeography[n_groups];
   int<lower=0,upper=1> legal[n_groups]; // is marijuana legal?
-  // vector<lower=0,upper=1>[n_groups] legal; // is marijuana legal?
-  
+
   int<lower=1> stop_count[n_groups];
   int<lower=0> search_count[n_groups];
   int<lower=0> hit_count[n_groups];
@@ -27,17 +26,17 @@ parameters {
 
   // parameters for signal distribution
   vector[n_races] phi_race;
-  vector[n_sub_geographies - 1] phi_sub_geography_raw;
+  vector[n_subgeographies - 1] phi_subgeography_raw;
   real mu_phi;
 
   vector[n_races] delta_race;
-  vector[n_sub_geographies - 1] delta_sub_geography_raw;
+  vector[n_subgeographies - 1] delta_subgeography_raw;
   real mu_delta;
 }
 
 transformed parameters {
-  vector[n_sub_geographies] phi_sub_geography;
-  vector[n_sub_geographies] delta_sub_geography;
+  vector[n_subgeographies] phi_subgeography;
+  vector[n_subgeographies] delta_subgeography;
   vector[n_groups] phi;
   vector[n_groups] delta;
   vector[n_groups] threshold;
@@ -46,10 +45,10 @@ transformed parameters {
   real successful_search_rate;
   real unsuccessful_search_rate;
 
-  phi_sub_geography[1] = 0;
-  phi_sub_geography[2:n_sub_geographies] = phi_sub_geography_raw;
-  delta_sub_geography[1] = 0;
-  delta_sub_geography[2:n_sub_geographies] = delta_sub_geography_raw;
+  phi_subgeography[1] = 0;
+  phi_subgeography[2:n_subgeographies] = phi_subgeography_raw;
+  delta_subgeography[1] = 0;
+  delta_subgeography[2:n_subgeographies] = delta_subgeography_raw;
 
   // threshold = threshold_race[race]
   //   + threshold_raw * sigma_threshold 
@@ -62,12 +61,12 @@ transformed parameters {
     // phi is the proportion of race x who evidence behavior
     // indicated by the outcome, i.e. whites carrying a weapon
     phi[i] = inv_logit(phi_race[race[i]]
-      + phi_sub_geography[sub_geography[i]]
+      + phi_subgeography[subgeography[i]]
       + legal[i] * phi_legal_race[race[i]]);
 
     // mu is the center of the `outcome` distribution
     delta[i] = exp(delta_race[race[i]]
-      + delta_sub_geography[sub_geography[i]]
+      + delta_subgeography[subgeography[i]]
       + legal[i] * delta_legal_race[race[i]]);
 
     successful_search_rate =
@@ -98,8 +97,8 @@ model {
   threshold_race ~ normal(0, 1);
 
   // draw control division parameters (for un-pinned divisions)
-  phi_sub_geography_raw ~ normal(0, 0.1);
-  delta_sub_geography_raw ~ normal(0, 0.1);
+  phi_subgeography_raw ~ normal(0, 0.1);
+  delta_subgeography_raw ~ normal(0, 0.1);
 
   // thresholds
   threshold_raw ~ normal(0, 1);
@@ -114,22 +113,22 @@ generated quantities {
   
   {
     vector[n_races] counts;
-    vector[n_sub_geographies] dep_stops;
+    vector[n_subgeographies] dep_stops;
     
     final_thresholds = rep_vector(0, n_races);
     counts     = rep_vector(0, n_races);
-    dep_stops  = rep_vector(0, n_sub_geographies);
+    dep_stops  = rep_vector(0, n_subgeographies);
     
     
     // calculate total stops per department
     for (i in 1:n_groups) {
-      dep_stops[sub_geography[i]] = dep_stops[sub_geography[i]] + stop_count[i];
+      dep_stops[subgeography[i]] = dep_stops[subgeography[i]] + stop_count[i];
     }
     
     for (i in 1:n_groups) {
       final_thresholds[race[i]] = final_thresholds[race[i]] 
-        + threshold_raw[i] * dep_stops[sub_geography[i]];
-      counts[race[i]] = counts[race[i]] + dep_stops[sub_geography[i]];
+        + threshold_raw[i] * dep_stops[subgeography[i]];
+      counts[race[i]] = counts[race[i]] + dep_stops[subgeography[i]];
     }
     final_thresholds = final_thresholds ./ counts;
   }
