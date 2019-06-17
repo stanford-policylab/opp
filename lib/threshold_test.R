@@ -122,17 +122,17 @@ summarize_for_stan <- function(
       n_outcome = sum(!!outcome_colq, na.rm = TRUE)
     ) %>% 
     ungroup() %>% 
-    unite(sub_geography, !!!control_colqs, !!geography_colq, remove = F) %>% 
+    unite(subgeography, !!!control_colqs, !!geography_colq, remove = F) %>% 
     unite(geography_race, !!geography_colq, !!demographic_colq, remove = F) %>% 
     # NOTE: keep original column values to map stan output to values
     mutate(
       race = !!demographic_colq,
       geography = !!geography_colq,
-      sub_geography_raw = sub_geography,
+      subgeography_raw = subgeography,
       geography_raw = !!geography_colq
     ) %>% 
     mutate_at(
-      .vars = c("race", "sub_geography", "geography", "geography_race"),
+      .vars = c("race", "subgeography", "geography", "geography_race"),
       .funs = ~as.integer(factor(.x))
     )
 }
@@ -141,10 +141,10 @@ summarize_for_stan <- function(
 format_data_summary_for_stan <- function(data_summary) {
   list(
     n_groups = nrow(data_summary),
-    n_sub_geographies = n_distinct(pull(data_summary, sub_geography)),
+    n_subgeographies = n_distinct(pull(data_summary, subgeography)),
     n_races = n_distinct(pull(data_summary, race)),
     n_geographies = n_distinct(pull(data_summary, geography)),
-    sub_geography = pull(data_summary, sub_geography),
+    subgeography = pull(data_summary, subgeography),
     race = pull(data_summary, race),
     geography_race = pull(data_summary, geography_race),
     stop_count = pull(data_summary, n),
@@ -336,7 +336,7 @@ add_thresholds <- function(
       )),
       geography_code = geography,
       geography = geography_raw,
-      sub_geography_code = sub_geography,
-      sub_geography = sub_geography_raw
+      subgeography_code = subgeography,
+      subgeography = subgeography_raw
     )
 }
