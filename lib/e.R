@@ -47,7 +47,11 @@ load_base_for <- function(state, city) {
       select(-matches("raw_")) %>%
       mutate(state = state, city = city)
     ) %>%
-    keep_only_highway_patrol_if_state()
+    keep_only_highway_patrol_if_state() %>%
+    filter_to_vehicular_stops() %>%
+    filter_to_analysis_years(years = 2011:2018) %>%
+    remove_years_with_too_few_stops(min_stops = 500)
+
 
   p@metadata %<>%
     mutate(state = state, city = city) %>%
@@ -87,4 +91,54 @@ keep_only_highway_patrol_if_state <- function(p) {
   }
 
   add_decision(p, action, reason, result)
+}
+
+
+filter_to_vehicular_stops <- function(p) {
+
+  action <- "filter to vehicular stops"
+  reason <- "pedestrian stops are qualitatively different"
+  result <- "no change"
+  details <- list(type_proportion <- count_pct(tbl, type))
+
+  n_before <- nrow(p@data)
+  p@data %<>% filter(type == "vehicular")
+  n_after <- nrow(p@data)
+  if (n_before - n_after > 0)
+    result <- "rows removed"
+
+  add_decision(p, action, reason, result, details)
+}
+
+
+filter_to_analysis_years <- function(p, years) {
+
+  action <- sprintf("filter to years %s", str_c(years, collapse = ", "))
+  reason <- "most recent, relevant years"
+  result <- "no change"
+
+  n_before <- nrow(p@data)
+  p@data %<>% filter(date %in% years)
+  n_after <- nrow(p@data)
+  if (n_before - n_after > 0)
+    result <- "rows removed"
+
+  add_decision(p, action, reason, result)
+}
+
+
+remove_years_with_too_few_stops <- function(p, min_stops) {
+  
+  action <- sprintf("remove years with fewer than %g stops", min_stops)
+  reason <- "data is likely unreliable"
+  result <- "no change"
+  details <- list(year_count <- count(p@data, yr = year(date)))
+
+  bad_years <- filter(details$year_count, n < min_stops) %>% pull(yr)
+  if (length(bad_years) > 0) {
+    p@data %<>% filter(!(year(date) %in% bad_years))
+    result <- sprintf("removed years %s", str_c(bad_years, collapse = ", "))
+  }
+
+  add_decision(p, action, reason, result, details)
 }
