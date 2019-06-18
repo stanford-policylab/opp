@@ -8,7 +8,9 @@ source(here::here("lib", "opp.R"))
 #' someone based on race
 #'
 #' @param tbl tibble containing the following data
-#' @param ... additional attributes to control for when inferring thresholds
+#' @param ... additional attributes to control for when inferring thresholds;
+#'        Note that in almost all cases will be sub-geography (e.g., police
+#'        district when testing cities, or county when testing states, etc.)
 #' @param geography_col contains a population division of interest to use 
 #'        hierarchically, i.e. if multiple cities are being test at the district
 #'        level, geography_col = city
@@ -34,6 +36,9 @@ source(here::here("lib", "opp.R"))
 #'   action_col = search_conducted,
 #'   outcome_col = contraband_found
 #' )
+#' NOTE: If using this hierarchical threshold test on just one location (e.g.,
+#' one state or one city, `geography_col` will be populated with just one 
+#' value, like the name of that city, or something)
 threshold_test <- function(
   tbl,
   ...,
