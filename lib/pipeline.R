@@ -15,7 +15,8 @@ setClass(
       ~result,
       ~details,
       ~nrows,
-      ~proportion
+      ~prop,
+      ~prop_prev
     )
   )
 )
@@ -35,6 +36,9 @@ setGeneric(
 )
 
 
+setGeneric("init", function(pipeline, data) { standardGeneric("init") }) 
+
+
 setMethod(
   "add_decision",
   signature("Pipeline"),
@@ -47,14 +51,19 @@ setMethod(
   ) {
 
     nrows <- nrow(pipeline@data)
-    proportion <- 1
-    if (nrow(pipeline@metadata) > 1)
-      proportion <- nrows / (slice(pipeline@metadata, 1) %>% pull(nrows))
+    prop <- 1
+    prop_prev <- 1
+    n <- nrow(pipeline@metadata)
+    if (n > 1) {
+      prop <- nrows / (slice(pipeline@metadata, 1) %>% pull(nrows))
+      prop_prev <- nrows / (slice(pipeline@metadata, n) %>% pull(nrows))
+    }
 
+    # NOTE: add_row doesn't work with list entries; it only takes the last key
     pipeline@metadata %<>%
       bind_rows(tribble(
-        ~action, ~reason, ~result, ~details, ~nrows, ~proportion,
-        action, reason, result, details, nrows, proportion
+        ~action, ~reason, ~result, ~details, ~nrows, ~prop, ~prop_prev,
+        action, reason, result, details, nrows, prop, prop_prev
       ))
 
     pipeline
@@ -62,8 +71,18 @@ setMethod(
 )
 
 
+setMethod(
+  "init",
+  signature("Pipeline"),
+  function(pipeline, data) {
+    pipeline@data <- data
+    add_decision(pipeline, "initialize", "none", "no change")
+  }
+)
+
+
 # Example
-# p <- new("Pipeline", data = as_tibble(iris))
+# p <- init(new("Pipeline"), as_tibble(iris))
 # p@data <- select(p@data, -Species)
 # p <-
 #   add_decision(
