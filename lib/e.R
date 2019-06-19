@@ -8,7 +8,8 @@ load <- function(analysis = "vod") {
     ~state, ~city,
     "WA", "Seattle",
     # "WA", "Statewide",
-    "CT", "Hartford"
+    "CT", "Hartford",
+    "TX", "Arlington"
   )
   # tbl <- opp_available()
 
@@ -22,12 +23,11 @@ load <- function(analysis = "vod") {
   }
 
   results <- opp_apply(load_func, tbl)
-  results
 
-  # list(
-  #   data = bind_rows(lapply(results, function(p) p@data)),
-  #   metadata = bind_rows(lapply(results, function(p) p@metadata))
-  # )
+  list(
+    data = bind_rows(lapply(results, function(p) p@data)),
+    metadata = bind_rows(lapply(results, function(p) p@metadata))
+  )
 }
 
 
@@ -62,12 +62,11 @@ load_base_for <- function(state, city) {
     keep_only_highway_patrol_if_state() %>%
     filter_to_vehicular_stops() %>%
     filter_to_analysis_years(years = 2011:2018) %>%
-    remove_months_with_too_few_stops(min_stops = 50) 
-    # remove_months_with_too_few_stops(min_stops = 50) %>%
-    # remove_months_with_poor_race_coverage(threshold = 0.65) %>%
-    # filter_to_analysis_races(races = c("white", "black", "hispanic")) %>%
-    # add_subgeography() %>%
-    # remove_anomalous_subgeographies()
+    remove_months_with_too_few_stops(min_stops = 50) %>%
+    remove_months_with_poor_race_coverage(threshold = 0.65) %>%
+    filter_to_analysis_races(races = c("white", "black", "hispanic")) %>%
+    add_subgeography() %>%
+    remove_anomalous_subgeographies()
 
   p@metadata %<>%
     mutate(state = state, city = city) %>%
@@ -148,7 +147,7 @@ remove_months_with_too_few_stops <- function(p, min_stops) {
   action <- sprintf("remove months with fewer than %g stops", min_stops)
   reason <- "data is too sparse to trust"
   result <- "no change"
-  details <- list(month_count <- count(p@data, month = format(date, "%Y-%m")))
+  details <- list(month_count = count(p@data, month = format(date, "%Y-%m")))
 
   bad_months <- filter(details$month_count, n < min_stops) %>% pull(month)
   if (length(bad_months) > 0) {
@@ -219,11 +218,14 @@ filter_to_analysis_races <- function(p, races) {
 
 add_subgeography <- function(p) {
 
-  # TODO(danj): add condition to use subgeography with intermediate numbers
+  # TODO(danj/amyshoe): add condition to select subgeography with reasonable numbers
 
   action <- "add subgeography"
   reason <- "necessary for some analyses"
   result <- "no change"
+
+  if (nrow(p@data) == 0)
+    return(add_decision(p, action, reason, result))
 
   subgeography_colnames <-
     if (p@data$city[[1]] == "Statewide") {
@@ -265,6 +267,10 @@ remove_anomalous_subgeographies <- function(p) {
   action <- "remove anomalous subgeographies"
   reason <- "these regions are either qualitatively different or undefined"
   result <- "no change"
+
+  if (nrow(p@data) == 0)
+    return(add_decision(p, action, reason, result))
+
   details <- list(subgeography_proportion <- count_pct(p@data, subgeography))
 
   city <- p@data$city[[1]]
