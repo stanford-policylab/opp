@@ -306,7 +306,7 @@ clean <- function(d, helpers) {
         ),
         "other" = str_detect(
           raw_SearchType,
-          fixed("SEARCH INCIDENT TO ARREST|SEARCH WARRANT|INVENTORY", ignore_case = T)
+          regex("(SEARCH INCIDENT TO ARREST)|(SEARCH WARRANT)|(INVENTORY)", ignore_case = T)
         )
       ),
       search_conducted = if_else(
