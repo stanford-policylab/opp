@@ -13,8 +13,10 @@ load <- function(analysis = "disparity") {
   )
   # tbl <- opp_available()
 
-  if (analysis == "vod") {
-    load_func <- load_vod_for
+  if (analysis == "vod_dst") {
+    load_func <- load_dst_vod_for
+  } else if (analysis == "vod_full") {
+    load_func <- load_full_vod_for
   } else if (analysis == "disparity") {
     load_func <- load_disparity_for
   } else if (analysis == "mj") {
@@ -43,13 +45,30 @@ load <- function(analysis = "disparity") {
 }
 
 
-load_vod_for <- function(state, city) {
-  load_base_for(state, city) %>%
-    remove_months_with_low_coverage(subgeography, threshold = 0.5) %>%
-    remove_na(subgeography)
-  # TODO(amyshoe): DST/VOD filters
+load_dst_vod_for <- function(state, city) {
+  load_vod_base_for(state, city) %>%
+    add_dst_dates() %>%
+    filter_to_dst_windows(week_radius = 3) %>% 
+    remove_locations_with_too_few_stops_per_race(geography, min_stops = 100) %>% 
+    select_top_n_locations_per_super(geography, state, top_n = 20)
 }
 
+load_full_vod_for <- function(state, city) {
+  load_vod_base_for(state, city) %>%
+    remove_partial_years(geography) %>% 
+    remove_locations_with_too_few_stops_per_race(geography, min_stops = 100) %>% 
+    select_top_n_locations_per_super(geography, state, top_n = 20)
+}
+
+load_vod_base_for <- function(state, city) {
+  load_base_for(state, city) %>%
+    filter_to_analysis_races(races = c("white", "black")) %>%
+    add_county_and_city_as_geography() %>% 
+    remove_months_with_low_coverage(geography, threshold = 0.5) %>%
+    remove_na(geography) %>% 
+    add_sunset_times() %>% 
+    filter_to_intertwilight_range()
+}
 
 load_disparity_for <- function(state, city) {
   load_base_for(state, city) %>%
