@@ -7,7 +7,7 @@ load <- function(analysis = "disparity") {
   tbl <- tribble(
     ~state, ~city,
     "WA", "Seattle",
-    # "WA", "Statewide",
+    "WA", "Statewide",
     "CT", "Hartford",
     "TX", "Arlington"
   )
@@ -19,6 +19,9 @@ load <- function(analysis = "disparity") {
     load_func <- load_disparity_for
   } else if (analysis == "mj") {
     load_func <- load_mj_for
+    tbl <- filter(tbl, city == "Statewide")
+  } else if (analysis == "mjt") {
+    load_func <- load_mj_threshold_for
     tbl <- filter(tbl, city == "Statewide")
   }
 
@@ -45,6 +48,7 @@ load_vod_for <- function(state, city) {
   load_base_for(state, city) %>%
     remove_months_with_low_coverage(subgeography, threshold = 0.5) %>%
     remove_na(subgeography)
+  # TODO(amyshoe): DST/VOD filters
 }
 
 
@@ -64,6 +68,7 @@ load_disparity_for <- function(state, city) {
 load_mj_for <- function(state, city) {
   load_base_for(state, city) %>%
     remove_locations_with_unreliable_search_data() %>%
+    filter_to_locations_with_data_before_and_after_legalization() %>%
     remove_months_with_low_coverage(search_conducted, threshold = 0.5) %>%
     remove_na(search_conducted)
 }
@@ -101,6 +106,8 @@ keep_only_highway_patrol_if_state <- function(p) {
   reason <- "some states have multiple departments, i.e. dept of agriculture"
   result <- "no change"
 
+  print(action)
+
   is_state <- p@data$city[[1]] == "statewide"
   has_multiple_departments <- "department_name" %in% colnames(p@data)
   if (is_state & has_multiple_departments) {
@@ -134,6 +141,8 @@ filter_to_vehicular_stops <- function(p) {
   reason <- "pedestrian stops are qualitatively different"
   result <- "no change"
 
+  print(action)
+
   details <- list(type_proportion <- count_pct(p@data, type))
   n_before <- nrow(p@data)
   p@data %<>% filter(type == "vehicular")
@@ -151,6 +160,8 @@ filter_to_analysis_years <- function(p, years) {
   reason <- "most recent, relevant years"
   result <- "no change"
 
+  print(action)
+
   n_before <- nrow(p@data)
   p@data %<>% filter(year(date) %in% years)
   n_after <- nrow(p@data)
@@ -167,6 +178,8 @@ remove_months_with_too_few_stops <- function(p, min_stops) {
   reason <- "data is too sparse to trust"
   result <- "no change"
   details <- list(month_count = count(p@data, month = format(date, "%Y-%m")))
+
+  print(action)
 
   bad_months <- filter(details$month_count, n < min_stops) %>% pull(month)
   if (length(bad_months) > 0) {
@@ -190,6 +203,8 @@ remove_months_with_low_coverage <- function(p, feature, threshold) {
   )
   reason <- sprintf("%s data is unreliable", feat_name)
   result <- "no change"
+
+  print(action)
 
   if (!(feat_name %in% colnames(p@data))) {
     result <- sprintf("eliminated because %s data is not recorded", feat_name)
@@ -224,6 +239,8 @@ remove_na <- function(p, feature) {
   reason <- sprintf("%s is required for analysis", feat_name)
   result <- "no change"
 
+  print(action)
+
   if (!(feat_name) %in% colnames(tbl)) {
     result <- sprintf("eliminated because %s data not recorded", feat_name)
     p@data %<>% slice(0)
@@ -246,6 +263,8 @@ filter_to_analysis_races <- function(p, races) {
   action <- sprintf("filter to races %s", str_c(races, collapse = ", "))
   reason <- "these are the most common races in the U.S."
   result <- "no change"
+
+  print(action)
 
   if (!("subject_race" %in% colnames(p@data))) {
     result <- "eliminated because race is not recorded"
@@ -270,6 +289,8 @@ add_subgeography <- function(p) {
   action <- "add subgeography"
   reason <- "necessary for some analyses"
   result <- "no change"
+
+  print(action)
 
   if (nrow(p@data) == 0)
     return(add_decision(p, action, reason, result))
@@ -315,6 +336,8 @@ remove_anomalous_subgeographies <- function(p) {
   action <- "remove anomalous subgeographies"
   reason <- "these regions are either qualitatively different or undefined"
   result <- "no change"
+
+  print(action)
 
   if (nrow(p@data) == 0)
     return(add_decision(p, action, reason, result))
@@ -375,44 +398,13 @@ remove_anomalous_subgeographies <- function(p) {
 }
 
 
-remove_months_with_low_search_coverage <- function(p, threshold) {
-
-  action <- sprintf(
-    "remove months where search is recorded less than %g%% of the time",
-    threshold * 100
-  )
-  reason <- "search data is likely unreliable"
-  result <- "no change"
-
-  if (!("search_conducted") %in% colnames(tbl)) {
-    result <- "eliminated because search data is not recorded"
-    p@data %<>% slice(0)
-    return(add_decision(p, action, reason, result))
-  }
-
-  cvg <-
-    p@data %>%
-    group_by(month = format(date, "%Y-%m")) %>%
-    summarize(coverage = coverage_rate(search_conducted)) %>%
-    ungroup()
-
-  details <- list(month_search_coverage <- cvg)
-
-  bad_months <- filter(cvg, coverage < threshold) %>% pull(month)
-  if (length(bad_months) > 0) {
-    p@data %<>% filter(!(format(date, "%Y-%m") %in% bad_months))
-    result <- sprintf("removed months %s", str_c(bad_months, collapse = ", "))
-  }
-
-  add_decision(p, action, reason, result, details)
-}
-
-
 filter_to_searches <- function(p) {
 
   action <- "filter to searches"
   reason <- "searches are the risk population"
   result <- "no change"
+
+  print(action)
 
   if (!("search_conducted") %in% colnames(tbl)) {
     result <- "eliminated because search data not recorded"
@@ -440,6 +432,8 @@ filter_to_discretionary_searches_if_search_basis <- function(p, threshold) {
   )
   reason <- "the officer decides to make these searches and is not obligated"
   result <- "no change"
+
+  print(action)
 
   p@data %<>% filter(search_conducted)
 
@@ -487,6 +481,8 @@ remove_locations_with_unreliable_search_data <- function(p) {
   reason <- "has an unreiable and/or irregular recording policy"
   result <- "no change"
 
+  print(action)
+
   if (nrow(p@data) == 0)
     return(add_decision(p, action, reason, result))
 
@@ -506,26 +502,14 @@ remove_locations_with_unreliable_search_data <- function(p) {
         "i.e. in 2012 all patrol stops are in Q1"
       ),
       TRUE ~ "no change"
-  )
+    )
+  }
 
   n_after <- nrow(p@data)
   if (n_before - n_after > 0)
     result <- "rows removed"
 
   add_decision(p, action, reason, result)
-}
-
-filter_to_locations_with_data_before_and_after_legalization <- function(tbl, log) {
-  date_range <- range(tbl$date, na.rm = TRUE)
-  start_year <- year(date_range[1])
-  end_year <- year(date_range[2])
-  if (start_year < 2012 & end_year > 2012) {
-    return(tbl)
-  } else {
-    msg <- "state does not have data before and after 2012"
-    log(list(elimination_reason = msg))
-    return(tibble())
-  }
 }
 
 
@@ -535,14 +519,20 @@ filter_to_locations_with_data_before_and_after_legalization <- function(p) {
   reason <- "need data pre/post marijuana legalization"
   result <- "no change"
 
+  print(action)
+
+  if (nrow(p@data) == 0)
+    return(add_decision(p, action, reason, result))
+
   date_range <- range(tbl$date, na.rm = TRUE)
   start_year <- year(date_range[1])
   end_year <- year(date_range[2])
-  if (start_year < 2012 & end_year > 2012) {
-    return(tbl)
-  } else {
-    msg <- "state does not have data before and after 2012"
-    log(list(elimination_reason = msg))
-    return(tibble())
-  }
+  details <- list(date_range = date_range)
+  if (start_year > 2012 | end_year < 2012) {
+    p@data %<>% slice(0)
+    result <- "eliminated: there isn't data before and after legalization"
+    return(add_decision(p, action, reason, result, details))
+  } 
+
+  add_decision(p, action, reason, result, details)
 }
