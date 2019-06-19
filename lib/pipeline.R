@@ -58,8 +58,9 @@ setMethod(
       starting_nrows <- slice(pipeline@metadata, 1) %>% pull(nrows)
       prev_nrows <- slice(pipeline@metadata, n) %>% pull(nrows)
       prop <- nrows / starting_nrows
-      if (prev_nrows > 0)
-        prop_prev <- nrows / prev_nrows
+      prop_prev <- nrows / prev_nrows
+      if (prev_nrows == 0)
+        prop_prev <- 0.0
     }
 
     # NOTE: add_row doesn't work with list entries; it only takes the last key

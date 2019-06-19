@@ -312,7 +312,8 @@ add_subgeography <- function(p) {
   summary <-
     left_join(
       null_rates(subgeographies),
-      n_distinct_values(subgeographies)
+      n_distinct_values(subgeographies),
+      by = "feature"
     ) %>%
     mutate(selected = feature == subgeography_selected)
 
@@ -524,7 +525,7 @@ filter_to_locations_with_data_before_and_after_legalization <- function(p) {
   if (nrow(p@data) == 0)
     return(add_decision(p, action, reason, result))
 
-  date_range <- range(tbl$date, na.rm = TRUE)
+  date_range <- range(p@data$date, na.rm = TRUE)
   start_year <- year(date_range[1])
   end_year <- year(date_range[2])
   details <- list(date_range = date_range)
