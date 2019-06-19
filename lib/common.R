@@ -23,8 +23,6 @@ library(sp)
 library(splines)
 library(suncalc)
 library(tidyverse)
-# NOTE: tidylog ust be loaded after tidyverse
-library(tidylog)
 library(zoo)
 
 source(here::here("lib", "pipeline.R"))
