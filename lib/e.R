@@ -196,7 +196,7 @@ remove_months_with_low_coverage <- function(p, feature, threshold) {
   feat_name <- quo_name(featq)
 
   action <- sprintf(
-    "remove months where %s data is recorded less than %g%% of the time",
+    "remove months where %s is recorded less than %g%% of the time",
     feat_name,
     threshold * 100
   )
@@ -234,14 +234,14 @@ remove_na <- function(p, feature) {
   featq <- enquo(feature)
   feat_name <- quo_name(featq)
 
-  action <- sprintf("remove rows there %s is null", feat_name)
+  action <- sprintf("remove rows there %s is NA", feat_name)
   reason <- sprintf("%s is required for analysis", feat_name)
   result <- "no change"
 
   print(action)
 
-  if (!(feat_name) %in% colnames(tbl)) {
-    result <- sprintf("eliminated because %s data not recorded", feat_name)
+  if (!(feat_name) %in% colnames(p@data)) {
+    result <- sprintf("eliminated because %s not recorded", feat_name)
     p@data %<>% slice(0)
     return(add_decision(p, action, reason, result))
   }
@@ -252,8 +252,7 @@ remove_na <- function(p, feature) {
   if (n_before - n_after > 0)
     result <- "rows removed"
 
-  add_decision(p, action, reason, result, details)
-
+  add_decision(p, action, reason, result)
 }
 
 
@@ -477,7 +476,7 @@ filter_to_discretionary_searches_if_search_basis <- function(p, threshold) {
 
 remove_locations_with_unreliable_search_data <- function(p) {
 
-  action <- "remove location because of unreliable search data"
+  action <- "remove locations with unreliable search data"
   reason <- "has an unreiable and/or irregular recording policy"
   result <- "no change"
 
