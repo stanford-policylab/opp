@@ -626,7 +626,7 @@ dst_model <- function(
   state_patrol_indicator_col = is_state_patrol,
   time_col = rounded_minute,
   degree = 6,
-  interact_dark_patrol = F,
+  interact_dark_agency = F,
   interact_time_location = F
 ) {
   darkness_indicator_colq <- enquo(darkness_indicator_col)
@@ -662,7 +662,7 @@ dst_model <- function(
     str_c(
       "cbind(n_minority, n_majority) ~ ",
       quo_name(darkness_indicator_colq),
-      if (interact_dark_patrol) "*agency_type + " else " + ",
+      if (interact_dark_agency) "*agency_type + " else " + ",
       str_c(
         str_c("ns(", quo_name(time_colq), ", df = ", degree, ")"),
         "geography",

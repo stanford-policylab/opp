@@ -2,7 +2,7 @@ library(housingData) # loads geoCounty which has county lat/lng centroids
 source(here::here("lib", "opp.R"))
 source(here::here("lib", "veil_of_darkness_test.R"))
 
-veil_of_darkness_daylight_savings <- function(save_mod=T) {
+veil_of_darkness_daylight_savings <- function() {
   if(!exists("VOD_ELIGIBLE_CITIES") | !exists("VOD_ELIGIBLE_STATES"))
     source(here::here("lib", "eligible_locations.R"))
   
@@ -15,38 +15,94 @@ veil_of_darkness_daylight_savings <- function(save_mod=T) {
     dst = T,
     week_radius = 3
   )
-  print("Geographies after load:")
-  print(unique(tbl$geography))
-  print("Number of states:")
-  print(tbl %>% filter(is_state_patrol) %>% select(state) %>% n_distinct())
-  print("Number of cities:")
-  print(tbl %>% filter(!is_state_patrol) %>% select(geography) %>% n_distinct())
   
   print("Running model...")
   # Run actual test
-  mod <- dst_model(
-    tbl, 
-    degree = 6, 
-    interact_dark_patrol = T,
-    interact_time_location = T
-  )
-  if(save_mod) {
-    print("Saving model...")
-    write_rds(mod, here::here("cache", "dst_mod_full.rds"))
-  }
-  list(
-    coefficients = broom::tidy(mod) %>% 
-      filter(term == "is_darkTRUE") %>% 
-      select(is_dark = estimate, std_error = std.error) %>% 
-      mutate(
-        data = "all", 
-        controls = "time, city/county",
-        spline_degree = 6,
-        interact = "time+loc, dark+patrol"
+  coefficients <- 
+    par_pmap(
+      mc.cores = 3,
+      tibble(
+        degree = rep(1:6, 4), 
+        interact = c(rep(T, 12), rep(F, 12)),
+        agency = rep(c(rep(T, 6), rep(F, 6)), 2)
       ),
-    data = mod$data %>% 
-      select(agency_type, geography) %>% 
-      mutate(state = str_sub(geography, -2))
+      function(degree, interact, agency) {
+        vod_coef(dst = T, tbl, geography, degree, interact, agency) %>% 
+          mutate(
+            data = "counties and cities",
+            base_controls = "time, location, season, year",
+            agency_control = agency,
+            interact_time_loc = interact,
+            spline_degree = degree
+          )
+      }
+    ) %>% bind_rows()
+  
+  d <- list(coefficients = coefficients, data = tbl)
+  
+  write_rds(d, here::here("cache", "vod_dst_sweep.rds"))
+  d
+}
+
+veil_of_darkness_full <- function() {
+  if(!exists("VOD_ELIGIBLE_CITIES") | !exists("VOD_ELIGIBLE_STATES"))
+    source(here::here("lib", "eligible_locations.R"))
+  
+  VOD_ELIGIBLE_CITIES <- VOD_ELIGIBLE_CITIES %>% select(state, city)
+  VOD_ELIGIBLE_STATES <- VOD_ELIGIBLE_STATES %>% select(state, city)
+  
+  tbl <- prepare_veil_of_darkness_data(
+    only_cities = VOD_ELIGIBLE_CITIES,
+    only_states = VOD_ELIGIBLE_STATES, 
+    dst = F
+  )
+  
+  coefficients <-
+    par_pmap(
+      mc.cores = 3,
+      tibble(degree = rep(6, 3), interact = rep(T, 3)),
+      function(degree, interact) {
+        bind_rows(
+          vod_coef(dst = F, tbl, geography, degree, interact),
+          vod_coef(
+            dst = F, 
+            filter(tbl, is_state_patrol), 
+            geography, 
+            degree, interact
+          ),
+          vod_coef(
+            dst = F, 
+            filter(tbl, !is_state_patrol), 
+            geography, 
+            degree, interact
+          )
+        ) %>%
+          mutate(
+            data = c(
+              "counties and cities",
+              "states",
+              "cities"
+            ),
+            ### TODO(amy): do we want year too?
+            base_controls = "time, geography",
+            spline_degree = degree,
+            interact_time_loc = interact
+          )
+      }
+    ) %>% bind_rows()
+  
+  list(
+    coefficients = coefficients, 
+    plots = list(
+      states = compose_vod_plots(
+        filter(tbl, is_state_patrol), 
+        state
+      ),
+      cities = compose_vod_plots(
+        filter(tbl, !is_state_patrol), 
+        geography
+      )
+    )
   )
 }
 
@@ -326,7 +382,7 @@ load_veil_of_darkness_states <- function(dst_filters = F, only) {
     # to full Feb 15-April 15-years and full Oct-Nov-years
     # GENERAL RULE: remove ranges more than 2sd deviations outside normal stop 
     # count for a 60 period
-    tbl <- select_data_with_dst_ranges(d, "dst_hist_states.rds") 
+    tbl <- select_data_with_dst_ranges(d) 
     # EXCEPTIONS: (TODO) SD, spring 2017
   }
   tbl 
@@ -376,86 +432,35 @@ select_data_with_dst_ranges <- function(d, plot_path = NULL) {
   tbl %>%
     inner_join(full_ranges)
 }
-################
 
-veil_of_darkness_cities <- function() {
-  
-  vod_data <- prepare_veil_of_darkness_cities()
-  
-  vod_tbl <- vod_data$vod_tbl
-  vod_tbl_sg <- vod_data$vod_tbl_sg
-  vod_tbl_sg_plus <- vod_data$vod_tbl_sg_plus
-  
-  coefficients <-
-    par_pmap(
-      mc.cores = 3,
-      tibble(degree = c(6, 6), interact = c(T, F)),
-      # tibble(degree = rep(1:6, 2), interact = c(rep(T, 6), rep(F, 6))),
-      function(degree, interact) {
-        bind_rows(
-          vod_coef(vod_tbl, geography, degree, interact),
-          vod_coef(vod_tbl_sg, geography, degree, interact),
-          vod_coef(vod_tbl_sg_plus, geography, degree, interact)
-        ) %>%
-          mutate(
-            data = c(
-              "all",
-              "subgeography",
-              "subgeography"
-            ),
-            controls = c(
-              "time, city_state",
-              "time, city_state",
-              "time, city_state_subgeography"
-            ),
-            spline_degree = degree,
-            interact = interact
-          )
-      }
-    ) %>% bind_rows()
-  
-  list(coefficients = coefficients, plots = compose_vod_plots(vod_tbl, geography))
-}
-
-vod_coef <- function(tbl, control_col, degree, interact_time_location) {
+vod_coef <- function(
+  dst = F, 
+  tbl, 
+  control_col, 
+  degree, 
+  interact_time_location,
+  interact_dark_agency
+) {
   control_colq <- enquo(control_col)
-  is_dark_e_sd <- summary(train_vod_model(
-    tbl,
-    !!control_colq,
-    spline_degree = degree,
-    interact_time_location = interact_time_location
-  ))$coefficients[2, 1:2]
-  list(is_dark = is_dark_e_sd[1], std_error = is_dark_e_sd[2])
+  if(dst) {
+    mod <-
+      dst_model(
+        tbl, 
+        degree = degree, 
+        interact_dark_agency = interact_dark_agency,
+        interact_time_location = interact_time_location
+      ) 
+  } else {
+    mod <- 
+      train_vod_model(
+      tbl,
+      !!control_colq,
+      spline_degree = degree,
+      interact_time_location = interact_time_location
+    )
+  }
+  broom::tidy(mod) %>% 
+    filter(term == "is_darkTRUE") %>% 
+    select(is_dark = estimate, std_error = std.error)
 }
-
-
-veil_of_darkness_states <- function() {
-  
-  tbl <- prepare_veil_of_darkness_states()
-  
-  print("States prepared. Starting models.")
-  
-  coefficients <- 
-    par_pmap(
-      mc.cores = 3,
-      tibble(degree = rep(6, 2), interact = c(T, F)),
-      function(interact, degree = 6) {
-        bind_rows(
-          vod_coef(tbl, state, degree, interact),
-          vod_coef(tbl, geography, degree, interact)
-        ) %>% 
-          mutate(
-            controls = c(
-              "time, state",
-              "time, county_state"
-            ),
-            spline_degree = degree,
-            interact = interact
-          )
-      }
-    ) %>% bind_rows()
-  
-  list(coefficients = coefficients, plots = compose_vod_plots(tbl, state))
-}
-
 
