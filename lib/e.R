@@ -22,22 +22,34 @@ load <- function(analysis = "vod") {
     tbl <- filter(tbl, city == "Statewide")
   }
 
-  results <- opp_apply(load_func, tbl)
-
-  list(
-    data = bind_rows(lapply(results, function(p) p@data)),
-    metadata = bind_rows(lapply(results, function(p) p@metadata))
+  results <- opp_apply(
+    function(state, city) {
+      p <- load_func(state, city)
+      p@metadata %<>% 
+        mutate(state = state, city = city) %>%
+        select(state, city, everything())
+      p
+    },
+    tbl
   )
+  results
+
+  # list(
+  #   data = bind_rows(lapply(results, function(p) p@data)),
+  #   metadata = bind_rows(lapply(results, function(p) p@metadata))
+  # )
 }
 
 
 load_vod_for <- function(state, city) {
-  load_base_for(state, city)
+  load_base_for(state, city) %>%
+    remove_months_with_poor_search_coverage(threshold = 0.5)
 }
 
 
 load_disparity_for <- function(state, city) {
-  load_base_for(state, city)
+  load_base_for(state, city) %>%
+    remove_months_with_poor_search_coverage(threshold = 0.5)
 }
 
 
@@ -48,31 +60,21 @@ load_mj_for <- function(state, city) {
 
 load_base_for <- function(state, city) {
 
-  state <- str_to_upper(state)
-  city <- str_to_title(city)
-
-  p <-
-    new("Pipeline") %>%
-    init(
-      opp_load_clean_data(state, city) %>%
-      # NOTE: raw_* columns aren't used in the analyses so drop them
-      select(-matches("raw_")) %>%
-      mutate(state = state, city = city)
-    ) %>%
-    keep_only_highway_patrol_if_state() %>%
-    filter_to_vehicular_stops() %>%
-    filter_to_analysis_years(years = 2011:2018) %>%
-    remove_months_with_too_few_stops(min_stops = 50) %>%
-    remove_months_with_poor_race_coverage(threshold = 0.65) %>%
-    filter_to_analysis_races(races = c("white", "black", "hispanic")) %>%
-    add_subgeography() %>%
-    remove_anomalous_subgeographies()
-
-  p@metadata %<>%
-    mutate(state = state, city = city) %>%
-    select(state, city, everything())
-
-  p
+  new("Pipeline") %>%
+  init(
+    opp_load_clean_data(state, city) %>%
+    # NOTE: raw_* columns aren't used in the analyses so drop them
+    select(-matches("raw_")) %>%
+    mutate(state = str_to_upper(state), city = str_to_title(city))
+  ) %>%
+  keep_only_highway_patrol_if_state() %>%
+  filter_to_vehicular_stops() %>%
+  filter_to_analysis_years(years = 2011:2018) %>%
+  remove_months_with_too_few_stops(min_stops = 50) %>%
+  remove_months_with_poor_race_coverage(threshold = 0.65) %>%
+  filter_to_analysis_races(races = c("white", "black", "hispanic")) %>%
+  add_subgeography() %>%
+  remove_anomalous_subgeographies()
 }
 
 
@@ -218,7 +220,6 @@ filter_to_analysis_races <- function(p, races) {
 
 add_subgeography <- function(p) {
 
-  # TODO(danj/amyshoe): add condition to select subgeography with reasonable numbers
 
   action <- "add subgeography"
   reason <- "necessary for some analyses"
@@ -235,6 +236,7 @@ add_subgeography <- function(p) {
     }
 
   subgeographies <- select_or_add_as_na(p@data, subgeography_colnames)
+  # TODO(danj/amyshoe): add condition to select subgeography with reasonable numbers
   subgeography <- subgeographies %>% select_if(funs(which.min(sum(is.na(.)))))
   subgeography_selected <- colnames(subgeography)[[1]]
   colnames(subgeography) <- "subgeography"
@@ -325,4 +327,89 @@ remove_anomalous_subgeographies <- function(p) {
     result %<>% str_c("removed %g records", diff)
 
   add_decision(p, action, reason, result)
+}
+
+
+remove_months_with_poor_search_coverage <- function(p, threshold) {
+
+  action <- sprintf(
+    "remove months where search is recorded less than %g%% of the time",
+    threshold * 100
+  )
+  reason <- "search data is likely unreliable"
+  result <- "no change"
+
+  if (!("search_conducted") %in% colnames(tbl)) {
+    result <- "eliminated because search data is not recorded"
+    p@data %<>% slice(0)
+    return(add_decision(p, action, reason, result))
+  }
+
+  cvg <-
+    p@data %>%
+    group_by(month = format(date, "%Y-%m")) %>%
+    summarize(coverage = coverage_rate(search_conducted)) %>%
+    ungroup()
+
+  details <- list(month_search_coverage <- cvg)
+
+  bad_months <- filter(cvg, coverage < threshold) %>% pull(month)
+  if (length(bad_months) > 0) {
+    p@data %<>% filter(!(format(date, "%Y-%m") %in% bad_months))
+    result <- sprintf("removed months %s", str_c(bad_months, collapse = ", "))
+  }
+
+  add_decision(p, action, reason, result, details)
+}
+
+
+
+keep_only_discretionary_searches <- function(p, threshold) {
+
+  action <- str_c(
+    "keep only plain view, consent, probable cause, k9 and NA searches ",
+    "(assume NA is discretionary) where search_basis is reliable"
+  )
+  reason <- "the officer decides to make these searches and is not obligated"
+  result <- "no change"
+
+  if (!("search_basis") %in% colnames(tbl)) {
+    result <- str_c(
+      "search basis not recorded; "
+      "assuming all searches are discretionary"
+    )
+    return(add_decision(p, action, reason, result))
+  }
+
+  cvg_rate <- coverage_rate(p@data$search_basis)
+  details <- list(search_basis_coverage_rate = cvg_rate)
+
+  # TODO(danj/amyshoe): this is really what we want to do?
+  if (cvg_rate < threshold) {
+    result <- sprintf(
+      str_c(
+        "search basis coverage rate %g%% < %g%% (threshold), "
+        "making it unreliable; assuming all searches are discretionary"
+      ),
+      cvg_rate * 100,
+      threshold * 100
+    )
+    return(add_decision(p, action, reason, result))
+  }
+
+  
+  n_before <- nrow(p@data)
+  p@data %<>% filter(
+    is.na(search_basis)
+    | search_basis %in% c("plain view", "consent", "probable cause", "k9")
+  )
+  n_after <- nrow(p@data)
+  if (n_before - n_after > 0)
+    result <- "rows removed"
+
+  add_decision(p, action, reason, result, details)
+  # # NOTE: Excludes "other" (i.e., arrest/warrant, probation/parole, inventory)
+  # tbl <- filter(tbl, is.na(search_basis) | search_basis %in% 
+  #                 c("plain view", "consent", "probable cause", "k9"))
+  # tbl
 }
