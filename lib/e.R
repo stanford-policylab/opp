@@ -176,14 +176,17 @@ remove_months_with_too_few_stops <- function(p, min_stops) {
   action <- sprintf("remove months with fewer than %g stops", min_stops)
   reason <- "data is too sparse to trust"
   result <- "no change"
-  details <- list(month_count = count(p@data, month = format(date, "%Y-%m")))
 
   print(action)
 
-  bad_months <- filter(details$month_count, n < min_stops) %>% pull(month)
-  if (length(bad_months) > 0) {
+  month_count = count(p@data, month = format(date, "%Y-%m"))
+  bad_months <- filter(month_count, n < min_stops) %>% pull(month)
+  details <- list(month_count = month_count, bad_months = bad_months)
+
+  n <- length(bad_months)
+  if (n > 0) {
     p@data %<>% filter(!(format(date, "%Y-%m") %in% bad_months))
-    result <- sprintf("removed months %s", str_c(bad_months, collapse = ", "))
+    result <- sprintf("removed %g months", n)
   }
 
   add_decision(p, action, reason, result, details)
