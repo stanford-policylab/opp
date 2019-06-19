@@ -196,6 +196,12 @@ clean <- function(d, helpers) {
     vehicle_type = HA_VEHICLE_TYPE,
     vehicle_year = HA_VEH_YEAR
   ) %>%
+  add_raw_colname_prefix(
+    HA_SEARCH_CONCENT_boolean,
+    HA_SEARCH_PC_boolean,
+    HA_INCIDTO_ARREST_boolean,
+    HA_VEHICLE_INVENT_boolean
+  ) %>% 
   mutate(
     date = parse_date(HA_ARREST_DATE, "%m/%d/%y %H:%M:%S"),
     time = parse_time(HA_ARREST_DATE, "%m/%d/%y %H:%M:%S"),
@@ -228,9 +234,9 @@ clean <- function(d, helpers) {
       "warning" = warning_issued
     ),
     search_basis = first_of(
-      "consent" = HA_SEARCH_CONCENT_boolean,
-      "probable cause" = HA_SEARCH_PC_boolean,
-      "other" = HA_INCIDTO_ARREST_boolean | HA_VEHICLE_INVENT_boolean
+      "consent" = raw_HA_SEARCH_CONCENT_boolean,
+      "probable cause" = raw_HA_SEARCH_PC_boolean,
+      "other" = raw_HA_INCIDTO_ARREST_boolean | raw_HA_VEHICLE_INVENT_boolean
     ),
     contraband_found = contraband_found | contraband_drugs | contraband_weapons,
     # 29 instances 
