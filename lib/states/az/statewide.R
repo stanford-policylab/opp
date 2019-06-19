@@ -162,8 +162,8 @@ clean <- function(d, helpers) {
       search_conducted = replace_na(tr_yn[SearchPerformed], FALSE),
       search_basis = first_of(
         "consent" = tr_yn[ConsentSearchAccepted],
-        "other" = tr_yn[DUISearchWarrant],
-        "probable cause" = search_conducted 
+        "probable cause" = search_conducted, 
+        "other" = tr_yn[DUISearchWarrant]
       ),
       contraband_drugs = !is.na(DrugSeizureType),
       contraband_other = (DriverItemsSeized != 'N' & !is.na(DriverItemsSeized)) |
