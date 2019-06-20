@@ -566,6 +566,8 @@ add_mj_calculated_features <- function(p) {
   reason <- "these are required for the analysis"
   result <- "added the features"
 
+  print(action)
+
   if (nrow(p@data) == 0)
     return(add_decision(p, action, reason, "no change"))
 
