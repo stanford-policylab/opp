@@ -37,11 +37,12 @@ load <- function(analysis = "disparity") {
     },
     tbl
   )
+  results
 
-  list(
-    data = bind_rows(lapply(results, function(p) p@data)),
-    metadata = bind_rows(lapply(results, function(p) p@metadata))
-  )
+#   list(
+#     data = bind_rows(lapply(results, function(p) p@data)),
+#     metadata = bind_rows(lapply(results, function(p) p@metadata))
+#   )
 }
 
 
@@ -515,14 +516,17 @@ remove_locations_with_unreliable_search_data <- function(p) {
   if (city == "Statewide" & state %in% c("IL", "MD", "MO", "NE")) {
     p@data %<>% slice(0)
     result <- case_when(
-      state,
-      "IL" ~ "removed because search recording policy changes year to year",
-      "MD" ~ "removed because before 2013 we are only given annual data",
-      "MO" ~ "removed because it's all annual data",
-      "NE" ~ str_c(
-        "removed because it has unreliable quarterly dates, ",
-        "i.e. in 2012 all patrol stops are in Q1"
-      ),
+      state == "IL"
+        ~ "removed because search recording policy changes year to year",
+      state == "MD"
+        ~ "removed because before 2013 we are only given annual data",
+      state == "MO"
+        ~ "removed because it's all annual data",
+      state == "NE"
+        ~ str_c(
+          "removed because it has unreliable quarterly dates, ",
+          "i.e. in 2012 all patrol stops are in Q1"
+        ),
       TRUE ~ "no change"
     )
   }
@@ -581,7 +585,7 @@ add_mj_calculated_features <- function(p) {
     p@data %<>% mutate(violation = NA)
 
   if (!("search_basis") %in% colnames(p@data))
-    p@data %<>% mutate(violation = NA)
+    p@data %<>% mutate(search_basis = NA)
 
   p@data %<>% 
     mutate(
