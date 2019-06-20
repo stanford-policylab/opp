@@ -88,12 +88,18 @@ load_mj_for <- function(state, city) {
     remove_locations_with_unreliable_search_data() %>%
     filter_to_locations_with_data_before_and_after_legalization() %>%
     remove_months_with_low_coverage(search_conducted, threshold = 0.5) %>%
-    remove_na(search_conducted)
+    add_mj_calculated_features()
 }
 
 
 load_mj_threshold_for <- function(state, city) {
+
+  # NOTE: threshold test is only for CO and WA
+  if (!(state %in% c("CO", "WA")))
+    return(tibble())
+
   load_mj_for(state, city) %>%
+    remove_na(search_conducted) %>%
     remove_months_with_low_coverage(subgeography, threshold = 0.5) %>%
     remove_na(subgeography)
 }
@@ -556,4 +562,68 @@ filter_to_locations_with_data_before_and_after_legalization <- function(p) {
   } 
 
   add_decision(p, action, reason, result, details)
+}
+
+
+add_mj_calculated_features <- function(p) {
+
+  action <- "add legalization, treatment, search, and misdemeanor features"
+  reason <- "these are required for the analysis"
+  result <- "added the features"
+
+  if (nrow(p@data) == 0)
+    return(add_decision(p, action, reason, "no change"))
+
+  if (!("subject_race" %in% colnames(p@data))) {
+    result <- "eliminated because race is not recorded"
+    p@data %<>% slice(0)
+    return(add_decision(p, action, reason, result))
+  }
+
+  if (!("violation") %in% colnames(p@data))
+    p@data %<>% mutate(violation = NA)
+
+  if (!("search_basis") %in% colnames(p@data))
+    p@data %<>% mutate(violation = NA)
+
+  p@data %<>% 
+    mutate(
+      subject_race = relevel(factor(subject_race), "white"),
+      legalization_date = if_else(
+        state == "CO",
+        as.Date("2012-12-10"),
+        # NOTE: default for control and WA is WA's legalization date
+        as.Date("2012-12-09")
+      ),
+      is_before_legalization = date < legalization_date,
+      is_treatment_state = state %in% c("WA", "CO"),
+      is_treatment = is_treatment_state & !is_before_legalization,
+      violation = str_to_lower(violation),
+      # NOTE: search_basis = NA is interpreted as a discretionary search;
+      # excludes other (non-discretionary)
+      is_discretionary_search =
+        search_conducted
+        & (
+          is.na(search_basis)
+          | search_basis %in% c("k9", "plain view", "probable cause", "consent")
+        ),
+      is_drugs_infraction_or_misdemeanor = str_detect(
+        violation,
+        str_c(
+          # NOTE: Details on Colorado's marijuana policies:
+          # https://www.colorado.gov/pacific/marijuana/driving-and-traveling
+          # CO violations
+          "possession of 1 oz or less of marijuana",
+          # NOTE: these spike after legalization
+          # "open marijuana container",
+
+          # WA violations
+          "drugs - misdemeanor",
+          "drugs paraphernalia - misdemeanor",
+          sep = "|"
+        )
+      )
+    )
+
+  add_decision(p, action, reason, result)
 }
