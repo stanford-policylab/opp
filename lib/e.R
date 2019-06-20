@@ -20,10 +20,10 @@ load <- function(analysis = "disparity") {
     load_func <- load_disparity_for
   } else if (analysis == "mj") {
     load_func <- load_mj_for
-    tbl <- filter(tbl, city == "Statewide")
+    tbl %<>% filter(city == "Statewide")
   } else if (analysis == "mjt") {
     load_func <- load_mj_threshold_for
-    tbl <- filter(tbl, state %in% c("CO", "WA"))
+    tbl %<>% filter(city == "Statewide", state %in% c("CO", "WA"))
   }
 
   results <- opp_apply(
@@ -209,10 +209,9 @@ remove_months_with_too_few_stops <- function(p, min_stops) {
   bad_months <- filter(month_count, n < min_stops) %>% pull(month)
   details <- list(month_count = month_count, bad_months = bad_months)
 
-  n <- length(bad_months)
-  if (n > 0) {
+  if (length(bad_months) > 0) {
     p@data %<>% filter(!(format(date, "%Y-%m") %in% bad_months))
-    result <- sprintf("removed %g months", n)
+    result <- sprintf("removed months %s", str_c(bad_months, collapse = ", "))
   }
 
   add_decision(p, action, reason, result, details)
@@ -516,26 +515,24 @@ remove_locations_with_unreliable_search_data <- function(p) {
 
   city <- p@data$city[[1]]
   state <- p@data$state[[1]]
-  n_before <- nrow(p@data)
 
   if (city == "Statewide" & state %in% c("IL", "MD", "MO", "NE")) {
     p@data %<>% slice(0)
     result <- case_when(
-      state,
-      "IL" ~ "removed because search recording policy changes year to year",
-      "MD" ~ "removed because before 2013 we are only given annual data",
-      "MO" ~ "removed because it's all annual data",
-      "NE" ~ str_c(
-        "removed because it has unreliable quarterly dates, ",
-        "i.e. in 2012 all patrol stops are in Q1"
-      ),
+      state == "IL"
+        ~ "removed because search recording policy changes year to year",
+      state == "MD"
+        ~ "removed because before 2013 we are only given annual data",
+      state == "MO"
+        ~ "removed because it's all annual data",
+      state == "NE"
+        ~ str_c(
+          "removed because it has unreliable quarterly dates, ",
+          "i.e. in 2012 all patrol stops are in Q1"
+        ),
       TRUE ~ "no change"
     )
   }
-
-  n_after <- nrow(p@data)
-  if (n_before - n_after > 0)
-    result <- "rows removed"
 
   add_decision(p, action, reason, result)
 }
@@ -572,6 +569,8 @@ add_mj_calculated_features <- function(p) {
   reason <- "these are required for the analysis"
   result <- "added the features"
 
+  print(action)
+
   if (nrow(p@data) == 0)
     return(add_decision(p, action, reason, "no change"))
 
@@ -585,7 +584,7 @@ add_mj_calculated_features <- function(p) {
     p@data %<>% mutate(violation = NA)
 
   if (!("search_basis") %in% colnames(p@data))
-    p@data %<>% mutate(violation = NA)
+    p@data %<>% mutate(search_basis = NA)
 
   p@data %<>% 
     mutate(
