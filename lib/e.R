@@ -24,7 +24,7 @@ load <- function(analysis = "disparity") {
     tbl %<>% filter(city == "Statewide")
   } else if (analysis == "mjt") {
     load_func <- load_mj_threshold_for
-    tbl %<>% filter(state %in% c("CO", "WA"))
+    tbl %<>% filter(city == "Statewide", state %in% c("CO", "WA"))
   }
 
   results <- opp_apply(
