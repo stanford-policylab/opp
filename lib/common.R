@@ -5,6 +5,7 @@ library(fs)
 library(functional)
 library(getopt)
 library(here)
+library(housingData) # loads geoCounty which has county lat/lng centroids
 library(jsonlite)
 library(knitr)
 library(lubridate)
