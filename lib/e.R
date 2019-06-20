@@ -4,14 +4,14 @@ source("opp.R")
 load <- function(analysis = "disparity") {
 
   # NOTE: test locations
-  tbl <- tribble(
-    ~state, ~city,
-    "WA", "Seattle",
-    "WA", "Statewide",
-    "CT", "Hartford",
-    "TX", "Arlington"
-  )
-  # tbl <- opp_available()
+  # tbl <- tribble(
+  #   ~state, ~city,
+  #   "WA", "Seattle",
+  #   "WA", "Statewide",
+  #   "CT", "Hartford",
+  #   "TX", "Arlington"
+  # )
+  tbl <- opp_available()
 
   if (analysis == "vod_dst") {
     load_func <- load_dst_vod_for
@@ -24,7 +24,7 @@ load <- function(analysis = "disparity") {
     tbl <- filter(tbl, city == "Statewide")
   } else if (analysis == "mjt") {
     load_func <- load_mj_threshold_for
-    tbl <- filter(tbl, city == "Statewide")
+    tbl <- filter(tbl, state %in% c("CO", "WA"))
   }
 
   results <- opp_apply(
@@ -93,11 +93,6 @@ load_mj_for <- function(state, city) {
 
 
 load_mj_threshold_for <- function(state, city) {
-
-  # NOTE: threshold test is only for CO and WA
-  if (!(state %in% c("CO", "WA")))
-    return(tibble())
-
   load_mj_for(state, city) %>%
     remove_na(search_conducted) %>%
     remove_months_with_low_coverage(subgeography, threshold = 0.5) %>%
