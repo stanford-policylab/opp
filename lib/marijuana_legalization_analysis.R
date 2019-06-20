@@ -4,22 +4,25 @@ source(here::here("lib", "eligibility.R"))
 
 marijuana_legalization_analysis <- function() {
   
-  p <- load("mj")
+  mj <- load("mj")
   write_rds(p, here::here("cache", "mj.rds"))
 
-  treatment <- filter(p@data, state %in% c("CO", "WA"))
-  control <- filter(p@data, !(state %in% c("CO", "WA")))
+  mjt <- load("mjt")
+  write_rds(p, here::here("cache", "mjt.rds"))
+
+  treatment <- filter(mj@data, state %in% c("CO", "WA"))
+  control <- filter(mj@data, !(state %in% c("CO", "WA")))
 
   list(
     tables = list(
       search_rate_difference_in_difference_coefficients =
-        calculate_search_rate_difference_in_difference_coefficients(p@data)
+        calculate_search_rate_difference_in_difference_coefficients(mj@data)
     ),
     plots = list(
       treatment_search_rates = compose_search_rate_plots(treatment),
       control_search_rates = compose_search_rate_plots(control),
       treatment_misdemeanor_rates = compose_misdemeanor_rate_plots(treatment),
-      inferred_threshold_changes = compose_inferred_threshold_changes_plot(treatment)
+      inferred_threshold_changes = compose_inferred_threshold_changes_plot(mjt@data)
     )
   )
 }
