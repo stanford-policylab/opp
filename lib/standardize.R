@@ -139,11 +139,21 @@ sanitize <- function(d) {
         sanitize_vehicle_year_func(d$data$date)
       )
     }
-    # NOTE: sanitize digits in free form character fields except location and
-    # violation under the assumption that they may include sensitive
-    # information, i.e. driver's license numbers, etc
     if (
-      !(col %in% c("raw_row_number", "violation", "location"))
+      !(col %in% c(
+        "raw_row_number",
+        "violation",
+        "disposition",
+        "location",
+        "officer_assignment",
+        quos_names(city_subgeographies),
+        quos_names(state_subgeographies),
+        "unit",
+        "vehicle_color",
+        "vehicle_make",
+        "vehicle_model",
+        "vehicle_type"
+      ))
       & class(d$data[[col]]) == "character"
     ) {
       sanitize_schema <- append_to(sanitize_schema, col, sanitize_digits)
