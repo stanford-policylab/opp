@@ -203,10 +203,9 @@ remove_months_with_too_few_stops <- function(p, min_stops) {
   bad_months <- filter(month_count, n < min_stops) %>% pull(month)
   details <- list(month_count = month_count, bad_months = bad_months)
 
-  n <- length(bad_months)
-  if (n > 0) {
+  if (length(bad_months) > 0) {
     p@data %<>% filter(!(format(date, "%Y-%m") %in% bad_months))
-    result <- sprintf("removed %g months", n)
+    result <- sprintf("removed months %s", str_c(bad_months, collapse = ", "))
   }
 
   add_decision(p, action, reason, result, details)
