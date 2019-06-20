@@ -13,7 +13,7 @@ marijuana_legalization_analysis <- function() {
   treatment <- filter(mj$data, state %in% c("CO", "WA"))
   control <- filter(mj$data, !(state %in% c("CO", "WA")))
 
-  list(
+  results <- list(
     tables = list(
       search_rate_difference_in_difference_coefficients =
         calculate_search_rate_difference_in_difference_coefficients(mj$data)
@@ -198,7 +198,13 @@ compose_timeseries_rate_plot <- function(
 
   p <-
     ggplot(
-      tbl,
+      mutate(
+        tbl,
+        subject_race = factor(
+          subject_race,
+          levels = c("white", "black", "hispanic")
+        )
+      ),
       aes(
         x = quarter,
         y = rate,
