@@ -510,7 +510,6 @@ remove_locations_with_unreliable_search_data <- function(p) {
 
   city <- p@data$city[[1]]
   state <- p@data$state[[1]]
-  n_before <- nrow(p@data)
 
   if (city == "Statewide" & state %in% c("IL", "MD", "MO", "NE")) {
     p@data %<>% slice(0)
@@ -529,10 +528,6 @@ remove_locations_with_unreliable_search_data <- function(p) {
       TRUE ~ "no change"
     )
   }
-
-  n_after <- nrow(p@data)
-  if (n_before - n_after > 0)
-    result <- "rows removed"
 
   add_decision(p, action, reason, result)
 }
