@@ -21,10 +21,10 @@ load <- function(analysis = "disparity") {
     load_func <- load_disparity_for
   } else if (analysis == "mj") {
     load_func <- load_mj_for
-    tbl <- filter(tbl, city == "Statewide")
+    tbl %<>% filter(city == "Statewide")
   } else if (analysis == "mjt") {
     load_func <- load_mj_threshold_for
-    tbl <- filter(tbl, state %in% c("CO", "WA"))
+    tbl %<>% filter(state %in% c("CO", "WA"))
   }
 
   results <- opp_apply(
@@ -37,12 +37,11 @@ load <- function(analysis = "disparity") {
     },
     tbl
   )
-  results
 
-#   list(
-#     data = bind_rows(lapply(results, function(p) p@data)),
-#     metadata = bind_rows(lapply(results, function(p) p@metadata))
-#   )
+  list(
+    data = bind_rows(lapply(results, function(p) p@data)),
+    metadata = bind_rows(lapply(results, function(p) p@metadata))
+  )
 }
 
 
