@@ -40,8 +40,8 @@ clean <- function(d, helpers) {
     "2" = "black",
     "3" = "hispanic",
     "4" = "asian/pacific islander",
-    "5" = "other/unknown",
-    "6" = "other/unknown"
+    "5" = "other",
+    "6" = "unknown"
   )
   
   tr_race_raw <- c(
@@ -121,7 +121,7 @@ clean <- function(d, helpers) {
         "warning" = warning_issued
       ),
       # NOTE: 97 rows are NA; we consider these search F
-      search_conducted = str_detect(disp_info, "(^|\\,)24") & !is.na(disp_info),
+      search_conducted = str_detect(disp_info, "(^|\\,| )24") & !is.na(disp_info),
       search_basis = first_of(
         "k9" = str_detect(disp_info, "(^|\\,)24C?K"),
         "consent" = str_detect(disp_info, "(^|\\,)24R"),
