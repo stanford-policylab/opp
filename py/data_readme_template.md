@@ -1981,7 +1981,11 @@ We’re excited to see what you come up with!
 **Data notes**:
 - The original data was aggregated by week.
 - Some rows have an unlikely high number of stops or searches. We have an
-  outstanding inquiry on this, but for now it is assumed to be correct.
+  outstanding inquiry on this, but have not heard back. In particular, spikes
+  in each week seem to usually be driven by a single officer with an unlikely
+  high number of stops or searches (e.g., about 1,000 searches by an officer
+  in a single week). Each spike seems to be driven by a different officer. 
+  Since this reporting seems highly unlikely, we exclude VA from search analyses. 
 - Counties were mapped using the provided dictionary, which is included in the
   raw data folder.
 - There are no written warnings in Virginia and verbal warnings are not
