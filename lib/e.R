@@ -53,6 +53,7 @@ load_dst_vod_for <- function(state, city) {
     select_top_n_locations_per_super(geography, state, top_n = 20)
 }
 
+
 load_full_vod_for <- function(state, city) {
   load_vod_base_for(state, city) %>%
     remove_partial_years(geography) %>% 
@@ -60,21 +61,21 @@ load_full_vod_for <- function(state, city) {
     select_top_n_locations_per_super(geography, state, top_n = 20)
 }
 
+
 load_vod_base_for <- function(state, city) {
   load_base_for(state, city) %>%
-    remove_months_with_low_coverage(date, threshold = 0.5) %>%
     remove_months_with_low_coverage(time, threshold = 0.5) %>% 
-    remove_na(date) %>% 
     remove_na(time) %>% 
     filter_to_analysis_races(races = c("white", "black")) %>%
-    add_county_or_city_as_geography() %>% 
+    add_geography_for_vod() %>% 
     remove_na(geography) %>% 
-    add_lat_lng() %>%
-    remove_na(center_lat) %>% 
-    remove_na(center_lng) %>% 
-    add_sunset_times() %>% 
-    filter_to_intertwilight_range()
+    add_center_lat_lng() %>%
+    remove_na(center_lat, center_lng) %>% 
+    add_sunset_times(center_lat, center_lng) %>% 
+    filter_to_intertwilight_time_period() %>%
+    remove_sunset_to_dusk_time_period()
 }
+
 
 load_disparity_for <- function(state, city) {
   load_base_for(state, city) %>%
@@ -234,8 +235,8 @@ remove_months_with_low_coverage <- function(p, feature, threshold) {
   print(action)
 
   if (!(feat_name %in% colnames(p@data))) {
-    result <- sprintf("eliminated because %s data is not recorded", feat_name)
     p@data %<>% slice(0)
+    result <- sprintf("eliminated because %s data is not recorded", feat_name)
     return(add_decision(p, action, reason, result))
   }
 
@@ -257,25 +258,29 @@ remove_months_with_low_coverage <- function(p, feature, threshold) {
 }
 
 
-remove_na <- function(p, feature) {
+remove_na <- function(p, ...) {
 
-  featq <- enquo(feature)
-  feat_name <- quo_name(featq)
+  featqs <- enquos(...)
+  feat_names <- quos_names(featqs)
 
-  action <- sprintf("remove rows where %s is NA", feat_name)
-  reason <- sprintf("%s is required for analysis", feat_name)
+  feat_names_str <- str_c(feat_names, collapse = ", ")
+  action <- sprintf("remove rows where any of %s is NA", feat_names_str)
+  reason <- sprintf("each of %s is required for analysis", feat_names_str)
   result <- "no change"
 
   print(action)
 
-  if (!(feat_name) %in% colnames(p@data)) {
-    result <- sprintf("eliminated because %s not recorded", feat_name)
-    p@data %<>% slice(0)
-    return(add_decision(p, action, reason, result))
+  for (feat_name in feat_names) {
+    if (!(feat_name) %in% colnames(p@data)) {
+      p@data %<>% slice(0)
+      result <- sprintf("eliminated because %s not recorded", feat_name)
+      return(add_decision(p, action, reason, result))
+    }
   }
 
   n_before <- nrow(p@data)
-  p@data %<>% filter(!is.na(!!featq))
+  for (featq in featqs)
+    p@data %<>% filter(!is.na(!!featq))
   n_after <- nrow(p@data)
   if (n_before - n_after > 0)
     result <- "rows removed"
@@ -520,15 +525,20 @@ remove_locations_with_unreliable_search_data <- function(p) {
     p@data %<>% slice(0)
     result <- case_when(
       state == "IL"
-        ~ "removed because search recording policy changes year to year",
+        ~ "eliminated because search recording policy changes year to year",
       state == "MD"
-        ~ "removed because before 2013 we are only given annual data",
+        ~ "eliminated because before 2013 we are only given annual data",
       state == "MO"
-        ~ "removed because it's all annual data",
+        ~ "eliminated because it's all annual data",
       state == "NE"
         ~ str_c(
-          "removed because it has unreliable quarterly dates, ",
+          "eliminated because it has unreliable quarterly dates, ",
           "i.e. in 2012 all patrol stops are in Q1"
+        ),
+      state == "VA",
+        ~ str_c(
+          "eliminated because it has weekly search recording with suspicious "
+          "spikes, i.e. an officer conducts 800-1500 searches in one week"
         ),
       TRUE ~ "no change"
     )
@@ -628,8 +638,10 @@ add_mj_calculated_features <- function(p) {
   add_decision(p, action, reason, result)
 }
 
-add_county_or_city_as_geography <- function(p) {
-  action <- "add counties and cities as geography"
+
+add_geography_for_vod <- function(p) {
+
+  action <- "use county_name for states and city for cities as geography"
   reason <- "necessary for joint state-city vod models"
   result <- "no change"
   
@@ -638,39 +650,32 @@ add_county_or_city_as_geography <- function(p) {
   if (nrow(p@data) == 0)
     return(add_decision(p, action, reason, result))
   
-  geography_colname <-
-    if (p@data$city[[1]] == "Statewide") {
-      "county_name"
-    } else {
-      "city"
-    }
+  city <- p@data$city[[1]]
+  geography_colname <- if_else(city == "Statewide", "county_name", "city")
+
+  if (!(geography_colname %in% colnames(p@data))) {
+    p@data %<>% slice(0)
+    result <- sprintf("eliminated because %s not present", feat_name)
+    return(add_decision(p, action, reason, result))
+  }
   
-  geography <- select_or_add_as_na(p@data, geography_colname)
-  colnames(geography) <- "geography"
-  p@data %<>% 
-    bind_cols(geography) %>% 
-    mutate(geography = str_c(geography, state, sep = ", "))
-  
-  summary <-
-    left_join(
-      null_rates(geography),
-      n_distinct_values(geography),
-      by = "feature"
-    ) 
-  
+  p@data %<>%
+    mutate(geography = str_c(UQ(sym(geography_colname)), state, sep = ", "))
+
   result <- sprintf(
-    "selected geography %s (%s null, %g distinct values)",
+    "selected geography %s (%g%% null, %g distinct values)",
     geography_colname,
-    summary$`null rate`,
-    summary$`n distinct values`
+    null_rate(p@data$geography) * 100,
+    length(unique(p@data$geography))
   )
-  details <- list(summary = summary)
   
-  add_decision(p, action, reason, result, details)
+  add_decision(p, action, reason, result)
 }
 
-add_lat_lng <- function(p) {
-  action <- "add lat/lng"
+
+add_center_lat_lng <- function(p) {
+
+  action <- "add center_lat and center_lng"
   reason <- "necessary for computing sunset times"
   result <- "no change"
   
@@ -679,41 +684,53 @@ add_lat_lng <- function(p) {
   if (nrow(p@data) == 0)
     return(add_decision(p, action, reason, result))
   
-  geocodes <-
-    if (p@data$city[[1]] == "Statewide") {
-      geoCounty %>% 
-      filter(state == p@data$state[[1]]) %>% 
-      select(state, county, center_lat = lat, center_lng = lon) %>% 
-      mutate(
-        # to match how states were processed, where McHenry, ND is Mchenry, ND
-        county = str_to_title(county),
-        # to match how states were processed, where "St. Johns" is "St Johns"
-        county = str_replace_all(county, "\\.", "")
-      ) %>% 
-      unite(geography, c("county", "state"), sep = ", ")
-    } else {
-      read_csv(here::here("resources", "city_coverage_geocodes.csv")) %>%
-      rename(center_lat = lat, center_lng = lng) 
-    }
+  city <- p@data$city[[1]]
+  state <- p@data$state[[1]]
+
+  p@data %<>%
+    left_join(
+      if (city != "Statewide") {
+        read_csv(here::here("resources", "city_center_lat_lngs.csv"))
+      } else {
+        geoCounty %>% 
+        filter(state == state) %>%
+        select(
+          state,
+          county,
+          center_lat = lat,
+          center_lng = lon
+        ) %>% 
+        mutate(
+          # NOTE: match how states were processed, i.e. McHenry, ND is Mchenry, ND
+          county = str_to_title(county),
+          # NOTE: match how states were processed, i.e. "St. Johns" is "St Johns"
+          county = str_replace_all(county, "\\.", "")
+        ) %>% 
+        unite(
+          geography,
+          c("county", "state"),
+          sep = ", "
+        )
+      },
+      by = "geography"
+    )
   
-  p@data %<>% 
-    left_join(geocodes, by = "geography")
+  # NOTE: null rate for center_lat and center_lng will be identical
+  result <- sprintf("added lat/lng (%s null)", null_rate(p@data$center_lat))
   
-  summary <-
-    null_rates(select(p@data, center_lat, center_lng))
-  
-  lat_lng_null_rate <- max(summary$`null rate`)
-  
-  result <- sprintf(
-    "added lat/lng (%s null)",
-    lat_lng_null_rate
-  )
-  details <- list(summary = summary)
-  
-  add_decision(p, action, reason, result, details)
+  add_decision(p, action, reason, result)
 }
 
-add_sunset_times <- function(p) {
+
+add_sunset_times <- function(
+  p,
+  lat_col,
+  lng_col
+) {
+
+  lat_colq <- enquo(lat_col)
+  lng_colq <- enquo(lng_col)
+
   action <- "add sunset times"
   reason <- "necessary for vod analysis"
   result <- "no change"
@@ -722,66 +739,19 @@ add_sunset_times <- function(p) {
   
   if (nrow(p@data) == 0)
     return(add_decision(p, action, reason, result))
+
+  p@data %<>% add_times(date, !!lat_colq, !!lng_colq, c("sunset", "dusk"))
+
+  result <- sprintf("added sunset times (%s NA)", null_rate(p@data$sunset))
   
-  tzs <-
-    p@data %>%
-    select(center_lat, center_lng) %>%
-    distinct() %>%
-    # NOTE: Warning is about using 'fast' by default; 'accurate' requires
-    # more dependencies and it doesn't seem necessary
-    mutate(
-      tz = tz_lookup_coords(pull(., center_lat), pull(., center_lng), warn = F)
-    )
-  
-  sunset_times <- 
-    p@data %>%
-    select(date, center_lat, center_lng) %>%
-    distinct() %>%
-    left_join(tzs) %>%
-    mutate(
-      lat = center_lat, 
-      lon = center_lng
-    ) %>% 
-    mutate(
-      sunset_utc = getSunlightTimes(data = ., keep = c("sunset"))$sunset,
-      date = ymd(str_sub(date, 1, 10))
-    ) %>% 
-    mutate(
-      dusk_utc = getSunlightTimes(data = ., keep = c("dusk"))$dusk,
-      date = ymd(str_sub(date, 1, 10))
-    )
-  
-  to_local_time <- function(sunset_utc, tz) {
-    format(sunset_utc, "%H:%M:%S", tz = tz)
-  }
-  
-  sunset_times$pre_sunset <- unlist(
-    map2(sunset_times$sunset_utc, sunset_times$tz, to_local_time)
-  )
-  sunset_times$sunset <- unlist(
-    map2(sunset_times$dusk_utc, sunset_times$tz, to_local_time)
-  )
-  
-  p@data %<>% left_join(
-    sunset_times %>% 
-      select(date, center_lat, center_lng, pre_sunset, sunset)
-  ) 
-  
-  summary <- null_rates(select(p@data, sunset, pre_sunset))
-  sunset_null_rate <- max(summary$`null rate`)
-  
-  result <- sprintf(
-    "added sunset times (%s null)",
-    sunset_null_rate
-  )
-  details <- list(summary = summary)
-  
-  add_decision(p, action, reason, result, details)
+  add_decision(p, action, reason, result)
 }
 
-filter_to_intertwilight_range <- function(p) {
-  action <- "filter to intertwilight range"
-  reason <- "necessary for vod analysis"
+
+filter_to_intertwilight_time_period <- function(p) {
+
+  action <- "filter to the intertwilight time period"
+  reason <- "necessary for the vod analysis"
   result <- "no change"
   
   print(action)
@@ -789,55 +759,60 @@ filter_to_intertwilight_range <- function(p) {
   if (nrow(p@data) == 0)
     return(add_decision(p, action, reason, result))
   
-  time_to_minute <- function(time) {
-    hour(hms(time)) * 60 + minute(hms(time))
-  }
-  
-  p@data <-
-    p@data %>%
+  n_before <- nrow(p@data)
+  p@data %<>%
     mutate(
       minute = time_to_minute(time),
-      pre_sunset_minute = time_to_minute(pre_sunset),
       sunset_minute = time_to_minute(sunset),
+      dusk_minute = time_to_minute(dusk),
+      # TODO(amyshoe): changed from both working with dusk
       min_sunset_minute = min(sunset_minute),
-      max_sunset_minute = max(sunset_minute)
-    )
-  
-  n_before <- nrow(p@data)
-  p@data %<>% 
+      max_dusk_minute = max(dusk_minute)
+    ) %>%
     filter(
       # NOTE: filter to get only the intertwilight period
       minute >= min_sunset_minute,
-      minute <= max_sunset_minute
+      minute <= max_dusk_minute
     )
-  n_after_intertwilight_filter <- nrow(p@data)
-  p@data %<>% 
-    filter(
-      # NOTE: remove the ~30min ambiguously lit period between sunset and dusk
-      !(minute > pre_sunset_minute & minute < sunset_minute)
-    ) 
-  n_after_ambiguous_light_filter <- nrow(p@data)
-  
-  if (n_before - n_after_ambiguous_light_filter > 0)
+  n_after <- nrow(p@data)
+
+  if (n_before - n_after > 0)
     result <- "rows removed"
   
-  details <- list(
-    p_removed_from_twilight_filter = 
-      (n_before - n_after_intertwilight_filter) / n_before,
-    p_removed_from_ambiguous_light_filter = 
-      (n_after_intertwilight_filter - n_after_ambiguous_light_filter) /
-      n_after_ambiguous_light_filter
-  )
-  
-  add_decision(p, action, reason, result, details)
+  add_decision(p, action, reason, result)
 }
 
+
+remove_sunset_to_dusk_time_period <- function(p) {
+
+  action <- "remove the time between when the sun sets and it is dark (dusk)"
+  reason <- "necessary for the vod analysis"
+  result <- "no change"
+  
+  print(action)
+  
+  if (nrow(p@data) == 0)
+    return(add_decision(p, action, reason, result))
+  
+  n_before <- nrow(p@data)
+  p@data %<>% filter(!(minute > sunset_minute & minute < dusk_minute)) 
+  n_after <- nrow(p@data)
+
+  if (n_before - n_after > 0)
+    result <- "rows removed"
+  
+  add_decision(p, action, reason, result)
+}
+
+
 remove_partial_years <- function(
-  p, feature, 
+  p,
+  feature, 
   days_per_yr_threshold = 100,
   max_start_day = "01-15",
   min_end_day = "12-15"
 ) {
+
   featq <- enquo(feature)
   feat_name <- quo_name(featq)
   
@@ -848,8 +823,8 @@ remove_partial_years <- function(
   print(action)
   
   if (!(feat_name) %in% colnames(p@data)) {
-    result <- sprintf("eliminated because %s not present", feat_name)
     p@data %<>% slice(0)
+    result <- sprintf("eliminated because %s not present", feat_name)
     return(add_decision(p, action, reason, result))
   }
   
@@ -934,14 +909,18 @@ remove_partial_years <- function(
   
 }
 
-add_dst_dates <- function() {
+
+add_dst_dates <- function(p) {
 }
 
-filter_to_dst_windows <- function(week_radius = 3) {
+
+filter_to_dst_windows <- function(p, week_radius) {
 }
+
 
 remove_locations_with_too_few_stops_per_race <- function(geo, min_stops) {
 }
+
 
 select_top_n_locations_per_super <- function(geo, supergeo, top_n) {
   

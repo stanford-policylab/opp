@@ -48,6 +48,76 @@ add_raw_colname_prefix <- function(tbl, ...) {
 }
 
 
+add_times <- function(
+  tbl,
+  date_col,
+  lat_col,
+  lng_col, 
+  # NOTE: see ?getSunsetTimes for available values
+  times = c("sunset", "dusk")
+) {
+
+  date_colq <- enquo(date_col)
+  lat_colq <- enquo(lat_col)
+  lng_colq <- enquo(lng_col)
+
+  date_colname <- quo_name(date_colq)
+  lat_colname <- quo_name(lat_colq)
+  lng_colname <- quo_name(lng_colq)
+
+  tbl %<>% add_time_zones(!!lat_colq, !!lng_colq)
+
+  cols <- c(date_colname, lat_colname, lng_colname, "tz")
+
+  tms <- 
+    # NOTE: getSunlightTimes' tz argument must be a single character string;
+    # since the data may have multiple time zones, convert from UTC (default)
+    # to the local timezone after
+    getSunlightTimes(
+      data =
+        tbl %>%
+        select(!!!cols) %>%
+        distinct() %>%
+        mutate(date = !!date_colq, lat = !!lat_colq, lon = !!lng_colq),
+      keep = times
+    ) %>%
+    as_tibble() %>%
+    # NOTE: suncalc adds 12:00 to all dates; remove this
+    mutate(date = ymd(str_sub(date, 1, 10)))
+
+  # NOTE: convert UTC to local time
+  for (time in times)
+    tms[[time]] <- to_local_time(tms[[time]], tms$tz)
+
+  tms %<>% select(!!!c(cols, times))
+
+  left_join(tbl, tms, by = cols)
+}
+
+
+add_time_zones <- function(
+  tbl,
+  lat_col,
+  lng_col
+) {
+
+  lat_colq <- enquo(lat_col)
+  lng_colq <- enquo(lng_col)
+
+  left_join(
+    tbl,
+    tbl %>%
+    select(!!lat_colq, !!lng_colq) %>%
+    distinct() %>%
+    mutate(
+      # NOTE: Warning is about using 'fast' by default; 'accurate' requires
+      # more dependencies and it doesn't seem necessary
+      tz = tz_lookup_coords(pull(., !!lat_colq), pull(., !!lng_colq), warn = F)
+    )
+  )
+}
+
+
 age_at_date <- function(birth_date, date) {
   # Calculate age at a certain date, given date of birth.
   # NOTE: age returned as floating point and will differ slightly from birthday
@@ -1039,6 +1109,18 @@ str_detect_na <- function(v, pattern, na_value = F) {
 
 str_to_expr <- function(expr_str) {
   eval(parse(text = expr_str))
+}
+
+
+time_to_minute <- function(time) {
+  tm <- hms(time)
+  hour(tm) * 60 + minute(tm)
+}
+
+
+to_local_time <- function(dts, tzs) {
+  f <- function(dt, tz) { format(dt, "%H:%M:%S", tz = tz) }
+  unlist(map2(dts, tzs, f))
 }
 
 

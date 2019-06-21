@@ -142,9 +142,8 @@ prepare_veil_of_darkness_cities <- function(
 ) {
   
   city_geocodes <-
-    read_csv(here::here("resources", "city_coverage_geocodes.csv")) %>%
-    separate(loc, c("city", "state"), sep = ",") %>%
-    rename(center_lat = lat, center_lng = lng)
+    read_csv(here::here("resources", "city_center_lat_lngs.csv")) %>%
+    separate(loc, c("city", "state"), sep = ",")
   
   print("Loading city data..")
   tbl <- load_veil_of_darkness_cities(dst, only) %>% 

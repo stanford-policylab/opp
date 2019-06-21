@@ -1,4 +1,4 @@
-geography,lat,lng
+geography,center_lat,center_lng
 "Albany, NY",42.6525793,-73.7562317
 "Anaheim, CA",33.8365932,-117.9143012
 "Arlington, TX",32.735687,-97.10806559999999
