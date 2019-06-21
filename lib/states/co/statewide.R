@@ -52,6 +52,7 @@ load_raw <- function(raw_data_dir, n_max) {
         mutate_at(vars(Warrant, ActivityID), as.character) %>% 
         rename(Age = AGE) %>% 
         mutate(
+          Ethnicity = if_else(Ethnicity == "HIS", "H", Race),
           # change / to - in order to match main data pull, for parsing
           IncidentDate = str_replace_all(IncidentDate, "/", "-")
         )
@@ -99,16 +100,16 @@ clean <- function(d, helpers) {
     AP = "asian/pacific islander",
     B = "black",
     H = "hispanic",
-    I = "other/unknown",
-    U = "unknown/other",
+    I = "other",
+    U = "unknown",
     W = "white",
-    Z = "unknown/other",
+    Z = "other",
     # include translations for 2017 data
     BLK = "black",
-    NAN = "unknown/other",
+    NAN = "other",
     ORI = "asian/pacific islander",
     PAI = "asian/pacific islander",
-    UNK = "unkown/other",
+    UNK = "unkown",
     WHT = "white"
   )
 
