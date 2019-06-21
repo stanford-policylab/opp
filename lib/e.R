@@ -832,6 +832,108 @@ filter_to_intertwilight_range <- function(p) {
   add_decision(p, action, reason, result, details)
 }
 
+remove_partial_years <- function(
+  p, feature, 
+  days_per_yr_threshold = 100,
+  max_start_day = "01-15",
+  min_end_day = "12-15"
+) {
+  featq <- enquo(feature)
+  feat_name <- quo_name(featq)
+  
+  action <- sprintf("remove %s-years with partial data", feat_name)
+  reason <- "need full-year comparison in vod"
+  result <- "no change"
+  
+  print(action)
+  
+  if (!(feat_name) %in% colnames(p@data)) {
+    result <- sprintf("eliminated because %s not present", feat_name)
+    p@data %<>% slice(0)
+    return(add_decision(p, action, reason, result))
+  }
+  
+  days_represented_by_feat <-
+    p@data %>% 
+    count(!!featq, date) %>% 
+    mutate(yr = year(date)) %>% 
+    group_by(!!featq, yr) %>% 
+    summarize(n_days_represented = n())
+  # NOTE: removing feature with not enough of a full year will also
+  # knock out aggregate data, which is intended.
+  remove_yr_if_missing_days <- days_represented_by_feat %>% 
+    filter(n_days_represented < days_per_yr_threshold)
+  
+  n_before <- nrow(p@data)
+  p@data %<>% 
+    mutate(yr = year(date)) %>% 
+    inner_join(
+      days_represented_by_feat %>% 
+        filter(n_days_represented >= days_per_yr_threshold),
+        select(-n_days_represented),
+      by = c("geography", "yr")
+    )
+  n_after_days_per_yr_filter <- nrow(p@data)
+  
+  months_represented_by_feat <-
+    p@data %>% 
+    mutate(month = as.yearmon(date)) %>% 
+    count(!!featq, yr, month) %>% 
+    group_by(!!featq, yr) %>% 
+    summarize(n_months_represented = n())
+  remove_yr_if_missing_months <- months_represented_by_feat %>% 
+    filter(n_months_represented < 12)
+  
+  p@data %<>% 
+    inner_join(
+      months_represented_by_feat %>% 
+        filter(n_months_represented == 12),
+      select(-n_months_represented),
+      by = c("geography", "yr")
+    )
+  n_after_months_per_yr_filter <- nrow(p@data)
+  
+  date_ranges_represented_by_feat <-
+    p@data %>% 
+    group_by(!!featq, yr) %>% 
+    summarize(min_date = min(date), max_date = max(date))
+  remove_yr_if_not_complete <- date_ranges_represented_by_feat %>% 
+    filter(
+      format(min_date,"%m-%d") > max_start_day |
+      format(max_date,"%m-%d") < min_end_day
+    )
+  
+  p@data %<>% 
+    inner_join(
+      date_ranges_represented_by_feat %>% 
+        filter(
+          format(min_date,"%m-%d") <= max_start_day |
+          format(max_date,"%m-%d") >= min_end_day 
+        ),
+      select(-date_range),
+      by = c("geography", "yr")
+    )
+  n_after_date_range_filter <- nrow(p@data)
+  
+  details <- list(
+    incomplete_feat_years_by_day = remove_yr_if_missing_days,
+    prop_removed_by_day = (n_before - n_after_days_per_yr_filter) / n_before,
+    incomplete_feat_years_by_month = remove_yr_if_missing_months, 
+    prop_removed_by_month =
+      (n_after_days_per_yr_filter - n_after_months_per_yr_filter) / 
+          n_after_days_per_yr_filter,
+    incomplete_feat_yrs_by_range = remove_yr_if_not_complete,
+    prop_removed_by_range = 
+      (n_after_days_per_yr_filter - n_after_date_range_filter) / 
+        n_after_days_per_yr_filter
+  )
+  
+  if (n_before - n_after_date_range_filter > 0)
+    result <- "rows removed"
+  add_decision(p, action, reason, result, details)
+  
+}
+
 add_dst_dates <- function() {
 }
 
@@ -846,6 +948,3 @@ select_top_n_locations_per_super <- function(geography, supergeography, top_n) {
   
 }
 
-remove_partial_years <- function(geography) {
-  
-}
