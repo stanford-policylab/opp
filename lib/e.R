@@ -765,13 +765,12 @@ filter_to_intertwilight_time_period <- function(p) {
       minute = time_to_minute(time),
       sunset_minute = time_to_minute(sunset),
       dusk_minute = time_to_minute(dusk),
-      # TODO(amyshoe): changed from both working with dusk
-      min_sunset_minute = min(sunset_minute),
+      min_dusk_minute = min(dusk_minute),
       max_dusk_minute = max(dusk_minute)
     ) %>%
     filter(
       # NOTE: filter to get only the intertwilight period
-      minute >= min_sunset_minute,
+      minute >= min_dusk_minute,
       minute <= max_dusk_minute
     )
   n_after <- nrow(p@data)
