@@ -940,11 +940,10 @@ add_dst_dates <- function() {
 filter_to_dst_windows <- function(week_radius = 3) {
 }
 
-remove_locations_with_too_few_stops_per_race <- function(geography, min_stops) {
-  
+remove_locations_with_too_few_stops_per_race <- function(geo, min_stops) {
 }
 
-select_top_n_locations_per_super <- function(geography, supergeography, top_n) {
+select_top_n_locations_per_super <- function(geo, supergeo, top_n) {
   
 }
 
