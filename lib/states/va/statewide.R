@@ -130,8 +130,8 @@ clean <- function(d, helpers) {
     "hispanic" = "hispanic",
     "indian" = "asian/pacific islander",
     "asian" = "asian/pacific islander",
-    "other" = "other/unknown",
-    "unknown" = "other/unknown"
+    "other" = "other",
+    "unknown" = "unknown"
   )
 
   d$metadata["comments"]["aggregation"] <- str_c(

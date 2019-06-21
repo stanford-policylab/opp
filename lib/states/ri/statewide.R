@@ -15,9 +15,9 @@ clean <- function(d, helpers) {
     # NOTE: L corresponds to "Black Hispanic" which is mapped to "hispanic".
     # This is consistent with coding policies in other states.
     L = "hispanic",
-    N = "other/unknown",
+    N = "other",
     W = "white",
-    O = "other/unknown"
+    O = "other"
   )
 
   tr_reason_for_stop <- c(

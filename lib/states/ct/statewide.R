@@ -16,7 +16,7 @@ clean <- function(d, helpers) {
     H = "hispanic",
     W = "white",
     # Native American
-    I = "other/unknown"
+    I = "other"
   )
 
   tr_search_basis <- c(

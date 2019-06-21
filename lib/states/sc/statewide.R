@@ -18,11 +18,11 @@ clean <- function(d, helpers) {
     "White" = "white",
     "Black" = "black",
     "Hispanic" = "hispanic",
-    "Amerindian" = "other/unknown",
+    "Amerindian" = "other",
     "Asian" = "asian/pacific islander",
-    "Multi-Race" = "other/unknown",
-    "Other" = "other/unknown",
-    "Unknown" = "other/unknown"
+    "Multi-Race" = "other",
+    "Other" = "other",
+    "Unknown" = "unknown"
   )
   tr_sex = c(
     "F" = "female",

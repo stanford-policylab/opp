@@ -22,9 +22,9 @@ clean <- function(d, helpers) {
     "Black" = "black",
     "Asian or Pacific Islander" = "asian/pacific islander",
     "Middle Eastern or East Indian (South Asian)" = "asian/pacific islander",
-    "American Indian or Alaskan Native" = "other/unknown",
-    "None - for no operator present citations only" = "other/unknown",
-    "A" = "other/unknown"
+    "American Indian or Alaskan Native" = "other",
+    "None - for no operator present citations only" = "unknown",
+    "A" = "other"
   )
 
   tr_search_basis <- c(

@@ -40,11 +40,11 @@ clean <- function(d, helpers) {
     F = "asian/pacific islander", # Filipino
     G = "asian/pacific islander", # Guamanian
     H = "hispanic", # Hispanic
-    I = "other/unknown", # Indian (presumably native american, since Z)
+    I = "other", # Indian (presumably native american, since Z)
     J = "asian/pacific islander", # Japanese
     K = "asian/pacific islander", # Korean
     L = "asian/pacific islander", # Laotian
-    O = "other/unknown", # Other
+    O = "other", # Other
     P = "asian/pacific islander", # Other Pacific Islander
     S = "asian/pacific islander", # Samoan
     U = "asian/pacific islander", # Hawaiian

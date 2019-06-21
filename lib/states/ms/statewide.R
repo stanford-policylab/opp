@@ -21,8 +21,8 @@ clean <- function(d, helpers) {
 
   tr_race <- c(
     B = "black",
-    I = "other/unknown", # American Indian
-    O = "other/unknown", # Other
+    I = "other", # American Indian
+    O = "other", # Other
     W = "white",
     Y = "asian/pacific islander"
   )

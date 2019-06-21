@@ -100,16 +100,16 @@ clean <- function(d, helpers) {
   tr_race = c(
     "1" = "white",
     "2" = "black",
-    "3" = "other/unknown", # Native American
+    "3" = "other", # Native American
     "4" = "asian/pacific islander", # Asian
     "5" = "asian/pacific islander", # Pacific Islander
     "6" = "asian/pacific islander", # East Indian
     "7" = "hispanic",
-    "8" = "other/unknown" # Other
+    "8" = "other" # Other
   )
   
   tr_officer_race = c(
-    "AMER IND/AK NATIVE" = "other/unknown",
+    "AMER IND/AK NATIVE" = "other",
     "ASIAN/PI" = "asian/pacific islander",
     "BLACK" = "black",
     "HISPANIC" = "hispanic",

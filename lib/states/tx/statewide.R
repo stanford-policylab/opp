@@ -142,9 +142,9 @@ clean <- function(d, helpers) {
     # NOTE: In line with census definitions, we define middle eastern as white
     # This is in contrast to old OPP definitions, which classified as other
     M = "white", # Middle Eastern
-    U = "other/unknown",
-    O = "other/unknown",
-    I = "other/unknown"
+    U = "unknown",
+    O = "other",
+    I = "other"
   )
 
   # NOTE: Normalizes a name for joining the dataset with last name race
@@ -254,7 +254,7 @@ clean <- function(d, helpers) {
     # NOTE: If the race is white or NA, and the last name is more than 75%
     # likely to be hispanic, we set race as hispanic.
     subject_race = if_else(
-      (subject_race_recorded %in% c("white", "other/unknown") | is.na(subject_race_recorded))
+      (subject_race_recorded %in% c("white", "other", "unknown") | is.na(subject_race_recorded))
       & !is.na(pH)
       & pH > 0.75,
       "hispanic",

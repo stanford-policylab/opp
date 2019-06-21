@@ -29,11 +29,11 @@ clean <- function(d, helpers) {
   tr_county <- json_to_tr(helpers$load_json("IA_counties.json"))
   tr_race <- c(
     # Non-Hispanic
-    "N" = "other/unknown",
+    "N" = "other",
     # Hispanic
     "H" = "hispanic",
     # Unknown
-    "U" = "other/unknown"
+    "U" = "unknown"
   )
 
   d$data %>%

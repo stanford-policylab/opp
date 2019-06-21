@@ -29,10 +29,10 @@ clean <- function(d, helpers) {
     B = "black",
     H = "hispanic",
     A = "asian/pacific islander",
-    I = "other/unknown",
-    X = "other/unknown",
-    U = "other/unknown",
-    N = "other/unknown"
+    I = "other",
+    N = "other",
+    X = "unknown",
+    U = "unknown"
   )
 
   tr_outcome <- c(

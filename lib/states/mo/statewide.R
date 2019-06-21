@@ -90,8 +90,8 @@ clean <- function(d, helpers) {
     "Asian" = "asian/pacific islander",
     "Black" = "black",
     "Hispanic" = "hispanic",
-    "Native American" = "other/unknown",
-    "Other" = "other/unknown",
+    "Native American" = "other",
+    "Other" = "other",
     "White" = "white"
   )
 

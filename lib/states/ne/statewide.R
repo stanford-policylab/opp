@@ -175,9 +175,9 @@ clean <- function(d, helpers) {
     "Hispanic" = "hispanic",
     "Asian" = "asian/pacific islander",
     "Asian / Pacific Islander" = "asian/pacific islander",
-    "Native American - Alaskan" = "other/unknown",
-    "Other" = "other/unknown",
-    "NatAmerican" = "other/unknown"
+    "Native American - Alaskan" = "other",
+    "Other" = "other",
+    "NatAmerican" = "other"
   )
 
   # TODO(phoebe): can we get gender/reason_for_stop/search/contraband fields?

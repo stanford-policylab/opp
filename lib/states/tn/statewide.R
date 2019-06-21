@@ -16,10 +16,10 @@ clean <- function(d, helpers) {
     B = "black",
     C = "asian/pacific islander",
     H = "hispanic",
-    I = "other/unknown",
+    I = "other",
     J = "asian/pacific islander",
-    O = "other/unknown",
-    R = "other/unknown",
+    O = "other",
+    R = "other",
     W = "white"
   )
 

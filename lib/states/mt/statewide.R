@@ -18,8 +18,8 @@ clean <- function(d, helpers) {
   tr_race <- c(
     A = "asian/pacific islander",
     B = "black",
-    I = "other/unknown",
-    U = "other/unknown",
+    I = "other",
+    U = "unknown",
     W = "white"
   )
 

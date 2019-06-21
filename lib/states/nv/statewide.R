@@ -27,9 +27,9 @@ clean <- function(d, helpers) {
     W = "white",
     B = "black",
     A = "asian/pacific islander",
-    I = "other/unknown",
-    M = "other/unknown",
-    U = "other/unknown"
+    I = "other",
+    M = "other",
+    U = "unknown"
   )
 
   # TODO(phoebe): can we get search/contraband fields?

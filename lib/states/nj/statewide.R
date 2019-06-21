@@ -43,10 +43,10 @@ clean <- function(d, helpers) {
     "H - HISPANIC" = "hispanic",
     "AS - ASIAN INDIAN" = "asian/pacific islander",
     "OA - OTHER ASIAN" = "asian/pacific islander",
-    "AI - AMERICAN INDIAN" = "other/unknown",
-    "UO - UNABLE TO OBSERVE" = "other/unknown",
-    "NP - NOT PROVIDED" = "other/unknown",
-    "UA - UNATTENDED" = "other/unknown" 
+    "AI - AMERICAN INDIAN" = "other",
+    "UO - UNABLE TO OBSERVE" = "unknown",
+    "NP - NOT PROVIDED" = "unknown",
+    "UA - UNATTENDED" = "unknown" 
   )
   
   # NOTE: race and ethnicity conflict in about 1% of stops
@@ -56,8 +56,8 @@ clean <- function(d, helpers) {
     "Hispanic / Latino" = "hispanic",
     "Asian Indian" = "asian/pacific islander",
     "Other Asian" = "asian/pacific islander",
-    "American Indian" = "other/unknown",
-    "Unknown" = "other/unknown"
+    "American Indian" = "other",
+    "Unknown" = "unknown"
   )
   
   tr_sex <- c(

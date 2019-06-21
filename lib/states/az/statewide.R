@@ -82,10 +82,10 @@ clean <- function(d, helpers) {
     BLACK = "black",
     A = "asian/pacific islander",
     `ASIAN / PACIFIC ISLANDER` = "asian/pacific islander",
-    N = "other/unknown",
-    `NATIVE AMERICAN` = "other/unknown",
-    X = "other/unknown",
-    `OTHER OR UNDETERMINED` = "other/unknown"
+    N = "other",
+    `NATIVE AMERICAN` = "other",
+    X = "unknown",
+    `OTHER OR UNDETERMINED` = "unknown"
   )
   
   tr_reason_for_stop <- c(

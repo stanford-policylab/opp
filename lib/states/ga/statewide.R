@@ -20,8 +20,8 @@ clean <- function(d, helpers) {
     "A" = "asian/pacific islander",
     "B" = "black",
     "H" = "hispanic",
-    "I" = "other/unknown",
-    "O" = "other/unknown",
+    "I" = "other",
+    "O" = "other",
     "W" = "white"
   )
   tr_sex = c(

@@ -112,6 +112,7 @@ clean <- function(d, helpers) {
   # more than 10 times in the data. This covers 99.9% of non-NA rows; note,
   # however, that more than a third of the race entries are NA anyway.
   tr_race <- c(
+    "M" = "white",
     "MID EAST" = "white",
     "MIDDLE EAS" = "white",
     "W" = "white",
@@ -134,15 +135,14 @@ clean <- function(d, helpers) {
     "AIN" = "asian/pacific islander",
     "ASI" = "asian/pacific islander",
     "PIS" = "asian/pacific islander",
-    "AKN" = "other/unknown",
-    "ALASKA NAT" = "other/unknown",
-    "I" = "other/unknown",
-    "INDIAN" = "other/unknown",
-    "M" = "other/unknown",
-    "NHI" = "other/unknown",
-    "O" = "other/unknown",
-    "U" = "other/unknown",
-    "UNK" = "other/unknown"
+    "AKN" = "other",
+    "ALASKA NAT" = "other",
+    "I" = "other",
+    "INDIAN" = "other",
+    "NHI" = "other",
+    "O" = "other",
+    "U" = "unknown",
+    "UNK" = "unknown"
   )
 
 

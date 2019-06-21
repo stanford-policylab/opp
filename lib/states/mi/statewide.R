@@ -18,8 +18,8 @@ clean <- function(d, helpers) {
     B = "black",
     H = "hispanic",
     A = "asian/pacific islander",
-    I = "other/unknown",
-    U = "other/unknown"
+    I = "other",
+    U = "unknown"
   )
 
   # NOTE: Replacing "NULL" with NA everywhere.

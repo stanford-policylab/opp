@@ -12,8 +12,8 @@ clean <- function(d, helpers) {
     "2 - WHITE" = "white",
     "3 - HISPANIC" = "hispanic",
     "4 - ASIAN - EAST INDIAN" = "asian/pacific islander",
-    "5 - NATIVE AMERICAN" = "other/unknown",
-    "6 - OTHER" = "other/unknown"
+    "5 - NATIVE AMERICAN" = "other",
+    "6 - OTHER" = "other"
   )
   
   # NOTE: we could maybe assume "1" is male and "2" is female also, but for

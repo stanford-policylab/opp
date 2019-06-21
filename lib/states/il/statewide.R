@@ -30,7 +30,7 @@ clean <- function(d, helpers) {
     "1" = "white",
     "2" = "black",
     # American Indian or Alaska Native
-    "3" = "other/unknown",
+    "3" = "other",
     "4" = "hispanic",
     # Asian
     "5" = "asian/pacific islander",

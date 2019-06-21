@@ -27,8 +27,8 @@ clean <- function(d, helpers) {
     # NOTE: We treat middle-eastern as white. See the US Census race
     # definitions: https://www.census.gov/topics/population/race/about.html
     "Middle Eastern" = "white",
-    "Native American" = "other/unknown",
-    "Unknown" = "other/unknown",
+    "Native American" = "other",
+    "Unknown" = "unknown",
     "White" = "white"
   )
 

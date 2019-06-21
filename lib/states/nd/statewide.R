@@ -12,8 +12,8 @@ clean <- function(d, helpers) {
     "African American" = "black",
     "Asian" = "asian/pacific islander",
     "Hispanic" = "hispanic",
-    "Native American" = "other/unknown",
-    "Other" = "other/unknown",
+    "Native American" = "other",
+    "Other" = "other",
     "White" = "white"
   )
 
