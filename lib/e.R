@@ -911,15 +911,6 @@ remove_partial_years <- function(
   
 }
 
-
-add_dst_dates <- function(p) {
-}
-
-
-filter_to_dst_windows <- function(p, week_radius) {
-}
-
-
 remove_location_yrs_with_too_few_stops_per_race <- function(p, geo, min_stops) {
   geo_colq <- enquo(geo)
   race_names <- p@data %>% 
@@ -1002,4 +993,80 @@ select_top_n_vod_geos <- function(p, geo, n_geos) {
   add_decision(p, action, reason, result, details)
 }
   
+remove_states_that_dont_observe_dst <- function(p) {
+  action <- "remove locations from states that don't observe DST"
+  reason <- "DST model makes no sense in these cases"
+  result <- "no change"
+  
+  print(action)
+  
+  if (nrow(p@data) == 0)
+    return(add_decision(p, action, reason, result))
+  
+  state <- p@data$state[[1]]
+  
+  if (state %in% c("AZ", "HI")) {
+    result <- sprintf("removed %s", state)
+    return(add_decision(tibble(), action, reason, result))
+  }
+  
+  add_decision(p, action, reason, result)
+}
+
+add_dst_dates <- function(p) {
+  action <- "add DST dates"
+  reason <- "necessary for DST model"
+  result <- "no change"
+  
+  print(action)
+  
+  if (nrow(p@data) == 0)
+    return(add_decision(p, action, reason, result))
+  
+  p@data %<>%
+    mutate(year = year(date)) %>% 
+    left_join(
+      read_rds(here::here("resources", "dst_start_end_dates.rds")), 
+      by = "year"
+    )
+  
+  dst_null_rates <- null_rate(select(p@data, dst_start, dst_end))
+  details = list(null_rates = dst_null_rates)
+  result <- "added dst dates"
+  
+  add_decision(p, action, reason, result, details)
+}
+
+
+filter_to_dst_windows <- function(p, week_radius) {
+  action <- sprintf("Filter to %d-week radius around each DST shift", week_radius)
+  reason <- "necessary for DST model"
+  result <- "no change"
+  
+  print(action)
+  
+  if (nrow(p@data) == 0)
+    return(add_decision(p, action, reason, result))
+  
+  n_before <- nrow(p@data)
+  p@data %<>% 
+    mutate(
+      # define spring as the week_radius around start of DST
+      spring = date >= dst_start - weeks(week_radius)
+        & date <= dst_start + weeks(week_radius),
+      # define fall as the week_radius around end of DST
+      fall = date >= dst_end - weeks(week_radius) 
+        & date <= dst_end + weeks(week_radius)
+    ) %>% 
+    filter(spring | fall) %>% 
+    mutate(season = if_else(spring, "spring", "fall"))
+  n_after <- nrow(p@data)
+  
+  if (n_before - n_after > 0)
+    result <- "rows removed"
+
+  # TODO(amyshoe): add details with counts per year/season
+  add_decision(p, action, reason, result)
+}
+
 
