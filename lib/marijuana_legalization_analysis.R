@@ -1,14 +1,14 @@
 library(here)
 source(here::here("lib", "opp.R"))
-source(here::here("lib", "eligibility.R"))
+source(here::here("lib", "e.R"))
 
 marijuana_legalization_analysis <- function() {
   
   mj <- load("mj")
-  write_rds(p, here::here("cache", "mj.rds"))
+  write_rds(mj, here::here("cache", "mj.rds"))
 
   mjt <- load("mjt")
-  write_rds(p, here::here("cache", "mjt.rds"))
+  write_rds(mjt, here::here("cache", "mjt.rds"))
 
   treatment <- filter(mj$data, state %in% c("CO", "WA"))
   control <- filter(mj$data, !(state %in% c("CO", "WA")))
