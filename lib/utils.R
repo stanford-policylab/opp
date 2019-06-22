@@ -84,12 +84,10 @@ add_times <- function(
     as_tibble() %>%
     # NOTE: suncalc adds 12:00 to all dates; remove this
     mutate(date = ymd(str_sub(date, 1, 10))) %>% 
-    # TODO(danj): I always forget how to do this properly...!!!sym!quosym!!??
-    rename(center_lat = lat, center_lng = lon) %>%  
+    rename(!!lat_colname := lat, !!lng_colname := lon) %>%  
+    # NOTE: add back timezone
     left_join(
-      tbl %>% 
-        select(!!lat_colq, !!lng_colq, tz) %>% 
-        distinct(),
+      tbl %>% select(!!lat_colq, !!lng_colq, tz) %>% distinct(),
       by = c(lat_colname, lng_colname)
     )
 
