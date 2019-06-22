@@ -742,7 +742,10 @@ add_sunset_times <- function(
 
   p@data %<>% add_times(date, !!lat_colq, !!lng_colq, c("sunset", "dusk"))
 
-  result <- sprintf("added sunset times (%s NA)", null_rate(p@data$sunset))
+  result <- sprintf(
+    "added sunset times (%g%% NA)",
+    null_rate(p@data$sunset) * 100
+  )
   
   add_decision(p, action, reason, result)
 }
