@@ -49,7 +49,7 @@ load_dst_vod_for <- function(state, city) {
     remove_states_that_dont_observe_dst() %>% 
     add_dst_dates() %>%
     filter_to_dst_windows(week_radius = 3) %>% 
-    remove_locations_with_too_few_stops_per_race(geography, min_stops = 100) %>% 
+    remove_location_yrs_with_too_few_stops_per_race(geography, min_stops = 100) %>% 
     select_top_n_locations_per_super(geography, state, top_n = 20)
 }
 
@@ -57,7 +57,7 @@ load_dst_vod_for <- function(state, city) {
 load_full_vod_for <- function(state, city) {
   load_vod_base_for(state, city) %>%
     remove_partial_years(geography) %>% 
-    remove_locations_with_too_few_stops_per_race(geography, min_stops = 100) %>% 
+    remove_location_yrs_with_too_few_stops_per_race(geography, min_stops = 100) %>% 
     select_top_n_locations_per_super(geography, state, top_n = 20)
 }
 
@@ -537,7 +537,7 @@ remove_locations_with_unreliable_search_data <- function(p) {
         ),
       state == "VA",
         ~ str_c(
-          "eliminated because it has weekly search recording with suspicious "
+          "eliminated because it has weekly search recording with suspicious ",
           "spikes, i.e. an officer conducts 800-1500 searches in one week"
         ),
       TRUE ~ "no change"
@@ -917,7 +917,49 @@ filter_to_dst_windows <- function(p, week_radius) {
 }
 
 
-remove_locations_with_too_few_stops_per_race <- function(geo, min_stops) {
+remove_location_yrs_with_too_few_stops_per_race <- function(p, geo, min_stops) {
+  geo_colq <- enquo(geo)
+  geo_name <- quo_name(geo)
+  race_names <- p@data %>% 
+    select(subject_race) %>% 
+    distinct() %>% 
+    pull(subject_race)
+  
+  action <- sprintf("remove location-years with fewer than %d stops per race", 
+                    min_stops)
+  reason <- "need sufficient data for vod model"
+  result <- "no change"
+  
+  print(action)
+  
+  location_yrs_removed <- p@data %>% 
+    mutate(yr = year(date)) %>% 
+    count(!!geo_colq, yr, subject_race) %>% 
+    spread(subject_race, n, fill = 0) %>% 
+    filter_at(
+      vars(race_names), 
+      all_vars(. < min_stops)
+    )
+  details = list(eliminated = location_yrs_removed)
+  
+  n_before <- nrow(p@data)
+  p@data %<>%
+    inner_join(
+      p@data %>% 
+        mutate(yr = year(date)) %>% 
+        count(!!geo_colq, yr, subject_race) %>% 
+        spread(subject_race, n, fill = 0) %>% 
+        filter_at(
+          vars(race_names), 
+          all_vars(. >= min_stops)
+        ) %>% 
+        select(!!geo_coq, yr)
+    )
+  n_after <- nrow(p@data)
+  
+  if (n_before - n_after > 0)
+    result <- "rows removed"
+  add_decision(p, action, reason, result, details)
 }
 
 
