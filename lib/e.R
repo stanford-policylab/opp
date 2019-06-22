@@ -36,11 +36,11 @@ load <- function(analysis = "disparity") {
     },
     tbl
   )
-
-  list(
-    data = bind_rows(lapply(results, function(p) p@data)),
-    metadata = bind_rows(lapply(results, function(p) p@metadata))
-  )
+  
+ list(
+   data = bind_rows(lapply(results, function(p) p@data)),
+   metadata = bind_rows(lapply(results, function(p) p@metadata))
+ )
 }
 
 
@@ -50,7 +50,7 @@ load_dst_vod_for <- function(state, city) {
     add_dst_dates() %>%
     filter_to_dst_windows(week_radius = 3) %>% 
     remove_location_yrs_with_too_few_stops_per_race(geography, min_stops = 100) %>% 
-    select_top_n_locations_per_super(geography, state, top_n = 20)
+    select_top_n_vod_geos(geography, top_n = 20)
 }
 
 
@@ -58,7 +58,7 @@ load_full_vod_for <- function(state, city) {
   load_vod_base_for(state, city) %>%
     remove_partial_years(geography) %>% 
     remove_location_yrs_with_too_few_stops_per_race(geography, min_stops = 100) %>% 
-    select_top_n_locations_per_super(geography, state, top_n = 20)
+    select_top_n_vod_geos(geography, top_n = 20)
 }
 
 
@@ -521,7 +521,7 @@ remove_locations_with_unreliable_search_data <- function(p) {
   city <- p@data$city[[1]]
   state <- p@data$state[[1]]
 
-  if (city == "Statewide" & state %in% c("IL", "MD", "MO", "NE")) {
+  if (city == "Statewide" & state %in% c("IL", "MD", "MO", "NE", "VA")) {
     p@data %<>% slice(0)
     result <- case_when(
       state == "IL"
@@ -535,7 +535,7 @@ remove_locations_with_unreliable_search_data <- function(p) {
           "eliminated because it has unreliable quarterly dates, ",
           "i.e. in 2012 all patrol stops are in Q1"
         ),
-      state == "VA",
+      state == "VA"
         ~ str_c(
           "eliminated because it has weekly search recording with suspicious ",
           "spikes, i.e. an officer conducts 800-1500 searches in one week"
@@ -919,10 +919,10 @@ filter_to_dst_windows <- function(p, week_radius) {
 
 remove_location_yrs_with_too_few_stops_per_race <- function(p, geo, min_stops) {
   geo_colq <- enquo(geo)
-  geo_name <- quo_name(geo)
   race_names <- p@data %>% 
     select(subject_race) %>% 
     distinct() %>% 
+    mutate(subject_race = as.character(subject_race)) %>% 
     pull(subject_race)
   
   action <- sprintf("remove location-years with fewer than %d stops per race", 
@@ -953,7 +953,7 @@ remove_location_yrs_with_too_few_stops_per_race <- function(p, geo, min_stops) {
           vars(race_names), 
           all_vars(. >= min_stops)
         ) %>% 
-        select(!!geo_coq, yr)
+        select(!!geo_colq, yr)
     )
   n_after <- nrow(p@data)
   
@@ -963,7 +963,40 @@ remove_location_yrs_with_too_few_stops_per_race <- function(p, geo, min_stops) {
 }
 
 
-select_top_n_locations_per_super <- function(geo, supergeo, top_n) {
+select_top_n_vod_geos <- function(p, geo, n_geos) {
+  geo_colq <- enquo(geo)
   
+  reason <- "VOD model can't handle too many locations"
+  result <- "no change"
+  
+  if(p@data$city[[1]] == "Statewide")
+    action <- sprintf("choose top %d counties for states", n_geos)
+  else {
+    action <- sprintf("single city; action not relevant")
+    print(action)
+    return(add_decision(p, action, reason, result))
+  }
+  
+  print(action)
+  
+  ranked_geos <- p@data %>%
+    count_pct(state, !!geo_colq) 
+  details = list(ranked_geos = ranked_geos)
+  
+  n_before <- nrow(p@data)
+  p@data %<>%
+    inner_join(
+      p@data %>%
+        count(state, !!geo_colq) %>%
+        group_by(state) %>% 
+        top_n(n_geos, n) %>% 
+        select(!!geo_colq)
+    )
+  n_after <- nrow(p@data)
+  
+  if (n_before - n_after > 0)
+    result <- "geographies removed"
+  add_decision(p, action, reason, result, details)
 }
+  
 
