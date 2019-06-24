@@ -655,7 +655,7 @@ add_geography_for_vod <- function(p) {
 
   if (!(geography_colname %in% colnames(p@data))) {
     p@data %<>% slice(0)
-    result <- sprintf("eliminated because %s not present", feat_name)
+    result <- sprintf("eliminated because %s not present", geography_colname)
     return(add_decision(p, action, reason, result))
   }
   
