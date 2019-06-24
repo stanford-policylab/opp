@@ -36,11 +36,11 @@ load <- function(analysis = "disparity") {
     },
     tbl
   )
-  
- list(
-   data = bind_rows(lapply(results, function(p) p@data)),
-   metadata = bind_rows(lapply(results, function(p) p@metadata))
- )
+  results
+ # list(
+ #   data = bind_rows(lapply(results, function(p) p@data)),
+ #   metadata = bind_rows(lapply(results, function(p) p@metadata))
+ # )
 }
 
 
@@ -50,7 +50,7 @@ load_dst_vod_for <- function(state, city) {
     add_dst_dates() %>%
     filter_to_dst_windows(week_radius = 3) %>% 
     remove_location_yrs_with_too_few_stops_per_race(geography, min_stops = 100) %>% 
-    select_top_n_vod_geos(geography, top_n = 20)
+    select_top_n_vod_geos(geography, n_geos = 20)
 }
 
 
@@ -58,7 +58,7 @@ load_full_vod_for <- function(state, city) {
   load_vod_base_for(state, city) %>%
     remove_partial_years(geography) %>% 
     remove_location_yrs_with_too_few_stops_per_race(geography, min_stops = 100) %>% 
-    select_top_n_vod_geos(geography, top_n = 20)
+    select_top_n_vod_geos(geography, n_geos = 20)
 }
 
 
@@ -913,11 +913,6 @@ remove_partial_years <- function(
 
 remove_location_yrs_with_too_few_stops_per_race <- function(p, geo, min_stops) {
   geo_colq <- enquo(geo)
-  race_names <- p@data %>% 
-    select(subject_race) %>% 
-    distinct() %>% 
-    mutate(subject_race = as.character(subject_race)) %>% 
-    pull(subject_race)
   
   action <- sprintf("remove location-years with fewer than %d stops per race", 
                     min_stops)
@@ -926,12 +921,23 @@ remove_location_yrs_with_too_few_stops_per_race <- function(p, geo, min_stops) {
   
   print(action)
   
+  if (nrow(p@data) == 0) {
+    result <- sprintf("dataframe empty")
+    return(add_decision(p, action, reason, result))
+  }
+  
+  race_names <- p@data %>% 
+    select(subject_race) %>% 
+    distinct() %>% 
+    mutate(subject_race = as.character(subject_race)) %>% 
+    pull(subject_race)
+  
   location_yrs_removed <- p@data %>% 
     mutate(yr = year(date)) %>% 
     count(!!geo_colq, yr, subject_race) %>% 
-    spread(subject_race, n, fill = 0) %>% 
+    spread(subject_race, n, fill = 0) %>%
     filter_at(
-      vars(race_names), 
+      vars(race_names),
       all_vars(. < min_stops)
     )
   details = list(eliminated = location_yrs_removed)
@@ -962,6 +968,13 @@ select_top_n_vod_geos <- function(p, geo, n_geos) {
   
   reason <- "VOD model can't handle too many locations"
   result <- "no change"
+  
+  if (nrow(p@data) == 0) {
+    action <- sprintf("select top %d geos", n_geos)
+    print(action)
+    result <- sprintf("dataframe empty")
+    return(add_decision(p, action, reason, result))
+  }
   
   if(p@data$city[[1]] == "Statewide")
     action <- sprintf("choose top %d counties for states", n_geos)
