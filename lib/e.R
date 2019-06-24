@@ -1020,7 +1020,8 @@ remove_states_that_dont_observe_dst <- function(p) {
   
   if (state %in% c("AZ", "HI")) {
     result <- sprintf("removed %s", state)
-    return(add_decision(tibble(), action, reason, result))
+    p@data %<>% tibble()
+    return(add_decision(p, action, reason, result))
   }
   
   add_decision(p, action, reason, result)
