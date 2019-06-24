@@ -81,7 +81,8 @@ load_disparity_for <- function(state, city) {
   load_base_for(state, city) %>%
     remove_locations_with_unreliable_search_data() %>%
     remove_months_with_low_coverage(search_conducted, threshold = 0.5) %>%
-    filter_to_searches() %>%
+    # We don't want this -- need all stops for threshold test
+    # filter_to_searches() %>% 
     filter_to_discretionary_searches_if_search_basis(threshold = 0.5) %>%
     remove_months_with_low_coverage(contraband_found, threshold = 0.5) %>%
     remove_na(contraband_found) %>%
@@ -495,9 +496,10 @@ filter_to_discretionary_searches_if_search_basis <- function(p, threshold) {
 
   n_before <- nrow(p@data)
   p@data %<>% filter(
-    search_conducted,
-    is.na(search_basis)
-    | search_basis %in% c("plain view", "consent", "probable cause", "k9")
+    !search_conducted |
+      (search_conducted & is.na(search_basis)) |
+      (search_conducted & search_basis %in% c("plain view", "consent", 
+                                              "probable cause", "k9"))
   )
   n_after <- nrow(p@data)
   if (n_before - n_after > 0)
