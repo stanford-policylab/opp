@@ -1,5 +1,5 @@
 source(here::here("lib", "opp.R"))
-source(here::here("lib", "eligibility.R"))
+source(here::here("lib", "e.R"))
 source(here::here("lib", "outcome_test.R"))
 source(here::here("lib", "threshold_test.R"))
 source(here::here("lib", "disparity_plot.R"))
@@ -36,12 +36,15 @@ source(here::here("lib", "disparity_plot.R"))
 disparity <- function() {
   datasets <- list()
   print("Preparing data...")
-  d <- load(analysis_name = "disparity")
+  d <- load("disparity")
   output = here::here("cache", "disparity_data.rds")
-  write_rds(d, output)
   sprintf("Saving data to %s", output)
-  datasets$state <- filter(d$data, city == "Statewide")
-  datasets$city <- filter(d$data, city != "Statewide")
+  write_rds(d, output)
+  # d <- read_rds(output)
+  datasets$state <- filter(d$data, city == "Statewide") %>% 
+    mutate(geography = state)
+  datasets$city <- filter(d$data, city != "Statewide") %>% 
+    unite(geography, c(city, state), sep = ", ", remove = F)
  
   results <- list()
   for (dataset_name in names(datasets)) {
@@ -95,6 +98,7 @@ disparity <- function() {
     
     results[[dataset_name]] <- v
   }
+  write_rds(results, here::here("cache", "disparity_results.rds"))
   results  
 }
 

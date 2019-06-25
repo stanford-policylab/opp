@@ -621,18 +621,22 @@ minute_to_time <- function(minute) {
 
 dst_model <- function(
   tbl,
+  state_patrol_indicator_col = is_state_patrol,
   demographic_indicator_col = is_minority_demographic,
   darkness_indicator_col = is_dark,
-  state_patrol_indicator_col = is_state_patrol,
   time_col = rounded_minute,
   degree = 6,
   interact_dark_agency = F,
   interact_time_location = F
 ) {
+  state_patrol_indicator_colq <- enquo(state_patrol_indicator_col)
   darkness_indicator_colq <- enquo(darkness_indicator_col)
   demographic_indicator_colq <- enquo(demographic_indicator_col)
-  state_patrol_indicator_colq <- enquo(state_patrol_indicator_col)
   time_colq <- enquo(time_col)
+  
+  tbl %<>% 
+    mutate(is_state_patrol = city == "Statewide")
+  
   
   agg <-
     tbl %>%
