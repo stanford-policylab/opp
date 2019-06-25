@@ -45,7 +45,7 @@ load_raw <- function(raw_data_dir, n_max) {
   colnames(d$data)[146] <- "officer_gender"
 
   d$data %>%
-    filter(year(IncidentDate) < 2016) %>%
+    # filter(year(IncidentDate) < 2016) %>%
     mutate_at(vars(LocationCounty), as.character) %>%
     bind_rows(
       d_2016$data %>%
@@ -55,7 +55,12 @@ load_raw <- function(raw_data_dir, n_max) {
           Ethnicity = if_else(Ethnicity == "HIS", "H", Race),
           # change / to - in order to match main data pull, for parsing
           IncidentDate = str_replace_all(IncidentDate, "/", "-")
-        )
+        ) %>% 
+        # NOTE: d$data goes through march 2016 and has search data, d_2016 has 
+        # the full year of 2016, but does not have search data, so we use the 
+        # richer data (d$data) for the longest time periods possible
+        filter(as.yearmon(IncidentDate) >= "Apr 2016") %>% 
+        mutate(no_search_data_flag = T)
     ) %>%
     bind_rows(
       d_2017$data %>% 
@@ -172,8 +177,11 @@ clean <- function(d, helpers) {
       violation = StatuteDesc,
       # NOTE: missing specific contraband type column.
       contraband_found = SearchContraband == "1",
-      search_conducted = !is.na(SearchBase) | 
-        coalesce(Search == "1" | Search == "TRUE", FALSE),
+      search_conducted = if_else(
+        no_search_data_flag,
+        NA,
+        !is.na(SearchBase) | coalesce(Search == "1" | Search == "TRUE", FALSE)
+      ),
       search_basis = fast_tr(SearchBase, tr_search_basis)
     ) %>%
     standardize(d$metadata)

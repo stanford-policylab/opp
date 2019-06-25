@@ -857,7 +857,16 @@ We’re excited to see what you come up with!
 - Rows in raw data represent violations, not stops, so we remove duplicates by
   grouping by the other fields.
 - `subject_race` was mapped from `raw_Ethnicity`. 
-- Note that data from 2016 came with about 80 fewer columns than the data before and   after, so many values for that year will be NA.
+- Note that data from 2016 came with about 80 fewer columns than the data pre-2016 
+  and after 2016, so many values for that year will be NA, including search data 
+  (see below for details).
+- The data came in three files, the first covered 2010-March 2016; this has full
+  data. The second covered Jan-Dec 2016; this was missing many columns, including
+  whether a search was conducted. The third data file covered Jan-Dec 2017 and
+  had full data. In order to preserve as much search data as possible we use the
+  second file with missing data only to fill in the nine months of April-Dec 
+  2016. This, in particular, affects the marijuana analysis search rate time 
+  series.
 - Additional columns in the raw data that may be of interest: `MMJCard`,
   `DUIDType`, `NonUS`, `NonUSDL`, `NonUSDLLocation`, `DLCheck`, 
   `TrafficAccident`, `AccidentSeverity` (0-4), `DUIArrest`, `HVPTCitation`, 
