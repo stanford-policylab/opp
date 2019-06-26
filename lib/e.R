@@ -81,13 +81,15 @@ load_disparity_for <- function(state, city) {
   load_base_for(state, city) %>%
     remove_locations_with_unreliable_search_data() %>%
     remove_months_with_low_coverage(search_conducted, threshold = 0.5) %>%
-    # We don't want this -- need all stops for threshold test
-    # filter_to_searches() %>% 
     filter_to_discretionary_searches_if_search_basis(threshold = 0.5) %>%
-    remove_months_with_low_coverage(contraband_found, threshold = 0.5) %>%
-    remove_na(contraband_found) %>%
+    remove_na(search_conducted) %>% 
+    remove_locations_with_unreliable_contraband_data() %>%
+    remove_months_with_low_coverage(
+      contraband_found, predicate = search_conducted, threshold = 0.5
+    ) %>%
     remove_months_with_low_coverage(subgeography, threshold = 0.5) %>%
-    remove_na(subgeography)
+    remove_na(subgeography) %>% 
+    remove_locations_with_too_few_searches_per_race(subgeography, min_searches = 50)
 }
 
 
@@ -220,11 +222,19 @@ remove_months_with_too_few_stops <- function(p, min_stops) {
 }
 
 
-remove_months_with_low_coverage <- function(p, feature, threshold) {
-
+remove_months_with_low_coverage <- function(p, feature, predicate = NULL, threshold) {
   featq <- enquo(feature)
   feat_name <- quo_name(featq)
-
+  
+  if(!missing(predicate)) {
+    predq <- enquo(predicate)
+    pred_name <- quo_name(predq)
+    if (!(pred_name %in% colnames(p@data))) {
+      p@data %<>% slice(0)
+      result <- sprintf("eliminated because predicate %s data is not recorded", pred_name)
+      return(add_decision(p, action, reason, result))
+    }
+  }
   action <- sprintf(
     "remove months where %s is recorded less than %g%% of the time",
     feat_name,
@@ -240,13 +250,17 @@ remove_months_with_low_coverage <- function(p, feature, threshold) {
     result <- sprintf("eliminated because %s data is not recorded", feat_name)
     return(add_decision(p, action, reason, result))
   }
-
+  base <- p@data
+  
+  if(!missing(predicate)) {
+    base <- filter(base, !!predq)
+  }
+  
   cvg <-
-    p@data %>%
+    base %>%
     group_by(month = format(date, "%Y-%m")) %>%
     summarize(coverage = coverage_rate(!!featq)) %>%
     ungroup()
-
   details <- list(coverage = cvg)
 
   bad_months <- filter(cvg, coverage < threshold) %>% pull(month)
@@ -468,8 +482,6 @@ filter_to_discretionary_searches_if_search_basis <- function(p, threshold) {
 
   print(action)
 
-  p@data %<>% filter(search_conducted)
-
   if (!("search_basis") %in% colnames(tbl)) {
     result <- str_c(
       "search basis not recorded; ",
@@ -477,8 +489,10 @@ filter_to_discretionary_searches_if_search_basis <- function(p, threshold) {
     )
     return(add_decision(p, action, reason, result))
   }
-
-  cvg_rate <- coverage_rate(p@data$search_basis)
+  
+  searches <- p@data %>% filter(search_conducted)
+  
+  cvg_rate <- coverage_rate(searches$search_basis)
   details <- list(coverage = cvg_rate)
 
   # TODO(danj/amyshoe): this is really what we want to do?
@@ -523,7 +537,9 @@ remove_locations_with_unreliable_search_data <- function(p) {
   city <- p@data$city[[1]]
   state <- p@data$state[[1]]
 
-  if (city == "Statewide" & state %in% c("IL", "MD", "MO", "NE", "VA")) {
+  if (city == "Statewide" & 
+      state %in% c("IL", "MD", "MO", "NE", "VA")
+  ) {
     p@data %<>% slice(0)
     result <- case_when(
       state == "IL"
@@ -549,6 +565,77 @@ remove_locations_with_unreliable_search_data <- function(p) {
   add_decision(p, action, reason, result)
 }
 
+remove_locations_with_unreliable_contraband_data <- function(p) {
+  
+  action <- "remove locations with unreliable contraband data"
+  reason <- "has an unreliable and/or irregular recording policy"
+  result <- "no change"
+  
+  print(action)
+  
+  if (nrow(p@data) == 0)
+    return(add_decision(p, action, reason, result))
+  
+  city <- p@data$city[[1]]
+  state <- p@data$state[[1]]
+  
+  if (city == "Statewide" & 
+      state %in% c("AZ", "MA")
+  ) {
+    p@data %<>% slice(0)
+    result <- case_when(
+      state == "AZ"
+      ~ str_c("eliminated because recording is messy and there are too many ",
+              "contradicting ways to define contraband"),
+      state == "MA"
+      ~ "eliminated because recording is messy and unreliable",
+      TRUE ~ "no change"
+    )
+  }
+  
+  add_decision(p, action, reason, result)
+}
+
+remove_locations_with_too_few_searches_per_race <- function(p, geo, min_searches) {
+  geo_colq <- enquo(geo)
+  
+  action <- sprintf("remove locations with fewer than %d searches per race", 
+                    min_searches)
+  reason <- "need sufficient data for threshold test model"
+  result <- "no change"
+  
+  print(action)
+  
+  if (nrow(p@data) == 0) {
+    result <- sprintf("dataframe empty")
+    return(add_decision(p, action, reason, result))
+  }
+  
+  race_names <- p@data %>% 
+    select(subject_race) %>% 
+    distinct() %>% 
+    mutate(subject_race = as.character(subject_race)) %>% 
+    pull(subject_race)
+  
+  locations_removed <- p@data %>% 
+    filter(search_conducted) %>% 
+    count(!!geo_colq, subject_race) %>% 
+    spread(subject_race, n, fill = 0) %>%
+    filter_at(
+      vars(race_names),
+      any_vars(. < min_searches)
+    )
+  details = list(eliminated = locations_removed)
+  
+  n_before <- nrow(p@data)
+  p@data %<>%
+    filter(!(!!geo_colq %in% pull(locations_removed, !!geo_colq)))
+  n_after <- nrow(p@data)
+  
+  if (n_before - n_after > 0)
+    result <- "rows removed"
+  add_decision(p, action, reason, result, details)
+}
 
 filter_to_locations_with_data_before_and_after_legalization <- function(p) {
 
