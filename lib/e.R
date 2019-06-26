@@ -67,7 +67,7 @@ load_vod_base_for <- function(state, city) {
   load_base_for(state, city) %>%
     remove_months_with_low_coverage(time, threshold = 0.5) %>% 
     remove_na(time) %>% 
-    filter_to_analysis_races(races = c("white", "black")) %>%
+    filter_to_races(races = c("white", "black")) %>%
     add_geography_for_vod() %>% 
     remove_na(geography) %>% 
     add_center_lat_lng() %>%
@@ -96,6 +96,8 @@ load_disparity_for <- function(state, city) {
 
 load_mj_for <- function(state, city) {
   load_base_for(state, city) %>%
+    # NOTE: truncate at 2016 since only a couple locations have data after that
+    filter_to_date_range("2011-01-01", "2016-01-01") %>%
     remove_locations_with_unreliable_search_data() %>%
     filter_to_locations_with_data_before_and_after_legalization() %>%
     remove_months_with_low_coverage(search_conducted, threshold = 0.5) %>%
@@ -121,10 +123,10 @@ load_base_for <- function(state, city) {
     ) %>%
     keep_only_highway_patrol_if_state() %>%
     filter_to_vehicular_stops() %>%
-    filter_to_analysis_years(years = 2011:2018) %>%
+    filter_to_date_range("2011-01-01", "2018-12-31") %>%
     remove_months_with_too_few_stops(min_stops = 50) %>%
     remove_months_with_low_coverage(subject_race, threshold = 0.5) %>%
-    filter_to_analysis_races(races = c("white", "black", "hispanic")) %>%
+    filter_to_races(races = c("white", "black", "hispanic")) %>%
     add_subgeography() %>%
     remove_anomalous_subgeographies()
 }
@@ -184,16 +186,16 @@ filter_to_vehicular_stops <- function(p) {
 }
 
 
-filter_to_analysis_years <- function(p, years) {
+filter_to_date_range <- function(p, start_date, end_date) {
 
-  action <- sprintf("filter to years %s", str_c(years, collapse = ", "))
-  reason <- "most recent, relevant years"
+  action <- sprintf("filter to %s-%s", start_date, end_date)
+  reason <- "target time period for analysis"
   result <- "no change"
 
   print(action)
 
   n_before <- nrow(p@data)
-  p@data %<>% filter(year(date) %in% years)
+  p@data %<>% filter(date >= as.Date(start_date), date <= as.Date(end_date))
   n_after <- nrow(p@data)
   if (n_before - n_after > 0)
     result <- "rows removed"
@@ -280,7 +282,7 @@ remove_na <- function(p, ...) {
   feat_names <- quos_names(featqs)
 
   feat_names_str <- str_c(feat_names, collapse = ", ")
-  action <- sprintf("remove rows where any of %s is NA", feat_names_str)
+  action <- sprintf("remove rows where %s is NA", feat_names_str)
   reason <- sprintf("each of %s is required for analysis", feat_names_str)
   result <- "no change"
 
@@ -305,10 +307,10 @@ remove_na <- function(p, ...) {
 }
 
 
-filter_to_analysis_races <- function(p, races) {
+filter_to_races <- function(p, races) {
 
   action <- sprintf("filter to races %s", str_c(races, collapse = ", "))
-  reason <- "these are the most common races in the U.S."
+  reason <- "analysis uses only these"
   result <- "no change"
 
   print(action)
