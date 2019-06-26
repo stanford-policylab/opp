@@ -1129,6 +1129,9 @@ add_dst_dates <- function(p) {
   p@data %<>%
     mutate(year = year(date)) %>% 
     left_join(
+      # NOTE: this only goes from 2011-2018; if you're using this analysis for
+      # later or earlier years, make sure to add those dates, or compute
+      # generaically (2nd Sunday in March; 1st Sunday in Nov)
       read_rds(here::here("resources", "dst_start_end_dates.rds")), 
       by = "year"
     )
