@@ -13,7 +13,7 @@ marijuana_legalization_analysis <- function() {
   treatment <- filter(mj$data, state %in% c("CO", "WA"))
   control <- filter(mj$data, !(state %in% c("CO", "WA")))
 
-  results <- list(
+  list(
     tables = list(
       search_rate_difference_in_difference_coefficients =
         calculate_search_rate_difference_in_difference_coefficients(mj$data)
