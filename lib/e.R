@@ -37,10 +37,11 @@ load <- function(analysis = "disparity") {
     tbl
   )
 
- list(
-   data = bind_rows(lapply(results, function(p) p@data)),
-   metadata = bind_rows(lapply(results, function(p) p@metadata))
- )
+  results
+ # list(
+ #   data = bind_rows(lapply(results, function(p) p@data)),
+ #   metadata = bind_rows(lapply(results, function(p) p@metadata))
+ # )
 }
 
 
@@ -1068,7 +1069,8 @@ select_top_n_vod_geos <- function(p, geo, n_geos) {
   if(p@data$city[[1]] == "Statewide")
     action <- sprintf("choose top %d counties for states", n_geos)
   else {
-    action <- sprintf("single city; action not relevant")
+    action <- sprintf("select top %d geos,", n_geos)
+    result <- "single city; action not relevant"
     print(action)
     return(add_decision(p, action, reason, result))
   }
