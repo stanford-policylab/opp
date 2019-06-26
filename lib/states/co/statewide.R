@@ -59,8 +59,7 @@ load_raw <- function(raw_data_dir, n_max) {
         # NOTE: d$data goes through march 2016 and has search data, d_2016 has 
         # the full year of 2016, but does not have search data, so we use the 
         # richer data (d$data) for the longest time periods possible
-        filter(as.yearmon(IncidentDate) >= "Apr 2016") %>% 
-        mutate(no_search_data_flag = T)
+        filter(as.yearmon(IncidentDate) >= "Apr 2016") 
     ) %>%
     bind_rows(
       d_2017$data %>% 
@@ -178,7 +177,9 @@ clean <- function(d, helpers) {
       # NOTE: missing specific contraband type column.
       contraband_found = SearchContraband == "1",
       search_conducted = if_else(
-        no_search_data_flag,
+        # Ensure that the large chunk of missing search data stays NA,
+        # but for any NAs in the good data, cast to FALSE
+        year(date) == 2016 & month(date) >= 4,
         NA,
         !is.na(SearchBase) | coalesce(Search == "1" | Search == "TRUE", FALSE)
       ),
