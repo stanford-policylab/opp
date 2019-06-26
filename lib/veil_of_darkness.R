@@ -2,10 +2,13 @@ source(here::here("lib", "opp.R"))
 source(here::here("lib", "e.R"))
 source(here::here("lib", "veil_of_darkness_test.R"))
 
-veil_of_darkness_daylight_savings <- function() {
-  vod_dst <- load("vod_dst")
-  write_rds(vod_dst, here::here("cache", "vod_dst_data.rds"))
-  
+veil_of_darkness_daylight_savings <- function(from_cache = F) {
+  if (from_cache) 
+    vod_dst <- read_rds(here::here("cache", "vod_dst_data.rds"))
+  else {
+    vod_dst <- load("vod_dst")
+    write_rds(vod_dst, here::here("cache", "vod_dst_data.rds"))
+  }
   d <- prep_vod_data(vod_dst$data)
   
   print("Running model...")
@@ -19,13 +22,15 @@ veil_of_darkness_daylight_savings <- function() {
         agency = rep(c(rep(T, 6), rep(F, 6)), 2)
       ),
       function(degree, interact, agency) {
-        vod_coef(dst = T, d, geography, degree, interact, agency) %>% 
+        r <- vod_coef(dst = T, d, geography, degree, interact, agency) 
+        r$coefficients %>% 
           mutate(
             data = "counties and cities",
             base_controls = "time, location, season, year",
             agency_control = agency,
             interact_time_loc = interact,
-            spline_degree = degree
+            spline_degree = degree,
+            formula = list(formula(r$model))
           )
       }
     ) %>% bind_rows()
@@ -36,31 +41,36 @@ veil_of_darkness_daylight_savings <- function() {
   results
 }
 
-veil_of_darkness_full <- function() {
-  vod_full <- load("vod_full")
-  write_rds(vod_full, here::here("cache", "vod_full_data.rds"))
+veil_of_darkness_full <- function(from_cache = F) {
+  if (from_cache) 
+    vod_full <- read_rds(here::here("cache", "vod_full_data.rds"))
+  else {
+    vod_full <- load("vod_full")
+    write_rds(vod_full, here::here("cache", "vod_full_data.rds"))
+  }
   
   d <- prep_vod_data(vod_full$data)
   
   coefficients <-
     par_pmap(
       mc.cores = 3,
-      tibble(degree = rep(6, 3), interact = rep(T, 3)),
+      tibble(degree = 6, interact = T),
       function(degree, interact) {
+        r1 <- vod_coef(dst = F, d, geography, degree, interact)
+        r2 <- vod_coef(
+          dst = F, 
+          filter(d, is_state_patrol), 
+          geography, 
+          degree, interact
+        )
+        r3 <- vod_coef(
+          dst = F, 
+          filter(d, !is_state_patrol), 
+          geography, 
+          degree, interact
+        )
         bind_rows(
-          vod_coef(dst = F, d, geography, degree, interact),
-          vod_coef(
-            dst = F, 
-            filter(d, is_state_patrol), 
-            geography, 
-            degree, interact
-          ),
-          vod_coef(
-            dst = F, 
-            filter(d, !is_state_patrol), 
-            geography, 
-            degree, interact
-          )
+          r1$coefficients, r2$coefficients, r3$coefficients
         ) %>%
           mutate(
             data = c(
@@ -71,7 +81,12 @@ veil_of_darkness_full <- function() {
             ### TODO(amy): do we want year too?
             base_controls = "time, geography",
             spline_degree = degree,
-            interact_time_loc = interact
+            interact_time_loc = interact,
+            formula = c(
+              list(formula(r1$model)), 
+              list(formula(r2$model)), 
+              list(formula(r3$model))
+            )
           )
       }
     ) %>% bind_rows()
@@ -154,7 +169,7 @@ vod_coef <- function(
   control_col, 
   degree, 
   interact_time_location,
-  interact_dark_agency
+  interact_dark_agency = F
 ) {
   control_colq <- enquo(control_col)
   if(dst) {
@@ -174,8 +189,19 @@ vod_coef <- function(
       interact_time_location = interact_time_location
     )
   }
-  broom::tidy(mod) %>% 
-    filter(term == "is_darkTRUE") %>% 
-    select(is_dark = estimate, std_error = std.error)
+  if(interact_dark_agency) {
+    coefs <- broom::tidy(mod) %>% ### TODO: change to have the two estimates
+      filter(str_detect(term, "is_dark")) %>% 
+      mutate(agency = if_else(
+        str_detect(term, "municipal"), 
+        "municipal_pd", "state_patrol")
+      ) %>%  
+      select(is_dark = estimate, agency, std_error = std.error) 
+  } else {
+    coefs <- broom::tidy(mod) %>% 
+      filter(term == "is_darkTRUE") %>% 
+      select(is_dark = estimate, std_error = std.error)
+  }
+  results = list(model = mod, coefficients = coefs)
 }
 

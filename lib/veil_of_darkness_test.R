@@ -634,10 +634,6 @@ dst_model <- function(
   demographic_indicator_colq <- enquo(demographic_indicator_col)
   time_colq <- enquo(time_col)
   
-  tbl %<>% 
-    mutate(is_state_patrol = city == "Statewide")
-  
-  
   agg <-
     tbl %>%
     mutate(
@@ -665,14 +661,22 @@ dst_model <- function(
   fmla <- as.formula(
     str_c(
       "cbind(n_minority, n_majority) ~ ",
-      quo_name(darkness_indicator_colq),
-      if (interact_dark_agency) "*agency_type + " else " + ",
+      if (interact_dark_agency) {
+        str_c(
+          # quo_name(darkness_indicator_colq),
+          "I(", quo_name(darkness_indicator_colq), "*(agency_type == 'municipal_pd'))",
+          " + I(", quo_name(darkness_indicator_colq), "*(agency_type == 'state_patrol'))"
+        )
+        # "agency_type + "#)
+      } else {
+        quo_name(darkness_indicator_colq)
+      },
       str_c(
-        str_c("ns(", quo_name(time_colq), ", df = ", degree, ")"),
-        "geography",
+        str_c(" + ns(", quo_name(time_colq), ", df = ", degree, ")"),
+        "geography + ",
         sep = if (interact_time_location) "*" else " + "
-      ), 
-      " + season + year"
+      ),
+      "season*year"
     )
   )
   print("Fitting model...")
