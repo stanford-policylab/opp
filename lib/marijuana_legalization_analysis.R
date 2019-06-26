@@ -248,7 +248,7 @@ compose_timeseries_rate_plot <- function(
       plot.margin = unit(rep(0.2, 4), "cm"),
       # panel.margin = unit(0.25, "lines"),
       # NOTE: tiny space between axis labels and tick marks
-      axis.title.x = element_text(margin = ggplot2::margin(t = 6.0)),
+      axis.title.x = element_blank(),
       axis.title.y = element_text(margin = ggplot2::margin(t = 6.0)),
       # NOTE: simplify legend
       legend.key = element_blank(),
@@ -298,21 +298,21 @@ compose_misdemeanor_rate_plots <- function(tbl) {
     is_before_legalization
   ) %>%
   summarize(
-    n_drugs_infraction_or_misdemeanor = sum(is_drugs_infraction_or_misdemeanor),
+    n_drug_infraction_or_misdemeanor = sum(is_drug_infraction_or_misdemeanor),
     n_stops_with_violation_data = n()
   ) %>%
   ungroup(
   ) %>%
   # NOTE: roll up to quarters to reduce noisiness
   to_rates_by_quarter(
-    n_drugs_infraction_or_misdemeanor,
+    n_drug_infraction_or_misdemeanor,
     n_stops_with_violation_data
   ) %>%
   # NOTE: remove data around legalization quarter since it will be mixed
   filter(
     quarter != as.Date("2012-11-15")
   ) %>%
-  compose_timeseries_rate_plot("Drugs Infraction & Misdemeanor Rate")
+  compose_timeseries_rate_plot("Drug Infraction & Misdemeanor Rate")
 }
 
 
