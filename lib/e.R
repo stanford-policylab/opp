@@ -36,12 +36,11 @@ load <- function(analysis = "disparity") {
     },
     tbl
   )
-
-  results
- # list(
- #   data = bind_rows(lapply(results, function(p) p@data)),
- #   metadata = bind_rows(lapply(results, function(p) p@metadata))
- # )
+  
+  list(
+   data = bind_rows(lapply(results, function(p) p@data)),
+   metadata = bind_rows(lapply(results, function(p) p@metadata))
+ )
 }
 
 
@@ -49,7 +48,8 @@ load_dst_vod_for <- function(state, city) {
   load_vod_base_for(state, city) %>%
     remove_states_that_dont_observe_dst() %>% 
     add_dst_dates() %>%
-    filter_to_dst_windows(week_radius = 3) %>% 
+    # NOTE: 30 day radius is what Ridgeway did in Cincy RAND paper
+    filter_to_dst_windows(day_radius = 30) %>% 
     remove_location_yrs_with_too_few_stops_per_race(geography, min_stops = 100) %>% 
     select_top_n_vod_geos(geography, n_geos = 20)
 }
@@ -98,7 +98,7 @@ load_mj_for <- function(state, city) {
   load_base_for(state, city) %>%
     # NOTE: truncate at 2016 since only a couple locations have data after that
     filter_to_date_range("2011-01-01", "2016-01-01") %>%
-    remove_locations_with_unreliable_search_data() %>%
+    remove_locations_with_unreliable_search_data(time_series = T) %>%
     filter_to_locations_with_data_before_and_after_legalization() %>%
     remove_months_with_low_coverage(search_conducted, threshold = 0.5) %>%
     add_mj_calculated_features()
@@ -228,6 +228,14 @@ remove_months_with_too_few_stops <- function(p, min_stops) {
 remove_months_with_low_coverage <- function(p, feature, predicate = NULL, threshold) {
   featq <- enquo(feature)
   feat_name <- quo_name(featq)
+  reason <- sprintf("%s data is unreliable", feat_name)
+  action <- sprintf(
+    "remove months where %s is recorded less than %g%% of the time",
+    feat_name,
+    threshold * 100
+  )
+  result <- "no change"
+  print(action)
   
   if(!missing(predicate)) {
     predq <- enquo(predicate)
@@ -238,15 +246,6 @@ remove_months_with_low_coverage <- function(p, feature, predicate = NULL, thresh
       return(add_decision(p, action, reason, result))
     }
   }
-  action <- sprintf(
-    "remove months where %s is recorded less than %g%% of the time",
-    feat_name,
-    threshold * 100
-  )
-  reason <- sprintf("%s data is unreliable", feat_name)
-  result <- "no change"
-
-  print(action)
 
   if (!(feat_name %in% colnames(p@data))) {
     p@data %<>% slice(0)
@@ -526,7 +525,7 @@ filter_to_discretionary_searches_if_search_basis <- function(p, threshold) {
 }
 
 
-remove_locations_with_unreliable_search_data <- function(p) {
+remove_locations_with_unreliable_search_data <- function(p, time_series = F) {
 
   action <- "remove locations with unreliable search data"
   reason <- "has an unreiable and/or irregular recording policy"
@@ -540,22 +539,9 @@ remove_locations_with_unreliable_search_data <- function(p) {
   city <- p@data$city[[1]]
   state <- p@data$state[[1]]
 
-  if (city == "Statewide" & 
-      state %in% c("IL", "MD", "MO", "NE", "VA")
-  ) {
+  if (city == "Statewide" & state %in% c("VA")) {
     p@data %<>% slice(0)
     result <- case_when(
-      state == "IL"
-        ~ "eliminated because search recording policy changes year to year",
-      state == "MD"
-        ~ "eliminated because before 2013 we are only given annual data",
-      state == "MO"
-        ~ "eliminated because it's all annual data",
-      state == "NE"
-        ~ str_c(
-          "eliminated because it has unreliable quarterly dates, ",
-          "i.e. in 2012 all patrol stops are in Q1"
-        ),
       state == "VA"
         ~ str_c(
           "eliminated because it has weekly search recording with suspicious ",
@@ -565,6 +551,24 @@ remove_locations_with_unreliable_search_data <- function(p) {
     )
   }
 
+  if (time_series & city == "Statewide" & state %in% c("IL", "MD", "MO", "NE")){
+    p@data %<>% slice(0)
+    result <- case_when(
+      state == "IL"
+      ~ "eliminated because search recording policy changes year to year",
+      state == "MD"
+      ~ "eliminated because before 2013 we are only given annual data",
+      state == "MO"
+      ~ "eliminated because it's all annual data",
+      state == "NE"
+      ~ str_c(
+        "eliminated because it has unreliable quarterly dates, ",
+        "i.e. in 2012 all patrol stops are in Q1"
+      ),
+      TRUE ~ "no change"
+    )
+  }
+  
   add_decision(p, action, reason, result)
 }
 
@@ -1148,8 +1152,8 @@ add_dst_dates <- function(p) {
 }
 
 
-filter_to_dst_windows <- function(p, week_radius) {
-  action <- sprintf("Filter to %d-week radius around each DST shift", week_radius)
+filter_to_dst_windows <- function(p, day_radius) {
+  action <- sprintf("Filter to %d-day radius around each DST shift", day_radius)
   reason <- "necessary for DST model"
   result <- "no change"
   
@@ -1161,12 +1165,12 @@ filter_to_dst_windows <- function(p, week_radius) {
   n_before <- nrow(p@data)
   p@data %<>% 
     mutate(
-      # define spring as the week_radius around start of DST
-      spring = date >= dst_start - weeks(week_radius)
-        & date <= dst_start + weeks(week_radius),
-      # define fall as the week_radius around end of DST
-      fall = date >= dst_end - weeks(week_radius) 
-        & date <= dst_end + weeks(week_radius)
+      # define spring as the day_radius around start of DST
+      spring = date >= dst_start - days(day_radius)
+        & date <= dst_start + days(day_radius),
+      # define fall as the day_radius around end of DST
+      fall = date >= dst_end - days(day_radius) 
+        & date <= dst_end + days(day_radius)
     ) %>% 
     filter(spring | fall) %>% 
     mutate(season = if_else(spring, "spring", "fall"))
