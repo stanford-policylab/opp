@@ -96,8 +96,8 @@ load_disparity_for <- function(state, city) {
 
 load_mj_for <- function(state, city) {
   load_base_for(state, city) %>%
-    # NOTE: truncate at 2016 since only a couple locations have data after that
-    filter_to_date_range("2011-01-01", "2016-01-01") %>%
+    # NOTE: truncate after 2015 since only a couple locations have data
+    filter_to_date_range("2011-01-01", "2015-12-31") %>%
     remove_locations_with_unreliable_search_data(time_series = T) %>%
     filter_to_locations_with_data_before_and_after_legalization() %>%
     remove_months_with_low_coverage(search_conducted, threshold = 0.5) %>%
@@ -713,7 +713,7 @@ add_mj_calculated_features <- function(p) {
           is.na(search_basis)
           | search_basis %in% c("k9", "plain view", "probable cause", "consent")
         ),
-      is_drugs_infraction_or_misdemeanor = str_detect(
+      is_drug_infraction_or_misdemeanor = str_detect(
         violation,
         str_c(
           # NOTE: Details on Colorado's marijuana policies:
