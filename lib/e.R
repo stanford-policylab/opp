@@ -713,7 +713,7 @@ add_mj_calculated_features <- function(p) {
           is.na(search_basis)
           | search_basis %in% c("k9", "plain view", "probable cause", "consent")
         ),
-      is_drugs_infraction_or_misdemeanor = str_detect(
+      is_drug_infraction_or_misdemeanor = str_detect(
         violation,
         str_c(
           # NOTE: Details on Colorado's marijuana policies:
