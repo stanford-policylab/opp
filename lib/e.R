@@ -24,6 +24,8 @@ load <- function(analysis = "disparity") {
   } else if (analysis == "mjt") {
     load_func <- load_mj_threshold_for
     tbl %<>% filter(city == "Statewide", state %in% c("CO", "WA"))
+  } else if (analysis == "base") {
+    load_func <- load_base_for
   }
 
   results <- opp_apply(
@@ -90,7 +92,10 @@ load_disparity_for <- function(state, city) {
     ) %>%
     remove_months_with_low_coverage(subgeography, threshold = 0.5) %>%
     remove_na(subgeography) %>% 
-    remove_locations_with_too_few_searches_per_race(subgeography, min_searches = 50)
+    remove_locations_with_too_few_searches_per_race(
+      subgeography, min_searches = 50
+    ) %>% 
+    remove_locations_with_too_few_subgeographies(min_subgeos = 3)
 }
 
 
@@ -107,6 +112,8 @@ load_mj_for <- function(state, city) {
 
 load_mj_threshold_for <- function(state, city) {
   load_mj_for(state, city) %>%
+    # NOTE: truncate after 2015 since only a couple locations have data
+    filter_to_date_range("2011-01-01", "2015-12-31") %>%
     remove_na(search_conducted) %>%
     remove_months_with_low_coverage(subgeography, threshold = 0.5) %>%
     remove_na(subgeography)
@@ -641,6 +648,32 @@ remove_locations_with_too_few_searches_per_race <- function(p, geo, min_searches
   
   if (n_before - n_after > 0)
     result <- "rows removed"
+  add_decision(p, action, reason, result, details)
+}
+
+remove_locations_with_too_few_subgeographies <- function(p, min_subgeos) {
+  action <- sprintf("remove locations with fewer than %d subgeographies", 
+                    min_subgeos)
+  reason <- str_c("need sufficient subgeos for threshold test and ",
+            "representative data for rolling up to geography")
+  result <- "no change"
+  
+  print(action)
+  
+  if (nrow(p@data) == 0) {
+    result <- sprintf("dataframe empty")
+    return(add_decision(p, action, reason, result))
+  }
+  
+  n_subgeos <- p@data %>% 
+    select(subgeography) %>% 
+    n_distinct()
+  details = list(n_subgeographies = n_subgeos)
+  
+  if (n_subgeos < min_subgeos) {
+    p@data %<>% slice(0) 
+    result <- "location eliminated"
+  }
   add_decision(p, action, reason, result, details)
 }
 
