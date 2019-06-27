@@ -55,11 +55,19 @@ locations_used_in_analyses <- function(use_cache = T) {
 
   locations <- 
     bind_rows(
+<<<<<<< HEAD
       load("vod_dst")$data %>% select(state, city),
       load("vod_full")$data %>% select(state, city),
       load("disparity")$data %>% select(state, city),
       load("mj")$data %>% select(state, city),
       load("mjt")$data %>% select(state, city)
+=======
+      load("vod_dst") %>% select(state, city),
+      load("vod_full") %>% select(state, city),
+      load("disparity") %>% select(state, city),
+      load("mj") %>% select(state, city),
+      load("mjt") %>% select(state, city)
+>>>>>>> master
     ) %>%
     distinct() %>%
     arrange(state, city)
