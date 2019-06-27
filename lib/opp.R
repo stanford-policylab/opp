@@ -916,7 +916,7 @@ opp_process_all <- function() {
         state = state,
         city = city,
         result = tryCatch(
-          { opp_process(state, city) },
+          { as.character(opp_process(state, city)) },
           error = function(e) { as.character(e) }
         )
       )

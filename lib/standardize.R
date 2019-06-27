@@ -25,6 +25,9 @@ standardize <- function(data, metadata) {
 
   # put all local metadata in standarize sublist of all metadata
   metadata[["standardize"]] <- d$metadata
+
+  print("finished!")
+
   list(
     data = d$data,
     metadata = metadata
@@ -154,7 +157,7 @@ sanitize <- function(d) {
         "vehicle_model",
         "vehicle_type"
       ))
-      & class(d$data[[col]]) == "character"
+      & get_primary_class(d$data[[col]]) == "character"
     ) {
       sanitize_schema <- append_to(sanitize_schema, col, sanitize_digits)
     }
