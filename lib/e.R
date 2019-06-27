@@ -66,8 +66,8 @@ locations_used_in_analyses <- function(use_cache = T) {
   locations <- list(data = tibble(), metadata = tibble())
   for (analysis in c("vod_dst", "vod_full", "disparity", "mj", "mjt")) {
     a <- f(analysis)
-    locations$data %<>% bind_rows(data, a$data)
-    locations$metadata %<>% bind_rows(data, a$metadata)
+    locations$data %<>% bind_rows(a$data)
+    locations$metadata %<>% bind_rows(a$metadata)
   }
 
   saveRDS(locations, cache_path)
