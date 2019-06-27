@@ -39,6 +39,13 @@ calculate_search_rate_difference_in_difference_coefficients <- function(tbl) {
       # search_conducted may be NA in different places, so filter locally
       !is.na(search_conducted)
     ) %>%
+    mutate(
+      # NOTE: make sure white is the base case
+      subject_race = factor(
+        subject_race,
+        levels = c("white", "black", "hispanic")
+      )
+    ) %>%
     group_by(
       state,
       date,
