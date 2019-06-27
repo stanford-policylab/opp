@@ -26,7 +26,10 @@ load <- function(analysis = "disparity") {
     tbl %<>% filter(city == "Statewide", state %in% c("CO", "WA"))
   } else if (analysis == "pfs") {
     load_func <- load_base_for
-    tbl <- locations_used_in_analyses() %>% select(state, city) %>% distinct()
+    tbl <-
+      locations_used_in_analyses()$data %>%
+      select(state, city) %>%
+      distinct()
   }
 
   results <- opp_apply(
@@ -53,20 +56,19 @@ locations_used_in_analyses <- function(use_cache = T) {
   if (use_cache && file_exists(cache_path))
     return(read_rds(cache_path))
 
-  f <- function(analysis) {
-    load(analysis)$data %>% select(state, city) %>% mutate(analysis = analysis)
+  f <- function(a) {
+    d <- load(a)
+    d$metadata %<>% mutate(analysis = a) %>% select(analysis, everything())
+    d$data %<>% select(state, city) %>% mutate(analysis = a)
+    d
   }
 
-  locations <- 
-    bind_rows(
-      f("vod_dst"),
-      f("vod_dst"),
-      f("vod_full"),
-      f("disparity"),
-      f("mj"),
-      f("mjt")
-    ) %>%
-    arrange(analysis, state, city)
+  locations <- list(data = tibble(), metadata = tibble())
+  for (analysis in c("vod_dst", "vod_full", "disparity", "mj", "mjt")) {
+    a <- f(analysis)
+    locations$data %<>% bind_rows(data, a$data)
+    locations$metadata %<>% bind_rows(data, a$metadata)
+  }
 
   saveRDS(locations, cache_path)
 
