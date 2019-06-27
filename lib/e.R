@@ -24,8 +24,9 @@ load <- function(analysis = "disparity") {
   } else if (analysis == "mjt") {
     load_func <- load_mj_threshold_for
     tbl %<>% filter(city == "Statewide", state %in% c("CO", "WA"))
-  } else if (analysis == "base") {
+  } else if (analysis == "pfs") {
     load_func <- load_base_for
+    tbl <- locations_used_in_analyses()
   }
 
   results <- opp_apply(
@@ -43,6 +44,29 @@ load <- function(analysis = "disparity") {
    data = bind_rows(lapply(results, function(p) p@data)),
    metadata = bind_rows(lapply(results, function(p) p@metadata))
  )
+}
+
+
+locations_used_in_analyses <- function(use_cache = T) {
+
+  cache_path <- here::here("cache", "locations_used_in_analyses.rds")
+  if (use_cache && file_exists(cache_path))
+    return(read_rds(cache_path))
+
+  locations <- 
+    bind_rows(
+      load("vod_dst")$data %>% select(state, city),
+      load("vod_full")$data %>% select(state, city),
+      load("disparity")$data %>% select(state, city),
+      load("mj")$data %>% select(state, city),
+      load("mjt")$data %>% select(state, city)
+    ) %>%
+    distinct() %>%
+    arrange(state, city)
+
+  saveRDS(locations, cache_path)
+
+  locations
 }
 
 
@@ -727,7 +751,6 @@ add_mj_calculated_features <- function(p) {
 
   p@data %<>% 
     mutate(
-      subject_race = relevel(factor(subject_race), "white"),
       legalization_date = if_else(
         state == "CO",
         as.Date("2012-12-10"),
