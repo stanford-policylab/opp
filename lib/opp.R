@@ -708,22 +708,14 @@ opp_load_state_fips <- function() {
 }
 
 
-opp_locations_used_in_analyses <- function(remove_locs_missing_hispanic = F) {
-  if(!exists("VOD_ELIGIBLE_CITIES") | !exists("VOD_ELIGIBLE_STATES")
-     | !exists("DISPARITY_ELIGIBLE_CITIES") | !exists("DISPARITY_ELIGIBLE_STATES")
-     | !exists("MJ_ELIGIBLE_STATES")) 
-    {
-      source(here::here("lib", "eligible_locations.R"))
-    }
-  tbl <- bind_rows(
-    VOD_ELIGIBLE_CITIES, VOD_ELIGIBLE_STATES, 
-    DISPARITY_ELIGIBLE_CITIES, DISPARITY_ELIGIBLE_STATES, 
-    MJ_ELIGIBLE_STATES
-  ) 
-  if(remove_locs_missing_hispanic)
-    tbl <- filter(tbl, !no_hispanics)
-  tbl %>% 
-    select(state, city) %>% 
+opp_locations_used_in_analyses <- function() {
+  source(here::here("lib", "e.R"))
+  mj <- load("mj") %>% select(state, city) 
+  disparity <- load("disparity") %>% select(state, city) 
+  vod_full <- load("vod_full") %>% select(state, city) 
+  vod_dst <- load("vod_dst") %>% select(state, city)
+  
+  bind_rows(mj, disparity, vod_full, vod_dst) %>% 
     distinct()
 }
 
