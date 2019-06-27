@@ -21,15 +21,15 @@ veil_of_darkness_daylight_savings <- function(from_cache = F) {
         interact = c(rep(T, 12), rep(F, 12)),
         agency = rep(c(rep(T, 6), rep(F, 6)), 2)
       ),
-      function(degree, interact, agency) {
-        r <- vod_coef(dst = T, d, geography, degree, interact, agency) 
+      function(degree_var, interact_var, agency_var) {
+        r <- vod_coef(dst = T, d, geography, degree_var, interact_var, agency_var) 
         r$coefficients %>% 
           mutate(
             data = "counties and cities",
             base_controls = "time, location, season, year",
-            agency_control = agency,
-            interact_time_loc = interact,
-            spline_degree = degree,
+            agency_control = agency_var,
+            interact_time_loc = interact_var,
+            spline_degree = degree_var,
             formula = list(formula(r$model))
           )
       }

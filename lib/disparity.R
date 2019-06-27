@@ -33,14 +33,17 @@ source(here::here("lib", "disparity_plot.R"))
 # )
 
 
-disparity <- function() {
+disparity <- function(from_cache = F) {
   datasets <- list()
   print("Preparing data...")
-  d <- load("disparity")
-  output = here::here("cache", "disparity_data.rds")
-  sprintf("Saving data to %s", output)
-  write_rds(d, output)
-  # d <- read_rds(output)
+  if (from_cache)
+    d <- read_rds(output)
+  else {
+    d <- load("disparity")
+    output = here::here("cache", "disparity_data.rds")
+    sprintf("Saving data to %s", output)
+    write_rds(d, output)
+  }
   datasets$state <- filter(d$data, city == "Statewide") %>% 
     mutate(geography = state)
   datasets$city <- filter(d$data, city != "Statewide") %>% 
