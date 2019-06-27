@@ -3,6 +3,7 @@ library(getopt)
 library(here)
 library(lazyeval)
 library(lubridate)
+library(maps)
 library(parallel)
 library(rlang)
 library(stringi)
@@ -282,6 +283,14 @@ bundle_raw <- function(data, loading_problems, comments = list()) {
 
 calculate_if <- function(pred_fun, func) {
   ifelse(pred_func(), func(), NA)
+}
+
+
+city_center_lat_lngs <- function() {
+  as_tibble(us.cities) %>%
+  right_separate_cols(name = c("city", "state"), sep = " ") %>%
+  mutate(lng = long) %>%
+  select(state, city, lat, lng)
 }
 
 

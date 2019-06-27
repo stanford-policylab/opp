@@ -848,7 +848,8 @@ add_center_lat_lng <- function(p) {
   p@data %<>%
     left_join(
       if (city != "Statewide") {
-        read_csv(here::here("resources", "city_center_lat_lngs.csv"))
+        city_center_lat_lngs() %>%
+          mutate(geography = str_c(city, state, sep = ", "))
       } else {
         geoCounty %>% 
         filter(state == state) %>%

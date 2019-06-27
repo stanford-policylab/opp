@@ -4,9 +4,7 @@ source(here::here("lib", "opp.R"))
 
 compose_coverage_map <- function() {
   data(state.fips)
-  city_geocodes <-
-    read_csv(here::here("resources", "city_center_lat_lngs.csv")) %>%
-    separate(loc, c("city", "state"), sep = ",")
+  city_geocodes <- city_center_lat_lngs()
   all_locs <- opp_available()
   all_states <- filter(all_locs, city == "Statewide")
   all_cities <- filter(all_locs, city != "Statewide")
