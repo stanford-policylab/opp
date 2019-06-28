@@ -289,8 +289,8 @@ calculate_if <- function(pred_fun, func) {
 city_center_lat_lngs <- function() {
   as_tibble(us.cities) %>%
   right_separate_cols(name = c("city", "state"), sep = " ") %>%
-  mutate(lng = long) %>%
-  select(state, city, lat, lng)
+  mutate(center_lat = lat, center_lng = long) %>%
+  select(state, city, center_lat, center_lng)
 }
 
 

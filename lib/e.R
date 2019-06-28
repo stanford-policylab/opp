@@ -59,7 +59,7 @@ locations_used_in_analyses <- function(use_cache = T) {
   f <- function(a) {
     d <- load(a)
     d$metadata %<>% mutate(analysis = a) %>% select(analysis, everything())
-    d$data %<>% select(state, city) %>% mutate(analysis = a)
+    d$data %<>% select(state, city) %>% distinct() %>% mutate(analysis = a)
     d
   }
 
