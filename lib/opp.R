@@ -1,6 +1,7 @@
 library(here)
 source(here::here("lib", "common.R"))
 
+
 clear <- function() {
   env = globalenv()
   rm(list=ls(envir = env), envir = env)

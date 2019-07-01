@@ -42,11 +42,12 @@ load <- function(analysis = "disparity") {
     },
     tbl
   )
+  results
   
-  list(
-   data = bind_rows(lapply(results, function(p) p@data)),
-   metadata = bind_rows(lapply(results, function(p) p@metadata))
- )
+  # list(
+  #  data = bind_rows(lapply(results, function(p) p@data)),
+  #  metadata = bind_rows(lapply(results, function(p) p@metadata))
+ # )
 }
 
 
