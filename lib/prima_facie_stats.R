@@ -3,7 +3,7 @@ source(here::here("lib", "opp.R"))
 
 
 prima_facie_stats <- function(
-  only = opp_locations_used_in_analyses(remove_locs_missing_hispanic = T)
+  only = opp_locations_used_in_analyses()
 ) {
   list(
     basic_counts = count_stops_and_locations(only),
