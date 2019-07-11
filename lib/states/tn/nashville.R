@@ -79,8 +79,14 @@ clean <- function(d, helpers) {
     # NOTE: all the files are traffic_stop_* and the stop reasons are vehicle
     # related
     type = "vehicular",
-    date = parse_date(date, "%m/%d/%Y"),
-    time = parse_time(time, "%I:%M:%S %p"),
+    date = coalesce(
+      parse_date(date, "%m/%d/%Y"),
+      parse_date(date, "%Y/%m/%d")
+    ),
+    time = coalesce(
+      parse_time(time, "%I:%M:%S %p"),
+      parse_time(time, "%H:%M:%S")
+    ),
     citation_issued =
       traffic_citation_issued
       # NOTE: misd_state_citation_issued is NA sometimes, assume this is false

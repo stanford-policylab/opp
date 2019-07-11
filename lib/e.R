@@ -42,12 +42,11 @@ load <- function(analysis = "disparity") {
     },
     tbl
   )
-  results
   
-  # list(
-  #  data = bind_rows(lapply(results, function(p) p@data)),
-  #  metadata = bind_rows(lapply(results, function(p) p@metadata))
- # )
+  list(
+   data = bind_rows(lapply(results, function(p) p@data)),
+   metadata = bind_rows(lapply(results, function(p) p@metadata))
+ )
 }
 
 
@@ -850,7 +849,8 @@ add_center_lat_lng <- function(p) {
     left_join(
       if (city != "Statewide") {
         city_center_lat_lngs() %>%
-          mutate(geography = str_c(city, state, sep = ", "))
+          mutate(geography = str_c(city, state, sep = ", ")) %>%
+          select(-city, -state)
       } else {
         geoCounty %>% 
         filter(state == state) %>%
@@ -1124,6 +1124,7 @@ remove_location_yrs_with_too_few_stops_per_race <- function(p, geo, min_stops) {
 
 
 select_top_n_vod_geos <- function(p, geo, n_geos) {
+
   geo_colq <- enquo(geo)
   
   reason <- "VOD model can't handle too many locations"
@@ -1136,10 +1137,10 @@ select_top_n_vod_geos <- function(p, geo, n_geos) {
     return(add_decision(p, action, reason, result))
   }
   
-  if(p@data$city[[1]] == "Statewide")
+  if (str_to_lower(p@data$city[[1]]) == "statewide") {
     action <- sprintf("choose top %d counties for states", n_geos)
-  else {
-    action <- sprintf("select top %d geos,", n_geos)
+  } else {
+    action <- sprintf("select top %d geos", n_geos)
     result <- "single city; action not relevant"
     print(action)
     return(add_decision(p, action, reason, result))
