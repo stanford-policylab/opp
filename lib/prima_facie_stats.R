@@ -5,7 +5,7 @@ source(here::here("lib", "e.R"))
 
 pfs <- function(use_cache = F) {
 
-  cache_path <- here::here("cache", "pfs.rds")
+  cache_path <- here::here("results", "pfs.rds")
   if (use_cache && file_exists(cache_path))
     return(read_rds(cache_path))
 
