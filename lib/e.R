@@ -1,6 +1,10 @@
 source("opp.R")
 
-load <- function(analysis = "disparity") {
+load <- function(analysis = "disparity", use_cache = F) {
+
+  cache_path <- here::here("cache", str_c(analysis, ".rds"))
+  if (use_cache & file_exists(cache_path))
+    return(read_rds(cache_path))
 
   # NOTE: test locations
   # tbl <- tribble(
@@ -27,12 +31,12 @@ load <- function(analysis = "disparity") {
   } else if (analysis == "pfs") {
     load_func <- load_base_for
     tbl <-
-      locations_used_in_analyses()$data %>%
+      locations_used_in_analyses(use_cache)$data %>%
       select(state, city) %>%
       distinct()
   }
 
-  results <- opp_apply(
+  tmp <- opp_apply(
     function(state, city) {
       p <- load_func(state, city)
       p@metadata %<>% 
@@ -43,21 +47,25 @@ load <- function(analysis = "disparity") {
     tbl
   )
   
-  list(
-   data = bind_rows(lapply(results, function(p) p@data)),
-   metadata = bind_rows(lapply(results, function(p) p@metadata))
- )
+  res <- list(
+   data = bind_rows(lapply(tmp, function(p) p@data)),
+   metadata = bind_rows(lapply(tmp, function(p) p@metadata))
+  )
+
+  write_rds(res, cache_path)
+
+  res
 }
 
 
-locations_used_in_analyses <- function(use_cache = T) {
+locations_used_in_analyses <- function(use_cache = F) {
 
   cache_path <- here::here("cache", "locations_used_in_analyses.rds")
   if (use_cache && file_exists(cache_path))
     return(read_rds(cache_path))
 
   f <- function(a) {
-    d <- load(a)
+    d <- load(a, use_cache)
     d$metadata %<>% mutate(analysis = a) %>% select(analysis, everything())
     d$data %<>% select(state, city) %>% distinct() %>% mutate(analysis = a)
     d
@@ -70,7 +78,7 @@ locations_used_in_analyses <- function(use_cache = T) {
     locations$metadata %<>% bind_rows(a$metadata)
   }
 
-  saveRDS(locations, cache_path)
+  write_rds(locations, cache_path)
 
   locations
 }

@@ -1,5 +1,60 @@
 library(here)
 source(here::here("lib", "opp.R"))
+source(here::here("lib", "e.R"))
+
+
+pfs <- function(use_cache = F) {
+
+  cache_path <- here::here("cache", "pfs.rds")
+  if (use_cache && file_exists(cache_path))
+    return(read_rds(cache_path))
+
+  all_data <- opp_load_all_clean_data()
+
+  analysis_data <- load("pfs", use_cache)$data
+
+  res <- list(
+    basic_counts = list(
+      collected = counts(all_data),
+      analyzed = counts(analysis_data)
+    ),
+    # stop_rates = stop_rates(all_data),
+    search_rates = search_rates(analysis_data)
+  )
+
+  write_rds(res, cache_path)
+
+  res
+}
+
+
+counts <- function(tbl) {
+  locs <- tbl %>% select(state, city) %>% distinct()
+  cities <- filter(locs, city != "Statewide")
+  states <- filter(locs, city == "Statewide")
+  list(
+    n_stops = nrow(tbl),
+    n_cities = nrow(cities),
+    n_states = nrow(states)
+  )
+}
+
+
+stop_rates <- function(tbl) {
+  # TODO(danj): pro-rated population since months are removed?
+}
+
+
+search_rates <- function(tbl) {
+  tbl %>%
+  group_by(state, city, subject_race) %>%
+  summarize(
+    n = n(),
+    n_searches = sum(search_conducted, na.rm = T),
+    search_rate = n_searches / n
+  ) %>%
+  ungroup()
+}
 
 
 prima_facie_stats <- function(

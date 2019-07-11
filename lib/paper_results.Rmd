@@ -20,14 +20,14 @@ mj <- read_rds(here::here("results", "marijuana_legalization_analysis.rds"))
 \end{center}
 
 We have collected and released a dataset of 
-`r pfs$basic_counts$n_stops_collected` traffic stops carried out by 
-`r pfs$basic_counts$n_states_collected` state patrol agencies and 
-`r pfs$basic_counts$n_cities_collected` municipal police departments.
+`r pfs$basic_counts$collected$n_stops` traffic stops carried out by 
+`r pfs$basic_counts$collected$n_states` state patrol agencies and 
+`r pfs$basic_counts$collectec$n_cities` municipal police departments.
 
 We analyzed a unique dataset detailing 
-`r pfs$basic_counts$n_stops_analyzed` traffic stops carried out by 
-`r pfs$basic_counts$n_states_analyzed` state patrol agencies and 
-`r pfs$basic_counts$n_cities_analyzed` municipal police departments.
+`r pfs$basic_counts$analyzed$n_stops` traffic stops carried out by 
+`r pfs$basic_counts$analyzed$n_states` state patrol agencies and 
+`r pfs$basic_counts$analyzed$n_cities` municipal police departments.
 
 \begin{center}
 \section{Prima Facie Stats}
