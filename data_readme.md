@@ -817,7 +817,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 64.7% </td>
+   <td style="text-align:left;"> 99.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
@@ -1565,11 +1565,11 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> search_person </td>
-   <td style="text-align:left;"> 3.7% </td>
+   <td style="text-align:left;"> 99.4% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> search_vehicle </td>
-   <td style="text-align:left;"> 3.7% </td>
+   <td style="text-align:left;"> 99.4% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> search_basis </td>
@@ -1945,7 +1945,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 92.5% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
@@ -2348,39 +2348,39 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_age </td>
-   <td style="text-align:left;"> 67.8% </td>
+   <td style="text-align:left;"> 70.3% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_dob </td>
-   <td style="text-align:left;"> 67.8% </td>
+   <td style="text-align:left;"> 70.3% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 76.4% </td>
+   <td style="text-align:left;"> 87.1% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
-   <td style="text-align:left;"> 68.6% </td>
+   <td style="text-align:left;"> 71.2% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_id </td>
-   <td style="text-align:left;"> 80.3% </td>
+   <td style="text-align:left;"> 83.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_id_hash </td>
-   <td style="text-align:left;"> 80.3% </td>
+   <td style="text-align:left;"> 83.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_sex </td>
-   <td style="text-align:left;"> 30.8% </td>
+   <td style="text-align:left;"> 31.8% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_first_name </td>
-   <td style="text-align:left;"> 80.2% </td>
+   <td style="text-align:left;"> 82.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_last_name </td>
-   <td style="text-align:left;"> 80.2% </td>
+   <td style="text-align:left;"> 82.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> type </td>
@@ -2388,23 +2388,23 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> violation </td>
-   <td style="text-align:left;"> 84.0% </td>
+   <td style="text-align:left;"> 83.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> arrest_made </td>
-   <td style="text-align:left;"> 54.2% </td>
+   <td style="text-align:left;"> 54.1% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> citation_issued </td>
-   <td style="text-align:left;"> 54.2% </td>
+   <td style="text-align:left;"> 54.1% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> warning_issued </td>
-   <td style="text-align:left;"> 54.2% </td>
+   <td style="text-align:left;"> 54.1% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> outcome </td>
-   <td style="text-align:left;"> 41.7% </td>
+   <td style="text-align:left;"> 41.6% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> contraband_found </td>
@@ -2412,7 +2412,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> search_conducted </td>
-   <td style="text-align:left;"> 100.0% </td>
+   <td style="text-align:left;"> 92.6% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> search_basis </td>
@@ -2437,7 +2437,16 @@ We’re excited to see what you come up with!
 - Rows in raw data represent violations, not stops, so we remove duplicates by
   grouping by the other fields.
 - `subject_race` was mapped from `raw_Ethnicity`. 
-- Note that data from 2016 came with about 80 fewer columns than the data before and   after, so many values for that year will be NA.
+- Note that data from 2016 came with about 80 fewer columns than the data pre-2016 
+  and after 2016, so many values for that year will be NA, including search data 
+  (see below for details).
+- The data came in three files, the first covered 2010-March 2016; this has full
+  data. The second covered Jan-Dec 2016; this was missing many columns, including
+  whether a search was conducted. The third data file covered Jan-Dec 2017 and
+  had full data. In order to preserve as much search data as possible we use the
+  second file with missing data only to fill in the nine months of April-Dec 
+  2016. This, in particular, affects the marijuana analysis search rate time 
+  series.
 - Additional columns in the raw data that may be of interest: `MMJCard`,
   `DUIDType`, `NonUS`, `NonUSDL`, `NonUSDLLocation`, `DLCheck`, 
   `TrafficAccident`, `AccidentSeverity` (0-4), `DUIArrest`, `HVPTCitation`, 
@@ -2487,7 +2496,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 99.5% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
@@ -2712,6 +2721,10 @@ We’re excited to see what you come up with!
   SubjectRaceCode, SubjectSexCode, and SubjectAge, reducing the number of rows
   by ~1.1%
 - search rate is suspiciously high, ~28%
+- hit rate is suspiciously low, ~1%; we exclude Hartford from outcome and
+  threshold tests because contraband recovered is so suspiciously low that we
+  don't trust it, plus it's so low that it's not even enough data to run the 
+  statistical tests reliably.
 - subject_race is based on SubjectEthnicityCode and SubjectRaceCode, which are
   based on raw_subject_ethnicity_code and raw_subject_race_code
 - search_conducted and search_basis are derived from SearchAuthorizationCode,
@@ -2959,7 +2972,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> search_conducted </td>
-   <td style="text-align:left;"> 68.4% </td>
+   <td style="text-align:left;"> 68.5% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> search_basis </td>
@@ -3069,7 +3082,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 52.5% </td>
+   <td style="text-align:left;"> 52.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
@@ -3366,7 +3379,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 99.7% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
@@ -4091,7 +4104,8 @@ We’re excited to see what you come up with!
   well, when that also occurred
 - Provided longitude is lacking the negative sign, which we add (without which
   all points are in central China)
-- subject race is based on RACE in the raw data and passed through as raw_race
+- subject race is based on RACE in the raw data and passed through as raw_race;
+  data does not include Hispanic.
 - violation is a concatenation of `Violation Description X` where X is 1 to 9
 - type is based on `Violation Description 1`
 - 2015 and 2017 only have data for part of the year
@@ -4282,7 +4296,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 99.1% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
@@ -4472,7 +4486,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 97.0% </td>
+   <td style="text-align:left;"> 99.6% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
@@ -4617,7 +4631,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 41.1% </td>
+   <td style="text-align:left;"> 97.8% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_id </td>
@@ -4819,7 +4833,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 99.2% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> department_name </td>
@@ -4882,7 +4896,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 97.7% </td>
+   <td style="text-align:left;"> 99.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
@@ -4971,7 +4985,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 95.0% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
@@ -5158,7 +5172,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> frisk_performed </td>
-   <td style="text-align:left;"> 3.9% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> search_conducted </td>
@@ -5166,11 +5180,11 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> search_person </td>
-   <td style="text-align:left;"> 3.9% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> search_vehicle </td>
-   <td style="text-align:left;"> 3.9% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> search_basis </td>
@@ -5186,6 +5200,18 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> reason_for_stop </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> raw_Ethnicity </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> raw_Race </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> raw_action_description </td>
    <td style="text-align:left;"> 100.0% </td>
   </tr>
 </tbody>
@@ -5460,7 +5486,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> frisk_performed </td>
-   <td style="text-align:left;"> 2.0% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> search_conducted </td>
@@ -5468,11 +5494,11 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> search_person </td>
-   <td style="text-align:left;"> 2.0% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> search_vehicle </td>
-   <td style="text-align:left;"> 2.0% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> search_basis </td>
@@ -5488,6 +5514,18 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> reason_for_stop </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> raw_Ethnicity </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> raw_Race </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> raw_action_description </td>
    <td style="text-align:left;"> 100.0% </td>
   </tr>
 </tbody>
@@ -5582,7 +5620,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> frisk_performed </td>
-   <td style="text-align:left;"> 5.3% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> search_conducted </td>
@@ -5590,11 +5628,11 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> search_person </td>
-   <td style="text-align:left;"> 5.3% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> search_vehicle </td>
-   <td style="text-align:left;"> 5.3% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> search_basis </td>
@@ -5610,6 +5648,18 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> reason_for_stop </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> raw_Ethnicity </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> raw_Race </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> raw_action_description </td>
    <td style="text-align:left;"> 100.0% </td>
   </tr>
 </tbody>
@@ -5704,7 +5754,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> frisk_performed </td>
-   <td style="text-align:left;"> 6.7% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> search_conducted </td>
@@ -5712,11 +5762,11 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> search_person </td>
-   <td style="text-align:left;"> 6.7% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> search_vehicle </td>
-   <td style="text-align:left;"> 6.7% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> search_basis </td>
@@ -5732,6 +5782,18 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> reason_for_stop </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> raw_Ethnicity </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> raw_Race </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> raw_action_description </td>
    <td style="text-align:left;"> 100.0% </td>
   </tr>
 </tbody>
@@ -5830,7 +5892,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> frisk_performed </td>
-   <td style="text-align:left;"> 5.2% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> search_conducted </td>
@@ -5838,11 +5900,11 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> search_person </td>
-   <td style="text-align:left;"> 5.2% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> search_vehicle </td>
-   <td style="text-align:left;"> 5.2% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> search_basis </td>
@@ -5858,6 +5920,18 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> reason_for_stop </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> raw_Ethnicity </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> raw_Race </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> raw_action_description </td>
    <td style="text-align:left;"> 100.0% </td>
   </tr>
 </tbody>
@@ -5951,7 +6025,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> frisk_performed </td>
-   <td style="text-align:left;"> 5.8% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> search_conducted </td>
@@ -5959,11 +6033,11 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> search_person </td>
-   <td style="text-align:left;"> 5.8% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> search_vehicle </td>
-   <td style="text-align:left;"> 5.8% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> search_basis </td>
@@ -5979,6 +6053,18 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> reason_for_stop </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> raw_Ethnicity </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> raw_Race </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> raw_action_description </td>
    <td style="text-align:left;"> 100.0% </td>
   </tr>
 </tbody>
@@ -6065,7 +6151,8 @@ We’re excited to see what you come up with!
   May or early June, i.e. 2010-05-08, 2011-06-02, 2012-05-05, 2013-05-04,
   2014-05-10, 2015-05-09, 2016-05-20; it's unclear what these correspond to and
   the PD has not yet responded to our inquiry
-- subject_race is based on raw_race, which is passed through
+- subject_race is based on raw_race, which is passed through; the data does not 
+  appear to include Hispanic.
 
 ## Statewide, ND
 ### 2010-01-01 to 2015-06-25
@@ -6099,7 +6186,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 94.4% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
@@ -6114,6 +6201,10 @@ We’re excited to see what you come up with!
    <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
+   <td style="text-align:left;"> outcome </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
    <td style="text-align:left;"> raw_Race </td>
    <td style="text-align:left;"> 100.0% </td>
   </tr>
@@ -6121,8 +6212,7 @@ We’re excited to see what you come up with!
 </table>
 
 **Data notes**:
-- The data contain records only for citations, not warnings, so we exclude
-  North Dakota from our analysis.
+- The data contain records only for citations, not warnings.
 - Rows represent individual citations, not stops, so we remove duplicates by
   grouping by the other fields.
 - The `violation` field is populated by citation codes and their descriptions.
@@ -6151,7 +6241,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 98.4% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> department_name </td>
@@ -6192,9 +6282,10 @@ We’re excited to see what you come up with!
   some sort; there are no stops for level 4.
 - The data is by quarter, not by day. So all stop_dates are the first date of
   the quarter.
-- For state patrol stops, there is a strange jump (Q1) and then dip (Q2–4) in
-  the data for 2012. It looks like for 2012 all stops are recorded as happening
-  in the first quarter.
+- There is a strange jump (Q1) and then dip (Q2–4) in the data for 2012. This
+  stems from all state patrol stops for 2012 being recorded as happening
+  in the first quarter. Municipal departments seem to have okay dated data for
+  2012.
 
 ## Statewide, NH
 ### 2014-01-01 to 2015-12-31
@@ -6240,7 +6331,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 62.9% </td>
+   <td style="text-align:left;"> 63.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
@@ -6316,7 +6407,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 3.8% </td>
+   <td style="text-align:left;"> 3.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
@@ -6622,7 +6713,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> violation </td>
-   <td style="text-align:left;"> 17.8% </td>
+   <td style="text-align:left;"> 96.6% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> citation_issued </td>
@@ -6647,6 +6738,10 @@ We’re excited to see what you come up with!
   <tr>
    <td style="text-align:left;"> vehicle_registration_state </td>
    <td style="text-align:left;"> 96.4% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> raw_race </td>
+   <td style="text-align:left;"> 97.4% </td>
   </tr>
 </tbody>
 </table>
@@ -6689,7 +6784,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 90.1% </td>
+   <td style="text-align:left;"> 99.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> type </td>
@@ -6725,6 +6820,7 @@ We’re excited to see what you come up with!
 **Data notes**:
 - Nevada does not seem to record Ethnicity or have any records of Hispanic
   drivers, so we exclude it from our analysis. 
+- Nevada does not record time of stop, making it ineligible for VOD analysis.
 - The violation field is a concatenation of two fields in the raw data:
   infraction codes and offense description.
 - Additional columns in the raw data that may be of interest: `Citation Number`.
@@ -6761,7 +6857,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 96.0% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
@@ -7041,11 +7137,11 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 0.0% </td>
+   <td style="text-align:left;"> 91.3% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
-   <td style="text-align:left;"> 0.0% </td>
+   <td style="text-align:left;"> 91.3% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_id </td>
@@ -7069,23 +7165,23 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> arrest_made </td>
-   <td style="text-align:left;"> 0.0% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> warning_issued </td>
-   <td style="text-align:left;"> 0.0% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> outcome </td>
-   <td style="text-align:left;"> 0.0% </td>
+   <td style="text-align:left;"> 39.8% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> contraband_found </td>
-   <td style="text-align:left;"> 0.0% </td>
+   <td style="text-align:left;"> 19.8% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> contraband_drugs </td>
-   <td style="text-align:left;"> 0.0% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> search_conducted </td>
@@ -7093,7 +7189,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> search_basis </td>
-   <td style="text-align:left;"> 0.0% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> raw_DISP_STRING </td>
@@ -7109,7 +7205,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> raw_race </td>
-   <td style="text-align:left;"> 0.0% </td>
+   <td style="text-align:left;"> 91.3% </td>
   </tr>
 </tbody>
 </table>
@@ -7269,6 +7365,7 @@ We’re excited to see what you come up with!
 - type is based on field_subject_cid, which is passed through as
   raw_field_subject_cid
 - subject_race is based on race, which is passed through as raw_race
+- There are zero stops of Hispanic individuals reported after 2010.
 
 ## Oklahoma City, OK
 ### 2011-01-01 to 2017-10-18
@@ -7354,11 +7451,11 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> speed </td>
-   <td style="text-align:left;"> 96.9% </td>
+   <td style="text-align:left;"> 40.8% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> posted_speed </td>
-   <td style="text-align:left;"> 96.9% </td>
+   <td style="text-align:left;"> 40.8% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> vehicle_color </td>
@@ -7394,7 +7491,8 @@ We’re excited to see what you come up with!
   seems to have missing/partial data; the last few months of 2017 are also
   missing
 - Search/contraband information is missing
-- subject_race is based on DfndRace, which is passed through as raw_dfnd_race
+- subject_race is based on DfndRace, which is passed through as raw_dfnd_race;
+  though the data do not include classification of drivers as Hispanic.
 
 ## Tulsa, OK
 ### 2009-01-01 to 2016-12-31
@@ -7504,7 +7602,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 99.2% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> type </td>
@@ -7851,7 +7949,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 94.0% </td>
+   <td style="text-align:left;"> 94.3% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
@@ -8013,7 +8111,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 98.9% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
@@ -8033,7 +8131,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> officer_race </td>
-   <td style="text-align:left;"> 99.3% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_last_name </td>
@@ -8251,7 +8349,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 98.1% </td>
+   <td style="text-align:left;"> 99.2% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
@@ -8313,7 +8411,7 @@ We’re excited to see what you come up with!
 </table>
 
 **Data notes**:
-- The data contain only citations, so we exclude Tennessee from our analysis. 
+- The data contain only citations. 
 - The codes in the `CNTY_NBR` field represent counties ordered alphabetically.
 - `location` is a concatenation of raw fields `UP_STR_HWY` (highway/street) and 
   `MLE_MRK_NBR` (mile marker). It would be possible to map the highway and mile 
@@ -8330,7 +8428,7 @@ We’re excited to see what you come up with!
   direction), `ACCD_IND` (accident boolean), `CMV_IND` (commercial vehicle boolean)
 
 ## Nashville, TN
-### 2010-01-01 to 2016-12-31
+### 2010-01-01 to 2019-03-24
 <table>
  <thead>
   <tr>
@@ -8341,11 +8439,11 @@ We’re excited to see what you come up with!
 <tbody>
   <tr>
    <td style="text-align:left;"> date </td>
-   <td style="text-align:left;"> 85.0% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> time </td>
-   <td style="text-align:left;"> 84.8% </td>
+   <td style="text-align:left;"> 99.8% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> location </td>
@@ -8803,7 +8901,7 @@ We’re excited to see what you come up with!
   prefix
 
 ## Garland, TX
-### 2012-01-03 to 2019-04-02
+### 2012-01-03 to 2019-06-22
 <table>
  <thead>
   <tr>
@@ -9334,7 +9432,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 97.7% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
@@ -9415,6 +9513,22 @@ We’re excited to see what you come up with!
   <tr>
    <td style="text-align:left;"> vehicle_year </td>
    <td style="text-align:left;"> 67.1% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> raw_HA_SEARCH_PC_boolean </td>
+   <td style="text-align:left;"> 92.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> raw_HA_SEARCH_CONCENT_boolean </td>
+   <td style="text-align:left;"> 92.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> raw_HA_INCIDTO_ARREST_boolean </td>
+   <td style="text-align:left;"> 92.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> raw_HA_VEHICLE_INVENT_boolean </td>
+   <td style="text-align:left;"> 92.0% </td>
   </tr>
 </tbody>
 </table>
@@ -9624,7 +9738,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 96.6% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_id </td>
@@ -9668,13 +9782,16 @@ We’re excited to see what you come up with!
 **Data notes**:
 - The original data was aggregated by week.
 - Some rows have an unlikely high number of stops or searches. We have an
-  outstanding inquiry on this, but for now it is assumed to be correct.
+  outstanding inquiry on this, but have not heard back. In particular, spikes
+  in each week seem to usually be driven by a single officer with an unlikely
+  high number of stops or searches (e.g., about 1,000 searches by an officer
+  in a single week). Each spike seems to be driven by a different officer. 
+  Since this reporting seems highly unlikely, we exclude VA from search analyses. 
 - Counties were mapped using the provided dictionary, which is included in the
   raw data folder.
 - There are no written warnings in Virginia and verbal warnings are not
   recorded, so all records are citations or searches without further action
-  taken. We, therefore, exclude Virginia from our analysis, because they do not
-  record the same set of stops as other states. 
+  taken. 
 - In the raw data, "Traffic arrests" refer to citations without a search.
   "Search arrests" refer to a citation and a search (either before or after the
   citation). "Search stops" refer to searches without a corresponding citation.
@@ -9847,7 +9964,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 98.2% </td>
+   <td style="text-align:left;"> 98.6% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
@@ -9978,7 +10095,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 70.6% </td>
+   <td style="text-align:left;"> 71.8% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
@@ -9986,7 +10103,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> officer_race </td>
-   <td style="text-align:left;"> 71.4% </td>
+   <td style="text-align:left;"> 72.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_sex </td>
@@ -10632,7 +10749,7 @@ We’re excited to see what you come up with!
 </table>
 
 **Data notes**:
-- The data come from two systems ("7.3" and “10.0”) that succeeded each other.
+- The data come from two systems ("7.3" and "10.0") that succeeded each other.
   They have different field names and are differently coded. This is
   particularly relevant for the violation field, which has a different encoding
   between the two systems; in order to map violations, we used the dictionaries
@@ -10690,7 +10807,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 97.2% </td>
+   <td style="text-align:left;"> 99.7% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
@@ -10710,6 +10827,10 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> type </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> outcome </td>
    <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
