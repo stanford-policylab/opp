@@ -4,43 +4,14 @@ source(here::here("lib", "outcome_test.R"))
 source(here::here("lib", "threshold_test.R"))
 source(here::here("lib", "disparity_plot.R"))
 
-# # NOTE: AZ, MA, OH, and VT also have contraband info and thus could have these
-# # tests run, but for various reasons (contraband info unreliable or messy,
-# # or too large a white population to be able to compare at the county level)
-# # we omit them because we wouldn't trust analysis on those states.
-# ELIGIBLE_STATES <- tribble(
-#   ~state, ~city,
-#   "CO", "Statewide",
-#   "CT", "Statewide",
-#   "IL", "Statewide",
-#   "NC", "Statewide",
-#   "RI", "Statewide",
-#   "SC", "Statewide",
-#   "TX", "Statewide",
-#   "WA", "Statewide",
-#   "WI", "Statewide"
-# )
-# 
-# # NOTE: Cities in NC can also be used for aggregate disparity tests, but
-# # do not have sub-geography and thus we do not use them in our paper.
-# ELIGIBLE_CITIES <- tribble(
-#   ~state, ~city,
-#   "CA", "San Diego",
-#   "CA", "San Francisco",
-#   "LA", "New Orleans",
-#   "PA", "Philadelphia",
-#   "TN", "Nashville"
-# )
-
-
 disparity <- function(from_cache = F) {
   datasets <- list()
+  output = here::here("cache", "disparity.rds")
   print("Preparing data...")
   if (from_cache)
     d <- read_rds(output)
   else {
     d <- load("disparity")
-    output = here::here("cache", "disparity_data.rds")
     sprintf("Saving data to %s", output)
     write_rds(d, output)
   }
