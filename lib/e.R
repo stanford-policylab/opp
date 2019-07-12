@@ -1,5 +1,11 @@
 source("opp.R")
 
+# NOTE: some filters are by-month; for locations that gave us annual data 
+#       (e.g., MO), these by-month filters don't quite apply in the same
+#       way. We have done separate manual checks to ensure the quality of
+#       these annual datasets where included. When applying this script to
+#       new data, make sure to treat annualized data with care.
+
 load <- function(analysis = "disparity", use_cache = F) {
 
   cache_path <- here::here("cache", str_c(analysis, ".rds"))
@@ -170,7 +176,9 @@ load_base_for <- function(state, city) {
     filter_to_vehicular_stops() %>%
     filter_to_date_range("2011-01-01", "2018-12-31") %>%
     remove_months_with_too_few_stops(min_stops = 50) %>%
-    remove_months_with_low_coverage(subject_race, threshold = 0.5) %>%
+    remove_months_with_low_coverage(
+      subject_race, additional_na_vals = "unknown", threshold = 0.5
+    ) %>%
     filter_to_races(races = c("white", "black", "hispanic")) %>%
     add_subgeography() %>%
     remove_anomalous_subgeographies()
@@ -270,7 +278,9 @@ remove_months_with_too_few_stops <- function(p, min_stops) {
 }
 
 
-remove_months_with_low_coverage <- function(p, feature, predicate = NULL, threshold) {
+remove_months_with_low_coverage <- function(
+  p, feature, predicate = NULL, additional_na_vals = NULL, threshold
+) {
   featq <- enquo(feature)
   feat_name <- quo_name(featq)
   reason <- sprintf("%s data is unreliable", feat_name)
@@ -303,6 +313,13 @@ remove_months_with_low_coverage <- function(p, feature, predicate = NULL, thresh
     base <- filter(base, !!predq)
   }
   
+  if(not_null(additional_na_vals)) {
+    base <- base %>% 
+      mutate(!!feat_name := str_replace_all(
+        !!featq, str_c(additional_na_vals, collapse = "|"), NA_character_
+      ))
+  }
+
   cvg <-
     base %>%
     group_by(month = format(date, "%Y-%m")) %>%
