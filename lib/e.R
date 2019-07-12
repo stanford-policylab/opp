@@ -193,7 +193,7 @@ keep_only_highway_patrol_if_state <- function(p) {
 
   print(action)
 
-  is_state <- p@data$city[[1]] == "statewide"
+  is_state <- p@data$city[[1]] == "Statewide"
   has_multiple_departments <- "department_name" %in% colnames(p@data)
   if (is_state & has_multiple_departments) {
     n_before <- nrow(p@data)
