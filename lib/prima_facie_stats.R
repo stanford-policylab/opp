@@ -13,7 +13,7 @@ prima_facie_stats <- function(use_cache = F) {
 
   analysis_data <- load("pfs", use_cache)$data
 
-  res <- list(
+  list(
     basic_counts = list(
       collected = counts(all_data),
       analyzed = counts(analysis_data)
@@ -21,10 +21,6 @@ prima_facie_stats <- function(use_cache = F) {
     stop_rates = stop_rates(all_data),
     search_rates = search_rates(analysis_data)
   )
-
-  write_rds(res, cache_path)
-
-  res
 }
 
 
