@@ -18,7 +18,7 @@ pfs <- function(use_cache = F) {
       collected = counts(all_data),
       analyzed = counts(analysis_data)
     ),
-    # stop_rates = stop_rates(all_data),
+    stop_rates = stop_rates(all_data),
     search_rates = search_rates(analysis_data)
   )
 
@@ -41,7 +41,31 @@ counts <- function(tbl) {
 
 
 stop_rates <- function(tbl) {
-  # TODO(danj): pro-rated population since months are removed?
+
+  pop <- par_pmap(
+    select(tbl, state, city) %>% distinct(),
+    function(state, city) {
+      opp_demographics(state, city) %>%
+        select(-place, -state, -fip) %>%
+        rename(state = state_abbreviation, subject_race = race) %>%
+        mutate(city = city)
+    }
+  ) %>%
+  bind_rows()
+
+  n_months <- 12
+  if (state == "MO" && city == "Statewide") {
+    # NOTE: MO has only annualized data
+    n_months <- 1
+  }
+
+  tbl %>%
+  group_by(state, city, subject_race, year_month = format(date, "%Y-%m")) %>%
+  summarize(n_monthly_stops = n()) %>%
+  group_by(state, city, subject_race) %>%
+  summarize(average_monthly_stops = mean(n_monthly_stops)) %>%
+  left_join(pop) %>%
+  mutate(annual_stop_rate = average_monthly_stops / population * n_months)
 }
 
 

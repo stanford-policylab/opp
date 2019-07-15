@@ -290,7 +290,13 @@ city_center_lat_lngs <- function() {
   as_tibble(us.cities) %>%
   right_separate_cols(name = c("city", "state"), sep = " ") %>%
   mutate(center_lat = lat, center_lng = long) %>%
-  select(state, city, center_lat, center_lng)
+  select(state, city, center_lat, center_lng) %>%
+  # NOTE: there are some entries not included in us.cities; they are
+  # added manually here (coordinates from google maps)
+  bind_rows(tribble(
+    ~state, ~city, ~center_lat, ~center_lng,
+    "VT", "Burlington", 44.492569, -73.2966882
+  ))
 }
 
 

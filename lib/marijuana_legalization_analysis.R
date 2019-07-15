@@ -39,13 +39,14 @@ calculate_search_rate_difference_in_difference_coefficients <- function(tbl) {
       # search_conducted may be NA in different places, so filter locally
       !is.na(search_conducted)
     ) %>%
-    mutate(
-      # NOTE: make sure white is the base case
-      subject_race = factor(
-        subject_race,
-        levels = c("white", "black", "hispanic")
-      )
-    ) %>%
+    # TODO(danj): remove
+    # mutate(
+    #   # NOTE: make sure white is the base case
+    #   subject_race = factor(
+    #     subject_race,
+    #     levels = c("white", "black", "hispanic")
+    #   )
+    # ) %>%
     group_by(
       state,
       date,
@@ -209,13 +210,15 @@ compose_timeseries_rate_plot <- function(
 
   p <-
     ggplot(
-      mutate(
-        tbl,
-        subject_race = factor(
-          subject_race,
-          levels = c("white", "black", "hispanic")
-        )
-      ),
+      # TODO(danj): remove
+      # mutate(
+      #   tbl,
+      #   subject_race = factor(
+      #     subject_race,
+      #     levels = c("white", "black", "hispanic")
+      #   )
+      # ),
+      tbl,
       aes(
         x = quarter,
         y = rate,
@@ -506,11 +509,13 @@ plot_threshold_changes <- function(tbl) {
     legal = factor(
       if_else(legal, "Post", "Pre"), 
       levels = c("Pre", "Post")
-    ),
-    subject_race = factor(
-      subject_race, 
-      levels = c("white", "black", "hispanic")
     )
+    # TODO(danj): remove since fixed in load
+    # ),
+    # subject_race = factor(
+    #   subject_race, 
+    #   levels = c("white", "black", "hispanic")
+    # )
   ) %>%
   ggplot(aes(legal, `50%`, color = subject_race)) +
   geom_line(aes(group = subject_race)) +

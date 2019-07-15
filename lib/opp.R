@@ -361,6 +361,15 @@ opp_data_paths <- function() {
 }
 
 
+opp_demographics <- function(state, city) {
+  if (city == "Statewide") {
+    opp_state_demographics(state)
+  } else {
+    opp_city_demographics(state, city)
+  }
+}
+
+
 opp_detect_ssns <- function() {
   opp_apply(
     function(state, city) {
@@ -1081,7 +1090,8 @@ opp_state_demographics <- function(state) {
     filter(state_abbreviation == state_query)
   if (nrow(tbl) != length(valid_races) - 1)
     stop(str_c("Demographic query for ", state_query, " failed!"))
-  tbl
+  # NOTE: for consistency with opp_city_demographics
+  tbl %>% mutate(place = state)
 }
 
 

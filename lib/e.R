@@ -385,7 +385,8 @@ filter_to_races <- function(p, races) {
   details <- list(subject_race_proportion <- count_pct(p@data, subject_race))
 
   n_before <- nrow(p@data)
-  p@data %<>% filter(subject_race %in% races)
+  p@data %<>% filter(subject_race %in% races) %>%
+    mutate(subject_race = factor(subject_race, levels = races))
   n_after <- nrow(p@data)
   if (n_before - n_after > 0)
     result <- "rows removed"
