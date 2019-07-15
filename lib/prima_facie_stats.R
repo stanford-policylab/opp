@@ -5,12 +5,7 @@ source(here::here("lib", "e.R"))
 
 prima_facie_stats <- function(use_cache = F) {
 
-  cache_path <- here::here("results", "pfs.rds")
-  if (use_cache && file_exists(cache_path))
-    return(read_rds(cache_path))
-
   all_data <- opp_load_all_clean_data()
-
   analysis_data <- load("pfs", use_cache)$data
 
   list(
@@ -50,7 +45,7 @@ stop_rates <- function(tbl) {
   bind_rows()
 
   n_months <- 12
-  if (state == "MO" && city == "Statewide") {
+  if (tbl$state[[1]] == "MO" && tbl$city[[1]] == "Statewide") {
     # NOTE: MO has only annualized data
     n_months <- 1
   }
