@@ -4,10 +4,9 @@ source(here::here("lib", "veil_of_darkness_test.R"))
 
 veil_of_darkness_daylight_savings <- function(from_cache = F) {
   if (from_cache) 
-    vod_dst <- read_rds(here::here("cache", "vod_dst_data.rds"))
+    vod_dst <- read_rds(here::here("cache", "vod_dst.rds"))
   else {
     vod_dst <- load("vod_dst")
-    write_rds(vod_dst, here::here("cache", "vod_dst_data.rds"))
   }
   d <- prep_vod_data(vod_dst$data)
   
@@ -43,10 +42,9 @@ veil_of_darkness_daylight_savings <- function(from_cache = F) {
 
 veil_of_darkness_full <- function(from_cache = F) {
   if (from_cache) 
-    vod_full <- read_rds(here::here("cache", "vod_full_data.rds"))
+    vod_full <- read_rds(here::here("cache", "vod_full.rds"))
   else {
     vod_full <- load("vod_full")
-    write_rds(vod_full, here::here("cache", "vod_full_data.rds"))
   }
   
   d <- prep_vod_data(vod_full$data)
