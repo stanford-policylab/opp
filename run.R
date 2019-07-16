@@ -64,7 +64,7 @@ get_args <- function() {
     "coverage",           "v",         "none",         "logical",
     "process_all",        "pa",        "none",         "logical",
     "report_all",         "ra",        "none",         "logical",
-    "prima_facie_stats",  "f",         "none",         "logical",
+    "prima_facie_stats",  "pfs",       "none",         "logical",
     "veil_of_darkness",   "vod",       "none",         "logical",
     "disparity",          "d",         "none",         "logical",
     "marijuana",          "m",         "none",         "logical",

@@ -1,6 +1,5 @@
 library(here)
 source(here::here("lib", "opp.R"))
-library(tictoc)
 
 #' Veil of Darkness Test
 #'
