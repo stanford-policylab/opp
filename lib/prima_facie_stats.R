@@ -70,7 +70,7 @@ stop_rates <- function(tbl) {
   summarize(average_monthly_stops = mean(n_monthly_stops)) %>%
   left_join(pop) %>%
   mutate(
-    average_annual_stops = average_annual_stops * n_months,
+    average_annual_stops = average_monthly_stops * n_months,
     annual_stop_rate = average_annual_stops / population
   )
 }
