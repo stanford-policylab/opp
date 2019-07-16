@@ -20,28 +20,32 @@ mj <- read_rds(here::here("results", "marijuana_legalization_analysis.rds"))
 \end{center}
 
 We have collected and released a dataset of 
-`r pfs$basic_counts$collected$n_stops` traffic stops carried out by 
-`r pfs$basic_counts$collected$n_states` state patrol agencies and 
-`r pfs$basic_counts$collectec$n_cities` municipal police departments.
+`r pfs$counts$collected$n_stops` traffic stops carried out by 
+`r pfs$counts$collected$n_states` state patrol agencies and 
+`r pfs$counts$collectec$n_cities` municipal police departments.
 
 We analyzed a unique dataset detailing 
-`r pfs$basic_counts$analyzed$n_stops` traffic stops carried out by 
-`r pfs$basic_counts$analyzed$n_states` state patrol agencies and 
-`r pfs$basic_counts$analyzed$n_cities` municipal police departments.
+`r pfs$counts$analyzed$n_stops` traffic stops carried out by 
+`r pfs$counts$analyzed$n_states` state patrol agencies and 
+`r pfs$counts$analyzed$n_cities` municipal police departments.
 
 \begin{center}
 \section{Prima Facie Stats}
 \end{center}
 
 ```{r stop_rates}
-pfs$stop_rates %>% 
-  filter(subject_race %in% c("black", "white", "hispanic")) %>% 
+pfs$plots$stop
+pfs$rates$stop %>% 
+  group_by(subject_race) %>%
+  summarize(average_annual_stop_rate = mean(annual_stop_rate))
   kable()
 ```
 
 ```{r search_rates}
-pfs$search_rates %>% 
-  filter(subject_race %in% c("black", "white", "hispanic")) %>% 
+pfs$plots$search
+pfs$rates$search %>% 
+  group_by(subject_race) %>%
+  summarize(average_search_rate = mean(search_rate))
   kable()
 ```
 

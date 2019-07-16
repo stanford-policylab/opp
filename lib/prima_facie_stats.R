@@ -6,15 +6,28 @@ source(here::here("lib", "e.R"))
 prima_facie_stats <- function(use_cache = F) {
 
   all_data <- opp_load_all_clean_data()
-  analysis_data <- load("pfs", use_cache)$data
+  stop_data <- load("pfs_stop", use_cache)$data
+  search_data <- load("pfs_search", use_cache)$data
+
+  stop_rates <- stop_rates(stop_data)
+  search_rates <- search_rates(search_data)
+
+  stop_rates_plot <- plot_stop_rates(stop_rates)
+  search_rates_plot <- plot_search_rates(search_rates)
 
   list(
-    basic_counts = list(
+    counts = list(
       collected = counts(all_data),
-      analyzed = counts(analysis_data)
+      analyzed = counts(stop_data)
     ),
-    stop_rates = stop_rates(all_data),
-    search_rates = search_rates(analysis_data)
+    rates = list(
+      stop = stop_rates,
+      search = search_rates
+    ),
+    plots = list(
+      stop = stop_rates_plot,
+      search = search_rates_plot
+    )
   )
 }
 
@@ -56,12 +69,17 @@ stop_rates <- function(tbl) {
   group_by(state, city, subject_race) %>%
   summarize(average_monthly_stops = mean(n_monthly_stops)) %>%
   left_join(pop) %>%
-  mutate(annual_stop_rate = average_monthly_stops / population * n_months)
+  mutate(
+    average_annual_stops = average_annual_stops * n_months,
+    annual_stop_rate = average_annual_stops / population
+  )
 }
 
 
 search_rates <- function(tbl) {
   tbl %>%
+  filter(
+  ) %>%
   group_by(state, city, subject_race) %>%
   summarize(
     n = n(),
@@ -69,4 +87,32 @@ search_rates <- function(tbl) {
     search_rate = n_searches / n
   ) %>%
   ungroup()
+}
+
+
+plot_stop_rates <- function(tbl) {
+  ggplot(
+    tbl %>% mutate(location = str_c(city, state, sep = ", ")),
+    aes(x = location, y = annual_stop_rate)
+  ) +
+  geom_bar(stat="identity") +
+  facet_grid(subject_race ~ .) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  ylab("Annual Stop Rate") +
+  ggtitle("Annual Stop Rates by Location")
+}
+
+
+plot_search_rates <- function(tbl) {
+  ggplot(
+    tbl %>%
+      mutate(location = str_c(city, state, sep = ", ")) %>%
+      filter(n_searches > 0),
+    aes(x = location, y = search_rate)
+  ) +
+  geom_bar(stat="identity") +
+  facet_grid(subject_race ~ .) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  ylab("Search Rate") +
+  ggtitle("Search Rates by Location")
 }
