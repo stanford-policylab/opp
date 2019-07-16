@@ -34,12 +34,16 @@ load <- function(analysis = "disparity", use_cache = F) {
   } else if (analysis == "mjt") {
     load_func <- load_mj_threshold_for
     tbl %<>% filter(city == "Statewide", state %in% c("CO", "WA"))
-  } else if (analysis == "pfs") {
-    load_func <- load_base_for
+  } else if (startsWith(analysis, "pfs")) {
     tbl <-
       locations_used_in_analyses(use_cache)$data %>%
       select(state, city) %>%
       distinct()
+    # NOTE: analysis == "pfs_stop"
+    load_func <- load_base_for
+    if (analysis == "pfs_search") {
+      load_func <- load_disparity_for
+    }
   }
 
   tmp <- opp_apply(
@@ -611,6 +615,23 @@ remove_locations_with_unreliable_search_data <- function(p, time_series = F) {
           "spikes, i.e. an officer conducts 800-1500 searches in one week"
         ),
       TRUE ~ "no change"
+    )
+  }
+
+  if (city %in% c("Arlington", "Pittsburgh")) {
+    p@data %<>% slice(0)
+    result <- case_when(
+        city == "Arlington"
+          ~ str_c(
+            "eliminated because we lack the data dictionary for",
+            "`6th digit (Search Outcome)` in the raw data"
+          ),
+        city == "Pittsburgh"
+          ~ str_c(
+            "eliminated because inferred search rate is very high; ",
+            "see data readme for how search_conducted is inferred"
+          ),
+        TRUE ~ "no change"
     )
   }
 
