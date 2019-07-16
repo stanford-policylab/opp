@@ -51,19 +51,16 @@ pfs$search_rates %>%
 \section{Veil of Darkness}
 \end{center}
 
-
 ```{r veil_of_darkness-plot}
-vod$states$plots$time_sliced$`Statewide, TX`
+vod$full$plots$states$time_sliced$`Statewide, TX`
 ```
 
 ```{r veil_of_darkness-mod}
 bind_rows(
   vod$dst$coefficients %>% 
-    mutate(model = "DST: cities and counties"),  
-  vod$cities$coefficients %>% 
-    mutate(model = "Full year: cities"),
-  vod$states$coefficients %>% 
-    mutate(model = "Full year: states")
+    mutate(model = "DST"),  
+  vod$full$coefficients %>% 
+    mutate(model = "Full year")
 ) %>% 
   select(model, is_dark, std_error, everything()) %>% 
   kable()
