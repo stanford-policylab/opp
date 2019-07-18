@@ -9,10 +9,26 @@ header-includes:
 ```{r setup, echo = FALSE}
 opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 
-pfs <- read_rds(here::here("results", "prima_facie_stats.rds"))
-vod <- read_rds(here::here("results", "veil_of_darkness.rds"))
-disp <- read_rds(here::here("results", "disparity.rds"))
-mj <- read_rds(here::here("results", "marijuana_legalization_analysis.rds"))
+# pfs <- read_rds(here::here("results", "prima_facie_stats.rds"))
+# vod <- read_rds(here::here("results", "veil_of_darkness.rds"))
+# disp <- read_rds(here::here("results", "disparity.rds"))
+# mj <- read_rds(here::here("results", "marijuana_legalization_analysis.rds"))
+```
+```{r load_pfs}
+# pfs <- read_rds(here::here("results", "prima_facie_stats.rds"))
+pfs <- read_rds("/share/data/opp/results/prima_facie_stats.rds")
+```
+```{r load_vod}
+# vod <- read_rds(here::here("results", "veil_of_darkness.rds"))
+vod <- read_rds("/share/data/opp/results/veil_of_darkness.rds")
+```
+```{r load_disp}
+# disp <- read_rds(here::here("results", "disparity.rds"))
+disp <- read_rds("/share/data/opp/results/disparity.rds")
+```
+```{r load_mj}
+# mj <- read_rds(here::here("results", "marijuana_legalization_analysis.rds"))
+mj <- read_rds("/share/data/opp/results/marijuana_legalization_analysis.rds")
 ```
 
 \begin{center}
@@ -37,7 +53,7 @@ We analyzed a unique dataset detailing
 pfs$plots$stop
 pfs$rates$stop %>% 
   group_by(subject_race) %>%
-  summarize(average_annual_stop_rate = mean(annual_stop_rate))
+  summarize(average_annual_stop_rate = mean(annual_stop_rate)) %>%
   kable()
 ```
 
@@ -45,7 +61,7 @@ pfs$rates$stop %>%
 pfs$plots$search
 pfs$rates$search %>% 
   group_by(subject_race) %>%
-  summarize(average_search_rate = mean(search_rate))
+  summarize(average_search_rate = mean(search_rate)) %>%
   kable()
 ```
 

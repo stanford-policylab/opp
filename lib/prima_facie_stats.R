@@ -3,7 +3,7 @@ source(here::here("lib", "opp.R"))
 source(here::here("lib", "e.R"))
 
 
-prima_facie_stats <- function(use_cache = F) {
+prima_facie_stats <- function() {
 
   all_data <- opp_load_all_clean_data()
   stop_data <- load("pfs_stop", use_cache)$data

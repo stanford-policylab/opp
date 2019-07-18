@@ -1039,7 +1039,6 @@ opp_run_prima_facie_stats <- function() {
 
 
 opp_run_paper_analyses <- function() {
-  # source(here::here("lib", "eligible_locations.R"))
   # opp_run_prima_facie_stats()
   # opp_run_veil_of_darkness()
   # opp_run_disparity()
