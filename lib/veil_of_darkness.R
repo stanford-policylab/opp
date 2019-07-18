@@ -28,15 +28,14 @@ veil_of_darkness_daylight_savings <- function(from_cache = F) {
             base_controls = "time, location, season, year",
             agency_control = agency_var,
             interact_time_loc = interact_var,
-            spline_degree = degree_var,
-            formula = list(formula(r$model))
+            spline_degree = degree_var
           )
       }
     ) %>% bind_rows()
   
-  results <- list(coefficients = coefficients, data = d)
+  results <- list(coefficients = coefficients)
   
-  write_rds(results, here::here("cache", "vod_dst_sweep.rds"))
+  write_rds(results, here::here("cache", "vod_dst_results.rds"))
   results
 }
 
@@ -79,12 +78,7 @@ veil_of_darkness_full <- function(from_cache = F) {
             ### TODO(amy): do we want year too?
             base_controls = "time, geography",
             spline_degree = degree,
-            interact_time_loc = interact,
-            formula = c(
-              list(formula(r1$model)), 
-              list(formula(r2$model)), 
-              list(formula(r3$model))
-            )
+            interact_time_loc = interact
           )
       }
     ) %>% bind_rows()
@@ -103,7 +97,7 @@ veil_of_darkness_full <- function(from_cache = F) {
     )
   )
   
-  write_rds(results, here::here("cache", "vod_full_mod_results.rds"))
+  write_rds(results, here::here("cache", "vod_full_results.rds"))
   results
 }
 
@@ -167,7 +161,8 @@ vod_coef <- function(
   control_col, 
   degree, 
   interact_time_location,
-  interact_dark_agency = F
+  interact_dark_agency = F,
+  store_model = F
 ) {
   control_colq <- enquo(control_col)
   if(dst) {
@@ -200,6 +195,11 @@ vod_coef <- function(
       filter(term == "is_darkTRUE") %>% 
       select(is_dark = estimate, std_error = std.error)
   }
-  results = list(model = mod, coefficients = coefs)
+  if(store_model) {
+    results <- list(model = mod, coefficients = coefs)
+  } else {
+    results <- list(coefficients = coefs)
+  }
+  results
 }
 

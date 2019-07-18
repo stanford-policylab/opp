@@ -78,7 +78,11 @@ threshold_test <- function(
   )
   stan_data <- format_data_summary_for_stan(data_summary)
   fit <- stan_threshold_test(stan_data, n_iter, n_cores)
-  metadata["stan_warnings"] <- summary(warnings()) 
+  stan_warnings <- summary(warnings())
+  fit_summary <- summary(fit)$summary
+  rhat <- fit_summary[,'Rhat'] %>% max(na.rm = T)
+  n_eff <- fit_summary[,'n_eff'] %>% min(na.rm = T)
+
   posteriors <- rstan::extract(fit)
 
   summary_stats <- collect_average_threshold_test_summary_stats(
@@ -87,12 +91,16 @@ threshold_test <- function(
     !!demographic_colq,
     majority_demographic
   )
-  
+
   list(
     metadata = c(
       metadata,
       list(
-        fit = fit
+        stan_warnings = stan_warnings,
+        rhat = rhat,
+        n_eff = n_eff,
+        n_iters = n_iter,
+        posteriors = posteriors
       )
     ),
     results = list(

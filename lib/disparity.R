@@ -43,7 +43,7 @@ disparity <- function(from_cache = F) {
       datasets[[dataset_name]],
       subgeography,
       geography_col = geography,
-      n_iter = 7500
+      n_iter = 5000
     )
     print("Composing threshold plots...")
     v$threshold$plots <- plt_all(v$threshold$results$thresholds, "threshold")
@@ -56,7 +56,7 @@ disparity <- function(from_cache = F) {
     v$threshold$ppc <- list()
     v$threshold$ppc$search_rate <- plt_ppc_rates(
       v$threshold$results$thresholds,
-      rstan::extract(v$threshold$metadata$fit),
+      v$threshold$metadata$posteriors,
       "search_rate", 
       numerator_col = n_action,
       denominator_col = n,
@@ -64,13 +64,13 @@ disparity <- function(from_cache = F) {
     )
     v$threshold$ppc$hit_rate <- plt_ppc_rates(
       v$threshold$results$thresholds,
-      rstan::extract(v$threshold$metadata$fit),
+      v$threshold$metadata$posteriors,
       "hit_rate", 
       numerator_col = n_outcome,
       denominator_col = n_action,
       title = str_c(dataset_name, " threshold ppc - hit rates")
     )
-    
+    v$threshold$metadata$posteriors <- NULL
     results[[dataset_name]] <- v
   }
   write_rds(results, here::here("cache", "disparity_results.rds"))
