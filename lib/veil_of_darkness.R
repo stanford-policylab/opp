@@ -1,6 +1,5 @@
 source(here::here("lib", "opp.R"))
 source(here::here("lib", "e.R"))
-source(here::here("lib", "veil_of_darkness_test.R"))
 
 veil_of_darkness_daylight_savings <- function(from_cache = F) {
   if (from_cache) 
@@ -33,8 +32,7 @@ veil_of_darkness_daylight_savings <- function(from_cache = F) {
       }
     ) %>% bind_rows()
   
-  results <- list(coefficients = coefficients)
-  
+  results <- coefficients
   write_rds(results, here::here("cache", "vod_dst_results.rds"))
   results
 }
@@ -75,7 +73,6 @@ veil_of_darkness_full <- function(from_cache = F) {
               "states",
               "cities"
             ),
-            ### TODO(amy): do we want year too?
             base_controls = "time, geography",
             spline_degree = degree,
             interact_time_loc = interact
@@ -96,7 +93,6 @@ veil_of_darkness_full <- function(from_cache = F) {
       )
     )
   )
-  
   write_rds(results, here::here("cache", "vod_full_results.rds"))
   results
 }
@@ -111,50 +107,6 @@ prep_vod_data <- function(tbl, minority_demographic = "black") {
     )
 }
 
-select_data_with_dst_ranges <- function(d, plot_path = NULL) {
-  d <- d %>% 
-    mutate(
-      yr = year(date),
-      day = day(date), 
-      month = month(date),
-      spring_range = month %in% 2:4 & !(month == 2 & day < 15)
-      & !(month == 4 & day > 15),
-      fall_range = month %in% 10:11
-    ) 
-  stops_per_range <- d %>% 
-    count(state, city, yr, month, date) %>% 
-    group_by(state, city, yr, month) %>% 
-    summarize(
-      avg_stops_per_day = sum(n)/n(),
-      avg_stops_per_dst_range = 60 * avg_stops_per_day
-    ) %>% 
-    group_by(state, city, yr) %>% 
-    summarize(
-      sd_per_dst_range = sd(avg_stops_per_dst_range),
-      avg_stops_per_dst_range = mean(avg_stops_per_dst_range)
-    )
-  tbl <- d %>% 
-    filter(spring_range | fall_range) 
-  
-  full_ranges <- tbl %>% 
-    count(state, city, yr, spring_range, fall_range) %>% 
-    left_join(stops_per_range) %>% 
-    filter(
-      n > avg_stops_per_dst_range - 3*sd_per_dst_range,
-      n < avg_stops_per_dst_range + 3*sd_per_dst_range
-    )
-  if (not_null(plot_path)) {
-    p <- tbl %>% 
-      count(state, city, yr, spring_range, fall_range, date) %>% 
-      ggplot(aes(date, n, fill = spring_range)) + 
-      geom_col() + 
-      facet_grid(rows = vars(city), cols = vars(yr), scales = "free")
-    write_rds(tbl, here::here("cache", plot_path))
-  }
-  tbl %>%
-    inner_join(full_ranges)
-}
-
 vod_coef <- function(
   dst = F, 
   tbl, 
@@ -167,7 +119,7 @@ vod_coef <- function(
   control_colq <- enquo(control_col)
   if(dst) {
     mod <-
-      dst_model(
+      train_dst_model(
         tbl, 
         degree = degree, 
         interact_dark_agency = interact_dark_agency,
@@ -176,14 +128,14 @@ vod_coef <- function(
   } else {
     mod <- 
       train_vod_model(
-      tbl,
-      !!control_colq,
-      spline_degree = degree,
-      interact_time_location = interact_time_location
-    )
+        tbl,
+        !!control_colq,
+        spline_degree = degree,
+        interact_time_location = interact_time_location
+      )
   }
   if(interact_dark_agency) {
-    coefs <- broom::tidy(mod) %>% ### TODO: change to have the two estimates
+    coefs <- broom::tidy(mod) %>% 
       filter(str_detect(term, "is_dark")) %>% 
       mutate(agency = if_else(
         str_detect(term, "municipal"), 
@@ -202,4 +154,282 @@ vod_coef <- function(
   }
   results
 }
+
+train_dst_model <- function(
+  tbl,
+  state_patrol_indicator_col = is_state_patrol,
+  demographic_indicator_col = is_minority_demographic,
+  darkness_indicator_col = is_dark,
+  time_col = rounded_minute,
+  degree = 6,
+  interact_dark_agency = F,
+  interact_time_location = F
+) {
+  state_patrol_indicator_colq <- enquo(state_patrol_indicator_col)
+  darkness_indicator_colq <- enquo(darkness_indicator_col)
+  demographic_indicator_colq <- enquo(demographic_indicator_col)
+  time_colq <- enquo(time_col)
+  
+  agg <-
+    tbl %>%
+    mutate(
+      agency_type = factor(
+        if_else(!!state_patrol_indicator_colq, "state_patrol", "municipal_pd"),
+        levels = c("state_patrol", "municipal_pd")
+      ),
+      year = factor(year)
+    ) %>% 
+    group_by(
+      !!darkness_indicator_colq,
+      !!time_colq,
+      agency_type,
+      geography,
+      season,
+      year
+    ) %>%
+    summarize(
+      n = n(),
+      n_minority = sum(!!demographic_indicator_colq),
+      n_majority = n - n_minority
+    ) %>% 
+    ungroup()
+  
+  fmla <- as.formula(
+    str_c(
+      "cbind(n_minority, n_majority) ~ ",
+      if (interact_dark_agency) {
+        str_c(
+          "I(", quo_name(darkness_indicator_colq), 
+          "*(agency_type == 'municipal_pd'))",
+          " + I(", quo_name(darkness_indicator_colq), 
+          "*(agency_type == 'state_patrol'))"
+        )
+      } else {
+        quo_name(darkness_indicator_colq)
+      },
+      str_c(
+        str_c(" + ns(", quo_name(time_colq), ", df = ", degree, ")"),
+        "geography + ",
+        sep = if (interact_time_location) "*" else " + "
+      ),
+      "season*year"
+    )
+  )
+  print("Fitting model...")
+  glm(fmla, data = agg, family = binomial)
+}
+
+train_vod_model <- function(
+  tbl,
+  ...,
+  demographic_indicator_col = is_minority_demographic,
+  darkness_indicator_col = is_dark,
+  time_col = rounded_minute,
+  degree = 6,
+  interact_dark_time = F,
+  interact_time_location = T
+) {
+  control_colqs <- enquos(...)
+  darkness_indicator_colq <- enquo(darkness_indicator_col)
+  demographic_indicator_colq <- enquo(demographic_indicator_col)
+  time_colq <- enquo(time_col)
+  
+  agg <-
+    tbl %>%
+    group_by(
+      !!darkness_indicator_colq,
+      !!time_colq,
+      !!!control_colqs
+    ) %>%
+    summarize(
+      n = n(),
+      n_minority = sum(!!demographic_indicator_colq),
+      n_majority = n - n_minority
+    )
+  
+  fmla <- as.formula(
+    str_c(
+      "cbind(n_minority, n_majority) ~ ",
+      quo_name(darkness_indicator_colq),
+      if (interact_dark_time) "*" else " + ",
+      str_c(
+        str_c("ns(", quo_name(time_colq), ", df = ", degree, ")"),
+        quos_names(control_colqs),
+        sep = if (interact_time_location) "*" else " + "
+      )
+    )
+  )
+  glm(fmla, data = agg, family = binomial, control = list(maxit = 100))
+}
+
+compose_vod_plots <- function(
+  data, 
+  geography_col = city_state,
+  demographic_col = subject_race,
+  minority_demographic = "black",
+  time_range_start = hms("16:45:00"), 
+  time_range_end = hms("21:30:00"),
+  window_size = 15,
+  path = NULL
+) {
+  geography_colq <- enquo(geography_col)
+  demographic_colq <- enquo(demographic_col)
+
+  data %>%
+    filter(
+      minute >= time_to_minute(time_range_start),
+      minute <= time_to_minute(time_range_end) 
+    ) %>% 
+    mutate(
+      rounded_minute = plyr::round_any(minute, 15, floor),
+      time_str = minute_to_time(rounded_minute),
+      minutes_since_sunset = minute - sunset_minute,
+      binned_minutes_since_sunset = cut(
+        minutes_since_sunset,
+        breaks = seq(-95, 65, 10),
+        labels = seq(-90, 60, 10)
+      )
+    ) %>%
+    filter(!is.na(binned_minutes_since_sunset)) %>%
+    group_by(binned_minutes_since_sunset, minute, !!geography_colq) %>%
+    mutate(
+      n = n(),
+      n_minority = sum(!!demographic_colq == minority_demographic),
+      minutes_since_dark = as.integer(as.character(binned_minutes_since_sunset))
+    ) %>%
+    ungroup() %>% 
+    select(
+      !!geography_colq, 
+      time_str, rounded_minute, minutes_since_dark, minute, 
+      n, n_minority
+    ) %>% 
+    mutate(geography = !!geography_colq) %>% 
+    group_by(!!geography_colq) %>% 
+    do(
+      plot = generate_time_sliced_vod_plots(., 
+        minority_demographic, 
+        window_size
+      )
+    ) %>%
+    translator_from_tbl(
+      quo_name(geography_colq),
+      "plot"
+    )
+}
+
+
+generate_time_sliced_vod_plots <- function(
+  d, 
+  minority_demographic = "black", 
+  window_size = 15, eps = 0.05
+) {
+  loc_name <- unique(d$geography)
+  prepare_data_for_timesliced_plot(
+    d, minority_demographic, window_size, eps
+  ) %>% 
+    group_by(time_str) %>% 
+    do(
+      plot = ggplot(data = ., aes(
+        minutes_since_dark,
+        proportion_minority)
+      ) +
+        geom_point(aes(size = n)) +
+        geom_smooth(
+          aes(y = avg_p_minority, color = is_dark),
+          method = "lm", se = F, linetype = "dashed"
+        ) +
+        geom_vline(xintercept = -25, linetype = "dotted") +
+        geom_vline(xintercept = 0, linetype = "dotted") +
+        geom_ribbon(
+          data = filter(., is_dark),
+          aes(ymin = avg_p_minority - se, ymax = avg_p_minority + se),
+          alpha=0.3
+        ) +
+        geom_ribbon(
+          data = filter(., !is_dark),
+          aes(ymin = avg_p_minority - se, ymax = avg_p_minority + se),
+          alpha=0.3
+        ) +
+        scale_x_continuous(
+          "Minutes since dark",
+          limits = c(-90, 60),
+          breaks = seq(-90, 60, 15)
+        ) +
+        scale_y_continuous(
+          str_c("Percent ", minority_demographic),
+          limits = c(
+            max(0, unique(.$y_min) - eps),
+            min(1, unique(.$y_max) + eps)
+          ),
+          breaks = seq(0.0, 1.0, 0.02), 
+          labels = scales::percent
+        ) +
+        scale_color_manual(values = c("blue", "blue")) +
+        labs(
+          title = str_c(
+            loc_name, ", ",
+            minute_to_time(unique(.$rounded_minute)), " to ",
+            minute_to_time(unique(.$rounded_minute) + window_size)
+          )
+        )
+    ) %>% 
+    translator_from_tbl(
+      "time_str",
+      "plot"
+    )
+  # if(not_null(path)) {
+  #   dir_create(path(path, "time_sliced", loc_name))
+  #   for(time_range in names(p)) {
+  #     ggsave(
+  #       filename = path(path, "time_sliced", loc_name, str_c(time_range, ".pdf")),
+  #       plot = p[[time_range]],
+  #       device = "pdf"
+  #     )
+  #   }
+  # }
+}
+
+prepare_data_for_timesliced_plot <- function(
+  data,
+  minority_demographic = "black", 
+  window_size = 15, eps = 0.05
+) {
+  data %>%
+    # remove the bin between sunset and dusk
+    filter(minutes_since_dark != -20) %>%
+    group_by(minutes_since_dark, time_str, rounded_minute, geography) %>%
+    summarise(
+      proportion_minority = sum(n_minority) / sum(n),
+      n = sum(n)
+    ) %>%
+    mutate(is_dark = minutes_since_dark >= 0) %>%
+    group_by(is_dark, time_str) %>%
+    mutate(
+      avg_p_minority = weighted.mean(proportion_minority, w = n),
+      se = 2*sqrt(avg_p_minority * (1 - avg_p_minority) / sum(n))
+    ) %>% 
+    group_by(time_str) %>% 
+    mutate(
+      y_max = max(proportion_minority),
+      y_min = min(proportion_minority)
+    )
+}
+
+to_quarter_hour <- function(date, time) {
+  format(
+    round_date(ymd_hms(str_c(date, time, sep = " ")), "15 min"),
+    "%H:%M:%S"
+  )
+}
+
+minute_to_time <- function(minute) {
+  str_c(
+    as.character(minute %/% 60 - 12),
+    ":",
+    str_pad(as.character(minute %% 60), 2, pad = "0"),
+    "pm"
+  )
+}
+
+
 

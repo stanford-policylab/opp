@@ -70,7 +70,42 @@ disparity <- function(from_cache = F) {
       denominator_col = n_action,
       title = str_c(dataset_name, " threshold ppc - hit rates")
     )
+    
     v$threshold$metadata$posteriors <- NULL
+    
+    # plot_path = opp_results_path(path("plots", dataset_name, "outcome"))
+    # dir_create(plot_path)
+    # for(loc in names(v$outcome$plots)) {
+    #   ggsave(
+    #     filename = path(plot_path, str_c(loc, ".pdf")),
+    #     plot = v$outcome$plots[[loc]],
+    #     device = "pdf"
+    #   )
+    # }
+    # v$outcome$plots <- NULL
+    # 
+    # plot_path = opp_results_path(path("plots", dataset_name, "threshold"))
+    # dir_create(plot_path)
+    # for(loc in names(v$threshold$plots)) {
+    #   ggsave(
+    #     filename = path(plot_path, str_c(loc, ".pdf")),
+    #     plot = v$threshold$plots[[loc]],
+    #     device = "pdf"
+    #   )
+    # }
+    # v$threshold$plots <- NULL
+    # 
+    # plot_path = opp_results_path(path("plots", dataset_name, "threshold", "ppc"))
+    # dir_create(plot_path)
+    # for(ppc_type in names(v$threshold$ppc)) {
+    #   ggsave(
+    #     filename = path(plot_path, str_c(ppc_type, ".pdf")),
+    #     plot = v$threshold$ppc[[loc]],
+    #     device = "pdf"
+    #   )
+    # }
+    # v$threshold$ppc <- NULL
+    
     results[[dataset_name]] <- v
   }
   write_rds(results, here::here("cache", "disparity_results.rds"))
@@ -163,7 +198,13 @@ plt_ppc_rates <- function(
 
   ylim <- obs$pred_error %>% range() %>% abs() %>% max()
 
-  plt <- obs %>% 
+  plt <- generate_ppc_plot(obs, ylim, title, !!size_colq, rate_name)
+}
+
+generate_ppc_plot <- function(obs, ylim, title, size_col, rate_name) {
+  size_colq <- enquo(size_col)
+  
+  obs %>% 
     sample_n(nrow(obs)) %>% 
     ggplot(aes(x=pred_rate, y=pred_error)) +
     geom_point(
@@ -187,8 +228,7 @@ plt_ppc_rates <- function(
       legend.title = element_blank(),
       legend.background = element_rect(fill = 'transparent')
     ) +
-    # scale_color_manual(values=c('black','red','blue')) +
+    scale_color_manual(values=c('black','red','blue')) +
     guides(size=FALSE) +
     labs(title = title)
-  plt
 }

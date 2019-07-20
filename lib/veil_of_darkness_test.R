@@ -37,8 +37,7 @@ veil_of_darkness_test <- function(
   majority_demographic = "white",
   spline_degree = 6,
   interact_dark_time = F,
-  interact_time_location = T,
-  plot = F
+  interact_time_location = T
 ) {
   control_colqs <- enquos(...)
   demographic_colq <- enquo(demographic_col)
@@ -73,19 +72,9 @@ veil_of_darkness_test <- function(
       interact_time_location = interact_time_location
   )
 
-  plots <- list()
-  if (plot) {
-    print("composing plots...")
-    plots$color_controlled <- compose_color_controlled_vod_plots(d$data)
-    plots$time_sliced <- compose_time_sliced_vod_plots(
-      d$data, geography_col_for_plot
-    )
-  }
-
   list(
     metadata = d$metadata,
-    results = list(data = d$data, model = model),
-    plots = plots
+    results = list(data = d$data, model = model)
   )
 }
 
@@ -391,16 +380,23 @@ train_vod_model <- function(
 }
 
 
-compose_vod_plots <- function(tbl, geography_col) {
+compose_vod_plots <- function(tbl, geography_col, path = NULL) {
   geography_colq <- enquo(geography_col)
-  list(
-    color_controlled = compose_color_controlled_vod_plots(tbl, !!geography_colq),
-    time_sliced = compose_time_sliced_vod_plots(tbl, !!geography_colq)
-  )
+  if(not_null(path)) {
+    compose_color_controlled_vod_plots(tbl, !!geography_colq, path)
+    compose_time_sliced_vod_plots(tbl, !!geography_colq, path)
+  } else {
+    list(
+      color_controlled = compose_color_controlled_vod_plots(tbl, !!geography_colq),
+      time_sliced = compose_time_sliced_vod_plots(tbl, !!geography_colq)
+    )
+  }
 }
 
 
-compose_color_controlled_vod_plots <- function(tbl, geo_col = city_state) {
+compose_color_controlled_vod_plots <- function(
+  tbl, geo_col = city_state, path = NULL
+) {
   geo_colq <- enquo(geo_col)
   geo_colname <- quo_name(geo_colq)
   # NOTE: limit time to 5:45 PM to 7:15 PM since data is sparse outside this
@@ -410,64 +406,73 @@ compose_color_controlled_vod_plots <- function(tbl, geo_col = city_state) {
   # values; in fact, 7 minutes before and 7 minutes after since each 15-minute
   # group is composed of 7 minutes before + midpoint (15-minute mark) + 7
   # minutes after
-  tbl <- filter(tbl, time >= hm("17:38"), time <= hm("19:22"))
-  bind_rows(
-    # NOTE: controlling for time every 15 minutes
-    mutate(
-      tbl,
-      quarter_hour = to_quarter_hour(date, time),
-      quarter_hour_minute = time_to_minute(quarter_hour),
-      quarter_hour_minute_since_sunset = quarter_hour_minute - sunset_minute,
-      quarter_hour_readable = str_c(
-          hour(hms(quarter_hour)) - 12,
-          ':',
-          str_pad(minute(hms(quarter_hour)), 2, side = "right", pad = "0"),
-          " PM"
-      )
-    ),
-    # NOTE: aggregate for comparison
-    mutate(
-      tbl,
-      quarter_hour_minute_since_sunset = minute - sunset_minute,
-      quarter_hour_readable = "aggregated"
-    )
-  ) %>%
-  group_by(
-    !!geo_colq,
-    quarter_hour_readable,
-    quarter_hour_minute_since_sunset
-  ) %>%
-  summarize(
-    minority_total = sum(is_minority_demographic),
-    majority_total = sum(!is_minority_demographic),
-    proportion_minority = minority_total / (minority_total + majority_total)
-  ) %>%
-  group_by(!!geo_colq) %>%
-  do(
-    plot = 
-      ggplot(
-        .,
-        aes(
-          x = quarter_hour_minute_since_sunset,
-          y = proportion_minority,
-          # NOTE: color and linetype need to be mapped to quarter_hour_readable
-          # in order to set scale_linetype_manual later
-          color = quarter_hour_readable,
-          linetype = quarter_hour_readable
+  p <- bind_rows(
+      # NOTE: controlling for time every 15 minutes
+      mutate(
+        filter(tbl, time >= hm("17:38"), time <= hm("19:22")),
+        quarter_hour = to_quarter_hour(date, time),
+        quarter_hour_minute = time_to_minute(quarter_hour),
+        quarter_hour_minute_since_sunset = quarter_hour_minute - sunset_minute,
+        quarter_hour_readable = str_c(
+            hour(hms(quarter_hour)) - 12,
+            ':',
+            str_pad(minute(hms(quarter_hour)), 2, side = "right", pad = "0"),
+            " PM"
         )
-      ) +
-      geom_smooth(method = "lm", se = F) +
-      scale_linetype_manual(values = c(rep("solid", 7), "dashed")) +
-      xlab("Minutes Since Sunset") +
-      ylab("Proportion Minority") +
-      coord_cartesian(xlim = c(-60, 60)) +
-      theme(legend.title = element_blank()) +
-      ggtitle(unique(pull(., !!geo_colq)))
-  ) %>%
-  translator_from_tbl(
-    geo_colname,
-    "plot"
-  )
+      ),
+      # NOTE: aggregate for comparison
+      mutate(
+        filter(tbl, time >= hm("17:38"), time <= hm("19:22")),
+        quarter_hour_minute_since_sunset = minute - sunset_minute,
+        quarter_hour_readable = "aggregated"
+      )
+    ) %>%
+    group_by(
+      !!geo_colq,
+      quarter_hour_readable,
+      quarter_hour_minute_since_sunset
+    ) %>%
+    summarize(
+      minority_total = sum(is_minority_demographic),
+      majority_total = sum(!is_minority_demographic),
+      proportion_minority = minority_total / (minority_total + majority_total)
+    ) %>%
+    group_by(!!geo_colq) %>%
+    do(
+      plot = 
+        ggplot(
+          .,
+          aes(
+            x = quarter_hour_minute_since_sunset,
+            y = proportion_minority,
+            # NOTE: color and linetype need to be mapped to quarter_hour_readable
+            # in order to set scale_linetype_manual later
+            color = quarter_hour_readable,
+            linetype = quarter_hour_readable
+          )
+        ) +
+        geom_smooth(method = "lm", se = F) +
+        scale_linetype_manual(values = c(rep("solid", 7), "dashed")) +
+        xlab("Minutes Since Sunset") +
+        ylab("Proportion Minority") +
+        coord_cartesian(xlim = c(-60, 60)) +
+        theme(legend.title = element_blank()) +
+        ggtitle(unique(pull(., !!geo_colq)))
+    ) %>%
+    translator_from_tbl(
+      geo_colname,
+      "plot"
+    )
+  if(not_null(path)) {
+    dir_create(path(path, "color_controlled"))
+    for(loc in names(p)) {
+      ggsave(
+        filename = path(path, "color_controlled", str_c(loc, ".pdf")),
+        plot = p[[loc]],
+        device = "pdf"
+      )
+    }
+  }
 }
 
 compose_time_sliced_vod_plots <- function(
@@ -477,12 +482,14 @@ compose_time_sliced_vod_plots <- function(
   minority_demographic = "black",
   time_range_start = hms("16:45:00"), 
   time_range_end = hms("21:30:00"),
-  window_size = 15
+  window_size = 15,
+  path = NULL
 ) {
   geography_colq <- enquo(geography_col)
   demographic_colq <- enquo(demographic_col)
-
-  d <- data %>%
+  print(str_c("saving time_sliced plot for: "))
+  
+  p <- data %>%
     filter(
       minute >= time_to_minute(time_range_start),
       minute <= time_to_minute(time_range_end) 
@@ -513,7 +520,11 @@ compose_time_sliced_vod_plots <- function(
     mutate(geography = !!geography_colq) %>% 
     group_by(!!geography_colq) %>% 
     do(
-      plot = generate_time_sliced_vod_plots(., minority_demographic, window_size)
+      plot = generate_time_sliced_vod_plots(., 
+                minority_demographic, 
+                window_size,
+                path = path
+              )
     ) %>%
     translator_from_tbl(
       quo_name(geography_colq),
@@ -523,32 +534,16 @@ compose_time_sliced_vod_plots <- function(
 
 
 generate_time_sliced_vod_plots <- function(
-  data, 
+  d, 
   minority_demographic = "black", 
-  window_size = 15, eps = 0.05
+  window_size = 15, eps = 0.05,
+  path = NULL
 ) {
-  d <-
-    data %>%
-    # remove the bin between sunset and dusk
-    filter(minutes_since_dark != -20) %>%
-    group_by(minutes_since_dark, time_str, rounded_minute, geography) %>%
-    summarise(
-      proportion_minority = sum(n_minority) / sum(n),
-      n = sum(n)
-    ) %>%
-    mutate(is_dark = minutes_since_dark >= 0) %>%
-    group_by(is_dark, time_str) %>%
-    mutate(
-      avg_p_minority = weighted.mean(proportion_minority, w = n),
-      se = 2*sqrt(avg_p_minority * (1 - avg_p_minority) / sum(n))
+  loc_name <- unique(d$geography)
+  p <- 
+    prepare_data_for_timesliced_plot(
+      d, minority_demographic, window_size, eps
     ) %>% 
-    group_by(time_str) %>% 
-    mutate(
-      y_max = max(proportion_minority),
-      y_min = min(proportion_minority)
-    )
-  
-  d %>% 
     group_by(time_str) %>% 
     do(
       plot = ggplot(data = ., aes(
@@ -589,7 +584,7 @@ generate_time_sliced_vod_plots <- function(
         scale_color_manual(values = c("blue", "blue")) +
         labs(
           title = str_c(
-            unique(.$geography), ", ",
+            loc_name, ", ",
             minute_to_time(unique(.$rounded_minute)), " to ",
             minute_to_time(unique(.$rounded_minute) + window_size)
           )
@@ -599,8 +594,43 @@ generate_time_sliced_vod_plots <- function(
       "time_str",
       "plot"
     )
+  if(not_null(path)) {
+    dir_create(path(path, "time_sliced", loc_name))
+    for(time_range in names(p)) {
+      ggsave(
+        filename = path(path, "time_sliced", loc_name, str_c(time_range, ".pdf")),
+        plot = p[[time_range]],
+        device = "pdf"
+      )
+    }
+  }
 }
 
+prepare_data_for_timesliced_plot <- function(
+  data,
+  minority_demographic = "black", 
+  window_size = 15, eps = 0.05
+) {
+  data %>%
+    # remove the bin between sunset and dusk
+    filter(minutes_since_dark != -20) %>%
+    group_by(minutes_since_dark, time_str, rounded_minute, geography) %>%
+    summarise(
+      proportion_minority = sum(n_minority) / sum(n),
+      n = sum(n)
+    ) %>%
+    mutate(is_dark = minutes_since_dark >= 0) %>%
+    group_by(is_dark, time_str) %>%
+    mutate(
+      avg_p_minority = weighted.mean(proportion_minority, w = n),
+      se = 2*sqrt(avg_p_minority * (1 - avg_p_minority) / sum(n))
+    ) %>% 
+    group_by(time_str) %>% 
+    mutate(
+      y_max = max(proportion_minority),
+      y_min = min(proportion_minority)
+    )
+}
 to_quarter_hour <- function(date, time) {
   format(
     round_date(ymd_hms(str_c(date, time, sep = " ")), "15 min"),
