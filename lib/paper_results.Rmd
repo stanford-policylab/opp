@@ -7,28 +7,13 @@ header-includes:
 ---
 
 ```{r setup, echo = FALSE}
+library(tidyverse)
+library(knitr)
 opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
-
-# pfs <- read_rds(here::here("results", "prima_facie_stats.rds"))
-# vod <- read_rds(here::here("results", "veil_of_darkness.rds"))
+pfs <- read_rds(here::here("results", "prima_facie_stats.rds"))
+vod <- read_rds(here::here("results", "veil_of_darkness.rds"))
 # disp <- read_rds(here::here("results", "disparity.rds"))
-# mj <- read_rds(here::here("results", "marijuana_legalization_analysis.rds"))
-```
-```{r load_pfs}
-# pfs <- read_rds(here::here("results", "prima_facie_stats.rds"))
-pfs <- read_rds("/share/data/opp/results/prima_facie_stats.rds")
-```
-```{r load_vod}
-# vod <- read_rds(here::here("results", "veil_of_darkness.rds"))
-vod <- read_rds("/share/data/opp/results/veil_of_darkness.rds")
-```
-```{r load_disp}
-# disp <- read_rds(here::here("results", "disparity.rds"))
-disp <- read_rds("/share/data/opp/results/disparity.rds")
-```
-```{r load_mj}
-# mj <- read_rds(here::here("results", "marijuana_legalization_analysis.rds"))
-mj <- read_rds("/share/data/opp/results/marijuana_legalization_analysis.rds")
+mj <- read_rds(here::here("results", "marijuana_legalization_analysis.rds"))
 ```
 
 \begin{center}
@@ -72,17 +57,29 @@ pfs$rates$search %>%
 \end{center}
 
 ```{r veil_of_darkness-plot}
-vod$full$plots$states$time_sliced$`Statewide, TX`
+vod$full$plots$states$TX$`6:00pm`
+vod$full$plots$states$TX$`6:15pm`
+vod$full$plots$states$TX$`6:30pm`
+vod$full$plots$states$TX$`6:45pm`
+vod$full$plots$states$TX$`7:00pm`
+vod$full$plots$states$TX$`7:15pm`
+vod$full$plots$states$TX$`7:30pm`
 ```
 
-```{r veil_of_darkness-mod}
+```{r veil_of_darkness-main_mod}
+vod$dst %>% 
+  filter(spline_degree == 6, agency_control, interact_time_loc) %>% 
+  kable()
+```
+
+```{r veil_of_darkness-appendix_mods}
 bind_rows(
-  vod$dst$coefficients %>% 
-    mutate(model = "DST"),  
-  vod$full$coefficients %>% 
+  vod$dst %>%
+    mutate(model = "DST"),
+  vod$full$coefficients %>%
     mutate(model = "Full year")
-) %>% 
-  select(model, is_dark, std_error, everything()) %>% 
+) %>%
+  select(model, agency, is_dark, std_error, everything()) %>%
   kable()
 ```
 
@@ -127,8 +124,22 @@ disp$city$threshold$plots$aggregate
 ```{r disparity-state-thresholds-plot, fig.height = 3, fig.width = 7}
 disp$state$threshold$plots$aggregate
 ```
-
 \newpage
+```{r disparity-city-ppcs, fig.height = 3, fig.width = 7}
+disp$city$threshold$ppc$search_rate
+```
+```{r disparity-state-thresholds-plot, fig.height = 3, fig.width = 7}
+disp$city$threshold$ppc$hit_rate
+```
+\newpage
+```{r disparity-state-ppcs, fig.height = 3, fig.width = 7}
+disp$state$threshold$ppc$search_rate
+```
+```{r disparity-state-thresholds-plot, fig.height = 3, fig.width = 7}
+disp$state$threshold$ppc$hit_rate
+```
+\newpage
+
 \begin{center}
 \section{Marijuana Legalization Analysis}
 \end{center}
