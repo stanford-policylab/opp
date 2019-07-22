@@ -94,7 +94,25 @@ disparity_plot <- function(
   } else {
     axis_limits <- c(0, axis_max)
   }
+  
+  generate_plot(
+    data, 
+    size_colname, 
+    minority_demographic,
+    majority_demographic,
+    axis_limits,
+    axis_title
+  )
+}
 
+generate_plot <- function(
+  data, 
+  size_colname, 
+  minority_demographic,
+  majority_demographic,
+  axis_limits,
+  axis_title
+) {
   data %>%
     ggplot(aes_string("majority_rate", "minority_rate")) +
     geom_point(aes_string(size = size_colname), alpha = 0.8, shape = 1) +

@@ -108,7 +108,6 @@ disparity <- function(from_cache = F) {
     
     results[[dataset_name]] <- v
   }
-  write_rds(results, here::here("cache", "disparity_results.rds"))
   results  
 }
 
@@ -198,7 +197,7 @@ plt_ppc_rates <- function(
 
   ylim <- obs$pred_error %>% range() %>% abs() %>% max()
 
-  plt <- generate_ppc_plot(obs, ylim, title, !!size_colq, rate_name)
+  generate_ppc_plot(obs, ylim, title, !!size_colq, rate_name)
 }
 
 generate_ppc_plot <- function(obs, ylim, title, size_col, rate_name) {
