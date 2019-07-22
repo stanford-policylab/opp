@@ -6,13 +6,13 @@ header-includes:
   - \usepackage{graphicx}
 ---
 
-```{r setup, echo = FALSE}
+```{r setup, echo = FALSE, message = FALSE, warning = FALSE}
 library(tidyverse)
 library(knitr)
 opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 pfs <- read_rds(here::here("results", "prima_facie_stats.rds"))
 vod <- read_rds(here::here("results", "veil_of_darkness.rds"))
-# disp <- read_rds(here::here("results", "disparity.rds"))
+disp <- read_rds(here::here("results", "disparity.rds"))
 mj <- read_rds(here::here("results", "marijuana_legalization_analysis.rds"))
 ```
 
@@ -57,13 +57,11 @@ pfs$rates$search %>%
 \end{center}
 
 ```{r veil_of_darkness-plot}
-vod$full$plots$states$TX$`6:00pm`
 vod$full$plots$states$TX$`6:15pm`
 vod$full$plots$states$TX$`6:30pm`
 vod$full$plots$states$TX$`6:45pm`
 vod$full$plots$states$TX$`7:00pm`
 vod$full$plots$states$TX$`7:15pm`
-vod$full$plots$states$TX$`7:30pm`
 ```
 
 ```{r veil_of_darkness-main_mod}
@@ -125,17 +123,17 @@ disp$city$threshold$plots$aggregate
 disp$state$threshold$plots$aggregate
 ```
 \newpage
-```{r disparity-city-ppcs, fig.height = 3, fig.width = 7}
+```{r disparity-city-ppc-search, fig.height = 3, fig.width = 7}
 disp$city$threshold$ppc$search_rate
 ```
-```{r disparity-state-thresholds-plot, fig.height = 3, fig.width = 7}
+```{r disparity-city-ppc-hit, fig.height = 3, fig.width = 7}
 disp$city$threshold$ppc$hit_rate
 ```
 \newpage
-```{r disparity-state-ppcs, fig.height = 3, fig.width = 7}
+```{r disparity-state-ppc-search, fig.height = 3, fig.width = 7}
 disp$state$threshold$ppc$search_rate
 ```
-```{r disparity-state-thresholds-plot, fig.height = 3, fig.width = 7}
+```{r disparity-state-ppc-hit, fig.height = 3, fig.width = 7}
 disp$state$threshold$ppc$hit_rate
 ```
 \newpage
@@ -171,17 +169,17 @@ mj$plots$inferred_threshold_changes
 ```
 
 
-```{r save_mj_control_search_rates}
-# NOTE: have to save the file to the tmp directory because landscape doesn't
-# work with r execution blocks
-library(ggplot2)
-ggsave(
-  "/tmp/mj_control_search_rates.png",
-  mj$plots$control_search_rates,
-  height = 6,
-  width = 11
-)
-```
-\begin{landscape}
-\includegraphics{/tmp/mj_control_search_rates.png}
-\end{landscape}
+<!-- # ```{r save_mj_control_search_rates} -->
+<!-- # # NOTE: have to save the file to the tmp directory because landscape doesn't -->
+<!-- # # work with r execution blocks -->
+<!-- # library(ggplot2) -->
+<!-- # ggsave( -->
+<!-- #   "/tmp/mj_control_search_rates.png", -->
+<!-- #   mj$plots$control_search_rates, -->
+<!-- #   height = 6, -->
+<!-- #   width = 11 -->
+<!-- # ) -->
+<!-- # ``` -->
+<!-- \begin{landscape} -->
+<!-- \includegraphics{/tmp/mj_control_search_rates.png} -->
+<!-- \end{landscape} -->
