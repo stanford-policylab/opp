@@ -204,7 +204,8 @@ generate_ppc_plot <- function(obs, ylim, title, size_col, rate_name) {
   size_colq <- enquo(size_col)
   
   obs %>% 
-    sample_n(nrow(obs)) %>% 
+    # NOTE: shuffle so that the plot points are not layered by race
+    sample_n(nrow(obs), replace = FALSE) %>% 
     ggplot(aes(x=pred_rate, y=pred_error)) +
     geom_point(
       aes(size=!!size_colq, color=demographic), 
