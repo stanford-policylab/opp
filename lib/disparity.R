@@ -164,14 +164,12 @@ plt_ppc_rates <- function(
   rate_to_plot,
   numerator_col,
   denominator_col,
-  size_col = n,
   demographic_col = subject_race,
   title, 
   truncate_prob = 0.99
 ) {
   numerator_colq <- enquo(numerator_col)
   denominator_colq <- enquo(denominator_col)
-  size_colq <- enquo(size_col)
   demographic_colq <- enquo(demographic_col)
   
   rate_name <- str_remove(rate_to_plot, "_rate") 
