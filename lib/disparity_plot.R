@@ -101,7 +101,8 @@ disparity_plot <- function(
     minority_demographic,
     majority_demographic,
     axis_limits,
-    axis_title
+    axis_title,
+    size_title
   )
 }
 
@@ -111,7 +112,8 @@ generate_plot <- function(
   minority_demographic,
   majority_demographic,
   axis_limits,
-  axis_title
+  axis_title,
+  size_title
 ) {
   data %>%
     ggplot(aes_string("majority_rate", "minority_rate")) +

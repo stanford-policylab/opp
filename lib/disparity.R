@@ -197,18 +197,17 @@ plt_ppc_rates <- function(
 
   ylim <- obs$pred_error %>% range() %>% abs() %>% max()
 
-  generate_ppc_plot(obs, ylim, title, !!size_colq, rate_name)
+  generate_ppc_plot(obs, ylim, title, rate_name)
 }
 
-generate_ppc_plot <- function(obs, ylim, title, size_col, rate_name) {
-  size_colq <- enquo(size_col)
+generate_ppc_plot <- function(obs, ylim, title, rate_name) {
   
   obs %>% 
     # NOTE: shuffle so that the plot points are not layered by race
     sample_n(nrow(obs), replace = FALSE) %>% 
     ggplot(aes(x=pred_rate, y=pred_error)) +
     geom_point(
-      aes(size=!!size_colq, color=demographic), 
+      aes(size=n, color=demographic), 
       alpha = 0.8
     ) + 
     scale_size_area(max_size=10) +
