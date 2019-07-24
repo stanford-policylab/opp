@@ -43,7 +43,7 @@ disparity <- function(from_cache = F) {
       datasets[[dataset_name]],
       subgeography,
       geography_col = geography,
-      n_iter = 5000
+      n_iter = 10000
     )
     print("Composing threshold plots...")
     v$threshold$plots <- plt_all(v$threshold$results$thresholds, "threshold")
@@ -176,7 +176,7 @@ plt_ppc_rates <- function(
   obs <- obs %>% 
     mutate(
       rate = !!numerator_colq / !!denominator_colq,
-      num_stops = !!size_colq,
+      num_base = !!denominator_colq,
       pred_rate = colMeans(post[[rate_to_plot]]),
       pred_error = rate - pred_rate,
       demographic = str_to_title(!!demographic_colq)
@@ -186,7 +186,7 @@ plt_ppc_rates <- function(
     obs,
     sprintf(
       'Weighted RMS prediction error: %.2f%%',
-      100*sqrt(weighted.mean((pred_error)^2, num_stops))
+      100*sqrt(weighted.mean((pred_error)^2, num_base))
     )
   ))
   

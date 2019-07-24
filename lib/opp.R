@@ -1002,10 +1002,10 @@ opp_results_path <- function(fname) {
 }
 
 
-opp_run_disparity <- function() {
+opp_run_disparity <- function(from_cache = F) {
   output_path <- opp_results_path("disparity.rds")
   source(here::here("lib", "disparity.R"))
-  disp <- disparity()
+  disp <- disparity(from_cache)
   saveRDS(disp, output_path)
   print(str_c(
     "saved to disparity analysis results to ",
