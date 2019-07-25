@@ -7,6 +7,7 @@ header-includes:
 ---
 
 ```{r setup, echo = FALSE, message = FALSE, warning = FALSE}
+source(here::here("lib", "utils.R"))
 library(tidyverse)
 library(knitr)
 opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
@@ -21,12 +22,12 @@ mj <- read_rds(here::here("results", "marijuana_legalization_analysis.rds"))
 \end{center}
 
 We have collected and released a dataset of 
-`r pfs$counts$collected$n_stops` traffic stops carried out by 
+`r comma_num(pfs$counts$collected$n_stops)` traffic stops carried out by 
 `r pfs$counts$collected$n_states` state patrol agencies and 
-`r pfs$counts$collectec$n_cities` municipal police departments.
+`r pfs$counts$collected$n_cities` municipal police departments.
 
 We analyzed a unique dataset detailing 
-`r pfs$counts$analyzed$n_stops` traffic stops carried out by 
+`r comma_num(pfs$counts$analyzed$n_stops)` traffic stops carried out by 
 `r pfs$counts$analyzed$n_states` state patrol agencies and 
 `r pfs$counts$analyzed$n_cities` municipal police departments.
 
@@ -56,19 +57,34 @@ pfs$rates$search %>%
 \section{Veil of Darkness}
 \end{center}
 
-```{r veil_of_darkness-plot}
-vod$full$plots$states$TX$`6:15pm`
+```{r veil_of_darkness-plot-630, fig.height = 3, fig.width = 4}
 vod$full$plots$states$TX$`6:30pm`
+```
+```{r veil_of_darkness-plot-645, fig.height = 3, fig.width = 4}
 vod$full$plots$states$TX$`6:45pm`
+```
+```{r veil_of_darkness-plot-700, fig.height = 3, fig.width = 4}
 vod$full$plots$states$TX$`7:00pm`
+```
+```{r veil_of_darkness-plot-715, fig.height = 3, fig.width = 4}
 vod$full$plots$states$TX$`7:15pm`
 ```
+```{r veil_of_darkness-plot-730, fig.height = 3, fig.width = 4}
+vod$full$plots$states$TX$`7:30pm`
+```
+```{r veil_of_darkness-plot-745, fig.height = 3, fig.width = 4}
+vod$full$plots$states$TX$`7:45pm`
+```
+
+\subsection(Main model results)
 
 ```{r veil_of_darkness-main_mod}
 vod$dst %>% 
   filter(spline_degree == 6, agency_control, interact_time_loc) %>% 
   kable()
 ```
+
+\subsection(Model results for the appendix/footnote reference) 
 
 ```{r veil_of_darkness-appendix_mods}
 bind_rows(
@@ -99,11 +115,13 @@ kable(disp$city$outcome$results$aggregate_hit_rates)
 kable(disp$state$outcome$results$aggregate_hit_rates)
 ```
 \newpage
-```{r disparity-city-hit_rates-plot, fig.height = 3, fig.width = 7}
-disp$city$outcome$plots$aggregate
+```{r disparity-city-hit_rates-plot, fig.height = 3, fig.width = 6}
+disp$city$outcome$plots$aggregate +
+  theme(legend.position = "none")
 ```
-```{r disparity-state-hit_rates-plot, fig.height = 3, fig.width = 7}
-disp$state$outcome$plots$aggregate
+```{r disparity-state-hit_rates-plot, fig.height = 3, fig.width = 6}
+disp$state$outcome$plots$aggregate +
+  theme(legend.position = "none")
 ```
 
 \begin{center}
@@ -116,11 +134,13 @@ kable(disp$city$threshold$results$aggregate_thresholds)
 kable(disp$state$threshold$results$aggregate_thresholds)
 ```
 \newpage
-```{r disparity-city-thresholds-plot, fig.height = 3, fig.width = 7}
-disp$city$threshold$plots$aggregate
+```{r disparity-city-thresholds-plot, fig.height = 3, fig.width = 6}
+disp$city$threshold$plots$aggregate +
+  theme(legend.position = "none")
 ```
-```{r disparity-state-thresholds-plot, fig.height = 3, fig.width = 7}
-disp$state$threshold$plots$aggregate
+```{r disparity-state-thresholds-plot, fig.height = 3, fig.width = 6}
+disp$state$threshold$plots$aggregate +
+  theme(legend.position = "none")
 ```
 \newpage
 ```{r disparity-city-ppc-search, fig.height = 3, fig.width = 7}
@@ -169,17 +189,17 @@ mj$plots$inferred_threshold_changes
 ```
 
 
-<!-- # ```{r save_mj_control_search_rates} -->
-<!-- # # NOTE: have to save the file to the tmp directory because landscape doesn't -->
-<!-- # # work with r execution blocks -->
-<!-- # library(ggplot2) -->
-<!-- # ggsave( -->
-<!-- #   "/tmp/mj_control_search_rates.png", -->
-<!-- #   mj$plots$control_search_rates, -->
-<!-- #   height = 6, -->
-<!-- #   width = 11 -->
-<!-- # ) -->
-<!-- # ``` -->
+```{r save_mj_control_search_rates, eval=FALSE}
+# NOTE: have to save the file to the tmp directory because landscape doesn't
+# work with r execution blocks
+library(ggplot2)
+ggsave(
+  "/tmp/mj_control_search_rates.png",
+  mj$plots$control_search_rates,
+  height = 6,
+  width = 11
+)
+```
 <!-- \begin{landscape} -->
 <!-- \includegraphics{/tmp/mj_control_search_rates.png} -->
 <!-- \end{landscape} -->
