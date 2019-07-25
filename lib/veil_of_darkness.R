@@ -280,19 +280,19 @@ compose_vod_plots <- function(
     mutate(
       rounded_minute = plyr::round_any(minute, 15, floor),
       time_str = minute_to_time(rounded_minute),
-      minutes_since_sunset = minute - sunset_minute,
-      binned_minutes_since_sunset = cut(
-        minutes_since_sunset,
+      minutes_since_dark = minute - dusk_minute,
+      binned_minutes_since_dark = cut(
+        minutes_since_dark,
         breaks = seq(-95, 65, 10),
         labels = seq(-90, 60, 10)
       )
     ) %>%
-    filter(!is.na(binned_minutes_since_sunset)) %>%
-    group_by(binned_minutes_since_sunset, minute, !!geography_colq) %>%
+    filter(!is.na(binned_minutes_since_dark)) %>%
+    group_by(binned_minutes_since_dark, minute, !!geography_colq) %>%
     mutate(
       n = n(),
       n_minority = sum(!!demographic_colq == minority_demographic),
-      minutes_since_dark = as.integer(as.character(binned_minutes_since_sunset))
+      minutes_since_dark = as.integer(as.character(binned_minutes_since_dark))
     ) %>%
     ungroup() %>% 
     # NOTE: Remove ambiguously lit period between sunset and dusk
@@ -317,7 +317,6 @@ compose_vod_plots <- function(
       "plot"
     )
 }
-
 
 generate_time_sliced_vod_plots <- function(
   d, 
@@ -378,16 +377,6 @@ generate_time_sliced_vod_plots <- function(
       "time_str",
       "plot"
     )
-  # if(not_null(path)) {
-  #   dir_create(path(path, "time_sliced", loc_name))
-  #   for(time_range in names(p)) {
-  #     ggsave(
-  #       filename = path(path, "time_sliced", loc_name, str_c(time_range, ".pdf")),
-  #       plot = p[[time_range]],
-  #       device = "pdf"
-  #     )
-  #   }
-  # }
 }
 
 prepare_data_for_timesliced_plot <- function(
@@ -396,8 +385,6 @@ prepare_data_for_timesliced_plot <- function(
   window_size = 15, eps = 0.05
 ) {
   data %>%
-    # remove the bin between sunset and dusk
-    filter(minutes_since_dark != -20) %>%
     group_by(minutes_since_dark, time_str, rounded_minute, geography) %>%
     summarise(
       proportion_minority = sum(n_minority) / sum(n),
