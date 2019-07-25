@@ -82,8 +82,9 @@ disparity_plot <- function(
     majority_plus_minority_sizes,
     by = c(control_colnames, "minority_demographic")
   ) %>% 
-    mutate(minority_demographic = 
-             str_c(str_to_title(minority_demographic), " drivers")
+    mutate(
+      minority_demographic = 
+        as.factor(str_c(str_to_title(minority_demographic), " drivers"))
     )
   
   if (is.null(axis_max)) {
@@ -96,37 +97,37 @@ disparity_plot <- function(
   }
   
   generate_plot(
-    data, 
-    size_colname, 
-    minority_demographic,
+    data,
+    size_colname,
     majority_demographic,
     axis_limits,
     axis_title,
-    size_title
+    size_title,
+    title
   )
 }
 
 generate_plot <- function(
   data, 
   size_colname, 
-  minority_demographic,
   majority_demographic,
   axis_limits,
   axis_title,
-  size_title
+  size_title,
+  plot_title
 ) {
   data %>%
-    ggplot(aes_string("majority_rate", "minority_rate")) +
+    ggplot(aes(majority_rate, minority_rate)) +
     geom_point(aes_string(size = size_colname), alpha = 0.8, shape = 1) +
     geom_abline(linetype = "dashed") +
     facet_grid(cols = vars(minority_demographic)) +
     scale_x_continuous(
-      labels = scales::percent, 
-      limits = axis_limits, 
+      labels = scales::percent,
+      limits = axis_limits,
       expand = c(0,0)
     ) +
     scale_y_continuous(
-      labels = scales::percent, 
+      labels = scales::percent,
       limits = axis_limits,
       expand = c(0,0)
     ) +
@@ -136,7 +137,7 @@ generate_plot <- function(
       x = str_c(str_to_title(majority_demographic), " ", axis_title),
       y = str_c("Minority ", axis_title),
       size = size_title,
-      title = title
+      title = plot_title
     ) +
     theme_bw(base_size=15) +
     theme(
