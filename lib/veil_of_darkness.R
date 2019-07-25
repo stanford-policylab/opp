@@ -32,9 +32,7 @@ veil_of_darkness_daylight_savings <- function(from_cache = F) {
       }
     ) %>% bind_rows()
   
-  results <- coefficients
-  write_rds(results, here::here("cache", "vod_dst_results.rds"))
-  results
+  coefficients
 }
 
 veil_of_darkness_full <- function(from_cache = F) {
@@ -93,7 +91,6 @@ veil_of_darkness_full <- function(from_cache = F) {
       )
     )
   )
-  write_rds(results, here::here("cache", "vod_full_results.rds"))
   results
 }
 
@@ -298,6 +295,10 @@ compose_vod_plots <- function(
       minutes_since_dark = as.integer(as.character(binned_minutes_since_sunset))
     ) %>%
     ungroup() %>% 
+    # NOTE: Remove ambiguously lit period between sunset and dusk
+    # NOTE: We do this in pre-processing too, but after rounding
+    #       some points get thrust into this range
+    filter(!(minutes_since_dark > -30 & minutes_since_dark < 0)) %>% 
     select(
       !!geography_colq, 
       time_str, rounded_minute, minutes_since_dark, minute, 
