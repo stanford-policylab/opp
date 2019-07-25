@@ -12,14 +12,6 @@ load <- function(analysis = "disparity", use_cache = F) {
   if (use_cache & file_exists(cache_path))
     return(read_rds(cache_path))
 
-  # NOTE: test locations
-  # tbl <- tribble(
-  #   ~state, ~city,
-  #   "WA", "Seattle",
-  #   "WA", "Statewide",
-  #   "CT", "Hartford",
-  #   "TX", "Arlington"
-  # )
   tbl <- opp_available()
 
   if (analysis == "vod_dst") {
@@ -1004,7 +996,7 @@ remove_sunset_to_dusk_time_period <- function(p) {
     return(add_decision(p, action, reason, result))
   
   n_before <- nrow(p@data)
-  p@data %<>% filter(!(minute > sunset_minute & minute < dusk_minute)) 
+  p@data %<>% filter(!(minute >= sunset_minute & minute <= dusk_minute)) 
   n_after <- nrow(p@data)
 
   if (n_before - n_after > 0)
