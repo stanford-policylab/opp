@@ -1,23 +1,22 @@
 ---
 title: "A large-scale analysis of racial disparities in police stops across the
 United States"
+classoption: landscape
 ---
 
 ```{r setup, echo = FALSE, message = FALSE, warning = FALSE}
-source(here::here("lib", "utils.R"))
 library(tidyverse)
 library(knitr)
 opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
-options(tinytex.verbose = TRUE)
 pfs <- read_rds(here::here("results", "prima_facie_stats.rds"))
 vod <- read_rds(here::here("results", "veil_of_darkness.rds"))
 disp <- read_rds(here::here("results", "disparity.rds"))
 mj <- read_rds(here::here("results", "marijuana_legalization_analysis.rds"))
 ```
 
-\begin{center}
+
 \section{Basic Numbers}
-\end{center}
+
 
 We have collected and released a dataset of 
 `r comma_num(pfs$counts$collected$n_stops)` traffic stops carried out by 
@@ -29,12 +28,11 @@ We analyzed a unique dataset detailing
 `r pfs$counts$analyzed$n_states` state patrol agencies and 
 `r pfs$counts$analyzed$n_cities` municipal police departments.
 
-\begin{center}
+
 \section{Prima Facie Stats}
-\end{center}
+
 
 ```{r stop_rates}
-pfs$plots$stop
 pfs$rates$stop %>%
   mutate(agency = if_else(city == "Statewide", "state patrol", "municipal pd")) %>% 
   group_by(agency, subject_race) %>%
@@ -48,7 +46,6 @@ Number of city departments with data for search analysis:
 `r pfs$rates$search %>% filter(city != "Statewide") %>% select(state, city) %>% n_distinct`
 
 ```{r search_rates}
-pfs$plots$search
 pfs$rates$search %>% 
   mutate(agency = if_else(city == "Statewide", "state patrol", "municipal pd")) %>% 
   group_by(agency, subject_race) %>%
@@ -58,30 +55,44 @@ pfs$rates$search %>%
 
 
 \newpage
-\begin{center}
-\section{Veil of Darkness}
-\end{center}
 
-```{r veil_of_darkness-plot-630, fig.height = 3, fig.width = 4}
+\section{Veil of Darkness}
+
+```{r veil_of_darkness-plot-630, fig.height=6, fig.width=9}
 vod$full$plots$states$TX$`6:30pm`
 ```
-```{r veil_of_darkness-plot-645, fig.height = 3, fig.width = 4}
+
+\newpage
+
+```{r veil_of_darkness-plot-645, fig.height=6, fig.width=9}
 vod$full$plots$states$TX$`6:45pm`
 ```
-```{r veil_of_darkness-plot-700, fig.height = 3, fig.width = 4}
+
+\newpage
+
+```{r veil_of_darkness-plot-700, fig.height=6, fig.width=9}
 vod$full$plots$states$TX$`7:00pm`
 ```
-```{r veil_of_darkness-plot-715, fig.height = 3, fig.width = 4}
+
+\newpage
+
+```{r veil_of_darkness-plot-715, fig.height=6, fig.width=9}
 vod$full$plots$states$TX$`7:15pm`
 ```
-```{r veil_of_darkness-plot-730, fig.height = 3, fig.width = 4}
+
+\newpage
+
+```{r veil_of_darkness-plot-730, fig.height=6, fig.width=9}
 vod$full$plots$states$TX$`7:30pm`
 ```
-```{r veil_of_darkness-plot-745, fig.height = 3, fig.width = 4}
+
+\newpage
+
+```{r veil_of_darkness-plot-745, fig.height=6, fig.width=9}
 vod$full$plots$states$TX$`7:45pm`
 ```
 
-\subsection(Main model results)
+\subsection{Main model results}
 
 ```{r veil_of_darkness-main_mod}
 vod$dst %>% 
@@ -89,7 +100,8 @@ vod$dst %>%
   kable()
 ```
 
-\subsection(Model results for the appendix/footnote reference) 
+\newpage
+\subsection{Model results for the appendix/footnote reference}
 
 Number of robustness check models with results not statistically significant: 
 `r vod$dst %>% filter(is_dark + 1.96*std_error >= 0) %>% nrow`
@@ -109,9 +121,9 @@ bind_rows(
 
 \newpage
 
-\begin{center}
+
+
 \section{Search Disparity Analysis}
-\end{center}
 
 State patrol agencies analyzed: 
 `r disp$state$outcome$results$hit_rates$geography %>% unique()`
@@ -122,101 +134,107 @@ Municipal departments analyzed:
 Number of municipal pd searches: 
 `r disp$city$outcome$results$hit_rates$n_search_conducted %>% sum()`
 
-\begin{center}
-\subsection{Outcome test results}
-\end{center}
+\subsection{Outcome Test}
 
-```{r disparity-city-hit_rates-table}
+
+```{r disparity-hit_rates-tables}
 kable(disp$city$outcome$results$aggregate_hit_rates)
-```
-```{r disparity-state-hit_rates-table}
 kable(disp$state$outcome$results$aggregate_hit_rates)
 ```
+
 \newpage
-```{r disparity-city-hit_rates-plot, fig.height = 2, fig.width = 4}
-disp$city$outcome$plots$aggregate +
-  theme(legend.position = "none")
-```
-```{r disparity-state-hit_rates-plot, fig.height = 2, fig.width = 2}
-disp$state$outcome$plots$aggregate +
-  theme(legend.position = "none")
+
+```{r disparity-city-hit_rates-plot, fig.height=6, fig.width=10}
+disp$city$outcome$plots$aggregate + theme(legend.position = "none")
 ```
 
-\begin{center}
-\subsection{Threshold test results}
-\end{center}
-```{r disparity-city-thresholds-table}
-kable(disp$city$threshold$results$aggregate_thresholds)
+\newpage
+
+```{r disparity-state-hit_rates-plot, fig.height=6, fig.width=10}
+disp$state$outcome$plots$aggregate + theme(legend.position = "none")
 ```
-```{r disparity-state-thresholds-table}
+
+\newpage
+
+\subsection{Threshold test results}
+
+```{r disparity-thresholds-tables}
+kable(disp$city$threshold$results$aggregate_thresholds)
 kable(disp$state$threshold$results$aggregate_thresholds)
 ```
+
 \newpage
-```{r disparity-city-thresholds-plot, fig.height = 3, fig.width = 6}
-disp$city$threshold$plots$aggregate 
-  # theme(legend.position = "none")
+
+```{r disparity-city-thresholds-plot, fig.height=5, fig.width=10}
+disp$city$threshold$plots$aggregate + theme(legend.position = "none")
 ```
-```{r disparity-state-thresholds-plot, fig.height = 3, fig.width = 6}
-disp$state$threshold$plots$aggregate 
-  # theme(legend.position = "none")
-```
+
 \newpage
-```{r disparity-city-ppc-search, fig.height = 5, fig.width = 8}
+
+```{r disparity-state-thresholds-plot, fig.height=5, fig.width=10}
+disp$state$threshold$plots$aggregate + theme(legend.position = "none")
+```
+
+\newpage
+
+```{r disparity-city-ppc-search, fig.height=5, fig.width=8}
 disp$city$threshold$ppc$search_rate
 ```
-```{r disparity-city-ppc-hit, fig.height = 5, fig.width = 8}
+
+\newpage
+
+```{r disparity-city-ppc-hit, fig.height=5, fig.width=8}
 disp$city$threshold$ppc$hit_rate
 ```
 
 \newpage
-```{r disparity-state-ppc-search, fig.height = 5, fig.width = 8}
+
+```{r disparity-state-ppc-search, fig.height=5, fig.width=8}
 disp$state$threshold$ppc$search_rate
 ```
-```{r disparity-state-ppc-hit, fig.height = 5, fig.width = 8}
+
+\newpage
+
+```{r disparity-state-ppc-hit, fig.height=5, fig.width=8}
 disp$state$threshold$ppc$hit_rate
 ```
 
 \newpage
 
-\begin{center}
+
 \section{Marijuana Legalization Analysis}
-\end{center}
+
+
 ```{r mj_table}
 kable(mj$tables$search_rate_difference_in_difference_coefficients)
 ```
 
 \newpage
-```{r mj_test_search_rates_plot, fig.height = 3, fig.width = 7}
-mj$plots$test_search_rates 
-# theme(
-#     legend.position = c(0.88, 0.80),
-#     axis.title.y = element_text(size = 12)
-#   )
+
+```{r mj_treatment_search_rates_plot, fig.height=5, fig.width=10}
+mj$plots$treatment_search_rates + theme(
+  legend.position = c(0.88, 0.80),
+  axis.title.y = element_text(size = 12)
+)
 ```
 
+\newpage
 
-```{r mj_test_misdemeanor_rates_plot, fig.height = 3, fig.width = 7}
-mj$plots$test_misdemeanor_rates 
-  # theme(
-  #   legend.position = c(0.88, 0.80),
-  #   axis.title.y = element_text(size = 12)
-  # )
+```{r mj_treatment_misdemeanor_rates_plot, fig.height=5, fig.width=10}
+mj$plots$treatment_misdemeanor_rates + theme(
+  legend.position = c(0.88, 0.80),
+  axis.title.y = element_text(size = 12)
+)
 ```
 
+\newpage
 
-```{r mj_inferred_threshold_plot, fig.height = 3, fig.width = 7}
+```{r mj_inferred_threshold_plot, fig.height=5, fig.width=10}
 mj$plots$inferred_threshold_changes
 ```
 
+\newpage
 
-```{r save_mj_control_search_rates, eval=FALSE}
-# NOTE: have to save the file to the tmp directory because landscape doesn't
-# work with r execution blocks
-library(ggplot2)
-ggsave(
-  "/tmp/mj_control_search_rates.png",
-  mj$plots$control_search_rates,
-  height = 6,
-  width = 11
-)
+```{r save_mj_control_search_rates, fig.height=5, fig.width=10}
+mj$plots$control_search_rates
 ```
