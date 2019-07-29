@@ -1,9 +1,6 @@
 ---
 title: "A large-scale analysis of racial disparities in police stops across the
 United States"
-header-includes:
-  - \usepackage{pdflscape}
-  - \usepackage{graphicx}
 ---
 
 ```{r setup, echo = FALSE, message = FALSE, warning = FALSE}
@@ -11,6 +8,7 @@ source(here::here("lib", "utils.R"))
 library(tidyverse)
 library(knitr)
 opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+options(tinytex.verbose = TRUE)
 pfs <- read_rds(here::here("results", "prima_facie_stats.rds"))
 vod <- read_rds(here::here("results", "veil_of_darkness.rds"))
 disp <- read_rds(here::here("results", "disparity.rds"))
@@ -115,11 +113,11 @@ kable(disp$city$outcome$results$aggregate_hit_rates)
 kable(disp$state$outcome$results$aggregate_hit_rates)
 ```
 \newpage
-```{r disparity-city-hit_rates-plot, fig.height = 3, fig.width = 6}
+```{r disparity-city-hit_rates-plot, fig.height = 2, fig.width = 4}
 disp$city$outcome$plots$aggregate +
   theme(legend.position = "none")
 ```
-```{r disparity-state-hit_rates-plot, fig.height = 3, fig.width = 6}
+```{r disparity-state-hit_rates-plot, fig.height = 2, fig.width = 2}
 disp$state$outcome$plots$aggregate +
   theme(legend.position = "none")
 ```
@@ -135,27 +133,29 @@ kable(disp$state$threshold$results$aggregate_thresholds)
 ```
 \newpage
 ```{r disparity-city-thresholds-plot, fig.height = 3, fig.width = 6}
-disp$city$threshold$plots$aggregate +
-  theme(legend.position = "none")
+disp$city$threshold$plots$aggregate 
+  # theme(legend.position = "none")
 ```
 ```{r disparity-state-thresholds-plot, fig.height = 3, fig.width = 6}
-disp$state$threshold$plots$aggregate +
-  theme(legend.position = "none")
+disp$state$threshold$plots$aggregate 
+  # theme(legend.position = "none")
 ```
 \newpage
-```{r disparity-city-ppc-search, fig.height = 3, fig.width = 7}
+```{r disparity-city-ppc-search, fig.height = 5, fig.width = 8}
 disp$city$threshold$ppc$search_rate
 ```
-```{r disparity-city-ppc-hit, fig.height = 3, fig.width = 7}
+```{r disparity-city-ppc-hit, fig.height = 5, fig.width = 8}
 disp$city$threshold$ppc$hit_rate
 ```
+
 \newpage
-```{r disparity-state-ppc-search, fig.height = 3, fig.width = 7}
+```{r disparity-state-ppc-search, fig.height = 5, fig.width = 8}
 disp$state$threshold$ppc$search_rate
 ```
-```{r disparity-state-ppc-hit, fig.height = 3, fig.width = 7}
+```{r disparity-state-ppc-hit, fig.height = 5, fig.width = 8}
 disp$state$threshold$ppc$hit_rate
 ```
+
 \newpage
 
 \begin{center}
@@ -167,20 +167,20 @@ kable(mj$tables$search_rate_difference_in_difference_coefficients)
 
 \newpage
 ```{r mj_test_search_rates_plot, fig.height = 3, fig.width = 7}
-mj$plots$test_search_rates +
-  theme(
-    legend.position = c(0.88, 0.80),
-    axis.title.y = element_text(size = 12)
-  )
+mj$plots$test_search_rates 
+# theme(
+#     legend.position = c(0.88, 0.80),
+#     axis.title.y = element_text(size = 12)
+#   )
 ```
 
 
 ```{r mj_test_misdemeanor_rates_plot, fig.height = 3, fig.width = 7}
-mj$plots$test_misdemeanor_rates +
-  theme(
-    legend.position = c(0.88, 0.80),
-    axis.title.y = element_text(size = 12)
-  )
+mj$plots$test_misdemeanor_rates 
+  # theme(
+  #   legend.position = c(0.88, 0.80),
+  #   axis.title.y = element_text(size = 12)
+  # )
 ```
 
 
@@ -200,6 +200,3 @@ ggsave(
   width = 11
 )
 ```
-<!-- \begin{landscape} -->
-<!-- \includegraphics{/tmp/mj_control_search_rates.png} -->
-<!-- \end{landscape} -->
