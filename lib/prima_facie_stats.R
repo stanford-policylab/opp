@@ -17,8 +17,16 @@ prima_facie_stats <- function() {
 
   list(
     counts = list(
-      collected = counts(all_data),
-      analyzed = counts(stop_data)
+      collected = list(
+        totals = counts(all_data),
+        states = counts(all_data %>% filter(city == "Statewide")),
+        cities = counts(all_data %>% filter(city != "Statewide"))
+      ),
+      analyzed = list(
+        totals = counts(stop_data),
+        states = counts(stop_data %>% filter(city == "Statewide")),
+        cities = counts(stop_data %>% filter(city != "Statewide"))
+      )
     ),
     rates = list(
       stop = stop_rates,

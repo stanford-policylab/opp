@@ -35,8 +35,9 @@ We analyzed a unique dataset detailing
 
 ```{r stop_rates}
 pfs$plots$stop
-pfs$rates$stop %>% 
-  group_by(subject_race) %>%
+pfs$rates$stop %>%
+  mutate(agency = if_else(city == "Statewide", "state patrol", "municipal pd")) %>% 
+  group_by(agency, subject_race) %>%
   summarize(average_annual_stop_rate = mean(annual_stop_rate)) %>%
   kable()
 ```
