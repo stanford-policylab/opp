@@ -113,6 +113,15 @@ bind_rows(
 \section{Search Disparity Analysis}
 \end{center}
 
+State patrol agencies analyzed: 
+`r disp$state$outcome$results$hit_rates$geography %>% unique()`
+Number of state patrol searches: 
+`r disp$state$outcome$results$hit_rates$n_search_conducted %>% sum()`
+Municipal departments analyzed:
+`r disp$city$outcome$results$hit_rates$geography %>% unique()`
+Number of municipal pd searches: 
+`r disp$city$outcome$results$hit_rates$n_search_conducted %>% sum()`
+
 \begin{center}
 \subsection{Outcome test results}
 \end{center}
