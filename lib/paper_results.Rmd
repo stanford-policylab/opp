@@ -42,10 +42,16 @@ pfs$rates$stop %>%
   kable()
 ```
 
+Number of state patrols with data for search analysis: 
+`r pfs$rates$search %>% filter(city == "Statewide") %>% select(state) %>% n_distinct`
+Number of city departments with data for search analysis: 
+`r pfs$rates$search %>% filter(city != "Statewide") %>% select(state, city) %>% n_distinct`
+
 ```{r search_rates}
 pfs$plots$search
 pfs$rates$search %>% 
-  group_by(subject_race) %>%
+  mutate(agency = if_else(city == "Statewide", "state patrol", "municipal pd")) %>% 
+  group_by(agency, subject_race) %>%
   summarize(average_search_rate = mean(search_rate)) %>%
   kable()
 ```
@@ -85,6 +91,9 @@ vod$dst %>%
 
 \subsection(Model results for the appendix/footnote reference) 
 
+Number of robustness check models with results not statistically significant: 
+`r vod$dst %>% filter(is_dark + 1.96*std_error >= 0) %>% nrow`
+
 ```{r veil_of_darkness-appendix_mods}
 bind_rows(
   vod$dst %>%
@@ -95,6 +104,7 @@ bind_rows(
   select(model, agency, is_dark, std_error, everything()) %>%
   kable()
 ```
+
 
 
 \newpage

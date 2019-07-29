@@ -125,8 +125,12 @@ collect_aggregate_hit_rates <- function(
       hit_rate = weighted.mean(
         get(str_c(outcome_colname, " where ", action_colname)),
         w = get(str_c("n_", action_colname))
-      )
+      ),
+      n = sum(get(str_c("n_", action_colname)))
     ) %>% 
     group_by(!!demographic_colq) %>% 
-    summarize(hit_rate = mean(hit_rate))
+    summarize(
+      hit_rate = mean(hit_rate),
+      n = sum(n)
+    )
 }
