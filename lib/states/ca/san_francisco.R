@@ -110,7 +110,8 @@ clean <- function(d, helpers) {
       race_description,
       sex,
       age,
-      location
+      location,
+      district
     ) %>%
     select(
       -reason_for_stop

@@ -694,27 +694,41 @@ remove_locations_with_too_few_searches_per_race <- function(p, geo, min_searches
     return(add_decision(p, action, reason, result))
   }
   
-  race_names <- p@data %>% 
+  race_names <-
+    p@data %>% 
     select(subject_race) %>% 
     distinct() %>% 
     mutate(subject_race = as.character(subject_race)) %>% 
     pull(subject_race)
+
+  locations_with_no_searches <-
+    p@data %>%
+    group_by(!!geo_colq, subject_race) %>%
+    filter(sum(search_conducted) == 0) %>%
+    pull(!!geo_colq)
   
-  locations_removed <- p@data %>% 
+  locations_with_too_few_searches_per_location_race <-
+    p@data %>% 
     filter(search_conducted) %>% 
     count(!!geo_colq, subject_race) %>% 
     spread(subject_race, n, fill = 0) %>%
     filter_at(
       vars(race_names),
       any_vars(. < min_searches)
-    )
-  details = list(eliminated = locations_removed)
-  
+    ) %>%
+    pull(!!geo_colq)
+
+  locations_to_remove <- c(
+    locations_with_no_searches,
+    locations_with_too_few_searches_per_location_race
+  )
+
   n_before <- nrow(p@data)
-  p@data %<>%
-    filter(!(!!geo_colq %in% pull(locations_removed, !!geo_colq)))
+  p@data %<>% filter(!(!!geo_colq %in% locations_to_remove))
   n_after <- nrow(p@data)
   
+  details = list(eliminated = locations_to_remove)
+
   if (n_before - n_after > 0)
     result <- "rows removed"
   add_decision(p, action, reason, result, details)
