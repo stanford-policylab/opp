@@ -124,6 +124,14 @@ add_time_zones <- function(
   )
 }
 
+minute_to_time <- function(minute) {
+  str_c(
+    as.character(minute %/% 60 - 12),
+    ":",
+    str_pad(as.character(minute %% 60), 2, pad = "0"),
+    "pm"
+  )
+}
 
 age_at_date <- function(birth_date, date) {
   # Calculate age at a certain date, given date of birth.
