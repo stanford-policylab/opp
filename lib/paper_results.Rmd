@@ -170,11 +170,7 @@ bind_rows(
   kable()
 ```
 
-
-
 \newpage
-
-
 
 \section{Search Disparity Analysis}
 
