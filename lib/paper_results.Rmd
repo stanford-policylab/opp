@@ -149,7 +149,7 @@ d %>%
 
 ```{r veil_of_darkness-main_mod}
 vod$dst %>% 
-  filter(spline_degree == 6, agency_control, interact_time_loc) %>% 
+  filter(spline_degree == 6, agency_control, !interact_time_loc) %>% 
   kable()
 ```
 
@@ -236,14 +236,26 @@ kable(disp$state$threshold$results$aggregate_thresholds)
 \newpage
 
 ```{r disparity-city-thresholds-plot, fig.height=5, fig.width=10}
+axis_min <- max(
+  min(
+    disp$city$threshold$plots$aggregate$data$minority_rate,
+    disp$city$threshold$plots$aggregate$data$majority_rate
+  ) - 0.05, 0
+)
+axis_max <- min(
+  max(
+    disp$city$threshold$plots$aggregate$data$minority_rate,
+    disp$city$threshold$plots$aggregate$data$majority_rate
+  ) + 0.05, 1
+)
 disp$city$threshold$plots$aggregate + 
   theme(legend.position = "none", plot.title = element_blank()) + 
   scale_x_continuous(
-    limits = c(axis_min, axis_max),
+    limits = c(axis_min, axis_max), breaks = seq(0, .5, 0.05),
     labels = scales::percent_format(accuracy = 1), expand = c(0,0)
   ) + 
   scale_y_continuous(
-    limits = c(axis_min, axis_max),
+    limits = c(axis_min, axis_max), breaks = seq(0, .5, 0.05),
     labels = scales::percent_format(accuracy = 1),expand = c(0,0)
   ) 
 ```
