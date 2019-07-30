@@ -122,12 +122,12 @@ generate_plot <- function(
     geom_abline(linetype = "dashed") +
     facet_grid(cols = vars(minority_demographic)) +
     scale_x_continuous(
-      labels = scales::percent,
+      labels = scales::percent_format(accuracy = 1),
       limits = axis_limits,
       expand = c(0,0)
     ) +
     scale_y_continuous(
-      labels = scales::percent,
+      labels = scales::percent_format(accuracy = 1),
       limits = axis_limits,
       expand = c(0,0)
     ) +
