@@ -1,10 +1,11 @@
 ---
-title: "A large-scale analysis of racial disparities in police stops across the
-United States"
+title: A large-scale analysis of racial disparities in police stops across the United
+  States
 classoption: landscape
 ---
 
 ```{r setup, echo = FALSE, message = FALSE, warning = FALSE}
+source(here::here("lib", "utils.R"))
 library(tidyverse)
 library(knitr)
 opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
@@ -92,6 +93,58 @@ vod$full$plots$states$TX$`7:30pm`
 vod$full$plots$states$TX$`7:45pm`
 ```
 
+\newpage
+
+```{r veil_of_darkness-plot-trio, fig.height=4, fig.width=9}
+d <- rbind(
+  vod$full$plots$states$TX$`7:00pm`$data,
+  vod$full$plots$states$TX$`7:15pm`$data,
+  vod$full$plots$states$TX$`7:30pm`$data
+) %>% 
+  mutate(time_window = str_c(
+    time_str, " to ", minute_to_time(rounded_minute + 15)
+  ))
+
+d %>% 
+  ggplot(aes(minutes_since_dark, proportion_minority)) +
+  geom_point(aes(size = n)) +
+  geom_smooth(
+    aes(y = avg_p_minority, color = is_dark),
+    method = "lm", se = F, linetype = "dashed"
+  ) +
+  geom_vline(xintercept = -25, linetype = "dotted") +
+  geom_vline(xintercept = 0, linetype = "dotted") +
+  geom_ribbon(
+    data = filter(d, is_dark),
+    aes(ymin = avg_p_minority - se, ymax = avg_p_minority + se),
+    alpha=0.3
+  ) +
+  geom_ribbon(
+    data = filter(d, !is_dark),
+    aes(ymin = avg_p_minority - se, ymax = avg_p_minority + se),
+    alpha=0.3
+  ) +
+  scale_x_continuous(
+    "Minutes since dark",
+    limits = c(-90, 60),
+    breaks = seq(-90, 60, 30)
+  ) +
+  scale_y_continuous(
+    str_c("Percent black"),
+    limits = c(0.15, 0.35),
+    breaks = seq(0.0, 1.0, 0.05), 
+    labels = scales::percent
+  ) +
+  scale_color_manual(values = c("blue", "blue")) +
+  theme_bw(base_size = 16) +
+  theme(
+    legend.position = 'none',
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  ) +
+  facet_grid(cols = vars(time_str))
+```
+
 \subsection{Main model results}
 
 ```{r veil_of_darkness-main_mod}
@@ -145,7 +198,28 @@ kable(disp$state$outcome$results$aggregate_hit_rates)
 \newpage
 
 ```{r disparity-city-hit_rates-plot, fig.height=6, fig.width=10}
-disp$city$outcome$plots$aggregate + theme(legend.position = "none")
+axis_min <- max(
+  min(
+    disp$city$outcome$plots$aggregate$data$minority_rate,
+    disp$city$outcome$plots$aggregate$data$majority_rate
+  ) - 0.05, 0
+)
+axis_max <- min(
+  max(
+    disp$city$outcome$plots$aggregate$data$minority_rate,
+    disp$city$outcome$plots$aggregate$data$majority_rate
+  ) + 0.05, 1
+)
+disp$city$outcome$plots$aggregate + 
+  theme(legend.position = "none", plot.title = element_blank()) + 
+  scale_x_continuous(
+    limits = c(axis_min, axis_max),
+    labels = scales::percent_format(accuracy = 1), expand = c(0,0)
+  ) + 
+  scale_y_continuous(
+    limits = c(axis_min, axis_max),
+    labels = scales::percent_format(accuracy = 1),expand = c(0,0)
+  ) 
 ```
 
 \newpage
@@ -166,7 +240,16 @@ kable(disp$state$threshold$results$aggregate_thresholds)
 \newpage
 
 ```{r disparity-city-thresholds-plot, fig.height=5, fig.width=10}
-disp$city$threshold$plots$aggregate + theme(legend.position = "none")
+disp$city$threshold$plots$aggregate + 
+  theme(legend.position = "none", plot.title = element_blank()) + 
+  scale_x_continuous(
+    limits = c(axis_min, axis_max),
+    labels = scales::percent_format(accuracy = 1), expand = c(0,0)
+  ) + 
+  scale_y_continuous(
+    limits = c(axis_min, axis_max),
+    labels = scales::percent_format(accuracy = 1),expand = c(0,0)
+  ) 
 ```
 
 \newpage
@@ -235,6 +318,6 @@ mj$plots$inferred_threshold_changes
 
 \newpage
 
-```{r save_mj_control_search_rates, fig.height=5, fig.width=10}
+```{r mj_control_search_rates, fig.height=5, fig.width=10}
 mj$plots$control_search_rates
 ```
