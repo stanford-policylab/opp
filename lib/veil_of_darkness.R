@@ -342,12 +342,12 @@ generate_time_sliced_vod_plots <- function(
         geom_vline(xintercept = 0, linetype = "dotted") +
         geom_ribbon(
           data = filter(., is_dark),
-          aes(ymin = avg_p_minority - se, ymax = avg_p_minority + se),
+          aes(ymin = avg_p_minority - 1.96*se, ymax = avg_p_minority + 1.96*se),
           alpha=0.3
         ) +
         geom_ribbon(
           data = filter(., !is_dark),
-          aes(ymin = avg_p_minority - se, ymax = avg_p_minority + se),
+          aes(ymin = avg_p_minority - 1.96*se, ymax = avg_p_minority + 1.96*se),
           alpha=0.3
         ) +
         scale_x_continuous(
@@ -394,7 +394,7 @@ prepare_data_for_timesliced_plot <- function(
     group_by(is_dark, time_str) %>%
     mutate(
       avg_p_minority = weighted.mean(proportion_minority, w = n),
-      se = 2*sqrt(avg_p_minority * (1 - avg_p_minority) / sum(n))
+      se = sqrt(avg_p_minority * (1 - avg_p_minority) / sum(n))
     ) %>% 
     group_by(time_str) %>% 
     mutate(
