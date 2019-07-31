@@ -111,7 +111,7 @@ plot_stop_rates <- function(tbl) {
 }
 
 
-plot_search_rates <- function(tbl) {
+plot_search_rates <- function(tbl, target_threshold = 0.5) {
   ggplot(
     tbl %>%
       mutate(location = str_c(city, state, sep = ", ")) %>%
@@ -123,4 +123,66 @@ plot_search_rates <- function(tbl) {
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   ylab("Search Rate") +
   ggtitle("Search Rates by Location")
+}
+
+generate_summary_table <- function(tbl) {
+  compute_coverage(tbl) %>% 
+    mutate(
+      order = if_else(city == "Statewide", 1, 0),
+      city = if_else(city == "Statewide", "--", city),
+      years = str_c(year(start_date), "-", year(end_date)),
+      nrows = comma_num(nrows)
+    ) %>%
+    select(
+      order,
+      State = state,
+      City = city,
+      Stops = nrows,
+      `Date Range` = years,
+      Date = date_cvg,
+      Time = time_cvg,
+      # Subgeography, TODO
+      `Subject Race` = race_cvg,
+      `Subject Age` = age_cvg,
+      `Subject Gender` = gender_cvg,
+      `Search Conducted` = search_cvg,
+      `Contraband Found` = contraband_cvg
+    ) %>%
+    arrange(
+      order,
+      State,
+      City
+    ) %>%
+    select(
+      -order
+    ) %>%
+    mutate_if(
+      function(v) all(is.numeric(v) & v <= 1.0, na.rm = T),
+      # NOTE: put dot if coverage above 50%
+      function(v) if_else(v < target_threshold | is.na(v), "", "$\bullet$")
+    ) 
+}
+
+compute_coverage <- function(tbl) {
+  tbl %>% 
+    group_by(state, city) %>% 
+    summarize(
+      date_range = range(tbl$date, na.rm = TRUE),
+      start_date = date_range[1],
+      end_date = date_range[2],
+      population = if_else(
+        city == "Statewide",
+        opp_state_population(state),
+        opp_city_population(state, city)
+      ),
+      nrows = n(),
+      date_cvg = coverage_rate(date),
+      time_cvg = coverage_rate(time),
+      # geo_cvg = coverage_rate(geo), #### TODO
+      race_cvg = coverage_rate(subject_race),
+      age_cvg = coverage_rate(subject_age),
+      gender_cvg = coverage_rate(subject_sex),
+      search_cvg = coverage_rate(search),
+      contraband_cvg = coverage_rate(contraband)
+    )
 }
