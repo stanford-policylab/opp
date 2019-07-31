@@ -57,6 +57,15 @@ pfs$rates$search %>%
 
 \newpage
 
+\section{Summary Table}
+
+```{r}
+
+```
+
+
+\newpage
+
 \section{Veil of Darkness}
 
 ```{r veil_of_darkness-plot-630, fig.height=6, fig.width=9}
@@ -133,7 +142,7 @@ d %>%
     str_c("Percent black"),
     limits = c(0.15, 0.35),
     breaks = seq(0.0, 1.0, 0.05), 
-    labels = scales::percent
+    labels = scales::percent_format(accuracy = 1)
   ) +
   scale_color_manual(values = c("blue", "blue")) +
   theme_bw(base_size = 16) +
