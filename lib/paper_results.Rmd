@@ -21,13 +21,17 @@ mj <- read_rds(here::here("results", "marijuana_legalization_analysis.rds"))
 
 We have collected and released a dataset of 
 `r comma_num(pfs$counts$collected$n_stops)` traffic stops carried out by 
-`r pfs$counts$collected$n_states` state patrol agencies and 
-`r pfs$counts$collected$n_cities` municipal police departments.
+`r pfs$counts$collected$n_states` (`r pfs$counts$collected$n_stops_states`)
+state patrol agencies and
+`r pfs$counts$collected$n_cities` (`r pfs$counts$collected$n_stops_cities`)
+municipal police departments.
 
 We analyzed a unique dataset detailing 
 `r comma_num(pfs$counts$analyzed$n_stops)` traffic stops carried out by 
-`r pfs$counts$analyzed$n_states` state patrol agencies and 
-`r pfs$counts$analyzed$n_cities` municipal police departments.
+`r pfs$counts$analyzed$n_states` (`r pfs$counts$analyzed$n_stops_states`)
+state patrol agencies and
+`r pfs$counts$analyzed$n_cities` (`r pfs$counts$analyzed$n_stops_cities`)
+municipal police departments.
 
 
 \section{Prima Facie Stats}
@@ -194,7 +198,7 @@ Number of municipal pd searches:
 
 \subsection{Outcome Test}
 
-
+City and State outcomes:
 ```{r disparity-hit_rates-tables}
 kable(disp$city$outcome$results$aggregate_hit_rates)
 kable(disp$state$outcome$results$aggregate_hit_rates)
