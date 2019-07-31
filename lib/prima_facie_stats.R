@@ -8,13 +8,15 @@ prima_facie_stats <- function(use_cache = F) {
   all_data <- opp_load_all_clean_data()
   stop_data <- load("pfs_stop", use_cache)$data
   search_data <- load("pfs_search", use_cache)$data
-
+  
   stop_rates <- stop_rates(stop_data)
   search_rates <- search_rates(search_data)
 
   stop_rates_plot <- plot_stop_rates(stop_rates)
   search_rates_plot <- plot_search_rates(search_rates)
-
+  
+  # summary_table <- generate_summary_table(stop_data)
+  
   list(
     counts = list(
       collected = list(
