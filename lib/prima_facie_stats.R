@@ -17,16 +17,8 @@ prima_facie_stats <- function(use_cache = F) {
 
   list(
     counts = list(
-      collected = list(
-        totals = counts(all_data),
-        states = counts(all_data %>% filter(city == "Statewide")),
-        cities = counts(all_data %>% filter(city != "Statewide"))
-      ),
-      analyzed = list(
-        totals = counts(stop_data),
-        states = counts(stop_data %>% filter(city == "Statewide")),
-        cities = counts(stop_data %>% filter(city != "Statewide"))
-      )
+      collected = counts(all_data),
+      analyzed = counts(stop_data),
     ),
     rates = list(
       stop = stop_rates,
@@ -42,12 +34,12 @@ prima_facie_stats <- function(use_cache = F) {
 
 counts <- function(tbl) {
   locs <- tbl %>% select(state, city) %>% distinct()
-  cities <- filter(locs, city != "Statewide")
-  states <- filter(locs, city == "Statewide")
   list(
+    n_cities = nrow(filter(locs, city != "Statewide")),
+    n_states = nrow(filter(locs, city == "Statewide")),
     n_stops = nrow(tbl),
-    n_cities = nrow(cities),
-    n_states = nrow(states)
+    n_stops_cities = nrow(filter(tbl, city != "Statewide")),
+    n_stops_states = nrow(filter(tbl, city == "Statewide"))
   )
 }
 
