@@ -8,8 +8,9 @@ prima_facie_stats <- function(use_cache = F) {
   all_data <- opp_load_all_clean_data()
   stop_data <- load("pfs_stop", use_cache)$data
   ###
-  write_rds(stop_data, here::here("cache", "pfs_stop_data.rds"))
-  print("Stop Data saved.")
+  # write_rds(stop_data, here::here("cache", "pfs_stop_data.rds"))
+  # print("Stop Data saved.")
+  stop_data <- read_rds(here::here("cache", "pfs_stop_data.rds"))
   summary_table <- generate_summary_table(stop_data)
   write_rds(summary_table, here::here("cache", "pfs_summary_tbl.rds"))
   print("Summary table saved.")
@@ -169,9 +170,8 @@ compute_coverage <- function(tbl) {
   tbl %>% 
     group_by(state, city) %>% 
     summarize(
-      date_range = range(tbl$date, na.rm = TRUE),
-      start_date = date_range[1],
-      end_date = date_range[2],
+      start_date = range(tbl$date, na.rm = TRUE)[1],
+      end_date = range(tbl$date, na.rm = TRUE)[2],
       population = if_else(
         city == "Statewide",
         opp_state_population(state),

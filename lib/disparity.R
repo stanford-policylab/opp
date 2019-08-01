@@ -73,39 +73,6 @@ disparity <- function(from_cache = F) {
     
     v$threshold$metadata$posteriors <- NULL
     
-    # plot_path = opp_results_path(path("plots", dataset_name, "outcome"))
-    # dir_create(plot_path)
-    # for(loc in names(v$outcome$plots)) {
-    #   ggsave(
-    #     filename = path(plot_path, str_c(loc, ".pdf")),
-    #     plot = v$outcome$plots[[loc]],
-    #     device = "pdf"
-    #   )
-    # }
-    # v$outcome$plots <- NULL
-    # 
-    # plot_path = opp_results_path(path("plots", dataset_name, "threshold"))
-    # dir_create(plot_path)
-    # for(loc in names(v$threshold$plots)) {
-    #   ggsave(
-    #     filename = path(plot_path, str_c(loc, ".pdf")),
-    #     plot = v$threshold$plots[[loc]],
-    #     device = "pdf"
-    #   )
-    # }
-    # v$threshold$plots <- NULL
-    # 
-    # plot_path = opp_results_path(path("plots", dataset_name, "threshold", "ppc"))
-    # dir_create(plot_path)
-    # for(ppc_type in names(v$threshold$ppc)) {
-    #   ggsave(
-    #     filename = path(plot_path, str_c(ppc_type, ".pdf")),
-    #     plot = v$threshold$ppc[[loc]],
-    #     device = "pdf"
-    #   )
-    # }
-    # v$threshold$ppc <- NULL
-    
     results[[dataset_name]] <- v
   }
   results  
@@ -211,11 +178,11 @@ generate_ppc_plot <- function(obs, ylim, title, rate_name) {
     scale_size_area(max_size=10) +
     scale_x_continuous(
       str_c('\nPredicted ', rate_name, ' rate'),  
-      labels = scales::percent
+      labels = scales::percent_format(accuracy = 1), expand = c(0,0)
     ) + 
     scale_y_continuous(
       str_c(str_to_title(rate_name), ' rate prediction error\n'), 
-      labels = scales::percent, limits = c(-2*ylim, 2*ylim)
+      labels = scales::percent_format(accuracy = 1), limits = c(-2*ylim, 2*ylim)
     ) +
     geom_abline(slope=0, intercept=0, linetype='dashed') +
     theme_bw(base_size = 20) +
@@ -223,7 +190,9 @@ generate_ppc_plot <- function(obs, ylim, title, rate_name) {
       legend.position=c(1.0,0),
       legend.justification=c(1,0),
       legend.title = element_blank(),
-      legend.background = element_rect(fill = 'transparent')
+      legend.background = element_rect(fill = 'transparent'),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank()
     ) +
     scale_color_manual(values=c('black','red','blue')) +
     guides(size=FALSE) +
