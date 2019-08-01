@@ -184,40 +184,6 @@ opp_add_type_func <- function(state, city) {
 }
 
 
-opp_analysis_eligible_locations <- function(
-  years = 2011:2017,
-  threshold = 0.65,
-  columns = c("date", "time", "subject_race")
-) {
-  opp_apply(
-    function(state, city) {
-      opp_analysis_is_eligible(state, city, years, threshold, columns)
-    }) %>%
-    bind_rows() %>%
-    filter(is_eligible) %>%
-    select(-is_eligible)
-}
-
-
-opp_analysis_is_eligible <- function(
-  state,
-  city,
-  years = 2011:2017,
-  threshold = 0.65,
-  columns = c("date", "time", "subject_race")
-) {
-  tbl <- opp_load_clean_data(state, city) %>% mutate(is_eligible = T)
-  res <- tibble(state = state, city = city, is_eligible = T)
-  for (col in columns) {
-    if (col %in% colnames(tbl))
-      tbl <- mutate(tbl, is_eligible = is_eligible & !is.na(get(col)))
-    else
-      return(mutate(res, is_eligible = F))
-  }
-  mutate(res, is_eligible = mean(tbl$is_eligible) > threshold)
-}
-
-
 opp_apply <- function(func, only = NULL) {
   if (is.null(only)) { only <- opp_available() }
   par_pmap(only, func)

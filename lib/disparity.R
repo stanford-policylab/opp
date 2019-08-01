@@ -1,5 +1,5 @@
-source(here::here("lib", "opp.R"))
-source(here::here("lib", "e.R"))
+library(here)
+source(here::here("lib", "eligibility.R"))
 source(here::here("lib", "outcome_test.R"))
 source(here::here("lib", "threshold_test.R"))
 source(here::here("lib", "disparity_plot.R"))
