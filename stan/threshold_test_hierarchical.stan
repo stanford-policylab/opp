@@ -22,13 +22,11 @@ parameters {
   vector[n_groups] threshold_raw;
 
   // parameters for signal distribution
-  // vector[n_races] phi_race;
-  vector[n_geographies * n_races] phi_race; // try race per city
+  vector[n_geographies * n_races] phi_race; // race per city
   vector[n_subgeographies - 1] phi_subgeography_raw;
   real mu_phi;
 
-  // vector[n_races] delta_race;
-  vector[n_geographies * n_races] delta_race; // try race per city
+  vector[n_geographies * n_races] delta_race; // race per city
   vector[n_subgeographies - 1] delta_subgeography_raw;
   real mu_delta;
 }
