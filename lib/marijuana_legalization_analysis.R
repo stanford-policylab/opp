@@ -226,7 +226,7 @@ compose_timeseries_rate_plot <- function(
     ) +
     scale_y_continuous(
       y_axis_label,
-      labels = function(x) scales::percent(x, accuracy = 0.01),
+      labels = scales::percent_format(accuracy = 0.1),
       expand = c(0, 0)
     ) +
     expand_limits(
@@ -505,7 +505,7 @@ plot_threshold_changes <- function(tbl) {
   scale_y_continuous(
     "Inferred Threshold", 
     limits = c(.25, .75), 
-    labels = scales::percent, 
+    labels = scales::percent_format(accuracy = 1), 
     expand = c(0,0)
   ) +
   theme_bw() +
