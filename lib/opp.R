@@ -214,6 +214,30 @@ opp_bad_data <- function() {
 }
 
 
+opp_sensitive_raw_data <- function() {
+  # NOTE: see task for details:
+	# https://app.asana.com/0/456927885748233/1120634887971867
+  tribble(
+    ~state, ~city,
+		"AZ", "Statewide",
+    "AZ", "Gilbert",
+    "CO", "Aurora",
+    "CO", "Statewide",
+    "MI", "Statewide",
+    "NY", "Statewide",
+    "OH", "Statewide",
+    "OK", "Tulsa",
+    "PA", "Philadelphia",
+    "PA", "Pittsburgh",
+    "TN", "Nashville",
+    "TN", "Statewide",
+    "TX", "Houston",
+    "TX", "Plano",
+    "TX", "Statewide"
+  )
+}
+
+
 opp_bunching_report <- function() {
   print("building report...")
   output_dir <- dir_create(here::here("reports"))
@@ -336,16 +360,21 @@ opp_demographics <- function(state, city) {
 }
 
 
-opp_detect_ssns <- function() {
+opp_detect_ssns <- function(clean = F, only = NULL) {
+  load_func <- opp_load_raw_data
+  if (clean)
+    load_func <- opp_load_clean_data
+  if (is.null(only)) { only <- opp_available() }
   opp_apply(
     function(state, city) {
       tbl <-
-        opp_load_raw_data(state, city) %>%
-        summarize_all(function(v) { any(detect_ssn(v)) }) %>%
+        load_func(state, city) %>%
+        summarize_all(function(v) { any(detect_ssn(v), na.rm = T) }) %>%
         transpose_one_line_table() %>%
         filter(values)
       list(state = state, city = city, ssn = tbl)
-    }
+    },
+    only
   )
 }
 
@@ -470,6 +499,13 @@ opp_fips_to_county_name_func <- function(state) {
   }
 }
 
+opp_has_sensitive_raw_data <- function(state, city) {
+  s <- str_to_upper(state)
+  c <- str_to_title(city)
+  opp_sensitive_raw_data() %>%
+    filter(state == this_state, city == this_city) %>%
+    nrow() > 0
+}
 
 opp_load <- function(state, city) {
   raw_data <- opp_load_raw_data(state, city)
@@ -695,18 +731,6 @@ opp_locations_used_in_analyses <- function() {
     distinct()
 }
 
-#### DEPRECATED ####
-# opp_locations_used_in_analysis <- function(analysis_name) {
-#   source(here::here("lib", str_c(analysis_name, ".R")), local = T)
-#   states <- tibble()
-#   cities <- tibble()
-#   if (exists("ELIGIBLE_STATES"))
-#     states <- ELIGIBLE_STATES
-#   if (exists("ELIGIBLE_CITIES"))
-#     cities <- ELIGIBLE_CITIES
-#   bind_rows(states, cities)
-# }
-
 
 opp_package_for_archive <- function(dir = "/share/data/opp-for-archive") {
   opp_apply(
@@ -735,7 +759,8 @@ opp_package_location_for_archive <- function(
   zip(str_c(csv, ".zip"), csv)
   file.remove(csv)
   saveRDS(d, rds)
-  tar(opp_data_dir(state, city), tgz, fn)
+  if (!opp_has_sensitive_raw_data(state, city))
+    tar(opp_data_dir(state, city), tgz, fn)
   shp_dir <- opp_shapefiles_dir(state, city)
   if (has_files(shp_dir))
     tar(shp_dir, shp, str_c(fn, "_shapefiles"))

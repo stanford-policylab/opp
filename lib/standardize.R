@@ -149,6 +149,8 @@ sanitize <- function(d) {
         "disposition",
         "location",
         "officer_assignment",
+        "officer_id",
+        "officer_id_hash",
         quos_names(city_subgeographies),
         quos_names(state_subgeographies),
         "unit",
