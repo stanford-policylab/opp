@@ -1,5 +1,6 @@
 library(here)
 source(here::here("lib", "eligibility.R"))
+source(here::here("lib", "utils.R"))
 
 
 prima_facie_stats <- function(use_cache = F) {
@@ -167,6 +168,11 @@ generate_summary_table <- function(tbl, target_threshold = 0.5) {
 }
 
 compute_coverage <- function(tbl) {
+  contraband_cvg_tbl <- tbl %>% 
+    filter(search_conducted) %>% 
+    group_by(state, city) %>% 
+    summarize(contraband_cvg = coverage_rate(contraband_found))
+  
   tbl %>% 
     group_by(state, city) %>% 
     summarize(
@@ -179,7 +185,8 @@ compute_coverage <- function(tbl) {
       race_cvg = coverage_rate(subject_race),
       age_cvg = coverage_rate(subject_age),
       gender_cvg = coverage_rate(subject_sex),
-      search_cvg = coverage_rate(search_conducted),
-      contraband_cvg = predicated_coverage_rate(contraband_found, search_conducted)
-    )
+      search_cvg = coverage_rate(search_conducted)
+    ) %>% 
+    left_join(contraband_cvg_tbl, by = c("state", "city")) %>% 
+    mutate(contraband_cvg = replace_na(contraband_cvg, 0))
 }
