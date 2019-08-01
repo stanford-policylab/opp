@@ -19,7 +19,10 @@ For each dataset, we provide 4 files:
 Each row in the cleaned data represents a stop. The following details the
 maximal set of features we attempted to extract from each location. Coverage
 varies by location. Fields with an asterisk were removed for public release due
-to privacy concerns.
+to privacy concerns. All columns except raw\_row\_number, violation,
+disposition, location, officer\_assignment, any city or state subgeography
+(i.e. county, beat, division, etc), unit, and vehicle_{color,make,model,type}
+are also digit sanitized (each digit replaced with "-") for privacy concerns.
 
 <table>
   <tr>
