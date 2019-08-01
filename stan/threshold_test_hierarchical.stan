@@ -53,13 +53,11 @@ transformed parameters {
   for (i in 1:n_groups) {
     // phi is the proportion of race x who evidence behavior
     // indicated by the outcome, i.e. whites carrying a weapon
-    // phi[i] = inv_logit(phi_race[race[i]]
-    phi[i] = inv_logit(phi_race[geography_race[i]] // try race per city
+    phi[i] = inv_logit(phi_race[geography_race[i]] // race per city
       + phi_subgeography[subgeography[i]]);
 
     // mu is the center of the `outcome` distribution
-    // delta[i] = exp(delta_race[race[i]]
-    delta[i] = exp(delta_race[geography_race[i]] // try race per city
+    delta[i] = exp(delta_race[geography_race[i]] // race per city
       + delta_subgeography[subgeography[i]]);
 
     successful_search_rate =
