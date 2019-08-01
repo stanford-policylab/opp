@@ -4,15 +4,16 @@ source(here::here("lib", "eligibility.R"))
 
 prima_facie_stats <- function(use_cache = F) {
 
-  all_data <- opp_load_all_clean_data()
-  stop_data <- load("pfs_stop", use_cache)$data
+  # all_data <- opp_load_all_clean_data()
+  # stop_data <- load("pfs_stop", use_cache)$data
   ###
   # write_rds(stop_data, here::here("cache", "pfs_stop_data.rds"))
   # print("Stop Data saved.")
   stop_data <- read_rds(here::here("cache", "pfs_stop_data.rds"))
   summary_table <- generate_summary_table(stop_data)
   write_rds(summary_table, here::here("cache", "pfs_summary_tbl.rds"))
-  print("Summary table saved.")
+  print("table saved.")
+  return(summary_table)
   ###
   search_data <- load("pfs_search", use_cache)$data
   
@@ -127,7 +128,7 @@ plot_search_rates <- function(tbl, target_threshold = 0.5) {
   ggtitle("Search Rates by Location")
 }
 
-generate_summary_table <- function(tbl) {
+generate_summary_table <- function(tbl, target_threshold = 0.5) {
   compute_coverage(tbl) %>% 
     mutate(
       order = if_else(city == "Statewide", 1, 0),
@@ -143,7 +144,7 @@ generate_summary_table <- function(tbl) {
       `Date Range` = years,
       Date = date_cvg,
       Time = time_cvg,
-      # Subgeography, TODO
+      Subgeography = geo_cvg,
       `Subject Race` = race_cvg,
       `Subject Age` = age_cvg,
       `Subject Gender` = gender_cvg,
@@ -169,21 +170,16 @@ compute_coverage <- function(tbl) {
   tbl %>% 
     group_by(state, city) %>% 
     summarize(
-      start_date = range(tbl$date, na.rm = TRUE)[1],
-      end_date = range(tbl$date, na.rm = TRUE)[2],
-      population = if_else(
-        city == "Statewide",
-        opp_state_population(state),
-        opp_city_population(state, city)
-      ),
+      start_date = range(date, na.rm = TRUE)[1],
+      end_date = range(date, na.rm = TRUE)[2],
       nrows = n(),
       date_cvg = coverage_rate(date),
       time_cvg = coverage_rate(time),
-      # geo_cvg = coverage_rate(geo), #### TODO
+      geo_cvg = coverage_rate(subgeography),
       race_cvg = coverage_rate(subject_race),
       age_cvg = coverage_rate(subject_age),
       gender_cvg = coverage_rate(subject_sex),
-      search_cvg = coverage_rate(search),
-      contraband_cvg = coverage_rate(contraband)
+      search_cvg = coverage_rate(search_conducted),
+      contraband_cvg = predicated_coverage_rate(contraband_found, search_conducted)
     )
 }
