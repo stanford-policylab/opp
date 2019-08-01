@@ -18,7 +18,7 @@ prima_facie_stats <- function(use_cache = F) {
   list(
     counts = list(
       collected = counts(all_data),
-      analyzed = counts(stop_data),
+      analyzed = counts(stop_data)
     ),
     rates = list(
       stop = stop_rates,
