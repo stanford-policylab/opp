@@ -1,6 +1,6 @@
 library(here)
 source(here::here("lib", "opp.R"))
-source(here::here("lib", "e.R"))
+source(here::here("lib", "eligibility.R"))
 
 marijuana_legalization_analysis <- function() {
   
