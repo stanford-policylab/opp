@@ -1,4 +1,19 @@
 source(here::here("lib", "common.R"))
+# NOTE: New Jersey uses sofware produced by LawSoft Inc.. There are two sets 
+# of data: CAD (computer aided dispatch, recorded at the time of stop) and 
+# RMS (record management system, recorded later). They have almost completely 
+# disjoint fields, and only RMS records have information on searches. We 
+# believe the data from the two systems should really be joined, but according 
+# to the NJSP there is not a programmatic way to do so. Therefore, we process 
+# the CAD data fully, which appear to be the dataset which corresponds to 
+# traffic stops. We did noticed that you could join the RMS file if you combine 
+# a few of the fields in a certain way. This method isn't perfect, and there 
+# are lots of nulls; but we include it in hopes that some data is better than 
+# no data.
+# Becuase of the above, we only know search/frisk/contraband information in 
+# about 13% of stops.
+# Thus, we leave searches as NA rather than casting them to FALSE as we do in 
+# other jurisdictions.
 
 load_raw <- function(raw_data_dir, n_max) {
   d_cad <- load_regex(raw_data_dir, "cad20\\d{2}.csv", n_max = n_max)
