@@ -166,6 +166,12 @@ vod$dst %>%
   kable()
 ```
 
+Point estimates: `r vod$dst %>% filter(spline_degree == 6, agency_control, !interact_time_loc) %>% pull(is_dark)`
+
+95% CI (lower): `r vod$dst %>% filter(spline_degree == 6, agency_control, !interact_time_loc) %>% pull(is_dark) - 1.96*(vod$dst %>% filter(spline_degree == 6, agency_control, !interact_time_loc) %>% pull(std_error))`
+
+95% CI (upper): `r vod$dst %>% filter(spline_degree == 6, agency_control, !interact_time_loc) %>% pull(is_dark) + 1.96*(vod$dst %>% filter(spline_degree == 6, agency_control, !interact_time_loc) %>% pull(std_error))`
+
 \newpage
 \subsection{Model results for the appendix/footnote reference}
 
