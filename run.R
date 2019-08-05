@@ -9,6 +9,8 @@ main <- function() {
     opp_process(args$state, args$city, args$n_max)
   if (not_null(args$report) & is.null(args$report_all))
     opp_report(args$state, args$city)
+  if (not_null(args$map))
+    opp_coverage_map()
   if (not_null(args$coverage))
     opp_coverage()
   if (not_null(args$process_all)) {
@@ -43,6 +45,7 @@ get_args <- function() {
                  "--state <state_code>",
                  "--city <city_name>",
                  "[--coverage]",
+                 "[--map]",
                  "[--process_all]",
                  "[--report_all]",
                  "[--prima_facie_stats]",
@@ -62,6 +65,7 @@ get_args <- function() {
     "state",              "s",         "none",         "character",
     "city",               "c",         "none",         "character",
     "coverage",           "v",         "none",         "logical",
+    "map",                "x",         "none",         "logical",
     "process_all",        "pa",        "none",         "logical",
     "report_all",         "ra",        "none",         "logical",
     "prima_facie_stats",  "pfs",       "none",         "logical",
