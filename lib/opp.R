@@ -543,8 +543,8 @@ opp_fips_to_county_name_func <- function(state) {
 }
 
 opp_has_sensitive_raw_data <- function(state, city) {
-  s <- str_to_upper(state)
-  c <- str_to_title(city)
+  this_state <- str_to_upper(state)
+  this_city <- str_to_title(city)
   opp_sensitive_raw_data() %>%
     filter(state == this_state, city == this_city) %>%
     nrow() > 0
@@ -776,6 +776,7 @@ opp_locations_used_in_analyses <- function() {
 
 
 opp_package_for_archive <- function(dir = "/share/data/opp/sdr_v2") {
+  dir_create(dir)
   opp_apply(
     function(state, city) {
       opp_package_location_for_archive(state, city, dir)
@@ -787,8 +788,9 @@ opp_package_for_archive <- function(dir = "/share/data/opp/sdr_v2") {
 opp_package_location_for_archive <- function(
   state,
   city,
-  dir = "/share/data/opp-for-archive"
+  dir = "/share/data/opp/sdr_v2"
 ) {
+  dir_create(dir)
   fn <- for_filename(state, city)
   base <- file.path(dir, fn)
   dt <- str_c("_", str_replace_all(Sys.Date(), "-", "_"))
