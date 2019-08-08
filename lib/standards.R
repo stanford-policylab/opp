@@ -167,7 +167,7 @@ schema <- c(
   zone                          = as.character,
 
   # who
-  subject_age                   = as.numeric,
+  subject_age                   = as.integer,
   subject_dob                   = as.Date,
   subject_yob                   = as.integer,
   subject_race                  = Curry(factor, levels = valid_races),
