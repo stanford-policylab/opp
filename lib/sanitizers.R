@@ -33,10 +33,10 @@ sanitize_dob_func <- function(dates) {
 
 sanitize_age <- function(val) {
   enforce_bounds(
-    val,
+    as.integer(val),
     valid_age_start,
     valid_age_end,
-    as.numeric(NA)
+    as.integer(NA)
   )
 }
 
