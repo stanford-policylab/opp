@@ -1,7 +1,6 @@
 library(here)
 source(here::here("lib", "common.R"))
 
-
 clear <- function() {
   env = globalenv()
   rm(list=ls(envir = env), envir = env)
@@ -323,7 +322,7 @@ opp_county_population <- function(state, county) {
 
 
 opp_coverage <- function() {
-  print("generateing coverage report...")
+  print("generating coverage report...")
   dir_create(here::here("reports"))
   output_path <- here::here("reports", "coverage.pdf")
   render(
@@ -332,6 +331,49 @@ opp_coverage <- function() {
     output_path
   )
   print(str_c("saved coverage report to ", output_path))
+}
+
+
+opp_coverage_map <- function() {
+  source(here::here("lib", "eligibility.R"))
+  data(state.fips)
+  analysis_locs <- locations_used_in_analyses(use_cache=T)$data
+  analysis_state_polynames <-
+    left_join(
+      analysis_locs %>% filter(city == "Statewide"),
+      state.fips,
+      by = c("state" = "abb")
+    ) %>%
+    pull(polyname)
+  analysis_cities <-
+    left_join(
+      analysis_locs %>% filter(city != "Statewide"),
+      city_center_lat_lngs()
+    )
+
+  state_polynames <- maps::map(database = "state")$names
+
+  dir_create(here::here("results"))
+  out_fn <- here::here("results", "coverage_map.pdf")
+  pdf(out_fn, width = 16, height = 9)
+  maps::map(
+    database = "state",
+    col = c("white", "lightblue3")[
+      1
+      + (state_polynames %in% analysis_state_polynames)
+    ],
+    fill = T,
+    namesonly = T
+  )
+  points(
+    analysis_cities$center_lng,
+    analysis_cities$center_lat,
+    col = "red",
+    pch = 16,
+    cex = 2
+  )
+  dev.off() 
+  print(str_c("saved to ", out_fn))
 }
 
 
@@ -500,8 +542,8 @@ opp_fips_to_county_name_func <- function(state) {
 }
 
 opp_has_sensitive_raw_data <- function(state, city) {
-  s <- str_to_upper(state)
-  c <- str_to_title(city)
+  this_state <- str_to_upper(state)
+  this_city <- str_to_title(city)
   opp_sensitive_raw_data() %>%
     filter(state == this_state, city == this_city) %>%
     nrow() > 0
@@ -732,7 +774,8 @@ opp_locations_used_in_analyses <- function() {
 }
 
 
-opp_package_for_archive <- function(dir = "/share/data/opp-for-archive") {
+opp_package_for_archive <- function(dir = "/share/data/opp/sdr_v2") {
+  dir_create(dir)
   opp_apply(
     function(state, city) {
       opp_package_location_for_archive(state, city, dir)
@@ -744,8 +787,9 @@ opp_package_for_archive <- function(dir = "/share/data/opp-for-archive") {
 opp_package_location_for_archive <- function(
   state,
   city,
-  dir = "/share/data/opp-for-archive"
+  dir = "/share/data/opp/sdr_v2"
 ) {
+  dir_create(dir)
   fn <- for_filename(state, city)
   base <- file.path(dir, fn)
   dt <- str_c("_", str_replace_all(Sys.Date(), "-", "_"))

@@ -50,8 +50,8 @@ load <- function(analysis = "disparity", use_cache = F) {
   )
   
   res <- list(
-   data = bind_rows(lapply(tmp, function(p) p@data)),
-   metadata = bind_rows(lapply(tmp, function(p) p@metadata))
+    data = bind_rows(lapply(tmp, function(p) p@data)),
+    metadata = bind_rows(lapply(tmp, function(p) p@metadata))
   )
 
   write_rds(res, cache_path)
