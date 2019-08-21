@@ -245,7 +245,7 @@ filter_to_eligible_officers <- function(
 
   n_officers_before <- select(tbl, !!officer_id_colq) %>% n_distinct
   n_stops_before <- nrow(tbl)
-  tbl <- filter(tbl, officer_id %in% eligible_officers)
+  tbl <- filter(tbl, !!officer_id_colq %in% eligible_officers)
   n_officers_after <- select(tbl, !!officer_id_colq) %>% n_distinct
   n_stops_after <- nrow(tbl)
 
