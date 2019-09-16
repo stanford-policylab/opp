@@ -932,6 +932,9 @@ We’re excited to see what you come up with!
   over the same person in the same day
 - Data is missing search and contraband information, as well as outcomes other
   than citations
+- Hispanic race data is likely underreported, given that ACS 2017 5-year
+  estimates suggest Hispanic individuals make up ~25% of the population, but
+  only ~4% of stops in Tampa
 - The data sources are public (it's unclear what the difference is between the
   stop types):
   - https://publicrec.hillsclerk.com/Traffic/Civil_Traffic_Name_Index_files/

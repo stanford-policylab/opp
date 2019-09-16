@@ -792,7 +792,8 @@ opp_package_location_for_archive <- function(
   dir_create(dir)
   fn <- for_filename(state, city)
   base <- file.path(dir, fn)
-  dt <- str_c("_", str_replace_all(Sys.Date(), "-", "_"))
+  dt <- "_2019_08_13"
+  # dt <- str_c("_", str_replace_all(Sys.Date(), "-", "_"))
   csv <- str_c(base, dt, ".csv")
   rds <- str_c(base, dt, ".rds")
   tgz <- str_c(base, dt, ".tgz")
@@ -800,8 +801,7 @@ opp_package_location_for_archive <- function(
   d <- opp_load_clean_data(state, city) %>%
     select(-one_of(redact_for_public_release))
   write_csv(d, csv) 
-  zip(str_c(csv, ".zip"), csv)
-  file.remove(csv)
+  zip(str_c(csv, ".zip"), csv, "-jm9")
   saveRDS(d, rds)
   if (!opp_has_sensitive_raw_data(state, city))
     tar(opp_data_dir(state, city), tgz, fn)
