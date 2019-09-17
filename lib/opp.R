@@ -792,8 +792,7 @@ opp_package_location_for_archive <- function(
   dir_create(dir)
   fn <- for_filename(state, city)
   base <- file.path(dir, fn)
-  dt <- "_2019_08_13"
-  # dt <- str_c("_", str_replace_all(Sys.Date(), "-", "_"))
+  dt <- str_c("_", str_replace_all(Sys.Date(), "-", "_"))
   csv <- str_c(base, dt, ".csv")
   rds <- str_c(base, dt, ".rds")
   tgz <- str_c(base, dt, ".tgz")
