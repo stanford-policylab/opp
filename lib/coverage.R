@@ -59,7 +59,6 @@ coverage_for_paper <- function() {
   ) %>%
   mutate_if(
     function(v) all(is.numeric(v) & v <= 1.0, na.rm = T),
-    # NOTE: put dot if coverage above 70%
     function(v) if_else(v < target_threshold | is.na(v), "", "dot")
   ) %>%
   mutate(
@@ -90,7 +89,8 @@ coverage_for_website <- function() {
           state = state,
           city = city,
           shapefiles = opp_download_shapefiles_url(state, city),
-          url = opp_download_clean_data_url(state, city),
+          rds = opp_download_clean_data_rds_url(state, city),
+          csv_zip  = opp_download_clean_data_csv_zip_url(state, city),
           has_pedestrian_stops = has_pedestrian_stops(state, city)
         )
       }

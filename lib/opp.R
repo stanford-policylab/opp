@@ -440,23 +440,29 @@ opp_download_clean_data <- function(state, city) {
   output_path <- opp_clean_data_path(state, city)
   if (!file_exists(output_path)) {
     pattern <- str_c(normalize_state(state), normalize_city(city), sep = "_")
-    download.file(opp_download_clean_data_url(state, city), output_path)
+    download.file(opp_download_clean_data_rds_url(state, city), output_path)
   }
 }
 
 
-opp_download_clean_data_url <- function(state, city) {
+opp_download_clean_data_rds_url <- function(state, city) {
   urls <- opp_download_clean_urls(state, city)
   urls[str_detect(urls, "\\.rds")]
 }
 
 
+opp_download_clean_data_csv_zip_url <- function(state, city) {
+  urls <- opp_download_clean_urls(state, city)
+  urls[str_detect(urls, "\\.csv\\.zip")]
+}
+
 opp_download_clean_urls <- function(state, city) {
   prefix <- "https://embed.stanford.edu/iframe?url="
-  if (city == "Statewide")
-    purl <- str_c(prefix, "https://purl.stanford.edu/jb084sr9005")
-  else
-    purl <- str_c(prefix, "https://purl.stanford.edu/tr137st9964")
+  purl <- str_c(prefix, "https://purl.stanford.edu/hp256wp2687")
+  # if (city == "Statewide")
+  #   purl <- str_c(prefix, "https://purl.stanford.edu/jb084sr9005")
+  # else
+  #   purl <- str_c(prefix, "https://purl.stanford.edu/tr137st9964")
   html <- str_c(readLines(purl), collapse = "\n")
   urls <- str_match_all(html, '<a href="(.*?)"')[[1]][,2]
   pattern <- str_c(normalize_state(state), normalize_city(city), sep = "_")
