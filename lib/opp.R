@@ -459,6 +459,7 @@ opp_download_clean_data_csv_zip_url <- function(state, city) {
 opp_download_clean_urls <- function(state, city) {
   prefix <- "https://embed.stanford.edu/iframe?url="
   purl <- str_c(prefix, "https://purl.stanford.edu/hp256wp2687")
+  # NOTE: old purls
   # if (city == "Statewide")
   #   purl <- str_c(prefix, "https://purl.stanford.edu/jb084sr9005")
   # else
