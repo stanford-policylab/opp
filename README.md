@@ -108,9 +108,9 @@ which will be one of `disparity.R`, `veil_of_darkness.R`,
 `marijuana_legalization_analysis.R`, and `prima_facie_stats.R`. `disparity.R`
 contains both the outcome and threshold tests, which are also available as
 independent scripts in `outcome_test.R` and `threshold_test.R`. After running
-each of these, the results are saved in the opp/results directory. The analyses
-take anywhere from ~20 minutes to several hours to run. To run all the analyses
-will take about a day on a modern server.
+each of these, the results are saved in the `opp/results` directory. The
+analyses take anywhere from ~20 minutes to several hours to run. To run all the
+analyses will take about a day on a modern server.
 
 Each of these analyses requires different subsets of the clean data and loads
 them using the `load` function defined in `eligibility.R`. The eligibility
