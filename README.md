@@ -100,7 +100,9 @@ opp_run_{paper_analyses,disparity,marijuana_legalization_analysis,veil_of_darkne
 ```
 Each of these effectively loads and runs the corresponding analysis script(s),
 which will be one of `disparity.R`, `veil_of_darkness.R`,
-`marijuana_legalization_analysis.R`, and `prima_facie_stats.R`. After running
+`marijuana_legalization_analysis.R`, and `prima_facie_stats.R`. `disparity.R`
+contains both the outcome and threshold tests, which are also available as
+independent scripts in `outcome_test.R` and `threshold_test.R`. After running
 each of these, the results are saved in the opp/results directory. The analyses
 take anywhere from ~20 minutes to several hours to run. To run all the analyses
 will take about a day on a modern server.
