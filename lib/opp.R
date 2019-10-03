@@ -444,7 +444,6 @@ opp_download_clean_data <- function(state, city) {
     opp_set_download_directory("/tmp/opp_data")
   output_path <- opp_clean_data_path(state, city)
   if (!file_exists(output_path)) {
-    pattern <- str_c(normalize_state(state), normalize_city(city), sep = "_")
     download.file(opp_download_clean_data_rds_url(state, city), output_path)
   }
 }
