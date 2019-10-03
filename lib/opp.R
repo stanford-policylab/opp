@@ -1080,10 +1080,10 @@ opp_run_prima_facie_stats <- function() {
 
 
 opp_run_paper_analyses <- function() {
-  # opp_run_prima_facie_stats()
-  # opp_run_veil_of_darkness()
-  # opp_run_disparity()
-  # opp_run_marijuana_legalization_analysis()
+  opp_run_prima_facie_stats()
+  opp_run_veil_of_darkness()
+  opp_run_disparity()
+  opp_run_marijuana_legalization_analysis()
   output_path <- opp_results_path("paper_results.pdf")
   render("paper_results.Rmd", "pdf_document", output_path)
   print(str_c("saved paper results to ", output_path))

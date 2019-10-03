@@ -72,3 +72,15 @@ opp_download_clean_data("wa", "seattle")
 ```R
 d <- opp_load_clean_data("wa", "seattle")
 ```
+
+## Recreating Analyses
+
+The easiest way is to run the following command from within the opp
+   directory
+```
+./run.R --paper
+```
+Each analysis can actually be run independently, as well:
+```
+./run.R --{disparity,marijuana,veil_of_darkness,prima_facie_stats}
+```
