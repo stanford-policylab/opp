@@ -96,7 +96,7 @@ Each analysis can also be run independently from command line:
 They can also be run from within R code:
 ```
 source('opp.R')
-opp_run_{paper_analyses,disparity,marijuana_legalization_analysis, veil_of_darkness,prima_facie_stats}
+opp_run_{paper_analyses,disparity,marijuana_legalization_analysis,veil_of_darkness,prima_facie_stats}
 ```
 Each of these effectively loads and runs the corresponding analysis script(s),
 which will be one of `disparity.R`, `veil_of_darkness.R`,
