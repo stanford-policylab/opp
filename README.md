@@ -81,11 +81,11 @@ The easiest way to rerun all analyses is the following:
 ```
 However, for this to work, all the data must be downloaded and available
 locally. To do this we, recommend setting the data directory to a location with
-sufficient space, and ensuring a healthy internet connection while up to 20Gb
+sufficient space and ensuring a healthy internet connection while up to 20Gb
 of data are downloaded. From within R, this can be done with the following:
 ```
 source('opp.R')
-opp_set_download_directory('/my/data/directory');
+opp_set_download_directory('/my/data/directory')
 opp_download_all_clean_data()
 ```
 
@@ -96,10 +96,9 @@ Each analysis can also be run independently from command line:
 They can also be run from within R code:
 ```
 source('opp.R')
-opp_run_{paper_analyses,disparity,marijuana_legalization_analysis,
-veil_of_darkness,prima_facie_stats}
+opp_run_{paper_analyses,disparity,marijuana_legalization_analysis, veil_of_darkness,prima_facie_stats}
 ```
-After running each of these, the results are saved in the /results directory.
+After running each of these, the results are saved in the opp/results directory.
 
 Each of these analyses requires different subsets of the clean data. Within
 each of scripts: disparity.R, veil_of_darkness.R,
@@ -118,7 +117,7 @@ previous run.
 
 ## Reprocessing Data
 Each location has it's own processing script, and these are located in
-opp/lib/states/<state>/<city>.R. Each script conforms to a contract that
+opp/lib/states/state/city.R. Each script conforms to a contract that
 defines two methods: load_raw and clean. load_raw loads and joins all the data
 while making minimal changes to the raw data, while clean processes and
 standardizes the data to bring it into compliance with our schema defined in
