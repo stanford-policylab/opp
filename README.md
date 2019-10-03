@@ -16,19 +16,19 @@
 ### Mac
 
 ## Getting Started
-1. [command line] Clone the repository
+1. Clone the repository
 ```
 git clone https://github.com/stanford-policylab/opp.git
 ```
-2. [command line] Change directories
+2. Change directories
 ```
 cd opp/lib
 ```
-3. [command line] Start R
+3. Start R
 ```
 R
 ```
-4. [R] install the required packages
+4. Install the required packages in R
 ```R
 install.packages(c(
   "assertr",
@@ -60,30 +60,35 @@ install.packages(c(
   "zoo"
 ))
 ```
-5. [R] load the main library
+5. Load the main library
 ```R
 source("opp.R")
 ```
-6. [R] download some clean data
+6. Set download directory (optional); if you don't set this, it will default to
+   `/tmp/opp_data`.
+```R
+opp_set_download_directory('/my/data/directory')
+```
+7. Download some clean data
 ```R
 opp_download_clean_data("wa", "seattle")
 ```
-7. [R] load the clean data
+8. Load the clean data
 ```R
 d <- opp_load_clean_data("wa", "seattle")
 ```
 
 ## Recreating Analyses
 
-The easiest way to rerun all analyses is the following:
+The easiest way to rerun all analyses from command line is the following:
 ```
 ./run.R --paper
 ```
 However, for this to work, all the data must be downloaded and available
 locally. To do this we, recommend setting the data directory to a location with
-sufficient space and ensuring a healthy internet connection while up to 20Gb
+sufficient space and ensuring a healthy internet connection while up to 10Gb
 of data are downloaded. From within R, this can be done with the following:
-```
+```R
 source('opp.R')
 opp_set_download_directory('/my/data/directory')
 opp_download_all_clean_data()
