@@ -75,16 +75,25 @@ d <- opp_load_clean_data("wa", "seattle")
 
 ## Recreating Analyses
 
-The easiest way is to run the following command from within the opp
-   directory.
+The easiest way to rerun all analyses is the following:
 ```
 ./run.R --paper
 ```
-Each analysis can be run independently:
+However, for this to work, all the data must be downloaded and available
+locally. To do this we, recommend setting the data directory to a location with
+sufficient space, and ensuring a healthy internet connection while up to 20Gb
+of data are downloaded. From within R, this can be done with the following:
+```
+source('opp.R')
+opp_set_download_directory('/my/data/directory');
+opp_download_all_clean_data()
+```
+
+Each analysis can also be run independently from command line:
 ```
 ./run.R --{disparity,marijuana,veil_of_darkness,prima_facie_stats}
 ```
-They  can also be run from within R code:
+They can also be run from within R code:
 ```
 source('opp.R')
 opp_run_{paper_analyses,disparity,marijuana_legalization_analysis,
