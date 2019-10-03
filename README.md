@@ -115,7 +115,7 @@ analyses will take about a day on a modern server.
 Each of these analyses requires different subsets of the clean data and loads
 them using the `load` function defined in `eligibility.R`. The eligibility
 script contains all the filters for the data for each of the analyses. By
-default, the `load` functions perform all the filters and create the filtered
+default, the `load` function performs all the filters and creates the filtered
 dataset fresh, but it automatically saves the result to the `opp/cache`
 directory. If you run load again, you can run `load(<analysis_name>, use_cache
 = T)` to speed up load time, as it will use the post-filtered dataset from the
@@ -125,7 +125,7 @@ previous run.
 Each location has it's own processing script, and these are located in
 `opp/lib/states/state/city.R`. Each script conforms to a contract that
 defines two methods: `load_raw` and `clean`. `load_raw` loads and joins all the data
-while making minimal changes to the raw data, while clean processes and
+while making minimal changes to the raw data, while `clean` processes and
 standardizes the data to bring it into compliance with our schema defined in
 standards.R.
 
