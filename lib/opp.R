@@ -422,7 +422,12 @@ opp_detect_ssns <- function(clean = F, only = NULL) {
 
 
 opp_download_all_clean_data <- function() {
-  opp_apply(opp_download_clean_data)
+  opp_apply(
+    opp_download_clean_data,
+    # NOTE: this needs to be hardcoded because opp_available indicates
+    # what data is available locally, not on OPP servers.
+    read_csv(here::here("resources", "available_locations.csv"))
+  )
 }
 
 
@@ -770,7 +775,7 @@ opp_load_state_fips <- function() {
 
 
 opp_locations_used_in_analyses <- function() {
-  source(here::here("lib", "e.R"))
+  source(here::here("lib", "eligibility.R"))
   mj <- load("mj") %>% select(state, city) 
   disparity <- load("disparity") %>% select(state, city) 
   vod_full <- load("vod_full") %>% select(state, city) 
