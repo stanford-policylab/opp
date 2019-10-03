@@ -114,16 +114,12 @@ analyses will take about a day on a modern server.
 
 Each of these analyses requires different subsets of the clean data and loads
 them using the `load` function defined in `eligibility.R`. The eligibility
-script contains all the filters for the data for each of the analyses. To run
-these, you will need access to all of the clean data, which can be obtained
-using `opp_download_all_clean_data()`; however, this will require up to 20Gb of
-space, so we recommend that you run `opp_set_download_directory(<dir>)` first
-and make sure that the directory you select on your harddrive has sufficient
-space. By default, the load functions perform all the filters and create the
-filtered dataset fresh, but it automatically saves the result to the
-`opp/cache` directory. If you run load again, you can run
-`load(<analysis_name>, use_cache = T)` to speed up load time, as it will use
-the post-filtered dataset from the previous run.
+script contains all the filters for the data for each of the analyses. By
+default, the `load` functions perform all the filters and create the filtered
+dataset fresh, but it automatically saves the result to the `opp/cache`
+directory. If you run load again, you can run `load(<analysis_name>, use_cache
+= T)` to speed up load time, as it will use the post-filtered dataset from the
+previous run.
 
 ## Reprocessing Data
 Each location has it's own processing script, and these are located in
