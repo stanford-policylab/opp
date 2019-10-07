@@ -3492,17 +3492,17 @@ We’re excited to see what you come up with!
   marijuana analysis for this reason. 
 - We only process statewide data from 2012 to 2017. We received data back to
   2004, but chose not to process it due to format issues and relevance.
-- For state patrol stops, there is mostly no information on the county of the
-  stop. Instead, stops are mapped to districts (see the district column), which
+- For state patrol stops, we used police district (see the `beat` column), which
   have a one-to-many relationship with counties; that is, a single district 
   covers multiple counties. See the relevant map
   [here](http://www.isp.state.il.us/districts/districtfinder.cfm). There is one
   district (#15) with a lot of stops that does not directly map to counties, as
-  it refers to stops made on the Chicago tollways. We use districts in our
-  analysis. 
+  it refers to stops made on the Chicago tollways. Note that while we use districts 
+  in our analysis, zipcode can be extracted from the data and mapped to county, if
+  desired.
 - Counties for local stops could be mapped by running the police departments 
   in the AgencyName field through Google's geocoder.
-- For both state patrol and local stops, zip code can be extracted and used to
+- For both state patrol and local stops, zipcode can be extracted and used to
   map to county, if needed. 
 - The `search_type_raw` field is occasionally "Consent search denied", when a
   search was conducted. This occurs because the search request might be denied
