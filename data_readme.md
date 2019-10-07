@@ -24,6 +24,13 @@ disposition, location, officer\_assignment, any city or state subgeography
 (i.e. county, beat, division, etc), unit, and vehicle_{color,make,model,type}
 are also digit sanitized (each digit replaced with "-") for privacy concerns.
 
+Note that many locations have additional information that could be extracted
+(e.g., zip code), but we do not designate a standardized column for information
+beyond what is listed below, either because we do not use the information in
+our analysis and/or because not enough locations provided this information.
+We do pull through some additional columns (discussed on a location-by-location
+basis within this readme), which have column names prefaced by "raw\_". 
+
 <table>
   <tr>
     <td>Column name</td>
@@ -3487,13 +3494,16 @@ We’re excited to see what you come up with!
   2004, but chose not to process it due to format issues and relevance.
 - For state patrol stops, there is mostly no information on the county of the
   stop. Instead, stops are mapped to districts (see the district column), which
-  have a one-to-many relationship with counties. See the relevant map
+  have a one-to-many relationship with counties; that is, a single district 
+  covers multiple counties. See the relevant map
   [here](http://www.isp.state.il.us/districts/districtfinder.cfm). There is one
   district (#15) with a lot of stops that does not directly map to counties, as
   it refers to stops made on the Chicago tollways. We use districts in our
   analysis. 
 - Counties for local stops could be mapped by running the police departments 
   in the AgencyName field through Google's geocoder.
+- For both state patrol and local stops, zip code can be extracted and used to
+  map to county, if needed. 
 - The `search_type_raw` field is occasionally "Consent search denied", when a
   search was conducted. This occurs because the search request might be denied
   but a search was conducted anyway. Many searches have missing search type
