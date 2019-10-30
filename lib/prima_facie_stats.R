@@ -5,17 +5,9 @@ source(here::here("lib", "utils.R"))
 
 prima_facie_stats <- function(use_cache = F) {
 
-  # all_data <- opp_load_all_clean_data()
-  # stop_data <- load("pfs_stop", use_cache)$data
-  ###
-  # write_rds(stop_data, here::here("cache", "pfs_stop_data.rds"))
-  # print("Stop Data saved.")
-  stop_data <- read_rds(here::here("cache", "pfs_stop_data.rds"))
+  all_data <- opp_load_all_clean_data()
+  stop_data <- load("pfs_stop", use_cache)$data
   summary_table <- generate_summary_table(stop_data)
-  write_rds(summary_table, here::here("cache", "pfs_summary_tbl.rds"))
-  print("table saved.")
-  return(summary_table)
-  ###
   search_data <- load("pfs_search", use_cache)$data
   
   stop_rates <- stop_rates(stop_data)
@@ -24,7 +16,7 @@ prima_facie_stats <- function(use_cache = F) {
   stop_rates_plot <- plot_stop_rates(stop_rates)
   search_rates_plot <- plot_search_rates(search_rates)
   
-  # summary_table <- generate_summary_table(stop_data)
+  summary_table <- generate_summary_table(stop_data)
   
   list(
     counts = list(
