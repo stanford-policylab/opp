@@ -157,7 +157,10 @@ sanitize <- function(d) {
         "vehicle_color",
         "vehicle_make",
         "vehicle_model",
-        "vehicle_type"
+        "vehicle_type",
+        "raw_driver_race",
+        "raw_race",
+        "raw_subject_race"
       ))
       & get_primary_class(d$data[[col]]) == "character"
     ) {
