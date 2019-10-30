@@ -219,7 +219,8 @@ clean <- function(d, helpers) {
     mutate(
       date = coalesce(
         parse_date(contact_date, "%Y-%m-%d %H:%M:%S"),
-        parse_date(contact_date, "%m/%d/%Y %H:%M")
+        parse_date(contact_date, "%m/%d/%Y %H:%M"),
+        parse_date(contact_date, "%Y/%m/%d")
       ),
       time = parse_time(contact_hour, "%H"),
       subject_age = parse_number(driver_age),
