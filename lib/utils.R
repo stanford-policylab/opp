@@ -1078,7 +1078,7 @@ ssn_regex <- function() {
 str_c_na <- function(..., sep = ", ") {
   # str_c_na(c("a", "b", "c"), c("1", "2", "3"), sep = "|")
   # "a|1" "b|2" "c|3"
-  joined <- unite(tibble(...), sep = sep)[[1]]
+  joined <- unite(tibble(...), "___tmp", sep = sep)[[1]]
   sep_literal <- str_c("\\Q", sep, "\\E")
   pattern <- str_c(
     str_c(sep_literal, "NA"),

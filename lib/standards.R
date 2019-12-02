@@ -142,8 +142,8 @@ schema <- c(
   raw_row_number                = as.character,
 
   # when
-  date                          = parse_date,
-  time                          = parse_time,
+  date                          = function(v) parse_date(as.character(v)),
+  time                          = function(v) parse_time(as.character(v)),
 
   # where
   location                      = as.character,

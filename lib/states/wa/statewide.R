@@ -96,16 +96,27 @@ clean <- function(d, helpers) {
   wa_location <- helpers$load_csv("wa_location.csv")
   
   tr_violation <- json_to_tr(helpers$load_json("WA_violations.json"))
+
+  tr_raw_race = c(
+    "1" = "White",
+    "2" = "African American",
+    "3" = "Native American",
+    "4" = "Asian",
+    "5" = "Pacific Islander",
+    "6" = "East Indian",
+    "7" = "Hispanic",
+    "8" = "Other"
+  )
   
   tr_race = c(
-    "1" = "white",
-    "2" = "black",
-    "3" = "other", # Native American
-    "4" = "asian/pacific islander", # Asian
-    "5" = "asian/pacific islander", # Pacific Islander
-    "6" = "asian/pacific islander", # East Indian
-    "7" = "hispanic",
-    "8" = "other" # Other
+    "White" = "white",
+    "African American" = "black",
+    "Native American" = "other",
+    "Asian" = "asian/pacific islander",
+    "Pacific Islander" = "asian/pacific islander",
+    "East Indian" = "asian/pacific islander",
+    "Hispanic" = "hispanic",
+    "Other" = "other"
   )
   
   tr_officer_race = c(
@@ -168,7 +179,7 @@ clean <- function(d, helpers) {
       road_number = str_pad(road_number, 3, pad = "0"),
       road_number = str_replace_all(
         road_number,
-        # NOTE: This normailization is to match the normalization done to
+        # NOTE: This normalization is to match the normalization done to
         # generate wa_location in the old openpolicing project; matches the WA
         # mile marker database road numbers.
         c("^97A$" = "097AR", "^28B$" = "028", "^20S$" = "020SPANACRT")
@@ -218,20 +229,20 @@ clean <- function(d, helpers) {
     ) %>% 
     mutate(
       date = coalesce(
-        parse_date(contact_date, "%Y-%m-%d %H:%M:%S"),
-        parse_date(contact_date, "%m/%d/%Y %H:%M"),
+        parse_date(contact_date, "%Y-%m-%d 00:00:00"),
+        parse_date(contact_date, "%m/%d/%Y 0:00"),
         parse_date(contact_date, "%Y/%m/%d")
       ),
       time = parse_time(contact_hour, "%H"),
       subject_age = parse_number(driver_age),
+      # convert from numbers to the strings provided in Data_Header_and_Key.pdf
+      raw_driver_race = fast_tr(raw_driver_race, tr_raw_race),
       subject_race = fast_tr(raw_driver_race, tr_race),
       subject_sex = fast_tr(raw_driver_gender, tr_sex),
       officer_race = fast_tr(raw_officer_race, tr_officer_race),
       officer_sex = fast_tr(raw_officer_gender, tr_officer_sex),
       officer_first_name = str_trim(employee_first),
       officer_last_name = str_trim(employee_last),
-      # NOTE: The data received up until Oct 2016 are vehicular stops by the
-      # Washington State Patrol.
       department_name = "Washington State Patrol",
       type = "vehicular",
       stop_reason = fast_tr(raw_contact_type, tr_contact_type),
