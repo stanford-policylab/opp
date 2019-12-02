@@ -7,7 +7,8 @@ source("opp.R")
 #       new data, make sure to treat annualized data with care.
 
 load <- function(analysis = "disparity", use_cache = F) {
-
+  
+  dir_create(here::here("cache"))
   cache_path <- here::here("cache", str_c(analysis, ".rds"))
   if (use_cache & file_exists(cache_path))
     return(read_rds(cache_path))
