@@ -50,6 +50,7 @@ clean <- function(d, helpers) {
     Model
   ) %>%
   rename(
+    subject_dob = DateofBirth,
     location = IncidentLocation,
     vehicle_registration_state = `License State`,
     vehicle_year = VehicleYear,
@@ -79,7 +80,6 @@ clean <- function(d, helpers) {
       "hispanic",
       tolower(Race)
     )],
-    subject_dob = parse_date(DateofBirth),
     disposition = tolower(Disposition),
     # NOTE: FIELD CONTACT CARD just records the event when no action was
     # taken

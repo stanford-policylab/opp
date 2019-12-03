@@ -17,7 +17,10 @@ load_raw <- function(raw_data_dir, n_max) {
   load <- function(fname_prefix, n_sheets) {
     for (i in 2:n_sheets) {
       fname <- str_c(fname_prefix, "_sheet_", i, ".csv")
-      tbl <- read_csv(file.path(raw_data_dir, fname))
+      tbl <- read_csv(
+          file.path(raw_data_dir, fname),
+          col_types = cols(.default = "c")
+      )
       loading_problems[[fname]] <<- problems(tbl)
       data <<- bind_rows(data, tbl)
       if (nrow(data) > n_max) {

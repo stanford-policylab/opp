@@ -139,8 +139,8 @@ age_at_date <- function(birth_date, date) {
   # age due to leap years.
   as.numeric(
     difftime(
-      parse_date(date),
-      parse_date(birth_date),
+      parse_date(as.character(date)),
+      parse_date(as.character(birth_date)),
       units = "days"
     )
   ) / 365.242
