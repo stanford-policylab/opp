@@ -61,25 +61,27 @@ clean <- function(d, helpers) {
       department_name = AgencyName,
       department_id = AgencyCode,
       vehicle_make = VehicleMake,
-      vehicle_year = VehicleYear
+      vehicle_year = VehicleYear,
+      time = TimeOfStop
     ) %>%
     mutate(
+      date_tmp = as.character(DateOfStop),
       date = coalesce(
-        parse_date(DateOfStop, "%m/%d/%Y"),
-        parse_date(DateOfStop, "%m/%d/%Y %H:%M:%S"),
-        parse_date(DateOfStop, "%m-%d-%Y %H:%M:%S"),
-        parse_date(DateOfStop, "%m-%d-%Y"),
-        parse_date(DateOfStop, "%Y-%m-%d %H:%M:%S"),
-        parse_date(DateOfStop, "%Y-%m-%d")
+        parse_date(date_tmp, "%m/%d/%Y"),
+        parse_date(date_tmp, "%m/%d/%Y %H:%M:%S"),
+        parse_date(date_tmp, "%m-%d-%Y %H:%M:%S"),
+        parse_date(date_tmp, "%m-%d-%Y"),
+        parse_date(date_tmp, "%Y-%m-%d %H:%M:%S"),
+        parse_date(date_tmp, "%Y-%m-%d")
       ),
-      time = parse_time(TimeOfStop),
+      subject_dob = parse_datetime(as.character(DriversYearofBirth), "%m/%d/%Y"),
       subject_yob = coalesce(
         parse_number(DriversYearofBirth),
-        year(parse_datetime(DriversYearofBirth, format="%m/%d/%Y"))
+        year(subject_dob)
       ),
       subject_age = year(date) - subject_yob,
-      subject_sex = tr_sex[parse_character(DriverSex)],
-      subject_race = tr_race[parse_character(raw_DriverRace)],
+      subject_sex = tr_sex[as.character(DriverSex)],
+      subject_race = tr_race[as.character(raw_DriverRace)],
       beat = if_else(
         department_name == "ILLINOIS STATE POLICE",
         str_pad(BeatLocationOfStop, width = "2", side = "left", pad = "0"),
@@ -91,7 +93,7 @@ clean <- function(d, helpers) {
       type = "vehicular",
       citation_issued = raw_ResultOfStop == 1,
       warning_issued = raw_ResultOfStop == 2 | raw_ResultOfStop == 3,
-      outcome = tr_outcome[parse_character(raw_ResultOfStop)],
+      outcome = tr_outcome[as.character(raw_ResultOfStop)],
       contraband_drugs = VehicleDrugsFound == 1
         | VehicleDrugParaphernaliaFound == 1
         | VehicleDrugAmount > 0
@@ -124,11 +126,11 @@ clean <- function(d, helpers) {
       reason_for_stop = if_else(
         raw_ReasonForStop == 1,
         str_c_na(
-          tr_reason_for_stop[parse_character(raw_ReasonForStop)],
-          tr_moving_violation[parse_character(raw_TypeOfMovingViolation)],
+          tr_reason_for_stop[as.character(raw_ReasonForStop)],
+          tr_moving_violation[as.character(raw_TypeOfMovingViolation)],
           sep=": "
         ),
-        tr_reason_for_stop[parse_character(raw_ReasonForStop)]
+        tr_reason_for_stop[as.character(raw_ReasonForStop)]
       ),
       violation = reason_for_stop
     ) %>%

@@ -163,7 +163,7 @@ clean <- function(d, helpers) {
   mutate(
     # NOTE: all persons are either Drivers or Passengers (no Pedestrians)
     type = "vehicular",
-    datetime = parse_datetime(StopDate),
+    datetime = parse_datetime(as.character(StopDate)),
     date = as.Date(datetime),
     time = format(datetime, "%H:%M:%S"),
     # NOTE: the majority of times are midnight, which signify missing data
