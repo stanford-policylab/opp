@@ -8,9 +8,9 @@ source(here::here("lib", "opp.R"))
 #' someone based on race
 #'
 #' @param tbl tibble containing the following data
-#' @param ... additional attributes to control for when inferring thresholds;
-#'        Note that in almost all cases will be sub-geography (e.g., police
-#'        district when testing cities, or county when testing states, etc.)
+#' @param subgeography_col geographic subdivision to control for when inferring
+#'        thresholds; (e.g., police district when testing cities, or county when
+#'        testing states, etc.)
 #' @param geography_col contains a population division of interest to use 
 #'        hierarchically, i.e. if multiple cities are being test at the district
 #'        level, geography_col = city
@@ -41,17 +41,18 @@ source(here::here("lib", "opp.R"))
 #' value, like the name of that city, or something)
 threshold_test <- function(
   tbl,
-  ...,
+  subgeography_col,
   geography_col = city,
   demographic_col = subject_race,
   action_col = search_conducted,
   outcome_col = contraband_found,
   majority_demographic = "white",
   n_iter = 5000,
-  n_cores = min(5, parallel::detectCores() / 2)
+  n_cores = min(5, parallel::detectCores() / 2),
+  prior_scaling_factor = 1
 ) {
   
-  control_colqs <- enquos(...)
+  subgeography_colq <- enquo(subgeography_col)
   geography_colq <- enquo(geography_col)
   demographic_colq <- enquo(demographic_col)
   action_colq <- enquo(action_col)
@@ -60,7 +61,7 @@ threshold_test <- function(
   metadata <- list()
   tbl <- opp_prepare_for_disparity(
     tbl,
-    !!!control_colqs,
+    !!subgeography_colq,
     !!geography_colq,
     demographic_col=!!demographic_colq,
     action_col=!!action_colq,
@@ -69,14 +70,17 @@ threshold_test <- function(
   )
   data_summary <- summarize_for_stan(
     tbl,
-    !!!control_colqs,
+    subgeography_col=!!subgeography_colq,
     geography_col=!!geography_colq,
     demographic_col=!!demographic_colq,
     action_col=!!action_colq,
     outcome_col=!!outcome_colq,
     metadata=metadata
   )
-  stan_data <- format_data_summary_for_stan(data_summary)
+  stan_data <- format_data_summary_for_stan(
+    data_summary,
+    prior_scaling_factor
+  )
   fit <- stan_threshold_test(stan_data, n_iter, n_cores)
   stan_warnings <- summary(warnings())
   fit_summary <- summary(fit)$summary
@@ -113,7 +117,7 @@ threshold_test <- function(
 
 summarize_for_stan <- function(
   tbl,
-  ...,
+  subgeography_col,
   geography_col = city,
   demographic_col = subject_race,
   action_col = search_conducted,
@@ -121,21 +125,21 @@ summarize_for_stan <- function(
   metadata = list()
 ) {
 
-  control_colqs <- enquos(...)
+  subgeography_colq <- enquo(subgeography_col)
   geography_colq <- enquo(geography_col)
   demographic_colq <- enquo(demographic_col)
   action_colq <- enquo(action_col)
   outcome_colq <- enquo(outcome_col)
 
   tbl %>% 
-    group_by(!!demographic_colq, !!geography_colq, !!!control_colqs) %>%
+    group_by(!!demographic_colq, !!geography_colq, !!subgeography_colq) %>%
     summarize(
       n = n(),
       n_action = sum(!!action_colq, na.rm = TRUE),
       n_outcome = sum(!!outcome_colq, na.rm = TRUE)
     ) %>% 
     ungroup() %>% 
-    unite(subgeography, !!!control_colqs, !!geography_colq, remove = F) %>% 
+    unite(subgeography, !!subgeography_colq, !!geography_colq, remove = F) %>% 
     unite(geography_race, !!geography_colq, !!demographic_colq, remove = F) %>% 
     # NOTE: keep original column values to map stan output to values
     mutate(
@@ -151,18 +155,19 @@ summarize_for_stan <- function(
 }
 
 
-format_data_summary_for_stan <- function(data_summary) {
+format_data_summary_for_stan <- function(data_summary, prior_scaling_factor) {
   list(
     n_groups = nrow(data_summary),
-    n_subgeographies = n_distinct(pull(data_summary, subgeography)),
     n_races = n_distinct(pull(data_summary, race)),
+    n_subgeographies = n_distinct(pull(data_summary, subgeography)),
     n_geographies = n_distinct(pull(data_summary, geography)),
-    subgeography = pull(data_summary, subgeography),
     race = pull(data_summary, race),
+    subgeography = pull(data_summary, subgeography),
     geography_race = pull(data_summary, geography_race),
     stop_count = pull(data_summary, n),
     search_count = pull(data_summary, n_action),
-    hit_count = pull(data_summary, n_outcome)
+    hit_count = pull(data_summary, n_outcome),
+    prior_scaling_factor = prior_scaling_factor
   )
 }
 
