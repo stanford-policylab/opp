@@ -41,7 +41,12 @@ municipal police departments.
 pfs$rates$stop %>%
   mutate(agency = if_else(city == "Statewide", "state patrol", "municipal pd")) %>% 
   group_by(agency, subject_race) %>%
-  summarize(average_annual_stop_rate = mean(annual_stop_rate)) %>%
+  summarize(
+    average_annual_stop_rate = mean(annual_stop_rate),
+    std_error = sqrt(var(annual_stop_rate) / length(annual_stop_rate)),
+    CI_lower = average_annual_stop_rate - 1.96 * std_error,
+    CI_upper = average_annual_stop_rate + 1.96 * std_error
+  ) %>%
   kable()
 ```
 
@@ -54,7 +59,12 @@ Number of city departments with data for search analysis:
 pfs$rates$search %>% 
   mutate(agency = if_else(city == "Statewide", "state patrol", "municipal pd")) %>% 
   group_by(agency, subject_race) %>%
-  summarize(average_search_rate = mean(search_rate)) %>%
+  summarize(
+    average_search_rate = mean(search_rate),
+    std_error = sqrt(var(search_rate) / length(search_rate)),
+    CI_lower = average_search_rate - 1.96 * std_error,
+    CI_upper = average_search_rate + 1.96 * std_error
+  ) %>%
   kable()
 ```
 

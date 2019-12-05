@@ -3,6 +3,7 @@
 *.pdf
 *.nfs*
 *.Rproj
+*.log
 *.key
 *.md
 .RData
