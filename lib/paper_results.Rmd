@@ -21,16 +21,16 @@ mj <- read_rds(here::here("results", "marijuana_legalization_analysis.rds"))
 
 We have collected and released a dataset of 
 `r comma_num(pfs$counts$collected$n_stops)` traffic stops carried out by 
-`r pfs$counts$collected$n_states` (`r pfs$counts$collected$n_stops_states`)
+`r pfs$counts$collected$n_states` (`r comma_num(pfs$counts$collected$n_stops_states)`)
 state patrol agencies and
-`r pfs$counts$collected$n_cities` (`r pfs$counts$collected$n_stops_cities`)
+`r pfs$counts$collected$n_cities` (`r comma_num(pfs$counts$collected$n_stops_cities)`)
 municipal police departments.
 
 We analyzed a unique dataset detailing 
 `r comma_num(pfs$counts$analyzed$n_stops)` traffic stops carried out by 
-`r pfs$counts$analyzed$n_states` (`r pfs$counts$analyzed$n_stops_states`)
+`r pfs$counts$analyzed$n_states` (`r comma_num(pfs$counts$analyzed$n_stops_states)`)
 state patrol agencies and
-`r pfs$counts$analyzed$n_cities` (`r pfs$counts$analyzed$n_stops_cities`)
+`r pfs$counts$analyzed$n_cities` (`r comma_num(pfs$counts$analyzed$n_stops_cities)`)
 municipal police departments.
 
 
@@ -42,16 +42,14 @@ pfs$rates$stop %>%
   mutate(agency = if_else(city == "Statewide", "state patrol", "municipal pd")) %>% 
   group_by(agency, subject_race) %>%
   summarize(
-    average_annual_stop_rate = mean(annual_stop_rate),
-    std_error = sqrt(var(annual_stop_rate) / length(annual_stop_rate)),
-    CI_lower = average_annual_stop_rate - 1.96 * std_error,
-    CI_upper = average_annual_stop_rate + 1.96 * std_error
+    average_annual_stop_rate = mean(annual_stop_rate)
   ) %>%
   kable()
 ```
 
 Number of state patrols with data for search analysis: 
 `r pfs$rates$search %>% filter(city == "Statewide") %>% select(state) %>% n_distinct`
+
 Number of city departments with data for search analysis: 
 `r pfs$rates$search %>% filter(city != "Statewide") %>% select(state, city) %>% n_distinct`
 
@@ -61,10 +59,13 @@ pfs$rates$search %>%
   group_by(agency, subject_race) %>%
   summarize(
     average_search_rate = mean(search_rate),
-    std_error = sqrt(var(search_rate) / length(search_rate)),
+    std_error = sqrt(
+      average_search_rate * (1 - average_search_rate) / mean(n)
+    ),
     CI_lower = average_search_rate - 1.96 * std_error,
     CI_upper = average_search_rate + 1.96 * std_error
   ) %>%
+  select(-std_error) %>% 
   kable()
 ```
 
@@ -82,41 +83,14 @@ pfs$rates$search %>%
 
 \section{Veil of Darkness}
 
-```{r veil_of_darkness-plot-630, fig.height=6, fig.width=9}
-vod$full$plots$states$TX$`6:30pm`
-```
+Number of points in 7:00-7:15pm panel:
+`r vod$full$plots$states$TX$`7:00pm`$data$n %>% sum() %>% comma_num()`
 
-\newpage
+Number of points in 7:15-7:30pm panel:
+`r vod$full$plots$states$TX$`7:15pm`$data$n %>% sum() %>% comma_num()`
 
-```{r veil_of_darkness-plot-645, fig.height=6, fig.width=9}
-vod$full$plots$states$TX$`6:45pm`
-```
-
-\newpage
-
-```{r veil_of_darkness-plot-700, fig.height=6, fig.width=9}
-vod$full$plots$states$TX$`7:00pm`
-```
-
-\newpage
-
-```{r veil_of_darkness-plot-715, fig.height=6, fig.width=9}
-vod$full$plots$states$TX$`7:15pm`
-```
-
-\newpage
-
-```{r veil_of_darkness-plot-730, fig.height=6, fig.width=9}
-vod$full$plots$states$TX$`7:30pm`
-```
-
-\newpage
-
-```{r veil_of_darkness-plot-745, fig.height=6, fig.width=9}
-vod$full$plots$states$TX$`7:45pm`
-```
-
-\newpage
+Number of points in 7:30-7:45pm panel:
+`r vod$full$plots$states$TX$`7:30pm`$data$n %>% sum() %>% comma_num()`
 
 ```{r veil_of_darkness-plot-trio, fig.height=4, fig.width=9}
 d <- rbind(
@@ -172,6 +146,7 @@ d %>%
 
 ```{r veil_of_darkness-main_mod}
 vod$dst %>% 
+  select(-data, -base_controls) %>% 
   filter(spline_degree == 6, agency_control, !interact_time_loc) %>% 
   kable()
 ```
@@ -191,11 +166,14 @@ Number of robustness check models with results not statistically significant:
 ```{r veil_of_darkness-appendix_mods}
 bind_rows(
   vod$dst %>%
+    select(-data, -base_controls) %>% 
     mutate(model = "DST"),
   vod$full$coefficients %>%
+    select(-data, -base_controls) %>% 
     mutate(model = "Full year")
 ) %>%
-  select(model, agency, is_dark, std_error, everything()) %>%
+  arrange(model, agency_control, interact_time_loc, spline_degree) %>% 
+  select(model, agency, is_dark, std_error, p_value, everything()) %>%
   kable()
 ```
 
@@ -205,19 +183,39 @@ bind_rows(
 
 State patrol agencies analyzed: 
 `r disp$state$outcome$results$hit_rates$geography %>% unique()`
-Number of state patrol searches: 
-`r disp$state$outcome$results$hit_rates$n_search_conducted %>% sum()`
+
+Total number of state patrol searches: 
+`r disp$state$outcome$results$hit_rates$n_search_conducted %>% sum() %>% comma_num()`
+
 Municipal departments analyzed:
 `r disp$city$outcome$results$hit_rates$geography %>% unique()`
-Number of municipal pd searches: 
-`r disp$city$outcome$results$hit_rates$n_search_conducted %>% sum()`
+
+Total number of municipal pd searches: 
+`r disp$city$outcome$results$hit_rates$n_search_conducted %>% sum() %>% comma_num()`
 
 \subsection{Outcome Test}
 
 City and State outcomes:
 ```{r disparity-hit_rates-tables}
-kable(disp$city$outcome$results$aggregate_hit_rates)
-kable(disp$state$outcome$results$aggregate_hit_rates)
+rbind(
+  disp$city$outcome$results$aggregate_hit_rates %>% 
+    mutate(
+      geography = "cities",
+      std_error = sqrt(hit_rate * (1 - hit_rate) / n),
+      lower_CI = hit_rate - 1.96 * std_error,
+      upper_CI = hit_rate + 1.96 * std_error
+    ),
+  disp$state$outcome$results$aggregate_hit_rates %>% 
+    mutate(
+      geography = "states",
+      std_error = sqrt(hit_rate * (1 - hit_rate) / n),
+      lower_CI = hit_rate - 1.96 * std_error,
+      upper_CI = hit_rate + 1.96 * std_error
+    )
+) %>% 
+  select(-std_error) %>% 
+  select(geography, everything())
+  kable()
 ```
 
 \newpage

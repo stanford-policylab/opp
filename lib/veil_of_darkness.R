@@ -138,11 +138,16 @@ vod_coef <- function(
         str_detect(term, "municipal"), 
         "municipal_pd", "state_patrol")
       ) %>%  
-      select(is_dark = estimate, agency, std_error = std.error) 
+      select(
+        is_dark = estimate, 
+        agency, 
+        std_error = std.error, 
+        p_value = p.value
+      ) 
   } else {
     coefs <- broom::tidy(mod) %>% 
       filter(term == "is_darkTRUE") %>% 
-      select(is_dark = estimate, std_error = std.error)
+      select(is_dark = estimate, std_error = std.error, p_value = p.value)
   }
   if(store_model) {
     results <- list(model = mod, coefficients = coefs)
