@@ -11,6 +11,8 @@ data {
   int<lower=1> stop_count[n_groups];
   int<lower=0> search_count[n_groups];
   int<lower=0> hit_count[n_groups];
+
+  real<lower=0> prior_scaling_factor;
 }
 
 parameters {
@@ -72,23 +74,23 @@ transformed parameters {
 
 model {
   // draw threshold parameters
-  sigma_threshold ~ normal(0, 1);
+  sigma_threshold ~ normal(0, 1 * prior_scaling_factor);
 
   // draw demographic parameters
   // each is centered at its own mu, and we allow for demographic heterogeneity
-  mu_phi ~ normal(0, 1);
-  mu_delta ~ normal(0, 1);
+  mu_phi ~ normal(0, 1 * prior_scaling_factor);
+  mu_delta ~ normal(0, 1 * prior_scaling_factor);
   
-  phi_race ~ normal(mu_phi, 0.1);
-  delta_race ~ normal(mu_delta, 0.1);
-  threshold_race ~ normal(0, 1);
+  phi_race ~ normal(mu_phi, 0.1 * prior_scaling_factor);
+  delta_race ~ normal(mu_delta, 0.1 * prior_scaling_factor);
+  threshold_race ~ normal(0, 1 * prior_scaling_factor);
 
   // draw control division parameters (for un-pinned divisions)
-  phi_subgeography_raw ~ normal(0, 0.1);
-  delta_subgeography_raw ~ normal(0, 0.1);
+  phi_subgeography_raw ~ normal(0, 0.1 * prior_scaling_factor);
+  delta_subgeography_raw ~ normal(0, 0.1 * prior_scaling_factor);
 
   // thresholds
-  threshold_raw ~ normal(0, 1);
+  threshold_raw ~ normal(0, 1 * prior_scaling_factor);
 
   search_count ~ binomial(stop_count, search_rate);
   hit_count ~ binomial(search_count, hit_rate);

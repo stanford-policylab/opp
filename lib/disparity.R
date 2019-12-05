@@ -38,41 +38,42 @@ disparity <- function(from_cache = F) {
         str_c("outcome aggregate: ", dataset_name)
       )
   
-    print("Running threshold test...")
-    v$threshold <- threshold_test(
-      datasets[[dataset_name]],
-      subgeography,
-      geography_col = geography,
-      n_iter = 10000
-    )
-    print("Composing threshold plots...")
-    v$threshold$plots <- plt_all(v$threshold$results$thresholds, "threshold")
-    v$threshold$plots$aggregate <- 
-      plt(
-        v$threshold$results$thresholds, 
-        str_c("threshold aggregate: ", dataset_name)
+    v$threshold <- list()
+    for (prior_scaling_factor in c(0.5, 1, 1.5)) {
+      sprintf("Running threshold test with scaling factor %g...", prior_scaling_factor)
+      t <- threshold_test(
+        datasets[[dataset_name]],
+        subgeography_col = subgeography,
+        geography_col = geography,
+        n_iter = 10000,
+        prior_scaling_factor = prior_scaling_factor
       )
-    print("Running threshold posterior predictive checks...")
-    v$threshold$ppc <- list()
-    v$threshold$ppc$search_rate <- plt_ppc_rates(
-      v$threshold$results$thresholds,
-      v$threshold$metadata$posteriors,
-      "search_rate", 
-      numerator_col = n_action,
-      denominator_col = n,
-      title = str_c(dataset_name, " threshold ppc - search rates")
-    )
-    v$threshold$ppc$hit_rate <- plt_ppc_rates(
-      v$threshold$results$thresholds,
-      v$threshold$metadata$posteriors,
-      "hit_rate", 
-      numerator_col = n_outcome,
-      denominator_col = n_action,
-      title = str_c(dataset_name, " threshold ppc - hit rates")
-    )
-    
-    v$threshold$metadata$posteriors <- NULL
-    
+      print("Composing threshold plots...")
+      t$plots <- plt_all(t$results$thresholds, "threshold")
+      t$plots$aggregate <- 
+        plt(t$results$thresholds, str_c("threshold aggregate: ", dataset_name))
+      print("Running threshold posterior predictive checks...")
+      t$ppc <- list()
+      t$ppc$search_rate <- plt_ppc_rates(
+        t$results$thresholds,
+        t$metadata$posteriors,
+        "search_rate", 
+        numerator_col = n_action,
+        denominator_col = n,
+        title = str_c(dataset_name, " threshold ppc - search rates")
+      )
+      t$ppc$hit_rate <- plt_ppc_rates(
+        t$results$thresholds,
+        t$metadata$posteriors,
+        "hit_rate", 
+        numerator_col = n_outcome,
+        denominator_col = n_action,
+        title = str_c(dataset_name, " threshold ppc - hit rates")
+      )
+      t$metadata$posteriors <- NULL
+      key <- sprintf("prior_scaling_factor_%g", prior_scaling_factor)
+      v$threshold[[key]] <- t
+    }
     results[[dataset_name]] <- v
   }
   results  
