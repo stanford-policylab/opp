@@ -39,13 +39,13 @@ disparity <- function(from_cache = F) {
       )
   
     v$threshold <- list()
-    for (prior_scaling_factor in c(0.5, 1, 2)) {
+    for (prior_scaling_factor in c(0.5, 1, 1.5)) {
       sprintf("Running threshold test with scaling factor %g...", prior_scaling_factor)
       t <- threshold_test(
         datasets[[dataset_name]],
         subgeography_col = subgeography,
         geography_col = geography,
-        n_iter = 20000,
+        n_iter = 10000,
         prior_scaling_factor = prior_scaling_factor
       )
       print("Composing threshold plots...")
