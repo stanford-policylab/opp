@@ -222,7 +222,6 @@ opp_sensitive_raw_data <- function() {
     "AZ", "Gilbert",
     "CO", "Aurora",
     "CO", "Statewide",
-    "MI", "Statewide",
     "NY", "Statewide",
     "OH", "Statewide",
     "OK", "Tulsa",
