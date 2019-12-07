@@ -47,33 +47,18 @@ veil_of_darkness_full <- function(from_cache = F) {
   coefficients <-
     par_pmap(
       mc.cores = 3,
-      tibble(degree = 6, interact = T),
-      function(degree, interact) {
-        r1 <- vod_coef(dst = F, d, geography, degree, interact)
-        r2 <- vod_coef(
-          dst = F, 
-          filter(d, is_state_patrol), 
-          geography, 
-          degree, interact
-        )
-        r3 <- vod_coef(
-          dst = F, 
-          filter(d, !is_state_patrol), 
-          geography, 
-          degree, interact
-        )
-        bind_rows(
-          r1$coefficients, r2$coefficients, r3$coefficients
-        ) %>%
+      tibble(
+        degree = rep(6, 2), 
+        interact = c(T, F)
+      ),
+      function(degree, interact, agency) {
+        r <- vod_coef(dst = F, d, geography, degree, interact)
+        r$coefficients %>% 
           mutate(
-            data = c(
-              "counties and cities",
-              "states",
-              "cities"
-            ),
+            data = "counties and cities",
             base_controls = "time, geography",
-            spline_degree = degree,
-            interact_time_loc = interact
+            interact_time_loc = interact,
+            spline_degree = degree
           )
       }
     ) %>% bind_rows()
