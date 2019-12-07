@@ -62,10 +62,10 @@ pfs$rates$search %>%
     std_error = sqrt(
       average_search_rate * (1 - average_search_rate) / mean(n)
     ),
-    CI_lower = average_search_rate - 1.96 * std_error,
-    CI_upper = average_search_rate + 1.96 * std_error
+    CI_radius = 1.96 * std_error,
+    CI_lower = average_search_rate - CI_radius,
+    CI_upper = average_search_rate + CI_radius
   ) %>%
-  select(-std_error) %>% 
   kable()
 ```
 
@@ -83,14 +83,17 @@ pfs$rates$search %>%
 
 \section{Veil of Darkness}
 
-Number of points in 7:00-7:15pm panel:
+Number of stops in 7:00-7:15pm panel:
 `r vod$full$plots$states$TX$`7:00pm`$data$n %>% sum() %>% comma_num()`
 
-Number of points in 7:15-7:30pm panel:
+Number of stops in 7:15-7:30pm panel:
 `r vod$full$plots$states$TX$`7:15pm`$data$n %>% sum() %>% comma_num()`
 
-Number of points in 7:30-7:45pm panel:
+Number of stops in 7:30-7:45pm panel:
 `r vod$full$plots$states$TX$`7:30pm`$data$n %>% sum() %>% comma_num()`
+
+Total number of stops in 3 panels:
+`r comma_num(vod$full$plots$states$TX$`7:00pm`$data$n %>% sum() + vod$full$plots$states$TX$`7:15pm`$data$n %>% sum() +  vod$full$plots$states$TX$`7:30pm`$data$n %>% sum())`
 
 ```{r veil_of_darkness-plot-trio, fig.height=4, fig.width=9}
 d <- rbind(
@@ -122,12 +125,12 @@ d %>%
     alpha=0.3
   ) +
   scale_x_continuous(
-    "Minutes since dark",
+    "Minutes since dusk",
     limits = c(-90, 60),
     breaks = seq(-90, 60, 30)
   ) +
   scale_y_continuous(
-    str_c("Percent black"),
+    str_c("Percent of stopped drivers who are black"),
     limits = c(0.15, 0.35),
     breaks = seq(0.0, 1.0, 0.05), 
     labels = scales::percent_format(accuracy = 1)
