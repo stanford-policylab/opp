@@ -294,6 +294,13 @@ calculate_if <- function(pred_fun, func) {
 }
 
 
+calculate_p_value <- function(p1, p2, n1, n2) {
+  pc <- (p1 * n1 + p2 * n2) / (n1 + n2)
+  z <- abs(p1 - p2) / sqrt(pc * (1 - pc) / n1 + pc * (1 - pc) / n2)
+  1 - pnorm(z)
+}
+
+
 city_center_lat_lngs <- function() {
   as_tibble(us.cities) %>%
   right_separate_cols(name = c("city", "state"), sep = " ") %>%
