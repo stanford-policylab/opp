@@ -266,7 +266,31 @@ disp$city$outcome$plots$aggregate +
 \newpage
 
 ```{r disparity-state-hit_rates-plot, fig.height=6, fig.width=10}
-disp$state$outcome$plots$aggregate + theme(legend.position = "none")
+axis_min <- max(
+  min(
+    disp$state$outcome$plots$aggregate$data$minority_rate,
+    disp$state$outcome$plots$aggregate$data$majority_rate
+  ) - 0.05, 0
+)
+axis_max <- min(
+  max(
+    disp$state$outcome$plots$aggregate$data$minority_rate,
+    disp$state$outcome$plots$aggregate$data$majority_rate
+  ), 1
+)
+disp$state$outcome$plots$aggregate + 
+  theme(
+    legend.position = "none",
+    plot.title = element_blank()
+  ) +
+  scale_x_continuous(
+    limits = c(axis_min, axis_max),
+    labels = scales::percent_format(accuracy = 1), expand = c(0,0)
+  ) + 
+  scale_y_continuous(
+    limits = c(axis_min, axis_max),
+    labels = scales::percent_format(accuracy = 1),expand = c(0,0)
+  ) 
 ```
 
 \newpage
@@ -274,8 +298,8 @@ disp$state$outcome$plots$aggregate + theme(legend.position = "none")
 \subsection{Threshold test results}
 
 ```{r disparity-thresholds-tables}
-kable(disp$city$threshold$results$aggregate_thresholds)
-kable(disp$state$threshold$results$aggregate_thresholds)
+kable(disp$city$threshold$prior_scaling_factor_1$results$aggregate_thresholds)
+kable(disp$state$threshold$prior_scaling_factor_1$results$aggregate_thresholds)
 ```
 
 \newpage
@@ -283,17 +307,17 @@ kable(disp$state$threshold$results$aggregate_thresholds)
 ```{r disparity-city-thresholds-plot, fig.height=5, fig.width=10}
 axis_min <- max(
   min(
-    disp$city$threshold$plots$aggregate$data$minority_rate,
-    disp$city$threshold$plots$aggregate$data$majority_rate
+    disp$city$threshold$prior_scaling_factor_1$plots$aggregate$data$minority_rate,
+    disp$city$threshold$prior_scaling_factor_1$plots$aggregate$data$majority_rate
   ) - 0.05, 0
 )
 axis_max <- min(
   max(
-    disp$city$threshold$plots$aggregate$data$minority_rate,
-    disp$city$threshold$plots$aggregate$data$majority_rate
+    disp$city$threshold$prior_scaling_factor_1$plots$aggregate$data$minority_rate,
+    disp$city$threshold$prior_scaling_factor_1$plots$aggregate$data$majority_rate
   ) + 0.05, 1
 )
-disp$city$threshold$plots$aggregate + 
+disp$city$threshold$prior_scaling_factor_1$plots$aggregate + 
   theme(legend.position = "none", plot.title = element_blank()) + 
   scale_x_continuous(
     limits = c(axis_min, axis_max), breaks = seq(0, .5, 0.05),
@@ -308,31 +332,35 @@ disp$city$threshold$plots$aggregate +
 \newpage
 
 ```{r disparity-state-thresholds-plot, fig.height=5, fig.width=10}
-disp$state$threshold$plots$aggregate + theme(legend.position = "none")
+disp$state$threshold$prior_scaling_factor_1$plots$aggregate + 
+  theme(
+    legend.position = "none",
+    plot.title = element_blank()
+  )
 ```
 
 \newpage
 
 ```{r disparity-city-ppc-search, fig.height=5, fig.width=8}
-disp$city$threshold$ppc$search_rate
+disp$city$threshold$prior_scaling_factor_1$ppc$search_rate
 ```
 
 \newpage
 
 ```{r disparity-city-ppc-hit, fig.height=5, fig.width=8}
-disp$city$threshold$ppc$hit_rate
+disp$city$threshold$prior_scaling_factor_1$ppc$hit_rate
 ```
 
 \newpage
 
 ```{r disparity-state-ppc-search, fig.height=5, fig.width=8}
-disp$state$threshold$ppc$search_rate
+disp$state$threshold$prior_scaling_factor_1$ppc$search_rate
 ```
 
 \newpage
 
 ```{r disparity-state-ppc-hit, fig.height=5, fig.width=8}
-disp$state$threshold$ppc$hit_rate
+disp$state$threshold$prior_scaling_factor_1$ppc$hit_rate
 ```
 
 \newpage
