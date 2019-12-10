@@ -81,13 +81,13 @@ pstate <- filter(ptbl, str_detect(agency, 'state'))
 pcity <- filter(ptbl, str_detect(agency, 'municipal'))
 ```
 
-State search p-values:
+Search p-values:
 `r slice(pstate, 1:2) %>% select(agency, subject_race) %>% kable()`
 p-value: `r slice(pstate, 1:2) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
 `r slice(pstate, -2) %>% select(agency, subject_race) %>% kable()`
 p-value: `r slice(pstate, -2) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
 `r slice(pstate, 2:3) %>% select(agency, subject_race) %>% kable()`
-p-value:`r slice(pstate, 2:3) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
+p-value: `r slice(pstate, 2:3) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
 `r slice(pcity, 1:2) %>% select(agency, subject_race) %>% kable()`
 p-value: `r slice(pcity, 1:2) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
 `r slice(pcity, -2) %>% select(agency, subject_race) %>% kable()`
@@ -249,6 +249,20 @@ rbind(
   kable()
 ```
 
+Hit rate p-values:
+`r slice(pstate, 1:2) %>% select(agency, subject_race) %>% kable()`
+p-value: `r slice(pstate, 1:2) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
+`r slice(pstate, -2) %>% select(agency, subject_race) %>% kable()`
+p-value: `r slice(pstate, -2) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
+`r slice(pstate, 2:3) %>% select(agency, subject_race) %>% kable()`
+p-value: `r slice(pstate, 2:3) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
+`r slice(pcity, 1:2) %>% select(agency, subject_race) %>% kable()`
+p-value: `r slice(pcity, 1:2) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
+`r slice(pcity, -2) %>% select(agency, subject_race) %>% kable()`
+p-value: `r slice(pcity, -2) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
+`r slice(pcity, 2:3) %>% select(agency, subject_race) %>% kable()`
+p-value: `r slice(pcity, 2:3) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
+
 \newpage
 
 ```{r disparity-city-hit_rates-plot, fig.height=6, fig.width=10}
@@ -279,31 +293,7 @@ disp$city$outcome$plots$aggregate +
 \newpage
 
 ```{r disparity-state-hit_rates-plot, fig.height=6, fig.width=10}
-axis_min <- max(
-  min(
-    disp$state$outcome$plots$aggregate$data$minority_rate,
-    disp$state$outcome$plots$aggregate$data$majority_rate
-  ) - 0.05, 0
-)
-axis_max <- min(
-  max(
-    disp$state$outcome$plots$aggregate$data$minority_rate,
-    disp$state$outcome$plots$aggregate$data$majority_rate
-  ), 1
-)
-disp$state$outcome$plots$aggregate + 
-  theme(
-    legend.position = "none",
-    plot.title = element_blank()
-  ) +
-  scale_x_continuous(
-    limits = c(axis_min, axis_max),
-    labels = scales::percent_format(accuracy = 1), expand = c(0,0)
-  ) + 
-  scale_y_continuous(
-    limits = c(axis_min, axis_max),
-    labels = scales::percent_format(accuracy = 1),expand = c(0,0)
-  ) 
+disp$state$outcome$plots$aggregate + theme(legend.position = "none")
 ```
 
 \newpage
@@ -360,11 +350,7 @@ disp$city$threshold$prior_scaling_factor_1$plots$aggregate +
 Normal priors:
 
 ```{r disparity-state-thresholds-plot, fig.height=5, fig.width=10}
-disp$state$threshold$prior_scaling_factor_1$plots$aggregate + 
-  theme(
-    legend.position = "none",
-    plot.title = element_blank()
-  )
+disp$state$threshold$prior_scaling_factor_1$plots$aggregate + theme(legend.position = "none")
 ```
 
 \newpage

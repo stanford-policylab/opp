@@ -4,7 +4,9 @@ source(here::here("lib", "opp.R"))
 #' Outcome Test
 #'
 #' @param tbl a tibble containing the following data
-#' @param ... additional attributes to control for when conducting outcome test
+#' @param subgeography_col geographic subdivision for calculating hit rates
+#'        (e.g., police district when testing cities, or county when
+#'        testing states, etc.)
 #' @param demographic_col contains a population division of interest, i.e. race,
 #'        age group, sex, etc...
 #' @param action_col identifies the risk population, i.e. those who were
@@ -16,24 +18,26 @@ source(here::here("lib", "opp.R"))
 #' @return list with \code{results} and \code{metadata} keys
 #'
 #' @examples
-#' outcome_test(tbl, precinct)
-#' outcome_test(tbl, precinct, subject_race, frisk_performed)
+#' outcome_test(tbl, precinct, city)
+#' outcome_test(tbl, precinct, city, subject_race, frisk_performed)
 #' outcome_test(
 #'   tbl,
+#'   precinct,
+#'   city,
 #'   demographic_col = subject_race,
 #'   action_col = search_conducted,
 #'   outcome_col = contraband_found
 #' )
 outcome_test <- function(
   tbl,
-  ...,
-  geography_col = city,
+  subgeography_col,
+  geography_col,
   demographic_col = subject_race,
   action_col = search_conducted,
   outcome_col = contraband_found
 ) {
   
-  control_colqs <- enquos(...)
+  subgeography_colq <- enquo(subgeography_col)
   geography_colq <- enquo(geography_col)
   demographic_colq <- enquo(demographic_col)
   action_colq <- enquo(action_col)
@@ -44,7 +48,8 @@ outcome_test <- function(
   metadata <- list()
   tbl <- opp_prepare_for_disparity(
     tbl,
-    !!!control_colqs, !!geography_colq,
+    !!subgeography_colq,
+    !!geography_colq,
     demographic_col = !!demographic_colq,
     action_col = !!action_colq,
     outcome_col = !!outcome_colq,
@@ -54,7 +59,7 @@ outcome_test <- function(
   results <- list()
   results$hit_rates <- compute_hit_rates(
     tbl,
-    !!!control_colqs,
+    subgeography_col = !!subgeography_colq,
     geography_col = !!geography_colq,
     demographic_col = !!demographic_colq,
     action_col = !!action_colq,
@@ -77,14 +82,14 @@ outcome_test <- function(
 
 compute_hit_rates <- function(
   tbl,
-  ...,
+  subgeography_col,
   geography_col,
   demographic_col,
   action_col,
   outcome_col
 ) {
   
-  control_colqs <- enquos(...)
+  subgeography_colq <- enquo(subeography_col)
   geography_colq <- enquo(geography_col)
   demographic_colq <- enquo(demographic_col)
   action_colq <- enquo(action_col)
@@ -97,7 +102,7 @@ compute_hit_rates <- function(
     group_by(
       !!demographic_colq,
       !!geography_colq,
-      !!!control_colqs
+      !!subgeography_colq
     ) %>%
     summarize(
       !!str_c(outcome_colname, " where ", action_colname)
@@ -122,6 +127,8 @@ collect_aggregate_hit_rates <- function(
       !!geography_colq
     ) %>% 
     summarize(
+      # i.e. average hit rate by subject_race-geography, weighted by the number
+      # of searches in each subeography
       hit_rate = weighted.mean(
         get(str_c(outcome_colname, " where ", action_colname)),
         w = get(str_c("n_", action_colname))
