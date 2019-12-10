@@ -99,6 +99,10 @@ p-value: `r slice(pcity, 2:3) %>% select(n_success, n_failure) %>% as.matrix %>%
 
 \section{Summary Table}
 
+```{r search_rates}
+pfs$summary_table
+```
+
 \newpage
 
 \section{Veil of Darkness}
