@@ -60,8 +60,9 @@ tbl <- pfs$rates$search %>%
   mutate(agency = if_else(city == "Statewide", "state patrol", "municipal pd")) %>% 
   group_by(agency, subject_race) %>%
   summarize(
-    average_search_rate = mean(search_rate),
     average_n = mean(n),
+    average_n_searches = mean(n_searches),
+    average_search_rate = mean(search_rate),
     std_error = sqrt(
       average_search_rate * (1 - average_search_rate) / average_n
     ),
@@ -71,32 +72,43 @@ tbl <- pfs$rates$search %>%
   ) %>%
   ungroup()
 tbl %>% kable()
+prop_tbl <- tbl %>%
+  mutate(
+    n_success = average_n_searches,
+    n_failure = average_n - average_n_searches
+  )
 ```
+
+p-values:
 
 
 \newpage
 
 \section{Summary Table}
 
-```{r}
-
-```
-
 \newpage
 
 \section{Veil of Darkness}
 
 Number of stops in 7:00-7:15pm panel:
-`r vod$full$plots$states$TX$`7:00pm`$data$n %>% sum() %>% comma_num()`
+```{r}
+vod$full$plots$states$TX$`7:00pm`$data$n %>% sum() %>% comma_num()
+```
 
 Number of stops in 7:15-7:30pm panel:
-`r vod$full$plots$states$TX$`7:15pm`$data$n %>% sum() %>% comma_num()`
+```{r}
+vod$full$plots$states$TX$`7:15pm`$data$n %>% sum() %>% comma_num()
+```
 
 Number of stops in 7:30-7:45pm panel:
-`r vod$full$plots$states$TX$`7:30pm`$data$n %>% sum() %>% comma_num()`
+```{r}
+vod$full$plots$states$TX$`7:30pm`$data$n %>% sum() %>% comma_num()
+```
 
 Total number of stops in 3 panels:
-`r comma_num(vod$full$plots$states$TX$`7:00pm`$data$n %>% sum() + vod$full$plots$states$TX$`7:15pm`$data$n %>% sum() +  vod$full$plots$states$TX$`7:30pm`$data$n %>% sum())`
+```{r}
+comma_num(vod$full$plots$states$TX$`7:00pm`$data$n %>% sum() + vod$full$plots$states$TX$`7:15pm`$data$n %>% sum() +  vod$full$plots$states$TX$`7:30pm`$data$n %>% sum())
+```
 
 ```{r veil_of_darkness-plot-trio, fig.height=4, fig.width=9}
 d <- rbind(
@@ -220,7 +232,7 @@ rbind(
     )
 ) %>% 
   select(-std_error) %>% 
-  select(geography, everything())
+  select(geography, everything()) %>%
   kable()
 ```
 
