@@ -99,7 +99,7 @@ p-value: `r slice(pcity, 2:3) %>% select(n_success, n_failure) %>% as.matrix %>%
 
 \section{Summary Table}
 
-```{r search_rates}
+```{r summary_table}
 pfs$summary_table
 ```
 
