@@ -236,14 +236,14 @@ rbind(
   disp$city$outcome$results$aggregate_hit_rates %>% 
     mutate(
       geography = "cities",
-      std_error = sqrt(hit_rate * (1 - hit_rate) / n),
+      std_error = sqrt(hit_rate * (1 - hit_rate) / n_search_conducted),
       lower_CI = hit_rate - 1.96 * std_error,
       upper_CI = hit_rate + 1.96 * std_error
     ),
   disp$state$outcome$results$aggregate_hit_rates %>% 
     mutate(
       geography = "states",
-      std_error = sqrt(hit_rate * (1 - hit_rate) / n),
+      std_error = sqrt(hit_rate * (1 - hit_rate) / n_search_conducted),
       lower_CI = hit_rate - 1.96 * std_error,
       upper_CI = hit_rate + 1.96 * std_error
     )
