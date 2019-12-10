@@ -72,15 +72,33 @@ tbl <- pfs$rates$search %>%
   ) %>%
   ungroup()
 tbl %>% kable()
-prop_tbl <- tbl %>%
+ptbl <- tbl %>%
   mutate(
     n_success = average_n_searches,
     n_failure = average_n - average_n_searches
   )
+pstate <- filter(pbl, str_detect(agency, 'state'))
+pcity <- filter(pbl, str_detect(agency, 'municipal'))
 ```
 
-p-values:
+State search p-values:
+`r slice(pstate, 1:2) %>% select(subject_race) %>% kable()`:
+`r slice(pstate, 1:2) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
 
+`r slice(ptbl, -2) %>% select(agency, subject_race) %>% kable()`:
+`r slice(ptbl, -2) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
+
+`r slice(ptbl, 2:3) %>% select(agency, subject_race) %>% kable()`:
+`r slice(ptbl, 2:3) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
+
+`r slice(ptbl, 4:5) %>% select(agency, subject_race) %>% kable()`:
+`r slice(ptbl, 4:5) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
+
+`r slice(ptbl, ) %>% select(agency, subject_race) %>% kable()`:
+`r slice(ptbl, -5) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
+
+`r slice(ptbl, 5:6) %>% select(agency, subject_race) %>% kable()`:
+`r slice(ptbl, 5:6) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
 
 \newpage
 
@@ -297,12 +315,26 @@ disp$state$outcome$plots$aggregate +
 
 \subsection{Threshold test results}
 
-```{r disparity-thresholds-tables}
+Scaling priors by 0.5x:
+```{r disparity-thresholds-tables-0.5}
+kable(disp$city$threshold$prior_scaling_factor_0.5$results$aggregate_thresholds)
+kable(disp$state$threshold$prior_scaling_factor_0.5$results$aggregate_thresholds)
+```
+
+Priors at 1.0 (normal):
+```{r disparity-thresholds-tables-1.0}
 kable(disp$city$threshold$prior_scaling_factor_1$results$aggregate_thresholds)
 kable(disp$state$threshold$prior_scaling_factor_1$results$aggregate_thresholds)
 ```
 
+Scaling priors by 1.5x:
+```{r disparity-thresholds-tables-1.5}
+kable(disp$city$threshold$prior_scaling_factor_1.5$results$aggregate_thresholds)
+kable(disp$state$threshold$prior_scaling_factor_1.5$results$aggregate_thresholds)
+```
+
 \newpage
+Threshold plot for normal priors:
 
 ```{r disparity-city-thresholds-plot, fig.height=5, fig.width=10}
 axis_min <- max(
@@ -330,6 +362,7 @@ disp$city$threshold$prior_scaling_factor_1$plots$aggregate +
 ```
 
 \newpage
+Normal priors:
 
 ```{r disparity-state-thresholds-plot, fig.height=5, fig.width=10}
 disp$state$threshold$prior_scaling_factor_1$plots$aggregate + 
@@ -340,24 +373,28 @@ disp$state$threshold$prior_scaling_factor_1$plots$aggregate +
 ```
 
 \newpage
+Normal priors:
 
 ```{r disparity-city-ppc-search, fig.height=5, fig.width=8}
 disp$city$threshold$prior_scaling_factor_1$ppc$search_rate
 ```
 
 \newpage
+Normal priors:
 
 ```{r disparity-city-ppc-hit, fig.height=5, fig.width=8}
 disp$city$threshold$prior_scaling_factor_1$ppc$hit_rate
 ```
 
 \newpage
+Normal priors:
 
 ```{r disparity-state-ppc-search, fig.height=5, fig.width=8}
 disp$state$threshold$prior_scaling_factor_1$ppc$search_rate
 ```
 
 \newpage
+Normal priors:
 
 ```{r disparity-state-ppc-hit, fig.height=5, fig.width=8}
 disp$state$threshold$prior_scaling_factor_1$ppc$hit_rate
