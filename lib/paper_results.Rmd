@@ -77,28 +77,23 @@ ptbl <- tbl %>%
     n_success = average_n_searches,
     n_failure = average_n - average_n_searches
   )
-pstate <- filter(pbl, str_detect(agency, 'state'))
-pcity <- filter(pbl, str_detect(agency, 'municipal'))
+pstate <- filter(ptbl, str_detect(agency, 'state'))
+pcity <- filter(ptbl, str_detect(agency, 'municipal'))
 ```
 
 State search p-values:
-`r slice(pstate, 1:2) %>% select(subject_race) %>% kable()`:
-`r slice(pstate, 1:2) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
-
-`r slice(ptbl, -2) %>% select(agency, subject_race) %>% kable()`:
-`r slice(ptbl, -2) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
-
-`r slice(ptbl, 2:3) %>% select(agency, subject_race) %>% kable()`:
-`r slice(ptbl, 2:3) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
-
-`r slice(ptbl, 4:5) %>% select(agency, subject_race) %>% kable()`:
-`r slice(ptbl, 4:5) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
-
-`r slice(ptbl, ) %>% select(agency, subject_race) %>% kable()`:
-`r slice(ptbl, -5) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
-
-`r slice(ptbl, 5:6) %>% select(agency, subject_race) %>% kable()`:
-`r slice(ptbl, 5:6) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
+`r slice(pstate, 1:2) %>% select(agency, subject_race) %>% kable()`
+p-value: `r slice(pstate, 1:2) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
+`r slice(pstate, -2) %>% select(agency, subject_race) %>% kable()`
+p-value: `r slice(pstate, -2) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
+`r slice(pstate, 2:3) %>% select(agency, subject_race) %>% kable()`
+p-value:`r slice(pstate, 2:3) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
+`r slice(pcity, 1:2) %>% select(agency, subject_race) %>% kable()`
+p-value: `r slice(pcity, 1:2) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
+`r slice(pcity, -2) %>% select(agency, subject_race) %>% kable()`
+p-value: `r slice(pcity, -2) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
+`r slice(pcity, 2:3) %>% select(agency, subject_race) %>% kable()`
+p-value: `r slice(pcity, 2:3) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
 
 \newpage
 
