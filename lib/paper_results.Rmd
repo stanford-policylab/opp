@@ -428,9 +428,15 @@ mj$plots$treatment_misdemeanor_rates$counts
 
 \newpage
 
+Number of points in CO panel: `r comma_num(mj$plots$counts$co)`
+
+Number of points in WA panel: `r comma_num(mj$plots$counts$wa)`
+
 ```{r mj_inferred_threshold_plot, fig.height=5, fig.width=10}
 mj$plots$inferred_threshold_changes$prior_scaling_factor_1$plot
 ```
+
+\newpage
 
 Prior robustness checks
 

@@ -23,6 +23,10 @@ marijuana_legalization_analysis <- function() {
       treatment_misdemeanor_rates =
         compose_misdemeanor_rate_plots(treatment),
       inferred_threshold_changes = list(
+        counts = list(
+          co = nrow(filter(mjt$data, state == "CO")),
+          wa = nrow(filter(mjt$data, state == "WA"))
+        ),
         prior_scaling_factor_0.5 = compose_inferred_threshold_changes_plot(
           mjt$data,
           prior_scaling_factor = 0.5
