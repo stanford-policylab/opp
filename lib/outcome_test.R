@@ -89,7 +89,7 @@ compute_hit_rates <- function(
   outcome_col
 ) {
   
-  subgeography_colq <- enquo(subeography_col)
+  subgeography_colq <- enquo(subgeography_col)
   geography_colq <- enquo(geography_col)
   demographic_colq <- enquo(demographic_col)
   action_colq <- enquo(action_col)
@@ -105,9 +105,9 @@ compute_hit_rates <- function(
       !!subgeography_colq
     ) %>%
     summarize(
-      !!str_c(outcome_colname, " where ", action_colname)
-        := sum(!!outcome_colq) / n(),
-      !!str_c("n_", action_colname) := n()
+      !!str_c("n_", outcome_colname) := sum(!!outcome_colq),
+      !!str_c("n_", action_colname) := n(),
+      hit_rate = sum(!!outcome_colq) / n()
     ) %>% 
     ungroup()
 }
@@ -127,17 +127,15 @@ collect_aggregate_hit_rates <- function(
       !!geography_colq
     ) %>% 
     summarize(
-      # i.e. average hit rate by subject_race-geography, weighted by the number
-      # of searches in each subeography
-      hit_rate = weighted.mean(
-        get(str_c(outcome_colname, " where ", action_colname)),
-        w = get(str_c("n_", action_colname))
-      ),
-      n = sum(get(str_c("n_", action_colname)))
+      !!str_c("n_", outcome_colname) := sum(get(str_c("n_", outcome_colname))),
+      !!str_c("n_", action_colname) := sum(get(str_c("n_", action_colname))),
+      hit_rate = sum(get(str_c("n_", outcome_colname))) / sum(get(str_c("n_", action_colname)))
     ) %>% 
     group_by(!!demographic_colq) %>% 
+    # unweighted average across geographies, i.e. cities
     summarize(
-      hit_rate = mean(hit_rate),
-      n = sum(n)
+      average_hit_rate = mean(hit_rate),
+      !!str_c("average_n_", outcome_colname) := mean(get(str_c("n_", outcome_colname))),
+      !!str_c("average_n_", action_colname) := mean(get(str_c("n_", action_colname)))
     )
 }

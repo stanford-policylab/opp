@@ -23,7 +23,7 @@ source(here::here("lib", "opp.R"))
 #'   precinct, 
 #'   demographic_col = subject_race, 
 #'   majority_demographic = "white", 
-#'   rate_col = `contraband_found where search_conducted`,
+#'   rate_col = hit_rate,
 #'   size_col = n_search_conducted
 #'  )
 disparity_plot <- function(
@@ -31,7 +31,7 @@ disparity_plot <- function(
   ...,
   demographic_col = subject_race, 
   majority_demographic = "white", 
-  rate_col = `contraband_found where search_conducted`,
+  rate_col = hit_rate,
   size_col = n_search_conducted,
   title = "Contraband recovery rates by sub-geography",
   axis_title = "hit rate",

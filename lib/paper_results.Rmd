@@ -99,7 +99,7 @@ p-value: `r slice(pcity, 2:3) %>% select(n_success, n_failure) %>% as.matrix %>%
 
 \section{Summary Table}
 
-```{r summary_table}
+```{r search_rates}
 pfs$summary_table
 ```
 
@@ -232,25 +232,31 @@ Total number of municipal pd searches:
 
 City and State outcomes:
 ```{r disparity-hit_rates-tables}
-rbind(
+tbl <- rbind(
   disp$city$outcome$results$aggregate_hit_rates %>% 
     mutate(
       geography = "cities",
-      std_error = sqrt(hit_rate * (1 - hit_rate) / n),
-      lower_CI = hit_rate - 1.96 * std_error,
-      upper_CI = hit_rate + 1.96 * std_error
+      std_error = sqrt(average_hit_rate * (1 - average_hit_rate) / average_n_search_conducted),
+      lower_CI = average_hit_rate - 1.96 * std_error,
+      upper_CI = average_hit_rate + 1.96 * std_error,
     ),
-  disp$state$outcome$results$aggregate_hit_rates %>% 
+  disp$state$outcome$results$aggregate_average_hit_rates %>% 
     mutate(
       geography = "states",
-      std_error = sqrt(hit_rate * (1 - hit_rate) / n),
-      lower_CI = hit_rate - 1.96 * std_error,
-      upper_CI = hit_rate + 1.96 * std_error
+      std_error = sqrt(average_hit_rate * (1 - average_hit_rate) / average_n_search_conducted),
+      lower_CI = average_hit_rate - 1.96 * std_error,
+      upper_CI = average_hit_rate + 1.96 * std_error
     )
-) %>% 
-  select(-std_error) %>% 
-  select(geography, everything()) %>%
-  kable()
+  ) %>% 
+  select(geography, everything())
+tbl %>% kable()
+ptbl <- tbl %>%
+  mutate(
+    n_success = average_n_contraband_found,
+    n_failure = average_n_search_conducted - average_n_contraband_found
+  )
+pstate <- filter(ptbl, geography == "states")
+pcity <- filter(ptbl, geography == "cities")
 ```
 
 Hit rate p-values:
