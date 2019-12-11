@@ -4,11 +4,8 @@ source(here::here("lib", "eligibility.R"))
 
 marijuana_legalization_analysis <- function() {
   
-  mj <- load("mj")
-  mjt <- load("mjt")
-
-  treatment <- filter(mj$data, state %in% c("CO", "WA"))
-  control <- filter(mj$data, !(state %in% c("CO", "WA")))
+  mj <- load("mj")$data
+  mjt <- load("mjt")$data
 
   list(
     tables = list(
@@ -16,27 +13,42 @@ marijuana_legalization_analysis <- function() {
         calculate_search_rate_difference_in_difference_coefficients(mj$data)
     ),
     plots = list(
-      treatment_search_rates =
-        compose_search_rate_plots(treatment),
-      control_search_rates =
-        compose_search_rate_plots(control),
-      treatment_misdemeanor_rates =
-        compose_misdemeanor_rate_plots(treatment),
+      search_rates <- group_by(mj, state) %>%
+        group_map(
+          ~ rate_time_series(
+            .x,
+            .y$state[1],
+            "is_discretionary_search",
+            "search_conducted"
+          )
+        ) %>%
+        unlist(recursive=FALSE),
+      misdemeanor_rates <- filter(mj, state %in% c("CO", "WA")) %>%
+        group_by(state) %>%
+        group_map(
+          ~ rate_time_series(
+            .x,
+            .y$state[1],
+            "is_drug_infraction_or_misdemeanor",
+            "violation"
+          )
+        ) %>%
+        unlist(recursive=FALSE),
       inferred_threshold_changes = list(
         counts = list(
-          co = nrow(filter(mjt$data, state == "CO")),
-          wa = nrow(filter(mjt$data, state == "WA"))
+          co = nrow(filter(mjt, state == "CO")),
+          wa = nrow(filter(mjt, state == "WA"))
         ),
         prior_scaling_factor_0.5 = compose_inferred_threshold_changes_plot(
-          mjt$data,
+          mjt,
           prior_scaling_factor = 0.5
         ),
         prior_scaling_factor_1 = compose_inferred_threshold_changes_plot(
-          mjt$data,
+          mjt,
           prior_scaling_factor = 1.0
         ),
         prior_scaling_factor_1.5 = compose_inferred_threshold_changes_plot(
-          mjt$data,
+          mjt,
           prior_scaling_factor = 1.5
         )
       )
@@ -85,271 +97,98 @@ calculate_search_rate_difference_in_difference_coefficients <- function(tbl) {
 }
 
 
-compose_search_rate_plots <- function(tbl) {
+rate_time_series <- function(
+  tbl,
+  state,
+  numerator,
+  denominator
+) {
 
-  # NOTE: ensure only treatment or control is passed
-  stopifnot(length(unique(tbl$is_treatment_state)) == 1)
+  # NOTE: this is a hack so we can get the state from group_map
+  tbl$state <- state
 
-  is_treatment_state <- tbl$is_treatment_state[[1]]
-
-  counts <- tbl %>%
-    filter(!is.na(search_conducted)) %>%
-    group_by(state) %>%
-    count()
-
-  tbl %<>%
-    filter(
-      # NOTE: don't filter in global filter because violation and
-      # search_conducted may be NA in different places, so filter locally
-      !is.na(search_conducted)
-    ) %>%
-    group_by(
-      state,
-      date,
-      subject_race,
-      legalization_date,
-      is_before_legalization
-    ) %>%
+  daily <- tbl %>%
+    filter(!is.na(get(denominator))) %>%
+    group_by(state, subject_race, is_before_legalization, date) %>%
     summarize(
-      n_discretionary_searches = sum(is_discretionary_search),
-      n_stops_with_search_data = n()
+      n_numerator = sum(get(numerator)),
+      n_denominator = n(),
+      rate = n_numerator / n_denominator
     ) %>%
     ungroup()
 
-  endpoints <-
-    tbl %>%
-    group_by(state) %>%
-    do(compute_search_trendline(.)) %>%
-    group_by(state, subject_race, is_before_legalization) %>%
-    filter(date == min(date) | date == max(date)) %>%
-    mutate(position = if_else(date == min(date), "start", "end")) %>%
-    select(-n_discretionary_searches, -n_stops_with_search_data)
-
-  # spread endpoints so it has cols start_date, end_date, start_rate, end_rate
-  trends <-
-    left_join(
-      endpoints %>%
-      select(-predicted_search_rate) %>%
-      spread(position, date) %>%
-      rename(start_date = start, end_date = end),
-
-      endpoints %>%
-      select(-date) %>%
-      spread(position, predicted_search_rate) %>%
-      rename(start_rate = start, end_rate = end)
-    )
-
-  tbl %<>%
-    # NOTE: roll up to quarters to reduce noisiness
-    to_rates_by_quarter(n_discretionary_searches, n_stops_with_search_data) %>%
+  quarterly <- daily %>%
+    mutate(
+      quarter = as.Date(str_c(
+        year(date),
+        c("-02-", "-05-", "-08-", "-11-")[quarter(date)],
+        "15"
+      ))
+    ) %>%
+    group_by(state, subject_race, is_before_legalization, quarter) %>%
+    summarize(rate = sum(n_numerator) / sum(n_denominator)) %>%
+    ungroup() %>%
     # NOTE: remove data around legalization quarter since it will be mixed
     filter(quarter != as.Date("2012-11-15"))
-
-  list(
-       counts = counts,
-       plot = compose_timeseries_rate_plot(
-          tbl,
-          "Search Rate",
-          is_treatment_state,
-          trends
-      )
-  )
-}
-
-
-compute_search_trendline <- function(tbl) {
-  fit <- function(tbl) {
-    glm(
-      # NOTE: (n_successes, n_failures) ~ X
-      # NOTE: date is interpreted numerically
-      cbind(
-        n_discretionary_searches,
-        n_stops_with_search_data - n_discretionary_searches
-      ) ~
-      subject_race
-      + date,
-      binomial,
-      tbl
-    )
-  }
-  m_before <- fit(filter(tbl, is_before_legalization))
-  m_after <- fit(filter(tbl, !is_before_legalization))
-  score <- function(model, tbl) { predict(model, tbl, type = "response", se.fit = TRUE) }
-
-  tbl %>%
-  group_by(state, subject_race, is_before_legalization) %>%
-  filter(date == min(date) | date == max(date)) %>%
-  distinct() %>%
-  ungroup() %>%
-  mutate(
-    predicted_search_rate = if_else(
-      is_before_legalization,
-      score(m_before, .),
-      score(m_after, .)
-    )
-  )
-}
-
-
-to_rates_by_quarter <- function(tbl, numerator_col, denominator_col) {
-
-  numerator_colq <- enquo(numerator_col)
-  denominator_colq <- enquo(denominator_col)
-  numerator_name <- quo_name(numerator_colq)
-  denominator_name <- quo_name(denominator_colq)
-  group_by_colnames <- c(
-    setdiff(
-      colnames(tbl),
-      c(numerator_name, denominator_name, "date")
-    ),
-    "quarter"
-  )
-
-  tbl %>%
-  mutate(
-    quarter = as.Date(str_c(
-      year(date),
-      c("-02-", "-05-", "-08-", "-11-")[quarter(date)],
-      "15"
-    ))
-  ) %>%
-  group_by(.dots = group_by_colnames) %>%
-  summarize(rate = sum(!!numerator_colq) / sum(!!denominator_colq)) %>%
-  ungroup()
-}
-
-
-compose_timeseries_rate_plot <- function(
-  tbl,
-  y_axis_label,
-  is_treatment_state = T,
-  trends = NULL
-) {
-
-  p <-
-    ggplot(
-      tbl,
-      aes(
-        x = quarter,
-        y = rate,
-        color = subject_race,
-        group = interaction(subject_race, is_before_legalization)
-      )
+  
+  g <-
+    ggplot() +
+    geom_smooth(
+      data=filter(daily, is_before_legalization),
+      aes(x=date, y=rate, color=subject_race),
+      formula=y ~ x,
+      method="lm",
+      linetype="dashed",
+      size=0.5
+    ) +
+    geom_smooth(
+      data=filter(daily, !is_before_legalization),
+      aes(x=date, y=rate, color=subject_race),
+      formula=y ~ x,
+      method="lm",
+      linetype="dashed",
+      size=0.5
     ) +
     geom_line(
-    ) +
-    geom_vline(
-      xintercept = tbl$legalization_date,
-      linetype = "longdash"
-    ) +
-    facet_wrap(
-      state ~ .,
-      scales = "free_y"
+      data=quarterly,
+      aes(
+        x=quarter,
+        y=rate,
+        color=subject_race,
+        group=interaction(subject_race, is_before_legalization)
+      )
     ) +
     scale_color_manual(
-      values = c("blue", "black", "red"),
-      labels = c("White", "Black", "Hispanic")
+      values=c("blue", "black", "red")
+    ) +
+    geom_vline(
+      xintercept=tbl$legalization_date[[1]],
+      linetype="longdash"
     ) +
     scale_y_continuous(
-      y_axis_label,
-      labels = scales::percent_format(accuracy = 0.1),
-      expand = c(0, 0)
+      labels=scales::percent_format(accuracy = 0.1),
     ) +
     expand_limits(
-      y = -0.0001
+      x=c(as.Date('2011-01-01'), as.Date('2015-12-31')),
+      y=0
     ) +
     theme_bw(
-      base_size = 15
+      base_size=15
     ) +
     theme(
-      # NOTE: remove the title
-      plot.title = element_blank(),
-      # NOTE: make the background white
       panel.background = element_rect(fill = "white", color = "white"),
-      panel.grid.major = element_blank(),
-      panel.grid.minor = element_blank(),
-      # NOTE: minimize margins
-      plot.margin = unit(rep(0.2, 4), "cm"),
-      # panel.margin = unit(0.25, "lines"),
-      # NOTE: tiny space between axis labels and tick marks
-      axis.title.x = element_blank(),
-      axis.title.y = element_text(margin = ggplot2::margin(t = 6.0)),
-      # NOTE: simplify legend
-      legend.key = element_blank(),
-      legend.background = element_rect(fill = "transparent"),
-      legend.title = element_blank(),
-      # NOTE: ifelse and if_else can't return vectors
-      legend.position = if (is_treatment_state) c(0.88, 0.88) else c(0.96, 0.95),
-      # axis.title.x = element_blank(),
-      panel.spacing = unit(0.25, "lines")
-      # plot.margin = unit(c(0.1, 0.2, 0.1, 0.1), "in")
-    )
-                  
-  if (!is.null(trends)) {
-    p <-
-      p +
-      geom_segment(
-        data = trends,
-        aes(
-          x = start_date,
-          xend = end_date,
-          y = start_rate,
-          yend = end_rate,
-          color = subject_race,
-          group = interaction(subject_race, is_before_legalization)
-        ),
-        linetype = "longdash",
-        size = 0.8
-      )
-  }
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_blank(),
+      axis.title.y=element_blank(),
+      legend.position="none"
+    ) +
+    # NOTE: hack to get facet_grid style title
+    facet_grid(. ~ state)
 
-  p
-}
-
-
-compose_misdemeanor_rate_plots <- function(tbl) {
-
-  counts <- tbl %>%
-    filter(!is.na(violation)) %>%
-    group_by(state) %>%
-    count()
-
-  tbl %<>%
-    filter(
-      # NOTE: don't filter in global filter because violation and
-      # search_conducted may be NA in different places, so filter locally
-      !is.na(violation)
-    ) %>%
-    group_by(
-      state,
-      date,
-      subject_race,
-      legalization_date,
-      is_before_legalization
-    ) %>%
-    summarize(
-      n_drug_infraction_or_misdemeanor = sum(is_drug_infraction_or_misdemeanor),
-      n_stops_with_violation_data = n()
-    ) %>%
-    ungroup(
-    ) %>%
-    # NOTE: roll up to quarters to reduce noisiness
-    to_rates_by_quarter(
-      n_drug_infraction_or_misdemeanor,
-      n_stops_with_violation_data
-    ) %>%
-    # NOTE: remove data around legalization quarter since it will be mixed
-    filter(
-      quarter != as.Date("2012-11-15")
-    )
-
-  list(
-    counts = counts,
-    plot = compose_timeseries_rate_plot(
-      tbl,
-      "Drug Infraction & Misdemeanor Rate"
-    )
-  )
+  v <- list()
+  v[[tbl$state[[1]]]] <- list(plot = g, count = sum(daily$n_denominator))
+  v
 }
 
 
