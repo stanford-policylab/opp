@@ -25,8 +25,20 @@ marijuana_legalization_analysis <- function() {
         compose_search_rate_plots(control),
       treatment_misdemeanor_rates =
         compose_misdemeanor_rate_plots(treatment),
-      inferred_threshold_changes =
-        compose_inferred_threshold_changes_plot(mjt$data)
+      inferred_threshold_changes = list(
+        prior_scaling_factor_0.5 = compose_inferred_threshold_changes_plot(
+          mjt$data,
+          prior_scaling_factor = 0.5
+        ),
+        prior_scaling_factor_1 = compose_inferred_threshold_changes_plot(
+          mjt$data,
+          prior_scaling_factor = 1.0
+        ),
+        prior_scaling_factor_1.5 = compose_inferred_threshold_changes_plot(
+          mjt$data,
+          prior_scaling_factor = 1.5
+        )
+      )
     )
   )
 }
@@ -314,37 +326,43 @@ compose_misdemeanor_rate_plots <- function(tbl) {
 }
 
 
-compose_inferred_threshold_changes_plot <- function(tbl) {
-  bind_rows(
-    collect_aggregate_thresholds_for_state(tbl, "CO"),
-    collect_aggregate_thresholds_for_state(tbl, "WA")
-  ) %>% 
-  plot_threshold_changes()
+compose_inferred_threshold_changes_plot <- function(tbl, prior_scaling_factor = 1) {
+  co <- collect_aggregate_thresholds_for_state(tbl, "CO", prior_scaling_factor)
+  wa <- collect_aggregate_thresholds_for_state(tbl, "WA", prior_scaling_factor)
+  list(
+    plot = bind_rows(
+      co$summary_stats,
+      wa$summary_stats
+    ) %>% 
+    plot_threshold_changes(),
+    metadata = list(
+      co_rhat = co$rhat,
+      co_n_eff = co$n_eff,
+      wa_rhat = wa$rhat,
+      wa_n_eff = wa$n_eff
+    )
+  )
 }
 
 
-collect_aggregate_thresholds_for_state <- function(tbl, s) {
+collect_aggregate_thresholds_for_state <- function(tbl, s, prior_scaling_factor = 1) {
   data_summary <- summarise_for_stan(filter(tbl, state == s)) 
-  stan_data <- format_data_summary_for_stan(data_summary)
+  stan_data <- format_data_summary_for_stan(data_summary, prior_scaling_factor)
   fit <- stan_marijuana_threshold_test(stan_data)
+  fit_summary <- summary(fit)$summary
+  rhat <- fit_summary[,'Rhat'] %>% max(na.rm = T)
+  n_eff <- fit_summary[,'n_eff'] %>% min(na.rm = T)
   posteriors <- rstan::extract(fit)
   data_with_thresholds <- add_thresholds(data_summary, posteriors)
-  summary_stats(data_with_thresholds, posteriors, s)
+  list(
+    summary_stats = summary_stats(data_with_thresholds, posteriors, s),
+    rhat = rhat,
+    n_eff = n_eff
+  )
 }
 
 
 summarise_for_stan <- function(tbl) {
-  # NOTE: Probable don't need these after refactor; keeping temporarily while
-  # testing, just in case
-  # filter(
-  #   tbl,
-  #   !is.na(subject_race), 
-  #   !is.na(county_name) ### todo(amy): keep this one
-  #   # TODO: check this doesn't change anything
-  #   # # NOTE: don't filter in global filter because violation and
-  #   # # search_conducted may be NA in different places, so filter locally
-  #   # !is.na(search_conducted)
-  # ) %>%
   tbl %>%
   # NOTE: Needed for threshold test; no included in global filter, because
   # it's not needed for statewide search rates and some control states dont
@@ -368,19 +386,18 @@ summarise_for_stan <- function(tbl) {
 }
 
 
-format_data_summary_for_stan <- function(d) {
-  # TODO: is pull necessary? --> dollars or with()
+format_data_summary_for_stan <- function(d, prior_scaling_factor = 1) {
   list(
     n_groups = nrow(d),
     n_subgeographies = n_distinct(pull(d, county_name)),
     n_races = n_distinct(pull(d, subject_race)),
     subgeography = pull(d, county_cd),
-    # TODO: check this
     legal = pull(d, as.integer(legal)),
     race = pull(d, race_cd),
     stop_count = pull(d, num_stops),
     search_count = pull(d, num_searches),
-    hit_count = pull(d, num_hits)
+    hit_count = pull(d, num_hits),
+    prior_scaling_factor = prior_scaling_factor
   )
 }
 

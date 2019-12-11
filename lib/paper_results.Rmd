@@ -416,7 +416,37 @@ mj$plots$treatment_misdemeanor_rates + theme(
 \newpage
 
 ```{r mj_inferred_threshold_plot, fig.height=5, fig.width=10}
-mj$plots$inferred_threshold_changes
+mj$plots$inferred_threshold_changes$prior_scaling_factor_1$plot
+```
+
+Prior robustness checks
+
+Scaling factor 0.5:
+
+WA rhat = `r mj$plots$inferred_threshold_changes$prior_scaling_factor_0.5$metadata$wa_rhat`
+
+WA n_eff = `r mj$plots$inferred_threshold_changes$prior_scaling_factor_0.5$metadata$wa_n_eff`
+
+CO rhat = `r mj$plots$inferred_threshold_changes$prior_scaling_factor_0.5$metadata$co_rhat`
+
+CO n_eff = `r mj$plots$inferred_threshold_changes$prior_scaling_factor_0.5$metadata$co_n_eff`
+
+```{r mj_inferred_threshold_plot_0.5_prior_scale, fig.height=5, fig.width=10}
+mj$plots$inferred_threshold_changes$prior_scaling_factor_0.5$plot
+```
+
+Scaling factor 1.5:
+
+WA rhat = `r mj$plots$inferred_threshold_changes$prior_scaling_factor_1.5$metadata$wa_rhat`
+
+WA n_eff = `r mj$plots$inferred_threshold_changes$prior_scaling_factor_1.5$metadata$wa_n_eff`
+
+CO rhat = `r mj$plots$inferred_threshold_changes$prior_scaling_factor_1.5$metadata$co_rhat`
+
+CO n_eff = `r mj$plots$inferred_threshold_changes$prior_scaling_factor_1.5$metadata$co_n_eff`
+
+```{r mj_inferred_threshold_plot_1.5_prior_scale, fig.height=5, fig.width=10}
+mj$plots$inferred_threshold_changes$prior_scaling_factor_1.5$plot
 ```
 
 \newpage
