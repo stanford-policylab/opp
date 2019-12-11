@@ -39,11 +39,16 @@ municipal police departments.
 Stop rates:
 ```{r stop_rates}
 pfs$rates$stop %>%
-  mutate(agency = if_else(city == "Statewide", "state patrol", "municipal pd")) %>% 
+  mutate(
+    agency = if_else(city == "Statewide", "state patrol", "municipal pd"),
+    var = annual_stop_rate * (1 - annual_stop_rate) / population
+  ) %>% 
   group_by(agency, subject_race) %>%
   summarize(
-    average_annual_stop_rate = mean(annual_stop_rate),
-    n = n()
+    stop_rate = mean(annual_stop_rate),
+    std_error = sqrt(sum(var)) / n(),
+    lower_ci = stop_rate - 1.96 * std_error,
+    upper_ci = stop_rate + 1.96 * std_error
   ) %>%
   kable()
 ```
@@ -57,21 +62,20 @@ Number of city departments with data for search analysis:
 
 ```{r search_rates}
 tbl <- pfs$rates$search %>% 
-  mutate(agency = if_else(city == "Statewide", "state patrol", "municipal pd")) %>% 
+  mutate(
+    agency = if_else(city == "Statewide", "state patrol", "municipal pd"),
+    var = search_rate * (1 - search_rate) / n
+  ) %>% 
   group_by(agency, subject_race) %>%
   summarize(
-    average_n = mean(n),
-    average_n_searches = mean(n_searches),
     average_search_rate = mean(search_rate),
-    std_error = sqrt(
-      average_search_rate * (1 - average_search_rate) / average_n
-    ),
-    CI_radius = 1.96 * std_error,
-    CI_lower = average_search_rate - CI_radius,
-    CI_upper = average_search_rate + CI_radius
+    std_error = sqrt(sum(var)) / n(),
+    lower_ci = average_search_rate - 1.96 * std_error,
+    upper_ci = average_search_rate + 1.96 * std_error
   ) %>%
   ungroup()
 tbl %>% kable()
+# TODO(danj): Make sure these make sense given new CI computations
 ptbl <- tbl %>%
   mutate(
     n_success = average_n_searches,
@@ -233,23 +237,38 @@ Total number of municipal pd searches:
 City and State outcomes:
 ```{r disparity-hit_rates-tables}
 tbl <- rbind(
-  disp$city$outcome$results$aggregate_hit_rates %>% 
-    mutate(
+  disp$city$outcome$results$hit_rates %>% 
+    group_by(geography, subject_race) %>% 
+    summarize(
+      hit_rate = weighted.mean(`contraband_found where search_conducted`, n_search_conducted),
+      var = hit_rate * (1 - hit_rate) / sum(n_search_conducted)
+    ) %>% 
+    group_by(subject_race) %>% 
+    summarize(
       geography = "cities",
-      std_error = sqrt(average_hit_rate * (1 - average_hit_rate) / average_n_search_conducted),
-      lower_CI = average_hit_rate - 1.96 * std_error,
-      upper_CI = average_hit_rate + 1.96 * std_error,
+      hit_rate = mean(hit_rate),
+      std_error = sqrt(sum(var)) / n(),
+      lower_ci = hit_rate - 1.96 * std_error,
+      upper_ci = hit_rate + 1.96 * std_error
     ),
-  disp$state$outcome$results$aggregate_average_hit_rates %>% 
-    mutate(
+  disp$state$outcome$results$hit_rates %>% 
+    group_by(geography, subject_race) %>% 
+    summarize(
+      hit_rate = weighted.mean(`contraband_found where search_conducted`, n_search_conducted),
+      var = hit_rate * (1 - hit_rate) / sum(n_search_conducted)
+    ) %>% 
+    group_by(subject_race) %>% 
+    summarize(
       geography = "states",
-      std_error = sqrt(average_hit_rate * (1 - average_hit_rate) / average_n_search_conducted),
-      lower_CI = average_hit_rate - 1.96 * std_error,
-      upper_CI = average_hit_rate + 1.96 * std_error
+      hit_rate = mean(hit_rate),
+      std_error = sqrt(sum(var)) / n(),
+      lower_ci = hit_rate - 1.96 * std_error,
+      upper_ci = hit_rate + 1.96 * std_error
     )
   ) %>% 
   select(geography, everything())
 tbl %>% kable()
+# TODO(danj): Make sure these make sense given new CI computations
 ptbl <- tbl %>%
   mutate(
     n_success = average_n_contraband_found,
