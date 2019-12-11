@@ -5,10 +5,7 @@ source(here::here("lib", "eligibility.R"))
 marijuana_legalization_analysis <- function() {
   
   mj <- load("mj")
-  write_rds(mj, here::here("cache", "mj.rds"))
-
   mjt <- load("mjt")
-  write_rds(mjt, here::here("cache", "mjt.rds"))
 
   treatment <- filter(mj$data, state %in% c("CO", "WA"))
   control <- filter(mj$data, !(state %in% c("CO", "WA")))
@@ -91,6 +88,11 @@ compose_search_rate_plots <- function(tbl) {
 
   is_treatment_state <- tbl$is_treatment_state[[1]]
 
+  counts <- tbl %>%
+    filter(!is.na(search_conducted)) %>%
+    group_by(state) %>%
+    count()
+
   tbl %<>%
     filter(
       # NOTE: don't filter in global filter because violation and
@@ -139,7 +141,15 @@ compose_search_rate_plots <- function(tbl) {
     # NOTE: remove data around legalization quarter since it will be mixed
     filter(quarter != as.Date("2012-11-15"))
 
-  compose_timeseries_rate_plot(tbl, "Search Rate", is_treatment_state, trends)
+  list(
+       counts = counts,
+       plot = compose_timeseries_rate_plot(
+          tbl,
+          "Search Rate",
+          is_treatment_state,
+          trends
+      )
+  )
 }
 
 
@@ -160,7 +170,7 @@ compute_search_trendline <- function(tbl) {
   }
   m_before <- fit(filter(tbl, is_before_legalization))
   m_after <- fit(filter(tbl, !is_before_legalization))
-  score <- function(model, tbl) { predict(model, tbl, type = "response") }
+  score <- function(model, tbl) { predict(model, tbl, type = "response", se.fit = TRUE) }
 
   tbl %>%
   group_by(state, subject_race, is_before_legalization) %>%
@@ -294,35 +304,48 @@ compose_timeseries_rate_plot <- function(
 
 
 compose_misdemeanor_rate_plots <- function(tbl) {
-  tbl %>%
-  filter(
-    # NOTE: don't filter in global filter because violation and
-    # search_conducted may be NA in different places, so filter locally
-    !is.na(violation)
-  ) %>%
-  group_by(
-    state,
-    date,
-    subject_race,
-    legalization_date,
-    is_before_legalization
-  ) %>%
-  summarize(
-    n_drug_infraction_or_misdemeanor = sum(is_drug_infraction_or_misdemeanor),
-    n_stops_with_violation_data = n()
-  ) %>%
-  ungroup(
-  ) %>%
-  # NOTE: roll up to quarters to reduce noisiness
-  to_rates_by_quarter(
-    n_drug_infraction_or_misdemeanor,
-    n_stops_with_violation_data
-  ) %>%
-  # NOTE: remove data around legalization quarter since it will be mixed
-  filter(
-    quarter != as.Date("2012-11-15")
-  ) %>%
-  compose_timeseries_rate_plot("Drug Infraction & Misdemeanor Rate")
+
+  counts <- tbl %>%
+    filter(!is.na(violation)) %>%
+    group_by(state) %>%
+    count()
+
+  tbl %<>%
+    filter(
+      # NOTE: don't filter in global filter because violation and
+      # search_conducted may be NA in different places, so filter locally
+      !is.na(violation)
+    ) %>%
+    group_by(
+      state,
+      date,
+      subject_race,
+      legalization_date,
+      is_before_legalization
+    ) %>%
+    summarize(
+      n_drug_infraction_or_misdemeanor = sum(is_drug_infraction_or_misdemeanor),
+      n_stops_with_violation_data = n()
+    ) %>%
+    ungroup(
+    ) %>%
+    # NOTE: roll up to quarters to reduce noisiness
+    to_rates_by_quarter(
+      n_drug_infraction_or_misdemeanor,
+      n_stops_with_violation_data
+    ) %>%
+    # NOTE: remove data around legalization quarter since it will be mixed
+    filter(
+      quarter != as.Date("2012-11-15")
+    )
+
+  list(
+    counts = counts,
+    plot = compose_timeseries_rate_plot(
+      tbl,
+      "Drug Infraction & Misdemeanor Rate"
+    )
+  )
 }
 
 

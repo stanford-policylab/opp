@@ -409,14 +409,21 @@ mj$plots$treatment_search_rates + theme(
   axis.title.y = element_text(size = 12)
 )
 ```
+```{r mj_treatment_search_rates_counts, fig.height=5, fig.width=10}
+mj$plots$treatment_search_rates$counts 
+```
 
 \newpage
 
 ```{r mj_treatment_misdemeanor_rates_plot, fig.height=5, fig.width=10}
-mj$plots$treatment_misdemeanor_rates + theme(
+mj$plots$treatment_misdemeanor_rates$plot + theme(
   legend.position = c(0.88, 0.80),
   axis.title.y = element_text(size = 12)
 )
+```
+
+```{r mj_treatment_misdemeanor_rates_counts, fig.height=5, fig.width=10}
+mj$plots$treatment_misdemeanor_rates$counts 
 ```
 
 \newpage
@@ -457,6 +464,10 @@ mj$plots$inferred_threshold_changes$prior_scaling_factor_1.5$plot
 
 \newpage
 
-```{r mj_control_search_rates, fig.height=5, fig.width=10}
-mj$plots$control_search_rates
+```{r mj_control_search_rates_plot, fig.height=5, fig.width=10}
+mj$plots$control_search_rates$plot
+```
+
+```{r mj_control_search_rates_counts, fig.height=5, fig.width=10}
+mj$plots$control_search_rates$counts
 ```
