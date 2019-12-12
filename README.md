@@ -47,6 +47,7 @@ install.packages(c(
   "magrittr",
   "maps",
   "parallel",
+  "patchwork",
   "purrr",
   "rlang",
   "rmarkdown",

@@ -10,10 +10,12 @@ marijuana_legalization_analysis <- function() {
   list(
     tables = list(
       search_rate_difference_in_difference_coefficients =
-        calculate_search_rate_difference_in_difference_coefficients(mj$data)
+        calculate_search_rate_difference_in_difference_coefficients(mj)
     ),
+		treatment_discretionary_searches_with_no_contraband =
+			treatment_discretionary_with_no_contraband(mj),
     plots = list(
-      search_rates <- group_by(mj, state) %>%
+      search_rates = group_by(mj, state) %>%
         group_map(
           ~ rate_time_series(
             .x,
@@ -23,7 +25,7 @@ marijuana_legalization_analysis <- function() {
           )
         ) %>%
         unlist(recursive=FALSE),
-      misdemeanor_rates <- filter(mj, state %in% c("CO", "WA")) %>%
+      misdemeanor_rates = filter(mj, state %in% c("CO", "WA")) %>%
         group_by(state) %>%
         group_map(
           ~ rate_time_series(
@@ -54,6 +56,25 @@ marijuana_legalization_analysis <- function() {
       )
     )
   )
+}
+
+treatment_discretionary_searches_with_no_contraband <- function(tbl) {
+	tbl %>%
+	filter(
+		state %in% c("CO", "WA"),
+		is_discretionary_search,
+		!contraband_found
+	) %>%
+	mutate(days_since_legalization = date - legalization_date) %>%
+	filter(
+		days_since_legalization >= -days(365),
+		days_since_legalization <= days(365)
+	) %>%
+	group_by(is_before_legalization) %>%
+	count() %>%
+	spread(is_before_legalization, n) %>%
+	rename(before = `TRUE`, after = `FALSE`) %>%
+	mutate(decrease_rate = (before - after) / before)
 }
 
 
@@ -106,6 +127,7 @@ rate_time_series <- function(
 
   # NOTE: this is a hack so we can get the state from group_map
   tbl$state <- state
+	legalization_date <- tbl$legalization_date[[1]]
 
   daily <- tbl %>%
     filter(!is.na(get(denominator))) %>%
@@ -162,7 +184,7 @@ rate_time_series <- function(
       values=c("blue", "black", "red")
     ) +
     geom_vline(
-      xintercept=tbl$legalization_date[[1]],
+      xintercept=legalization_date,
       linetype="longdash"
     ) +
     scale_y_continuous(

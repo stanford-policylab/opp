@@ -6,13 +6,16 @@ classoption: landscape
 
 ```{r setup, echo = FALSE, message = FALSE, warning = FALSE}
 source(here::here("lib", "utils.R"))
+source(here::here("lib", "format_plots_for_paper.R"))
 library(tidyverse)
+library(patchwork)
 library(knitr)
 opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 pfs <- read_rds(here::here("results", "prima_facie_stats.rds"))
 vod <- read_rds(here::here("results", "veil_of_darkness.rds"))
 disp <- read_rds(here::here("results", "disparity.rds"))
 mj <- read_rds(here::here("results", "marijuana_legalization_analysis.rds"))
+mjf <- format_mj(mj)
 ```
 
 
@@ -60,50 +63,28 @@ Number of state patrols with data for search analysis:
 Number of city departments with data for search analysis: 
 `r pfs$rates$search %>% filter(city != "Statewide") %>% select(state, city) %>% n_distinct`
 
-```{r search_rates}
-tbl <- pfs$rates$search %>% 
-  mutate(
-    agency = if_else(city == "Statewide", "state patrol", "municipal pd"),
-    var = search_rate * (1 - search_rate) / n
-  ) %>% 
-  group_by(agency, subject_race) %>%
-  summarize(
-    average_search_rate = mean(search_rate),
-    std_error = sqrt(sum(var)) / n(),
-    lower_ci = average_search_rate - 1.96 * std_error,
-    upper_ci = average_search_rate + 1.96 * std_error
-  ) %>%
-  ungroup()
-tbl %>% kable()
-# TODO(danj): Make sure these make sense given new CI computations
-ptbl <- tbl %>%
-  mutate(
-    n_success = average_n_searches,
-    n_failure = average_n - average_n_searches
-  )
-pstate <- filter(ptbl, str_detect(agency, 'state'))
-pcity <- filter(ptbl, str_detect(agency, 'municipal'))
+```{r search_rates_cis}
+pfs$rates$search %>% 
+mutate(
+  agency = if_else(city == "Statewide", "state patrol", "municipal pd"),
+  var = search_rate * (1 - search_rate) / n
+) %>% 
+group_by(agency, subject_race) %>%
+summarize(
+  average_search_rate = mean(search_rate),
+  std_error = sqrt(sum(var)) / n(),
+  lower_ci = average_search_rate - 1.96 * std_error,
+  upper_ci = average_search_rate + 1.96 * std_error
+) %>%
+ungroup() %>%
+kable()
 ```
-
-Search p-values:
-`r slice(pstate, 1:2) %>% select(agency, subject_race) %>% kable()`
-p-value: `r slice(pstate, 1:2) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
-`r slice(pstate, -2) %>% select(agency, subject_race) %>% kable()`
-p-value: `r slice(pstate, -2) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
-`r slice(pstate, 2:3) %>% select(agency, subject_race) %>% kable()`
-p-value: `r slice(pstate, 2:3) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
-`r slice(pcity, 1:2) %>% select(agency, subject_race) %>% kable()`
-p-value: `r slice(pcity, 1:2) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
-`r slice(pcity, -2) %>% select(agency, subject_race) %>% kable()`
-p-value: `r slice(pcity, -2) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
-`r slice(pcity, 2:3) %>% select(agency, subject_race) %>% kable()`
-p-value: `r slice(pcity, 2:3) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
 
 \newpage
 
 \section{Summary Table}
 
-```{r search_rates}
+```{r search_rates_summary}
 pfs$summary_table
 ```
 
@@ -236,62 +217,39 @@ Total number of municipal pd searches:
 
 City and State outcomes:
 ```{r disparity-hit_rates-tables}
-tbl <- rbind(
-  disp$city$outcome$results$hit_rates %>% 
-    group_by(geography, subject_race) %>% 
-    summarize(
-      hit_rate = weighted.mean(`contraband_found where search_conducted`, n_search_conducted),
-      var = hit_rate * (1 - hit_rate) / sum(n_search_conducted)
-    ) %>% 
-    group_by(subject_race) %>% 
-    summarize(
-      geography = "cities",
-      hit_rate = mean(hit_rate),
-      std_error = sqrt(sum(var)) / n(),
-      lower_ci = hit_rate - 1.96 * std_error,
-      upper_ci = hit_rate + 1.96 * std_error
-    ),
-  disp$state$outcome$results$hit_rates %>% 
-    group_by(geography, subject_race) %>% 
-    summarize(
-      hit_rate = weighted.mean(`contraband_found where search_conducted`, n_search_conducted),
-      var = hit_rate * (1 - hit_rate) / sum(n_search_conducted)
-    ) %>% 
-    group_by(subject_race) %>% 
-    summarize(
-      geography = "states",
-      hit_rate = mean(hit_rate),
-      std_error = sqrt(sum(var)) / n(),
-      lower_ci = hit_rate - 1.96 * std_error,
-      upper_ci = hit_rate + 1.96 * std_error
-    )
+rbind(
+disp$city$outcome$results$hit_rates %>% 
+  group_by(geography, subject_race) %>% 
+  summarize(
+    hit_rate = weighted.mean(hit_rate, n_search_conducted),
+    var = hit_rate * (1 - hit_rate) / sum(n_search_conducted)
   ) %>% 
-  select(geography, everything())
-tbl %>% kable()
-# TODO(danj): Make sure these make sense given new CI computations
-ptbl <- tbl %>%
-  mutate(
-    n_success = average_n_contraband_found,
-    n_failure = average_n_search_conducted - average_n_contraband_found
+  group_by(subject_race) %>% 
+  summarize(
+    geography = "cities",
+    hit_rate = mean(hit_rate),
+    std_error = sqrt(sum(var)) / n(),
+    lower_ci = hit_rate - 1.96 * std_error,
+    upper_ci = hit_rate + 1.96 * std_error
+  ),
+disp$state$outcome$results$hit_rates %>% 
+  group_by(geography, subject_race) %>% 
+  summarize(
+    hit_rate = weighted.mean(hit_rate, n_search_conducted),
+    var = hit_rate * (1 - hit_rate) / sum(n_search_conducted)
+  ) %>% 
+  group_by(subject_race) %>% 
+  summarize(
+    geography = "states",
+    hit_rate = mean(hit_rate),
+    std_error = sqrt(sum(var)) / n(),
+    lower_ci = hit_rate - 1.96 * std_error,
+    upper_ci = hit_rate + 1.96 * std_error
   )
-pstate <- filter(ptbl, geography == "states")
-pcity <- filter(ptbl, geography == "cities")
+) %>% 
+select(geography, everything()) %>%
+kable()
 ```
-
-Hit rate p-values:
-`r slice(pstate, 1:2) %>% select(agency, subject_race) %>% kable()`
-p-value: `r slice(pstate, 1:2) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
-`r slice(pstate, -2) %>% select(agency, subject_race) %>% kable()`
-p-value: `r slice(pstate, -2) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
-`r slice(pstate, 2:3) %>% select(agency, subject_race) %>% kable()`
-p-value: `r slice(pstate, 2:3) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
-`r slice(pcity, 1:2) %>% select(agency, subject_race) %>% kable()`
-p-value: `r slice(pcity, 1:2) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
-`r slice(pcity, -2) %>% select(agency, subject_race) %>% kable()`
-p-value: `r slice(pcity, -2) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
-`r slice(pcity, 2:3) %>% select(agency, subject_race) %>% kable()`
-p-value: `r slice(pcity, 2:3) %>% select(n_success, n_failure) %>% as.matrix %>% prop.test %$% p.value`
-
 \newpage
 
 ```{r disparity-city-hit_rates-plot, fig.height=6, fig.width=10}
@@ -328,6 +286,8 @@ disp$state$outcome$plots$aggregate + theme(legend.position = "none")
 \newpage
 
 \subsection{Threshold test results}
+
+city then state
 
 Scaling priors by 0.5x:
 ```{r disparity-thresholds-tables-0.5}
@@ -421,16 +381,60 @@ kable(mj$tables$search_rate_difference_in_difference_coefficients)
 ```
 
 \newpage
+```{r mj_search_rates_treatment, fig.height=3, fig.width=8}
+sr <- mj$plots$search_rates
+mjf$treatment_search_rates
+```
 
-```{r mj_treatment_search_rates_plot, fig.height=5, fig.width=10}
-mj$plots$search_rates
+CO: `r sr$CO$count`
+
+WA: `r sr$WA$count`
+
+decrease:
+```{r mj_decrease}
+mjf$treatment_discretionary_searches_with_no_contraband %>%
+kable()
 ```
 
 \newpage
 
-```{r mj_treatment_misdemeanor_rates_plot, fig.height=5, fig.width=10}
-mj$plots$misdemeanor_rates
+```{r mj_misdemeanor_rates_treatment, fig.height=3, fig.width=8}
+md <- mj$plots$misdemeanor_rates
+mjf$treatment_misdemeanor_rates
 ```
+
+CO: `r md$CO$count`
+
+WA: `r md$WA$count`
+
+\newpage
+
+```{r mj_search_rates_control, fig.height=5.75, fig.width=10}
+mjf$control_search_rates
+```
+AZ: `r sr$AZ$count`
+
+CA: `r sr$CA$count`
+
+FL: `r sr$FL$count`
+
+MA: `r sr$MA$count`
+
+MT: `r sr$MT$count`
+
+NC: `r sr$NC$count`
+
+OH: `r sr$OH$count`
+
+RI: `r sr$RI$count`
+
+SC: `r sr$SC$count`
+
+TX: `r sr$TX$count`
+
+VT: `r sr$VT$count`
+
+WI: `r sr$WI$count`
 
 \newpage
 
