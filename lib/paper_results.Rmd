@@ -84,8 +84,17 @@ kable()
 
 \section{Summary Table}
 
+total: `r pfs$summary_table$Stops %>% str_replace_all(",", "") %>% as.numeric() %>% sum %>% comma_num()`
+
 ```{r search_rates_summary}
-pfs$summary_table
+pfs$summary_table %>% 
+  mutate(agency = if_else(City == "--", "state", "city")) %>% 
+  group_by(agency) %>% 
+  mutate(ct = 1:n()) %>% 
+  ungroup() %>% 
+  select(-agency) %>% 
+  select(ct, everything()) %>% 
+  kable("latex")
 ```
 
 \newpage
@@ -184,16 +193,10 @@ Number of robustness check models with results not statistically significant:
 `r vod$dst %>% filter(is_dark + 1.96*std_error >= 0) %>% nrow`
 
 ```{r veil_of_darkness-appendix_mods}
-bind_rows(
-  vod$dst %>%
-    select(-data, -base_controls) %>% 
-    mutate(model = "DST"),
-  vod$full$coefficients %>%
-    select(-data, -base_controls) %>% 
-    mutate(model = "Full year")
-) %>%
-  arrange(model, agency_control, interact_time_loc, spline_degree) %>% 
-  select(model, agency, is_dark, std_error, p_value, everything()) %>%
+vod$dst %>%
+  select(-data, -base_controls) %>%
+  arrange(agency_control, interact_time_loc, spline_degree) %>% 
+  select(agency, is_dark, std_error, p_value, everything()) %>%
   kable()
 ```
 
