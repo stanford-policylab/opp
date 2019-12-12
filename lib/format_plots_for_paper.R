@@ -37,7 +37,8 @@ format_mj <- function(mj) {
   truncate <- coord_cartesian(ylim=c(0, 0.025))
   scale <- scale_y_continuous(
     labels=scales::percent_format(accuracy=0.1),
-    breaks=c(0.00, 0.01, 0.02)
+    breaks=c(0.00, 0.01, 0.02),
+    expand = c(0,0)
   )
 
   src <- (
