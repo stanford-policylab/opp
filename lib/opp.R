@@ -784,7 +784,7 @@ opp_locations_used_in_analyses <- function() {
 }
 
 
-opp_package_for_archive <- function(dir = "/share/data/opp/sdr_v2") {
+opp_package_for_archive <- function(dir = "/share/data/opp/sdr_v3") {
   dir_create(dir)
   opp_apply(
     function(state, city) {
@@ -794,11 +794,7 @@ opp_package_for_archive <- function(dir = "/share/data/opp/sdr_v2") {
 }
 
 
-opp_package_location_for_archive <- function(
-  state,
-  city,
-  dir = "/share/data/opp/sdr_v2"
-) {
+opp_package_location_for_archive <- function(state, city, dir) {
   dir_create(dir)
   fn <- for_filename(state, city)
   base <- file.path(dir, fn)
