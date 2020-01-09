@@ -1240,6 +1240,59 @@ opp_violation_rates <- function() {
 }
 
 
+opp_write_out_website_data <- function() {
+  pfs <- read_rds(here::here("results", "prima_facie_stats.rds"))
+  d <- read_rds(here::here("results", "disparity.rds"))
+  write_out <- function(tbl, name) {
+    write_csv(tbl, here::here("results", str_c(name, ".csv")))
+  }
+  write_out(
+    select(pfs$rates$stop, state, city, subject_race, annual_stop_rate) %>%
+      mutate(is_city = as.integer(city != "Statewide")),
+    "stop_rates"
+  )
+  write_out(
+    select(pfs$rates$search, state, city, subject_race, search_rate) %>%
+      mutate(is_city = as.integer(city != "Statewide")),
+    "search_rates"
+  )
+  write_out(
+    bind_rows(
+      mutate(d$city$outcome$results$hit_rates, is_city = 1),
+      mutate(d$state$outcome$results$hit_rates, is_city = 0)
+    ) %>%
+    select(
+      is_city,
+      subject_race,
+      geography,
+      subgeography,
+      hit_rate
+    ),
+    "hit_rates" 
+  )
+  write_out(
+    bind_rows(
+      mutate(
+        d$city$threshold$prior_scaling_factor_1$results$thresholds,
+        is_city = 1
+      ),
+      mutate(
+        d$state$threshold$prior_scaling_factor_1$results$thresholds,
+        is_city = 0
+      )
+    ) %>%
+    select(
+      is_city,
+      subject_race,
+      geography,
+      subgeography,
+      threshold
+    ),
+    "thresholds" 
+  )
+}
+
+
 pdf_filename <- function(state, city) {
   str_c(for_filename(state, city), ".pdf")
 }
