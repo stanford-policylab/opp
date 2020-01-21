@@ -195,8 +195,12 @@ Number of robustness check models with results not statistically significant:
 ```{r veil_of_darkness-appendix_mods}
 vod$dst %>%
   select(-data, -base_controls) %>%
+  mutate(
+    l_ci = is_dark - 1.96 * std_error,
+    u_ci = is_dark + 1.96 * std_error
+  ) %>% 
   arrange(agency_control, interact_time_loc, spline_degree) %>% 
-  select(agency, is_dark, std_error, p_value, everything()) %>%
+  select(agency, is_dark, std_error, l_ci, u_ci, p_value, everything()) %>%
   kable()
 ```
 
