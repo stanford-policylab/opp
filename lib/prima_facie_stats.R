@@ -13,8 +13,8 @@ prima_facie_stats <- function(use_cache = F) {
   stop_rates <- stop_rates(stop_data)
   search_rates <- search_rates(search_data)
 
-  stop_rates_plot <- plot_stop_rates(stop_rates)
-  search_rates_plot <- plot_search_rates(search_rates)
+  stop_rates_plot <- plot_stop_rates(stop_rates$geo)
+  search_rates_plot <- plot_search_rates(search_rates$geo)
   
   summary_table <- generate_summary_table(stop_data)
   
@@ -24,8 +24,11 @@ prima_facie_stats <- function(use_cache = F) {
       analyzed = counts(stop_data)
     ),
     rates = list(
-      stop = stop_rates,
-      search = search_rates
+      stop = stop_rates$geo,
+      search = search_rates$geo,
+      # used by the website
+      stop_subgeo = stop_rates$subgeo,
+      search_subgeo = search_rates$subgeo
     ),
     plots = list(
       stop = stop_rates_plot,
@@ -67,6 +70,14 @@ stop_rates <- function(tbl) {
     n_months <- 1
   }
 
+  list (
+    geo = stop_rates_by_geo(tbl, pop, n_months),
+    subgeo = stop_rates_by_subgeo(tbl, pop, n_months)
+  )
+}
+
+
+stop_rates_by_geo <- function(tbl, pop, n_months) {
   tbl %>%
   group_by(state, city, subject_race, year_month = format(date, "%Y-%m")) %>%
   summarize(n_monthly_stops = n()) %>%
@@ -80,17 +91,45 @@ stop_rates <- function(tbl) {
 }
 
 
-search_rates <- function(tbl) {
+stop_rates_by_subgeo <- function(tbl, pop, n_months) {
   tbl %>%
-  filter(
+  group_by(
+    state,
+    city,
+    subgeography,
+    subject_race,
+    year_month = format(date, "%Y-%m")
   ) %>%
-  group_by(state, city, subject_race) %>%
-  summarize(
-    n = n(),
-    n_searches = sum(search_conducted, na.rm = T),
-    search_rate = n_searches / n
-  ) %>%
-  ungroup()
+  summarize(n_monthly_stops = n()) %>%
+  group_by(state, city, subgeography, subject_race) %>%
+  summarize(average_monthly_stops = mean(n_monthly_stops)) %>%
+  left_join(pop) %>%
+  mutate(
+    average_annual_stops = average_monthly_stops * n_months,
+    annual_stop_rate = average_annual_stops / population
+  )
+}
+
+
+search_rates <- function(tbl) {
+  list(
+    geo = tbl %>%
+      group_by(state, city, subject_race) %>%
+      summarize(
+        n = n(),
+        n_searches = sum(search_conducted, na.rm = T),
+        search_rate = n_searches / n
+      ) %>%
+      ungroup(),
+    subgeo = tbl %>%
+      group_by(state, city, subgeography, subject_race) %>%
+      summarize(
+        n = n(),
+        n_searches = sum(search_conducted, na.rm = T),
+        search_rate = n_searches / n
+      ) %>%
+      ungroup()
+  )
 }
 
 
