@@ -28,31 +28,35 @@ calculate_diff_cis <- function(rates, ses) {
   state_white_hispanic_upper_ci <- state_white_hispanic_diff + z * state_white_hispanic_se
 
   printf(
-    'city white-black: %g (%g, %g)',
+    'city white-black: %g (%g, %g), p-value: %f',
     city_white_black_diff,
     city_white_black_lower_ci,
-    city_white_black_upper_ci
+    city_white_black_upper_ci,
+    2 * (1 - pnorm(abs(city_white_black_diff / city_white_black_se)))
   )
 
   printf(
-    'city white-hispanic: %g (%g, %g)',
+    'city white-hispanic: %g (%g, %g), p-value: %f',
     city_white_hispanic_diff,
     city_white_hispanic_lower_ci,
-    city_white_hispanic_upper_ci
+    city_white_hispanic_upper_ci,
+    2 * (1 - pnorm(abs(city_white_hispanic_diff / city_white_hispanic_se)))
   )
 
   printf(
-    'state white-black: %g (%g, %g)',
+    'state white-black: %g (%g, %g), p-value: %f',
     state_white_black_diff,
     state_white_black_lower_ci,
-    state_white_black_upper_ci
+    state_white_black_upper_ci,
+    2 * (1 - pnorm(abs(state_white_black_diff / state_white_black_se)))
   )
 
   printf(
-    'state white-hispanic: %g (%g, %g)',
+    'state white-hispanic: %g (%g, %g), p-value: %f',
     state_white_hispanic_diff,
     state_white_hispanic_lower_ci,
-    state_white_hispanic_upper_ci
+    state_white_hispanic_upper_ci,
+    2 * (1 - pnorm(abs(state_white_hispanic_diff / state_white_hispanic_se)))
   )
 }
 
