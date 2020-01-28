@@ -1241,50 +1241,60 @@ opp_violation_rates <- function() {
 
 
 opp_write_out_website_data <- function() {
+  # this is extremely fragile code that exists because the website was
+  # originally coded to some files with this structure, and it was
+  # determined that this would be less work than recoding the front-end;
+  # should the demands of the front-end ever change, this will probably need
+  # to be re-written
   pfs <- read_rds(here::here("results", "prima_facie_stats.rds"))
   d <- read_rds(here::here("results", "disparity.rds"))
-  x <- left_join(
-    # stop and search rates from prima facie stats
-    left_join(
-      pfs$rates$stop,
-      pfs$rates$search
+  stop_and_search <- left_join(
+      pfs$rates$stop_subgeo,
+      pfs$rates$search_subgeo
+    ) %>%
+    mutate(
+      geography = if_else(city == "Statewide", state, city),
+      is_city = city != "Statewide",
     ) %>%
     rename(
-      geography = city
-    ) %>%
-    mutate(is_city = geography != "Statewide"),
-    # hit rate and thresholds from disparity
-    left_join(
-      bind_rows(
-        separate(
-          d$city$outcome$results$hit_rates,
-          geography,
-          c("geography", "state"),
-          sep = ", "
-        ) %>%
-          mutate(is_city = TRUE),
-        d$state$outcome$results$hit_rates %>%
-        mutate(is_city = FALSE)
-      ),
-      bind_rows(
-        separate(
-          d$city$threshold$prior_scaling_factor_1$results$thresholds,
-          geography,
-          c("geography", "state"),
-          sep = ", "
-        ) %>%
-        mutate(is_city = TRUE),
-        d$state$threshold$prior_scaling_factor_1$results$thresholds %>%
-        mutate(is_city = FALSE)
-      ),
-      by = c("state", "geography", "subgeography", "subject_race")
+      stop_rate = annual_stop_rate,
+      stops_per_year = average_annual_subgeo_stops
+    )
+  hit_and_threshold <- left_join(
+    bind_rows(
+      separate(
+        d$city$outcome$results$hit_rates,
+        geography,
+        c("geography", "state"),
+        sep = ", "
+      ) %>%
+      mutate(is_city = TRUE),
+      d$state$outcome$results$hit_rates %>%
+      mutate(is_city = FALSE, state = geography)
     ),
-    by = c("state", "geography", "subject_race")
-  ) %>%
-  rename(
-    stop_rate = annual_stop_rate,
-    inferred_threshold = threshold ,
-    stops_per_year = average_annual_stops
+    bind_rows(
+      separate(
+        d$city$threshold$prior_scaling_factor_1$results$thresholds,
+        geography,
+        c("geography", "state"),
+        sep = ", "
+      ) %>%
+      mutate(is_city = TRUE) %>%
+      separate(subgeography, c("subgeography"), sep="_", extra="drop"),
+      d$state$threshold$prior_scaling_factor_1$results$thresholds %>%
+      mutate(
+        is_city = FALSE,
+        state = geography,
+      ) %>%
+      separate(subgeography, c("subgeography"), sep="_", extra="drop")
+    ) %>%
+    rename(inferred_threshold = threshold)
+  )
+
+  x <- left_join(
+    stop_and_search,
+    hit_and_threshold,
+    by = c("state", "geography", "subgeography", "subject_race", "is_city")
   ) %>%
   select(
     is_city,
@@ -1300,8 +1310,7 @@ opp_write_out_website_data <- function() {
   )
 
   y <- group_by(pfs$rates$stop, state, city, subject_race) %>%
-    summarize(stop_rate_n = sum(average_annual_stops)) %>%
-    rename(geography = city)
+    summarize(stop_rate_n = sum(average_annual_stops))
 
   z <- left_join(x, y)
   write_csv(

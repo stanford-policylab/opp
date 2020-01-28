@@ -92,6 +92,9 @@ stop_rates_by_geo <- function(tbl, pop, n_months) {
 
 
 stop_rates_by_subgeo <- function(tbl, pop, n_months) {
+  # this is used by the website graphs; we can't actually calculate stop rate by
+  # subgeo because we don't have population at that level presently; however, we
+  # can add the count of stops
   tbl %>%
   group_by(
     state,
@@ -103,10 +106,10 @@ stop_rates_by_subgeo <- function(tbl, pop, n_months) {
   summarize(n_monthly_stops = n()) %>%
   group_by(state, city, subgeography, subject_race) %>%
   summarize(average_monthly_stops = mean(n_monthly_stops)) %>%
-  left_join(pop) %>%
-  mutate(
-    average_annual_stops = average_monthly_stops * n_months,
-    annual_stop_rate = average_annual_stops / population
+  mutate(average_annual_subgeo_stops = average_monthly_stops * n_months) %>%
+  left_join(
+    stop_rates_by_geo(tbl, pop, n_months),
+    by = c("state", "city", "subject_race")
   )
 }
 
