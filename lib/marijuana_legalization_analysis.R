@@ -2,10 +2,10 @@ library(here)
 source(here::here("lib", "opp.R"))
 source(here::here("lib", "eligibility.R"))
 
-marijuana_legalization_analysis <- function() {
+marijuana_legalization_analysis <- function(use_cache=FALSE) {
   
-  mj <- load("mj")$data
-  mjt <- load("mjt")$data
+  mj <- load("mj", use_cache)$data
+  mjt <- load("mjt", use_cache)$data
 
   list(
     tables = list(
@@ -13,7 +13,7 @@ marijuana_legalization_analysis <- function() {
         calculate_search_rate_difference_in_difference_coefficients(mj)
     ),
 		treatment_discretionary_searches_with_no_contraband =
-			treatment_discretionary_with_no_contraband(mj),
+      treatment_discretionary_searches_with_no_contraband(mj),
     plots = list(
       search_rates = group_by(mj, state) %>%
         group_map(
@@ -208,9 +208,63 @@ rate_time_series <- function(
     # NOTE: hack to get facet_grid style title
     facet_grid(. ~ state)
 
+
   v <- list()
-  v[[tbl$state[[1]]]] <- list(plot = g, count = sum(daily$n_denominator))
+  v[[tbl$state[[1]]]] <- list(
+    plot = g,
+    count = sum(daily$n_denominator),
+    # for website
+    quarterly = quarterly,
+    trendlines = trendlines_for_website(daily)
+  )
   v
+}
+
+
+trendlines_for_website <- function(daily) {
+  before = filter(daily, is_before_legalization)
+  after = filter(daily, !is_before_legalization)
+
+  bmin = min(before$date)
+  bmax = max(before$date)
+  amin = min(after$date)
+  amax = max(after$date)
+
+  bw = lm(rate ~ date, data=filter(before, subject_race == 'white'))
+  bb = lm(rate ~ date, data=filter(before, subject_race == 'black'))
+  bh = lm(rate ~ date, data=filter(before, subject_race == 'hispanic'))
+  aw = lm(rate ~ date, data=filter(after, subject_race == 'white'))
+  ab = lm(rate ~ date, data=filter(after, subject_race == 'black'))
+  ah = lm(rate ~ date, data=filter(after, subject_race == 'hispanic'))
+
+  bw_min = predict(bw, data.frame(date = c(bmin)))
+  bw_max = predict(bw, data.frame(date = c(bmax)))
+  bb_min = predict(bb, data.frame(date = c(bmin)))
+  bb_max = predict(bb, data.frame(date = c(bmax)))
+  bh_min = predict(bh, data.frame(date = c(bmin)))
+  bh_max = predict(bh, data.frame(date = c(bmax)))
+
+  aw_min = predict(aw, data.frame(date = c(amin)))
+  aw_max = predict(aw, data.frame(date = c(amax)))
+  ab_min = predict(ab, data.frame(date = c(amin)))
+  ab_max = predict(ab, data.frame(date = c(amax)))
+  ah_min = predict(ah, data.frame(date = c(amin)))
+  ah_max = predict(ah, data.frame(date = c(amax)))
+
+  tribble(
+      ~race,
+      ~is_before_legalization,
+      ~start_date,
+      ~end_date,
+      ~start_rate,
+      ~end_rate,
+      'white', TRUE, bmin, bmax, bw_min, bw_max,
+      'black', TRUE, bmin, bmax, bb_min, bb_max,
+      'hispanic', TRUE, bmin, bmax, bh_min, bh_max,
+      'white', FALSE, amin, amax, aw_min, aw_max,
+      'black', FALSE, amin, amax, ab_min, ab_max,
+      'hispanic', FALSE, amin, amax, ah_min, ah_max
+  )
 }
 
 
