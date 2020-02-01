@@ -1243,6 +1243,8 @@ opp_write_out_website_data <- function() {
   # to be re-written
   pfs <- read_rds(here::here("results", "prima_facie_stats.rds"))
   d <- read_rds(here::here("results", "disparity.rds"))
+  mj <- read_rds(here::here("results", "marijuana_legalization_analysis.rds"))
+
   stop_and_search <- left_join(
       pfs$rates$stop_subgeo,
       pfs$rates$search_subgeo
@@ -1316,6 +1318,39 @@ opp_write_out_website_data <- function() {
     filter(z, !is_city) %>% select(-is_city, -state),
     here::here("results", "state.csv")
   )
+
+  bind_rows(lapply(
+    mj$plots$misdemeanor_rates,
+    function(loc) loc$quarterly),
+  ) %>%
+  rename(
+    driver_race = subject_race,
+    pre_legalization = is_before_legalization,
+    misdemeanor_rate = rate,
+  ) %>% write_csv(here::here("results", "marijuana_misdemeanor_rates.csv"))
+
+  bind_rows(lapply(
+    mj$plots$search_rates,
+    function(loc) loc$quarterly),
+  ) %>%
+  rename(
+    driver_race = subject_race,
+    pre_legalization = is_before_legalization,
+    search_rate = rate,
+  ) %>% write_csv(here::here("results", "marijuana_search_rates.csv"))
+
+  bind_rows(lapply(
+    mj$plots$search_rates,
+    function(loc) loc$trendlines),
+  ) %>%
+  rename(
+    driver_race = race,
+    pre_legalization = is_before_legalization,
+    date_start = start_date,
+    date_end = end_date,
+    search_rate_start = start_rate,
+    search_rate_end = end_rate,
+  ) %>% write_csv(here::here("results", "marijuana_trendlines.csv"))
 }
 
 

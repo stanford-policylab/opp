@@ -153,75 +153,75 @@ rate_time_series <- function(
     # NOTE: remove data around legalization quarter since it will be mixed
     filter(quarter != as.Date("2012-11-15"))
   
-  g <-
-    ggplot() +
-    geom_smooth(
-      data=filter(daily, is_before_legalization),
-      aes(x=date, y=rate, color=subject_race),
-      formula=y ~ x,
-      method="lm",
-      linetype="dashed",
-      size=0.5
-    ) +
-    geom_smooth(
-      data=filter(daily, !is_before_legalization),
-      aes(x=date, y=rate, color=subject_race),
-      formula=y ~ x,
-      method="lm",
-      linetype="dashed",
-      size=0.5
-    ) +
-    geom_line(
-      data=quarterly,
-      aes(
-        x=quarter,
-        y=rate,
-        color=subject_race,
-        group=interaction(subject_race, is_before_legalization)
-      )
-    ) +
-    scale_color_manual(
-      values=c("blue", "black", "red")
-    ) +
-    geom_vline(
-      xintercept=legalization_date,
-      linetype="longdash"
-    ) +
-    scale_y_continuous(
-      labels=scales::percent_format(accuracy = 0.1),
-    ) +
-    expand_limits(
-      x=c(as.Date('2011-01-01'), as.Date('2015-12-31')),
-      y=0
-    ) +
-    theme_bw(
-      base_size=15
-    ) +
-    theme(
-      panel.background = element_rect(fill = "white", color = "white"),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_blank(),
-      axis.title.y=element_blank(),
-      legend.position="none"
-    ) +
-    # NOTE: hack to get facet_grid style title
-    facet_grid(. ~ state)
-
-
   v <- list()
-  v[[tbl$state[[1]]]] <- list(
-    plot = g,
+  v[[state]] <- list(
+    plot = plot_rate_time_series(daily, quarterly, legalization_date),
     count = sum(daily$n_denominator),
     # for website
     quarterly = quarterly,
-    trendlines = trendlines_for_website(daily)
+    trendlines = trendlines_for_website(state, daily)
   )
   v
 }
 
+plot_rate_time_series <- function(daily, quarterly, legalization_date) {
+  ggplot() +
+  geom_smooth(
+    data=filter(daily, is_before_legalization),
+    aes(x=date, y=rate, color=subject_race),
+    formula=y ~ x,
+    method="lm",
+    linetype="dashed",
+    size=0.5
+  ) +
+  geom_smooth(
+    data=filter(daily, !is_before_legalization),
+    aes(x=date, y=rate, color=subject_race),
+    formula=y ~ x,
+    method="lm",
+    linetype="dashed",
+    size=0.5
+  ) +
+  geom_line(
+    data=quarterly,
+    aes(
+      x=quarter,
+      y=rate,
+      color=subject_race,
+      group=interaction(subject_race, is_before_legalization)
+    )
+  ) +
+  scale_color_manual(
+    values=c("blue", "black", "red")
+  ) +
+  geom_vline(
+    xintercept=legalization_date,
+    linetype="longdash"
+  ) +
+  scale_y_continuous(
+    labels=scales::percent_format(accuracy = 0.1),
+  ) +
+  expand_limits(
+    x=c(as.Date('2011-01-01'), as.Date('2015-12-31')),
+    y=0
+  ) +
+  theme_bw(
+    base_size=15
+  ) +
+  theme(
+    panel.background = element_rect(fill = "white", color = "white"),
+    panel.grid.major=element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_blank(),
+    axis.title.y=element_blank(),
+    legend.position="none"
+  ) +
+  # NOTE: hack to get facet_grid style title
+  facet_grid(. ~ state)
+}
 
-trendlines_for_website <- function(daily) {
+
+trendlines_for_website <- function(state, daily) {
   before = filter(daily, is_before_legalization)
   after = filter(daily, !is_before_legalization)
 
@@ -252,18 +252,19 @@ trendlines_for_website <- function(daily) {
   ah_max = predict(ah, data.frame(date = c(amax)))
 
   tribble(
+      ~state,
       ~race,
       ~is_before_legalization,
       ~start_date,
       ~end_date,
       ~start_rate,
       ~end_rate,
-      'white', TRUE, bmin, bmax, bw_min, bw_max,
-      'black', TRUE, bmin, bmax, bb_min, bb_max,
-      'hispanic', TRUE, bmin, bmax, bh_min, bh_max,
-      'white', FALSE, amin, amax, aw_min, aw_max,
-      'black', FALSE, amin, amax, ab_min, ab_max,
-      'hispanic', FALSE, amin, amax, ah_min, ah_max
+      state, 'white', TRUE, bmin, bmax, bw_min, bw_max,
+      state, 'black', TRUE, bmin, bmax, bb_min, bb_max,
+      state, 'hispanic', TRUE, bmin, bmax, bh_min, bh_max,
+      state, 'white', FALSE, amin, amax, aw_min, aw_max,
+      state, 'black', FALSE, amin, amax, ab_min, ab_max,
+      state, 'hispanic', FALSE, amin, amax, ah_min, ah_max
   )
 }
 
