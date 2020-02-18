@@ -95,8 +95,8 @@ model {
   threshold_race ~ normal(0, 1 * prior_scaling_factor);
 
   // draw control division parameters (for un-pinned divisions)
-  phi_subgeography_raw ~ normal(0, 1 * prior_scaling_factor);
-  delta_subgeography_raw ~ normal(0, 1 * prior_scaling_factor);
+  phi_subgeography_raw ~ normal(0, 0.1 * prior_scaling_factor);
+  delta_subgeography_raw ~ normal(0, 0.1 * prior_scaling_factor);
 
   // thresholds
   threshold_raw ~ normal(0, 1);
