@@ -81,16 +81,16 @@ model {
   mu_phi ~ normal(0, 1 * prior_scaling_factor);
   mu_delta ~ normal(0, 1 * prior_scaling_factor);
   
-  phi_race ~ normal(mu_phi, 0.1 * prior_scaling_factor);
-  delta_race ~ normal(mu_delta, 0.1 * prior_scaling_factor);
+  phi_race ~ normal(mu_phi, 1 * prior_scaling_factor);
+  delta_race ~ normal(mu_delta, 1 * prior_scaling_factor);
   threshold_race ~ normal(0, 1 * prior_scaling_factor);
 
   // draw control division parameters (for un-pinned divisions)
-  phi_subgeography_raw ~ normal(0, 0.1 * prior_scaling_factor);
-  delta_subgeography_raw ~ normal(0, 0.1 * prior_scaling_factor);
+  phi_subgeography_raw ~ normal(0, 1 * prior_scaling_factor);
+  delta_subgeography_raw ~ normal(0, 1 * prior_scaling_factor);
 
   // thresholds
-  threshold_raw ~ normal(0, 1 * prior_scaling_factor);
+  threshold_raw ~ normal(0, 1);
 
   search_count ~ binomial(stop_count, search_rate);
   hit_count ~ binomial(search_count, hit_rate);

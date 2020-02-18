@@ -52,10 +52,6 @@ transformed parameters {
   delta_subgeography[1] = 0;
   delta_subgeography[2:n_subgeographies] = delta_subgeography_raw;
 
-  // threshold = threshold_race[race]
-  //   + threshold_raw * sigma_threshold 
-  //   + legal * threshold_legal_race[race];
-
   for (i in 1:n_groups) {
     threshold[i] = threshold_race[race[i]]
       + threshold_raw[i] * sigma_threshold 
@@ -94,16 +90,16 @@ model {
   mu_phi ~ normal(0, 1 * prior_scaling_factor);
   mu_delta ~ normal(0, 1 * prior_scaling_factor);
   
-  phi_race ~ normal(mu_phi, 0.1 * prior_scaling_factor);
-  delta_race ~ normal(mu_delta, 0.1 * prior_scaling_factor);
+  phi_race ~ normal(mu_phi, 1 * prior_scaling_factor);
+  delta_race ~ normal(mu_delta, 1 * prior_scaling_factor);
   threshold_race ~ normal(0, 1 * prior_scaling_factor);
 
   // draw control division parameters (for un-pinned divisions)
-  phi_subgeography_raw ~ normal(0, 0.1 * prior_scaling_factor);
-  delta_subgeography_raw ~ normal(0, 0.1 * prior_scaling_factor);
+  phi_subgeography_raw ~ normal(0, 1 * prior_scaling_factor);
+  delta_subgeography_raw ~ normal(0, 1 * prior_scaling_factor);
 
   // thresholds
-  threshold_raw ~ normal(0, 1 * prior_scaling_factor);
+  threshold_raw ~ normal(0, 1);
 
   search_count ~ binomial(stop_count, search_rate);
   hit_count ~ binomial(search_count, hit_rate);
