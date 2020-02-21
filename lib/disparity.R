@@ -7,10 +7,10 @@ source(here::here("lib", "disparity_plot.R"))
 disparity <- function(from_cache = F) {
   datasets <- list()
   output = here::here("cache", "disparity.rds")
-  if (from_cache)
+  if (from_cache) {
     print("Loading data from cache...")
     d <- read_rds(output)
-  else {
+  } else {
     print("Preparing data...")
     d <- load("disparity")
     sprintf("Saving data to %s", output)
