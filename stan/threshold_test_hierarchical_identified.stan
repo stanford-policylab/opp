@@ -35,23 +35,28 @@ parameters {
 
 transformed parameters {
   vector[n_geographies * n_races] phi_race;
-  vector[n_geographics * n_races] delta_race;
+  vector[n_geographies * n_races] delta_race;
   vector[n_subgeographies] phi_subgeography;
   vector[n_subgeographies] delta_subgeography;
   vector[n_groups] phi;
   vector[n_groups] delta;
   vector[n_groups] threshold;
-  vector[n_races] threshold_race;
+  vector[n_groups] threshold_race;
   vector<lower=0, upper=1>[n_groups] search_rate;
   vector<lower=0, upper=1>[n_groups] hit_rate;
   real successful_search_rate;
   real unsuccessful_search_rate;
   real<lower=0> sigma_threshold;
+  real mu_phi;
+  real mu_delta;
+
+  mu_phi = mu_phi_raw * prior_scaling_factor;
+  mu_delta = mu_delta_raw * prior_scaling_factor;
 
   phi_race[1] = 0;
-  phi_race[2:(n_geographies * n_races)] = phi_race_raw * prior_scaling_factor;
+  phi_race[2:(n_geographies * n_races)] = phi_race_raw * 0.5 * prior_scaling_factor;
   delta_race[1] = 0;
-  delta_race[2:(n_geographies * n_races)] = delta_race_raw * prior_scaling_factor;
+  delta_race[2:(n_geographies * n_races)] = delta_race_raw * 0.1 * prior_scaling_factor;
 
   phi_subgeography[1] = 0;
   phi_subgeography[2:n_subgeographies] = phi_subgeography_raw * 0.1 * prior_scaling_factor;

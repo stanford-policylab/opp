@@ -310,7 +310,7 @@ format_confidence_interval <- function(
 
 stan_threshold_test <- function(
   data,
-  n_iter = 5000,
+  n_iter = 10000,
   n_cores = min(5, parallel::detectCores() / 2)
 ) {
   # NOTE: defaults; may expose more of these in the future
@@ -318,10 +318,10 @@ stan_threshold_test <- function(
   initialization_method <- "random"
   min_acceptable_divergence_rate <- 0.05
   n_iter_per_progress_update <- 50
-  n_iter_warmup <- min(2500, round(n_iter / 2))
+  n_iter_warmup <- min(5000, round(n_iter / 2))
   n_markov_chains <- 5
   nuts_max_tree_depth <- 12
-  path_to_stan_model <- here::here("stan", "threshold_test_hierarchical.stan")
+  path_to_stan_model <- here::here("stan", "threshold_test_hierarchical_identified.stan")
   
   rstan::sampling(
     stan_model(path_to_stan_model),

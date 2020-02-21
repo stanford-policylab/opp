@@ -7,10 +7,11 @@ source(here::here("lib", "disparity_plot.R"))
 disparity <- function(from_cache = F) {
   datasets <- list()
   output = here::here("cache", "disparity.rds")
-  print("Preparing data...")
   if (from_cache)
+    print("Loading data from cache...")
     d <- read_rds(output)
   else {
+    print("Preparing data...")
     d <- load("disparity")
     sprintf("Saving data to %s", output)
     write_rds(d, output)
@@ -45,7 +46,7 @@ disparity <- function(from_cache = F) {
         datasets[[dataset_name]],
         subgeography_col = subgeography,
         geography_col = geography,
-        n_iter = 10000,
+        n_iter = 25000,
         prior_scaling_factor = prior_scaling_factor
       )
       print("Composing threshold plots...")
