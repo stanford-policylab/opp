@@ -41,10 +41,12 @@ transformed parameters {
   vector[n_groups] phi;
   vector[n_groups] delta;
   vector[n_groups] threshold;
+  vector[n_races] threshold_race;
   vector<lower=0, upper=1>[n_groups] search_rate;
   vector<lower=0, upper=1>[n_groups] hit_rate;
   real successful_search_rate;
   real unsuccessful_search_rate;
+  real<lower=0> sigma_threshold;
 
   phi_race[1] = 0;
   phi_race[2:(n_geographies * n_races)] = phi_race_raw * prior_scaling_factor;
@@ -56,10 +58,10 @@ transformed parameters {
   delta_subgeography[1] = 0;
   delta_subgeography[2:n_subgeographies] = delta_subgeography_raw * 0.1 * prior_scaling_factor;
 
-  threshold = (
-    threshold_race_raw[race] * prior_scaling_factor
-    + threshold_raw * sigma_threshold_raw * prior_scaling_factor
-  );
+  threshold_race = threshold_race_raw[race] * prior_scaling_factor;
+  sigma_threshold = sigma_threshold_raw * prior_scaling_factor;
+
+  threshold = threshold_race + threshold_raw * sigma_threshold;
 
   for (i in 1:n_groups) {
     // phi is the proportion of race x who evidence behavior
