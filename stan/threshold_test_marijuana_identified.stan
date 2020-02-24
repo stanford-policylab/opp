@@ -56,9 +56,9 @@ transformed parameters {
   mu_delta = mu_delta_raw * prior_scaling_factor;
   
   phi_race[1] = 0;
-  phi_race[2:n_races] = mu_phi + phi_race_raw * 0.25 * prior_scaling_factor;
+  phi_race[2:n_races] = phi_race_raw * 0.1 * prior_scaling_factor;
   delta_race[1] = 0;
-  delta_race[2:n_races] = mu_delta + delta_race_raw * 0.1 * prior_scaling_factor;
+  delta_race[2:n_races] = delta_race_raw * 0.1 * prior_scaling_factor;
 
   phi_subgeography[1] = 0;
   phi_subgeography[2:n_subgeographies] = phi_subgeography_raw * 0.1 * prior_scaling_factor;
