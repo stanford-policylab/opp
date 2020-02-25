@@ -200,7 +200,8 @@ clean <- function(d, helpers) {
     HA_SEARCH_CONCENT_boolean,
     HA_SEARCH_PC_boolean,
     HA_INCIDTO_ARREST_boolean,
-    HA_VEHICLE_INVENT_boolean
+    HA_VEHICLE_INVENT_boolean,
+    HA_RACE_SEX
   ) %>% 
   mutate(
     date = parse_date(HA_ARREST_DATE, "%m/%d/%y %H:%M:%S"),
@@ -218,8 +219,8 @@ clean <- function(d, helpers) {
     subject_first_name = str_to_title(HA_N_FIRST_DRVR),
     subject_last_name = str_to_title(HA_N_LAST_DRVR),
     normalized_last_name = normalize_name(HA_N_LAST_DRVR),
-    subject_race_recorded = fast_tr(str_sub(HA_RACE_SEX, 1, 1), tr_race),
-    subject_sex = fast_tr(str_sub(HA_RACE_SEX, 2, 2), tr_sex),
+    subject_race_recorded = fast_tr(str_sub(raw_HA_RACE_SEX, 1, 1), tr_race),
+    subject_sex = fast_tr(str_sub(raw_HA_RACE_SEX, 2, 2), tr_sex),
     # NOTE: Only vehicular traffic stops were requested in the data request.
     type = "vehicular",
     violation = str_c_na(warning_reasons, citation_reasons, sep = "|"),
@@ -267,7 +268,7 @@ clean <- function(d, helpers) {
     date,
     time,
     county_fips,
-    HA_RACE_SEX,
+    raw_HA_RACE_SEX,
     HA_MILEPOST,
     officer_id,
     subject_first_name,
