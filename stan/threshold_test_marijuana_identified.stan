@@ -44,6 +44,7 @@ transformed parameters {
   vector[n_groups] phi;
   vector[n_groups] delta;
   vector[n_groups] threshold;
+  vector[n_groups] threshold_race;
   vector<lower=0, upper=1>[n_groups] search_rate;
   vector<lower=0, upper=1>[n_groups] hit_rate;
   real successful_search_rate;
