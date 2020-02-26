@@ -322,7 +322,7 @@ summarise_for_stan <- function(tbl) {
   ) %>%
   summarize(
     num_stops = n(),
-    num_searches = sum(is_discretionary_search, na.rm = T), #TODO(amy): make sure we can remove these
+    num_searches = sum(is_discretionary_search, na.rm = T), 
     num_hits = sum(is_discretionary_search & contraband_found, na.rm = T)
   ) %>% 
   ungroup()
@@ -358,7 +358,7 @@ stan_marijuana_threshold_test <- function(
   n_iter_warmup <- min(2500, round(n_iter / 2))
   n_markov_chains <- 5
   nuts_max_tree_depth <- 12
-  path_to_stan_model <- here::here("stan", "threshold_test_marijuana.stan")
+  path_to_stan_model <- here::here("stan", "threshold_test_marijuana_identified.stan")
   
   rstan::sampling(
     stan_model(path_to_stan_model),
