@@ -297,19 +297,19 @@ disp$state$outcome$plots$aggregate + theme(legend.position = "none")
 city then state
 
 Scaling priors by 0.5x:
-```{r disparity-thresholds-tables-0.5}
+```{r disparity-thresholds-tables-0_5}
 kable(disp$city$threshold$prior_scaling_factor_0.5$results$aggregate_thresholds)
 kable(disp$state$threshold$prior_scaling_factor_0.5$results$aggregate_thresholds)
 ```
 
 Priors at 1.0 (normal):
-```{r disparity-thresholds-tables-1.0}
+```{r disparity-thresholds-tables-1_0}
 kable(disp$city$threshold$prior_scaling_factor_1$results$aggregate_thresholds)
 kable(disp$state$threshold$prior_scaling_factor_1$results$aggregate_thresholds)
 ```
 
 Scaling priors by 1.5x:
-```{r disparity-thresholds-tables-1.5}
+```{r disparity-thresholds-tables-1_5}
 kable(disp$city$threshold$prior_scaling_factor_1.5$results$aggregate_thresholds)
 kable(disp$state$threshold$prior_scaling_factor_1.5$results$aggregate_thresholds)
 ```
@@ -463,7 +463,7 @@ CO rhat = `r mj$plots$inferred_threshold_changes$prior_scaling_factor_0.5$metada
 
 CO n_eff = `r mj$plots$inferred_threshold_changes$prior_scaling_factor_0.5$metadata$co_n_eff`
 
-```{r mj_inferred_threshold_plot_0.5_prior_scale, fig.height=5, fig.width=10}
+```{r mj_inferred_threshold_plot_0_5_prior_scale, fig.height=5, fig.width=10}
 mj$plots$inferred_threshold_changes$prior_scaling_factor_0.5$plot
 ```
 
@@ -477,6 +477,6 @@ CO rhat = `r mj$plots$inferred_threshold_changes$prior_scaling_factor_1.5$metada
 
 CO n_eff = `r mj$plots$inferred_threshold_changes$prior_scaling_factor_1.5$metadata$co_n_eff`
 
-```{r mj_inferred_threshold_plot_1.5_prior_scale, fig.height=5, fig.width=10}
+```{r mj_inferred_threshold_plot_1_5_prior_scale, fig.height=5, fig.width=10}
 mj$plots$inferred_threshold_changes$prior_scaling_factor_1.5$plot
 ```
