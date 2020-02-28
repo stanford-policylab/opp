@@ -86,17 +86,6 @@ kable()
 
 total: `r pfs$summary_table$Stops %>% str_replace_all(",", "") %>% as.numeric() %>% sum %>% comma_num()`
 
-```{r search_rates_summary}
-pfs$summary_table %>% 
-  mutate(agency = if_else(City == "--", "state", "city")) %>% 
-  group_by(agency) %>% 
-  mutate(ct = 1:n()) %>% 
-  ungroup() %>% 
-  select(-agency) %>% 
-  select(ct, everything()) %>% 
-  kable("latex")
-```
-
 \newpage
 
 \section{Veil of Darkness}
