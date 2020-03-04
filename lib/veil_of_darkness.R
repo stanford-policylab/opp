@@ -37,7 +37,7 @@ veil_of_darkness_daylight_savings <- function(from_cache = F) {
 
 veil_of_darkness_full <- function(from_cache = F) {
   if (from_cache) 
-    vod_full <- read_rds(here::here("cache", "vod_full.rds"))
+    vod_full <- read_rds(here::here("cache", "vod_full.rds")) 
   else {
     vod_full <- load("vod_full")
   }
@@ -48,12 +48,12 @@ veil_of_darkness_full <- function(from_cache = F) {
     par_pmap(
       mc.cores = 3,
       tibble(
-        degree = rep(6, 2), 
+        degree = rep(6, 2),
         interact = c(T, F)
       ),
       function(degree, interact, agency) {
         r <- vod_coef(dst = F, d, geography, degree, interact)
-        r$coefficients %>% 
+        r$coefficients %>%
           mutate(
             data = "counties and cities",
             base_controls = "time, geography",
@@ -64,7 +64,7 @@ veil_of_darkness_full <- function(from_cache = F) {
     ) %>% bind_rows()
   
   results <- list(
-    coefficients = coefficients, 
+    coefficients = coefficients,
     plots = list(
       states = compose_vod_plots(
         filter(d, is_state_patrol), 
@@ -261,7 +261,7 @@ compose_vod_plots <- function(
 ) {
   geography_colq <- enquo(geography_col)
   demographic_colq <- enquo(demographic_col)
-
+  
   data %>%
     filter(
       minute >= time_to_minute(time_range_start),
@@ -294,7 +294,7 @@ compose_vod_plots <- function(
       time_str, rounded_minute, minutes_since_dark, minute, 
       n, n_minority
     ) %>% 
-    mutate(geography = !!geography_colq) %>% 
+    mutate(geography = !!geography_colq) %>%
     group_by(!!geography_colq) %>% 
     do(
       plot = generate_time_sliced_vod_plots(., 
@@ -314,6 +314,7 @@ generate_time_sliced_vod_plots <- function(
   window_size = 15, eps = 0.05
 ) {
   loc_name <- unique(d$geography)
+
   prepare_data_for_timesliced_plot(
     d, minority_demographic, window_size, eps
   ) %>% 
@@ -375,6 +376,7 @@ prepare_data_for_timesliced_plot <- function(
   window_size = 15, eps = 0.05
 ) {
   data %>%
+    unique() %>% 
     group_by(minutes_since_dark, time_str, rounded_minute, geography) %>%
     summarise(
       proportion_minority = sum(n_minority) / sum(n),
