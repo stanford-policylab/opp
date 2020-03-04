@@ -26,7 +26,7 @@ format_mj <- function(mj) {
   
   srt <- (
     sr$CO$plot + y0 + label + ylab("Search Rate")
-    | sr$WA$plot + y0 + legend + keys
+    | sr$WA$plot + y0 + legend + keys 
   )
   mdt <- (
     md$CO$plot + y0 + label + ylab("Drug & Misdemeanor Rate")

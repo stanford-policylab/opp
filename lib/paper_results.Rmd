@@ -276,7 +276,32 @@ disp$city$outcome$plots$aggregate +
 \newpage
 
 ```{r disparity-state-hit_rates-plot, fig.height=6, fig.width=10}
-disp$state$outcome$plots$aggregate + theme(legend.position = "none")
+axis_min <- max(
+  min(
+    disp$state$outcome$plots$aggregate$data$minority_rate,
+    disp$state$outcome$plots$aggregate$data$majority_rate
+  ) - 0.03, 0
+)
+axis_max <- min(
+  max(
+    disp$state$outcome$plots$aggregate$data$minority_rate,
+    disp$state$outcome$plots$aggregate$data$majority_rate
+  ) + 0.03, 1
+)
+
+disp$state$outcome$plots$aggregate + 
+  theme(
+    legend.position = "none",
+    plot.title = element_blank()
+  ) +
+  scale_x_continuous(
+    limits = c(axis_min, axis_max),
+    labels = scales::percent_format(accuracy = 1), expand = c(0,0)
+  ) + 
+  scale_y_continuous(
+    limits = c(axis_min, axis_max),
+    labels = scales::percent_format(accuracy = 1),expand = c(0,0)
+  ) 
 ```
 
 \newpage
@@ -311,13 +336,13 @@ axis_min <- max(
   min(
     disp$city$threshold$prior_scaling_factor_1$plots$aggregate$data$minority_rate,
     disp$city$threshold$prior_scaling_factor_1$plots$aggregate$data$majority_rate
-  ) - 0.05, 0
+  ) - 0.03, 0
 )
 axis_max <- min(
   max(
     disp$city$threshold$prior_scaling_factor_1$plots$aggregate$data$minority_rate,
     disp$city$threshold$prior_scaling_factor_1$plots$aggregate$data$majority_rate
-  ) + 0.05, 1
+  ) + 0.03, 1
 )
 disp$city$threshold$prior_scaling_factor_1$plots$aggregate + 
   theme(legend.position = "none", plot.title = element_blank()) + 
@@ -335,35 +360,80 @@ disp$city$threshold$prior_scaling_factor_1$plots$aggregate +
 Normal priors:
 
 ```{r disparity-state-thresholds-plot, fig.height=5, fig.width=10}
-disp$state$threshold$prior_scaling_factor_1$plots$aggregate + theme(legend.position = "none")
+disp$state$threshold$prior_scaling_factor_1$plots$aggregate + 
+  theme(legend.position = "none", plot.title = element_blank())
 ```
 
 \newpage
 Normal priors:
 
 ```{r disparity-city-ppc-search, fig.height=5, fig.width=8}
-disp$city$threshold$prior_scaling_factor_1$ppc$search_rate
+disp$city$threshold$prior_scaling_factor_1$ppc$search_rate + 
+  scale_y_continuous(
+    "Search rate prediction error\n",
+    limits = c(-.016, .016), breaks = seq(-.5, .5, 0.005),
+    labels = scales::percent_format(accuracy = 0.1)
+) +
+    scale_x_continuous(
+        "\nPredicted search rate",
+        limits = c(0, .27), breaks = seq(0, .5, 0.05),
+        labels = scales::percent_format(accuracy = 1), expand = c(0,0)
+    ) +
+  theme(plot.title = element_blank())
 ```
 
 \newpage
 Normal priors:
 
 ```{r disparity-city-ppc-hit, fig.height=5, fig.width=8}
-disp$city$threshold$prior_scaling_factor_1$ppc$hit_rate
+disp$city$threshold$prior_scaling_factor_1$ppc$hit_rate +
+    scale_y_continuous(
+        "Hit rate prediction error\n",
+        limits = c(-.21, .21), breaks = seq(-.5, .5, 0.05),
+        labels = scales::percent_format(accuracy = 1)
+    ) +
+    scale_x_continuous(
+        "\nPredicted hit rate",
+        limits = c(0, .37), breaks = seq(0, .5, 0.05),
+        labels = scales::percent_format(accuracy = 1), expand = c(0,0)
+    ) +
+    theme(plot.title = element_blank())
 ```
 
 \newpage
 Normal priors:
 
 ```{r disparity-state-ppc-search, fig.height=5, fig.width=8}
-disp$state$threshold$prior_scaling_factor_1$ppc$search_rate
+disp$state$threshold$prior_scaling_factor_1$ppc$search_rate +
+  scale_y_continuous(
+        "Search rate prediction error\n",
+        limits = c(-.021, .021), breaks = seq(-.5, .5, 0.005),
+        labels = scales::percent_format(accuracy = .1)
+    ) +
+    scale_x_continuous(
+        "\nPredicted search rate",
+        limits = c(0, .11), breaks = seq(0, .5, 0.02),
+        labels = scales::percent_format(accuracy = 1), expand = c(0,0)
+    ) +
+  theme(plot.title = element_blank())
 ```
 
 \newpage
 Normal priors:
 
 ```{r disparity-state-ppc-hit, fig.height=5, fig.width=8}
-disp$state$threshold$prior_scaling_factor_1$ppc$hit_rate
+disp$state$threshold$prior_scaling_factor_1$ppc$hit_rate + 
+  scale_y_continuous(
+        "Hit rate prediction error\n",
+        limits = c(-.30, .30), breaks = seq(-.5, .5, 0.05),
+        labels = scales::percent_format(accuracy = 1)
+    ) +
+    scale_x_continuous(
+        "\nPredicted hit rate",
+        limits = c(0, .65), breaks = seq(0, .8, 0.1),
+        labels = scales::percent_format(accuracy = 1), expand = c(0,0)
+    ) +
+  theme(plot.title = element_blank())
 ```
 
 \newpage
@@ -435,7 +505,13 @@ WI: `r sr$WI$count`
 \newpage
 
 ```{r mj_inferred_threshold_plot, fig.height=5, fig.width=10}
-mj$plots$inferred_threshold_changes$prior_scaling_factor_1$plot
+mj$plots$inferred_threshold_changes$prior_scaling_factor_1$plot +
+  theme_bw(base_size = 20) +
+  theme(
+    panel.grid = element_blank(),
+    legend.background=element_rect(fill="transparent"),
+    legend.position=c(0.65, 0.25)
+  )
 ```
 
 \newpage
