@@ -1089,6 +1089,7 @@ We’re excited to see what you come up with!
   name, and location
 - There may be duplicates, but there is often insufficient information to
   deduplicate, i.e. the time resolution is hourly driver_race is null 99% of
+  the time, and officer ID appears to be only a prefix of the full ID ~0.3% of
   the time
 - Data includes warnings and arrests, but is missing warnings
 - violation represents statute_description in the raw data
