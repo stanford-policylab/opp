@@ -99,7 +99,12 @@ clean <- function(d, helpers) {
       search_conducted = replace_na(search_conducted, FALSE),
       # NOTE: mimics old opp
       contraband_found = if_else(search_conducted & is.na(contraband_found), 
-                                 FALSE, contraband_found)
+                                 FALSE, contraband_found),
+      # officer_badge_number, i.e. officer_id is not unique
+      officer_id_hash = simple_map(
+          str_c_na(officer_id, officer_last_name, officer_race),
+          simple_hash
+      )
     ) %>%
     standardize(d$metadata)
 }

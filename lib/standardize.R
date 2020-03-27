@@ -42,9 +42,9 @@ add_calculated_columns <- function(d) {
       new_colname <- str_c(prefix(col), "_", "age")
       d$data[[new_colname]] <- age_at_date(d$data[[col]], d$data[["date"]])
     }
-    if (col == "officer_id") {
-      h <- function(s) if (is.na(s)) NA_character_ else substr(digest(s), 1, 10)
-      d$data[["officer_id_hash"]] <- simple_map(d$data[[col]], h)
+    # retain manually calculated officer_id_hash
+    if (col == "officer_id" && !("officer_id_hash" %in% colnames(d$data))) {
+      d$data[["officer_id_hash"]] <- simple_map(d$data[[col]], simple_hash)
     }
   }
   d

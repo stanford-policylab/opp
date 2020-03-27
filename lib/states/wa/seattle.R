@@ -62,11 +62,8 @@ clean <- function(d, helpers) {
   separate_cols(
     date_time = c("date", "time"),
     officer_no_1 = c("officer_id", "officer_name"),
-    sep = " "
-  ) %>%
-  separate_cols(
     officer_name = c("officer_last_name", "officer_first_name"),
-    sep = ", "
+    sep = " "
   ) %>%
   mutate(
     type = if_else(
@@ -81,6 +78,14 @@ clean <- function(d, helpers) {
       "vehicular"
     ),
     date = parse_date(date, "%Y/%m/%d"),
+    officer_last_name = str_replace_all(officer_last_name, ",", ""),
+    officer_first_name = str_replace_all(officer_first_name, ",", ""),
+    officer_first_name = str_trim(officer_first_name),
+    # officer_no is not unique, so combine with last name to get hash
+    officer_id_hash = simple_map(
+        str_c_na(officer_id, officer_last_name),
+        simple_hash
+    ),
     subject_race = tr_race[subject_race],
     subject_sex = tr_sex[subject_sex],
     subject_dob = parse_date(subj_dob, "%Y%m%d"),

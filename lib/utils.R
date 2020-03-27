@@ -539,6 +539,10 @@ format_two_digit_year <- function(yr, cutoff = year(Sys.Date())) {
 }
 
 
+simple_hash <- function(s) {
+  if (is.na(s)) NA_character_ else substr(digest(s), 1, 10)
+}
+
 get_primary_class <- function(obj) {
   class(obj)[1]
 }

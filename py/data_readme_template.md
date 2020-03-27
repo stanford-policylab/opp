@@ -222,7 +222,15 @@ are also digit sanitized (each digit replaced with "-") for privacy concerns.
   <tr>
     <td>officer_id_hash</td>
     <td>A unique hash of the officer id used to identify individual officers
-    within a location.</td>
+    within a location. This is usually just a hash of the provided officer ID
+    or badge number. In some places, notably South Carolina Statewide data and
+    the Seattle, WA city data, this ID is not unique, so we hash it with other
+    officer attributes to make it unique, i.e. officer_last_name, officer_race,
+    etc. In about half of locations, however, we get an officer ID but no other
+    officer information, so our ability to test for uniqueness and deduplicate
+    is limited. In other locations, a small number of IDs are duplicated
+    because of what appears to be a data entry issue, i.e. Chicago, IL, where
+    0.3% of officer IDs appear to be only the prefix of their ID. </td>
     <td>"a888fdc120"</td>
   </tr>
   <tr>
@@ -1766,6 +1774,8 @@ We’re excited to see what you come up with!
 - While there is data on violation, many of the stops have missing data.
 - Violation is a concatenation of `sectionnum` and `offensecode` in the raw data.
 - Additional columns in the raw data that may be of interest (Note, many of these
+- Original officer\_badge\_number is not unique, so it is hashed with the
+  officer's last name and race to create officer\_id\_hash 
   were used to construct search/contraband/arrest/outcome information in the 
   clean data. See processing script for details.): `jailed`, `felonyarrest`,
   `armedwith` (messy free field), `using[drugs/alcohol]`, 
@@ -2078,6 +2088,8 @@ We’re excited to see what you come up with!
 - vehicle_* columns are based on a coalesced combination of veh and vehcile
   (sic) columns in the raw data; this is passed through as
   raw_vehicle_description
+- The officer ID associated with the raw column officer\_no\_1 is not unique,
+  so it is hashed with the officer's last name to create officer\_id\_hash
 
 ## Madison, WI
 **Data notes**:

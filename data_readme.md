@@ -24,13 +24,6 @@ disposition, location, officer\_assignment, any city or state subgeography
 (i.e. county, beat, division, etc), unit, and vehicle_{color,make,model,type}
 are also digit sanitized (each digit replaced with "-") for privacy concerns.
 
-Note that many locations have additional information that could be extracted
-(e.g., zip code), but we do not designate a standardized column for information
-beyond what is listed below, either because we do not use the information in
-our analysis and/or because not enough locations provided this information.
-We do pull through some additional columns (discussed on a location-by-location
-basis within this readme), which have column names prefaced by "raw\_". 
-
 <table>
   <tr>
     <td>Column name</td>
@@ -229,7 +222,15 @@ basis within this readme), which have column names prefaced by "raw\_".
   <tr>
     <td>officer_id_hash</td>
     <td>A unique hash of the officer id used to identify individual officers
-    within a location.</td>
+    within a location. This is usually just a hash of the provided officer ID
+    or badge number. In some places, notably South Carolina Statewide data and
+    the Seattle, WA city data, this ID is not unique, so we hash it with other
+    officer attributes to make it unique, i.e. officer_last_name, officer_race,
+    etc. In about half of locations, however, we get an officer ID but no other
+    officer information, so our ability to test for uniqueness and deduplicate
+    is limited. In other locations, a small number of IDs are duplicated
+    because of what appears to be a data entry issue, i.e. Chicago, IL, where
+    0.3% of officer IDs appear to be only the prefix of their ID. </td>
     <td>"a888fdc120"</td>
   </tr>
   <tr>
@@ -3384,7 +3385,11 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_age </td>
-   <td style="text-align:left;"> 99.9% </td>
+   <td style="text-align:left;"> 0.1% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> subject_dob </td>
+   <td style="text-align:left;"> 0.1% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_yob </td>
@@ -3492,18 +3497,15 @@ We’re excited to see what you come up with!
   marijuana analysis for this reason. 
 - We only process statewide data from 2012 to 2017. We received data back to
   2004, but chose not to process it due to format issues and relevance.
-- For state patrol stops, we used police district (see the `beat` column), which
-  have a one-to-many relationship with counties; that is, a single district 
-  covers multiple counties. See the relevant map
+- For state patrol stops, there is mostly no information on the county of the
+  stop. Instead, stops are mapped to districts (see the district column), which
+  have a one-to-many relationship with counties. See the relevant map
   [here](http://www.isp.state.il.us/districts/districtfinder.cfm). There is one
   district (#15) with a lot of stops that does not directly map to counties, as
-  it refers to stops made on the Chicago tollways. Note that while we use districts 
-  in our analysis, zipcode can be extracted from the data and mapped to county, if
-  desired.
+  it refers to stops made on the Chicago tollways. We use districts in our
+  analysis. 
 - Counties for local stops could be mapped by running the police departments 
   in the AgencyName field through Google's geocoder.
-- For both state patrol and local stops, zipcode can be extracted and used to
-  map to county, if needed. 
 - The `search_type_raw` field is occasionally "Consent search denied", when a
   search was conducted. This occurs because the search request might be denied
   but a search was conducted anyway. Many searches have missing search type
@@ -6670,7 +6672,7 @@ We’re excited to see what you come up with!
   raw_race and raw_ethnicity
 
 ## Henderson, NV
-### 2011-06-30 to 2018-01-31
+### 2011-06-30 to 2019-11-12
 <table>
  <thead>
   <tr>
@@ -8139,7 +8141,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> officer_id_hash </td>
-   <td style="text-align:left;"> 98.5% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_age </td>
@@ -8252,6 +8254,8 @@ We’re excited to see what you come up with!
 - While there is data on violation, many of the stops have missing data.
 - Violation is a concatenation of `sectionnum` and `offensecode` in the raw data.
 - Additional columns in the raw data that may be of interest (Note, many of these
+- Original officer\_badge\_number is not unique, so it is hashed with the
+  officer's last name and race to create officer\_id\_hash 
   were used to construct search/contraband/arrest/outcome information in the 
   clean data. See processing script for details.): `jailed`, `felonyarrest`,
   `armedwith` (messy free field), `using[drugs/alcohol]`, 
@@ -9531,6 +9535,10 @@ We’re excited to see what you come up with!
    <td style="text-align:left;"> 67.1% </td>
   </tr>
   <tr>
+   <td style="text-align:left;"> raw_HA_RACE_SEX </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
    <td style="text-align:left;"> raw_HA_SEARCH_PC_boolean </td>
    <td style="text-align:left;"> 92.0% </td>
   </tr>
@@ -10072,7 +10080,7 @@ We’re excited to see what you come up with!
 
 
 ## Statewide, WA
-### 2009-01-01 to 2015-12-31
+### 2009-01-01 to 2018-09-30
 <table>
  <thead>
   <tr>
@@ -10083,7 +10091,7 @@ We’re excited to see what you come up with!
 <tbody>
   <tr>
    <td style="text-align:left;"> date </td>
-   <td style="text-align:left;"> 72.9% </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> time </td>
@@ -10373,7 +10381,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> officer_first_name </td>
-   <td style="text-align:left;"> 85.3% </td>
+   <td style="text-align:left;"> 96.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_last_name </td>
@@ -10448,6 +10456,8 @@ We’re excited to see what you come up with!
 - vehicle_* columns are based on a coalesced combination of veh and vehcile
   (sic) columns in the raw data; this is passed through as
   raw_vehicle_description
+- The officer ID associated with the raw column officer\_no\_1 is not unique,
+  so it is hashed with the officer's last name to create officer\_id\_hash
 
 ## Madison, WI
 ### 2007-09-28 to 2017-09-28
