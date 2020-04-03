@@ -779,7 +779,7 @@ opp_locations_used_in_analyses <- function() {
 }
 
 
-opp_package_for_archive <- function(dir = "/share/data/opp/sdr_v3") {
+opp_package_for_archive <- function(dir = "/share/data/opp/sdr_v4") {
   dir_create(dir)
   opp_apply(
     function(state, city) {
