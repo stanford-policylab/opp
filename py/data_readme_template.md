@@ -24,6 +24,13 @@ disposition, location, officer\_assignment, any city or state subgeography
 (i.e. county, beat, division, etc), unit, and vehicle_{color,make,model,type}
 are also digit sanitized (each digit replaced with "-") for privacy concerns.
 
+Note that many locations have additional information that could be extracted
+(e.g., zip code), but we do not designate a standardized column for information
+beyond what is listed below, either because we do not use the information in
+our analysis and/or because not enough locations provided this information. We
+do pull through some additional columns (discussed on a location-by-location
+basis within this readme), which have column names prefixed with "raw\_".
+
 <table>
   <tr>
     <td>Column name</td>
@@ -2153,8 +2160,15 @@ We’re excited to see what you come up with!
   `is_acciden`.
 
 
-CHANGE LOG FOR NEXT UPDATE:
-- More stringent deduping logic
-- Contraband found set to FALSE when NA and search conducted is true
-- Predication correction added to metadata
-- Six more cities
+# Changelog
+- December 16th, 2019:
+  - More stringent deduping logic
+  - Contraband found set to FALSE when NA and search conducted is true
+  - Predication correction added to metadata
+  - Six more cities
+- April 3rd, 2020:
+  - Pulled out `raw_HA_RACE_SEX` in Texas Statewide data
+  - Seattle, WA and South Carolina Statewide data had non-unique officer IDs,
+    so `officer_id_hash` now hashes those original IDs with other personal
+    information to create a unique hash; see `officer_id_hash` in table
+    description for more information

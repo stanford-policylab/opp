@@ -83,7 +83,7 @@ clean <- function(d, helpers) {
     officer_first_name = str_trim(officer_first_name),
     # officer_no is not unique, so combine with last name to get hash
     officer_id_hash = simple_map(
-        str_c_na(officer_id, officer_last_name),
+        str_c(officer_id, officer_last_name),
         simple_hash
     ),
     subject_race = tr_race[subject_race],
