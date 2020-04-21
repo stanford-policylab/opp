@@ -461,7 +461,7 @@ opp_download_clean_data_csv_zip_url <- function(state, city) {
 
 opp_download_clean_urls <- function(state, city) {
   prefix <- "https://embed.stanford.edu/iframe?url="
-  purl <- str_c(prefix, "https://purl.stanford.edu/kx738rc7407")
+  purl <- str_c(prefix, "https://purl.stanford.edu/yg821jf8611")
   html <- str_c(readLines(purl), collapse = "\n")
   urls <- str_match_all(html, '<a href="(.*?)"')[[1]][,2]
   pattern <- str_c(normalize_state(state), normalize_city(city), sep = "_")
