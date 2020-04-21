@@ -2079,6 +2079,10 @@ We’re excited to see what you come up with!
 - `raw_enforcements` is simply a concatenation of 12 enforcement columns in the
   raw data.
 - Additional columns in the raw data that may be of interest: officer name
+- A `raw` enforcement value of 1 corresponds to either a citation or an arrest.
+  Under the assumption that most values were citations, we set `citation_issued
+  = TRUE` and `arrest_made = NA` when raw enforcement value was 1, although
+  this will likely mislabel a small number of arrests.
 
 ## Tacoma, WA
 **Data notes**:
