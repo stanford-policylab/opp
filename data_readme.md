@@ -3392,11 +3392,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> subject_age </td>
-   <td style="text-align:left;"> 0.1% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> subject_dob </td>
-   <td style="text-align:left;"> 0.1% </td>
+   <td style="text-align:left;"> 99.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_yob </td>
@@ -6554,7 +6550,7 @@ We’re excited to see what you come up with!
   conclusions from this information.
 
 ## Camden, NJ
-### 2013-05-01 to 2020-01-29
+### 2013-05-01 to 2018-06-13
 <table>
  <thead>
   <tr>
@@ -6680,7 +6676,7 @@ We’re excited to see what you come up with!
   raw_race and raw_ethnicity
 
 ## Henderson, NV
-### 2011-06-30 to 2019-11-12
+### 2011-06-30 to 2018-01-31
 <table>
  <thead>
   <tr>
@@ -8149,7 +8145,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> officer_id_hash </td>
-   <td style="text-align:left;"> 100.0% </td>
+   <td style="text-align:left;"> 98.5% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_age </td>
@@ -9543,10 +9539,6 @@ We’re excited to see what you come up with!
    <td style="text-align:left;"> 67.1% </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> raw_HA_RACE_SEX </td>
-   <td style="text-align:left;"> 100.0% </td>
-  </tr>
-  <tr>
    <td style="text-align:left;"> raw_HA_SEARCH_PC_boolean </td>
    <td style="text-align:left;"> 92.0% </td>
   </tr>
@@ -10088,7 +10080,7 @@ We’re excited to see what you come up with!
 
 
 ## Statewide, WA
-### 2009-01-01 to 2018-09-30
+### 2009-01-01 to 2015-12-31
 <table>
  <thead>
   <tr>
@@ -10099,7 +10091,7 @@ We’re excited to see what you come up with!
 <tbody>
   <tr>
    <td style="text-align:left;"> date </td>
-   <td style="text-align:left;"> 100.0% </td>
+   <td style="text-align:left;"> 72.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> time </td>
@@ -10243,6 +10235,10 @@ We’re excited to see what you come up with!
 - `raw_enforcements` is simply a concatenation of 12 enforcement columns in the
   raw data.
 - Additional columns in the raw data that may be of interest: officer name
+- A `raw` enforcement value of 1 corresponds to either a citation or an arrest.
+  Under the assumption that most values were citations, we set `citation_issued
+  = TRUE` and `arrest_made = NA` when raw enforcement value was 1, although
+  this will likely mislabel a small number of arrests.
 
 ## Tacoma, WA
 ### 2007-09-11 to 2017-09-10
@@ -10389,7 +10385,7 @@ We’re excited to see what you come up with!
   </tr>
   <tr>
    <td style="text-align:left;"> officer_first_name </td>
-   <td style="text-align:left;"> 96.0% </td>
+   <td style="text-align:left;"> 85.3% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_last_name </td>
