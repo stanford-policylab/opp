@@ -1,20 +1,5 @@
 # Open Policing Project (OPP)
 
-## Required System Packages
-
-### All Systems
-* R
-
-### Fedora
-* gdal-devel
-* proj-nad
-* proj-epsg
-* proj-devel
-* v8-314-devel (libv8-3.14-dev ubuntu)
-* libjpeg-turbo-devel
-
-### Mac
-
 ## Simple Bulk Downloads
 Install [python 3](https://www.python.org/downloads/) if you do not have it,
 then follow the subsequent code from command line:
@@ -40,19 +25,19 @@ cd opp
 ```
 
 ## Getting Started
-1. Clone the repository
+Install [R](https://www.r-project.org/) and clone the repository
 ```
 git clone https://github.com/stanford-policylab/opp.git
 ```
-2. Change directories
+Change into the repository's `lib` directory
 ```
 cd opp/lib
 ```
-3. Start R
+Start R
 ```
 R
 ```
-4. Install the required packages in R
+From R, install the required packages
 ```R
 install.packages(c(
   "assertr",
@@ -85,26 +70,25 @@ install.packages(c(
   "zoo"
 ))
 ```
-All these packages must install successfully for the following command to
-succeed.
-
-5. Load the main library
+All these packages must successfully install in order to load the following
+main library:
 ```R
 source("opp.R")
 ```
-6. Set download directory (optional); if you don't set this, it will default to
-   `/tmp/opp_data`.
+Set download directory (optional); if you don't set this, it will default to
+`/tmp/opp_data`.
 ```R
 opp_set_download_directory('/my/data/directory')
 ```
-7. Download some clean data
+Download some clean data
 ```R
 opp_download_clean_data("wa", "seattle")
 ```
-8. Load the clean data
+Load the clean data
 ```R
 d <- opp_load_clean_data("wa", "seattle")
 ```
+Explore!
 
 ## Recreating Analyses
 
