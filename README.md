@@ -15,6 +15,30 @@
 
 ### Mac
 
+## Simple Bulk Downloads
+Install [python 3](https://www.python.org/downloads/) if you do not have it,
+then follow the subsequent code from command line:
+```
+git clone https://github.com/stanford-policylab/opp.git # clone the repo
+cd opp
+
+# Example uses:
+./download                            # download all locations with csv files to /tmp/opp_data
+./download -h                         # see help for all commands
+./download -t csv -l                  # list all locations with csv files
+./download -t csv                     # download all locations with csv files to /tmp/opp_data
+./download -t shapefiles -l            # list all locations with shapefiles
+./download -t shapefiles               # download all locations with shapefiles to /tmp/opp_data
+./download -t rds -l                  # list all locations with rds files
+./download -t rds                     # download all locations with rds files to /tmp/opp_data
+./download -t csv -o ~/Documents/opp  # download all locations with csv files to ~/Documents/opp
+./download -t rds -o ~/Documents/opp  # download all locations with rds files to ~/Documents/opp
+./download -t csv -s CA               # download all California csvs (state + city) to /tmp_opp_data
+./download -c '.*beach.*'             # download all locations that have 'beach' in the city's name to /tmp/opp_data
+./download -s CA -c '.*beach.*'       # download all locations in CA that have 'beach' in the city's name
+./download -t rds -s CA -c 'Long Beach' -o ~/research/opp # will download the rds of Long Beach, CA data to ~/research/opp
+```
+
 ## Getting Started
 1. Clone the repository
 ```
