@@ -34,10 +34,10 @@ load_raw <- function(raw_data_dir, n_max) {
   colnames(d$data)[86 ] <- "id_3"
   colnames(d$data)[87 ] <- "traffic_stop_id_2"
   colnames(d$data)[104] <- "id_4"
-  colnames(d$data)[107] <- "driver_last_name"
-  colnames(d$data)[108] <- "driver_first_name"
+  colnames(d$data)[107] <- "subject_last_name"
+  colnames(d$data)[108] <- "subject_first_name"
   colnames(d$data)[105] <- "traffic_stop_id_3"
-  colnames(d$data)[112] <- "driver_gender"
+  colnames(d$data)[112] <- "subject_gender"
   colnames(d$data)[138] <- "officer_id"
   colnames(d$data)[139] <- "traffic_stop_id_4"
   colnames(d$data)[142] <- "officer_last_name"
@@ -128,12 +128,16 @@ clean <- function(d, helpers) {
   # create a single row for a stop. For search_conducted and contraband_found
   # fields, >99.9% all stops in group have same value. 
   d$data %>%
+    rename(
+      subject_middle_name = MiddleName
+    ) %>%
     merge_rows(
       officer_id,
       officer_first_name,
       officer_last_name,
-      driver_first_name,
-      driver_last_name,
+      subject_first_name,
+      subject_middle_name,
+      subject_last_name,
       IncidentDate,
       IncidentTime,
       DOB,
@@ -159,7 +163,7 @@ clean <- function(d, helpers) {
       subject_dob = parse_date(DOB, "%Y-%m-%d"),
       subject_age = age_at_date(subject_dob, date),
       subject_race = fast_tr(raw_Ethnicity, tr_race),
-      subject_sex = fast_tr(driver_gender, tr_sex),
+      subject_sex = fast_tr(subject_gender, tr_sex),
       officer_sex = fast_tr(officer_gender, tr_sex),
       # TODO: The original analysis suggests outcome / arrest data after
       # 2013 is bad. Follow up on this to clarify what's wrong and remove it

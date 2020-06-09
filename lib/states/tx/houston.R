@@ -43,6 +43,14 @@ clean <- function(d, helpers) {
     speed = Speed,
     posted_speed = `Posted Speed`
   ) %>%
+  separate_cols(
+    `Defendant Name` = c("subject_last_name", "subject_first_middle_name"),
+    sep = ", "
+  ) %>%
+  separate_cols(
+    subject_first_middle_name = c("subject_first_name", "subject_middle_name"),
+    sep = " "
+  ) %>%
   mutate(
     # TODO(phoebe): can we confirm these are all vehicle related incidents?
     # https://app.asana.com/0/456927885748233/663043550621573

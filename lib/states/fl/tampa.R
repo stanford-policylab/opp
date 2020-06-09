@@ -34,6 +34,9 @@ clean <- function(d, helpers) {
   # NOTE: this includes multiple Tampa-area police departments
   d$data %>%
     rename(
+      subject_first_name = `First Name`,
+      subject_middle_name = `Middle Name`,
+      subject_last_name = `Last Name`,
       violation = `Statute Description`,
       vehicle_registration_state = `Tag State`,
       department_name = `Law Enf Agency Name`
@@ -82,6 +85,9 @@ clean <- function(d, helpers) {
     # ) %>%
     merge_rows(
       date,
+      subject_first_name,
+      subject_middle_name,
+      subject_last_name,
       subject_race,
       subject_dob,
       officer_last_name,

@@ -27,29 +27,31 @@ clean <- function(d, helpers) {
   # TODO(phoebe): get search and contraband
   # https://app.asana.com/0/456927885748233/570989790365269 
   d$data %>%
-    merge_rows(
-      `Ticket Date`,
-      `Ticket Time`,
-      `Ticket Location`,
-      `First Name`,
-      `Last Name`,
-      sex,
-      Ethnicity,
-      Race,
-      `Date of Birth`
-    ) %>%
-    helpers$add_lat_lng(
-      "Ticket Location"
-    ) %>%
-    helpers$add_shapefiles_data(
-    ) %>%
     rename(
       date = `Ticket Date`,
       time = `Ticket Time`,
       location = `Ticket Location`,
       violation = `Incident Violation`,
       subject_dob = `Date of Birth`,
-      district = POLICE_DIS
+      district = POLICE_DIS,
+      subject_first_name = `First Name`,
+      subject_last_name = `Last Name`,
+    ) %>%
+    merge_rows(
+      date,
+      time,
+      location,
+      subject_first_name,
+      subject_last_name,
+      subject_dob,
+      sex,
+      Ethnicity,
+      Race
+    ) %>%
+    helpers$add_lat_lng(
+      "Ticket Location"
+    ) %>%
+    helpers$add_shapefiles_data(
     ) %>%
     helpers$add_type(
       "violation"

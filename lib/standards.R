@@ -172,6 +172,9 @@ schema <- c(
   subject_yob                   = as.integer,
   subject_race                  = Curry(factor, levels = valid_races),
   subject_sex                   = Curry(factor, levels = valid_sexes),
+  subject_first_name            = as.character,
+  subject_middle_name           = as.character,
+  subject_last_name             = as.character,
   officer_id                    = as.character,
   officer_id_hash               = as.character,
   officer_age                   = as.numeric,
@@ -293,5 +296,8 @@ redact_for_public_release <- c(
   "officer_id",
   "officer_dob",
   "officer_first_name",
-  "officer_last_name"
+  "officer_last_name",
+  "subject_first_name",
+  "subject_middle_name",
+  "subject_last_name"
 )

@@ -30,6 +30,8 @@ clean <- function(d, helpers) {
     ) %>%
     rename(
       subject_age = defendant_age,
+      subject_first_name = defendant_first_name,
+      subject_last_name = defendant_last_name,
       # TODO(ravi): is this acceptable? should we filter out anything else?
       # https://app.asana.com/0/456927885748233/595493946182533
       violation = charge_description,

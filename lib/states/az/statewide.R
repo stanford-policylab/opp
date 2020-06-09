@@ -115,6 +115,8 @@ clean <- function(d, helpers) {
       date = DateOfStop,
       time = TimeOfStop,
       officer_id = BadgeNumber,
+      subject_first_name = SubjectFirstName,
+      subject_last_name = SubjectLastName,
       vehicle_year = VehicleYear,
       vehicle_type = VehicleStyle
     ) %>%

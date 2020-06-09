@@ -28,6 +28,7 @@ clean <- function(d, helpers) {
       off_dt,
       off_ti,
       dob,
+      lname,
       ht,
       sex,
       wt,
@@ -42,7 +43,8 @@ clean <- function(d, helpers) {
       vehicle_registration_state = plate_state,
       vehicle_type = style,
       vehicle_color = color,
-      officer_id = ofcr_id
+      officer_id = ofcr_id,
+      subject_last_name = lname
     ) %>%
     mutate(
       # TODO(phoebe); are these all vehicular stops?
