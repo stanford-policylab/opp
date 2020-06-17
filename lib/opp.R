@@ -988,6 +988,12 @@ opp_processor_paths <- function() {
 }
 
 
+opp_raw_column_names <- function(state, city = "statewide") {
+  tbl <- opp_load_raw_data(state, city)
+  list(state = state, city = city, cols = colnames(tbl))
+}
+
+
 opp_raw_data_dir <- function(state, city = "statewide") {
   data_dir <- opp_data_dir(state, city)
   file.path(data_dir, "raw_csv")
