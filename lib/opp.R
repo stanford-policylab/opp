@@ -295,11 +295,15 @@ opp_clean <- function(d, state, city = "statewide") {
 }
 
 
-opp_clean_data_path <- function(state, city = "statewide") {
+opp_clean_data_path <- function(state, city = "statewide", csv_path=FALSE) {
   # NOTE: all clean data is stored and loaded in RDS format to
   # maintain data types
   clean_data_dir <- dir_create(path(opp_data_dir(state, city), "clean"))
-  path(clean_data_dir, str_c(normalize_city(city), ".rds"))
+  if (csv_path) {
+    path(clean_data_dir, str_c(normalize_city(city), ".csv"))
+  } else {
+    path(clean_data_dir, str_c(normalize_city(city), ".rds"))
+  }
 }
 
 
@@ -1105,6 +1109,9 @@ opp_run_veil_of_darkness <- function() {
 
 opp_save <- function(d, state, city = "statewide") {
   saveRDS(d, opp_clean_data_path(state, city))
+  csv_path <- opp_clean_data_path(state, city, csv_path=TRUE)
+  write_csv(d$data, csv_path)
+  zip(str_c(csv_path, ".zip"), csv_path, "-jm9")
 }
 
 
