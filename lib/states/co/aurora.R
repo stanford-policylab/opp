@@ -33,7 +33,6 @@ clean <- function(d, helpers) {
       location = `Ticket Location`,
       violation = `Incident Violation`,
       subject_dob = `Date of Birth`,
-      district = POLICE_DIS,
       subject_first_name = `First Name`,
       subject_last_name = `Last Name`,
     ) %>%
