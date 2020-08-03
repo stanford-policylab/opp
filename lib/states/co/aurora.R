@@ -48,7 +48,6 @@ clean <- function(d, helpers) {
       Race
     ) %>%
     helpers$add_lat_lng(
-      "Ticket Location"
     ) %>%
     helpers$add_shapefiles_data(
     ) %>%
