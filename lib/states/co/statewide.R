@@ -129,7 +129,11 @@ clean <- function(d, helpers) {
   # fields, >99.9% all stops in group have same value. 
   d$data %>%
     rename(
-      subject_middle_name = MiddleName
+      subject_middle_name = MiddleName,
+      subject_drivers_license = DL,
+      subject_drivers_license_state = DLState,
+      vehicle_license_plate = Plate,
+      vehicle_registration_state = PlateState
     ) %>%
     merge_rows(
       officer_id,

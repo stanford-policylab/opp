@@ -37,6 +37,8 @@ clean <- function(d, helpers) {
       subject_first_name = `First Name`,
       subject_middle_name = `Middle Name`,
       subject_last_name = `Last Name`,
+      subject_drivers_license = `Drivers License Number`,
+      subject_drivers_license_state = `Drivers License State`,
       violation = `Statute Description`,
       vehicle_registration_state = `Tag State`,
       department_name = `Law Enf Agency Name`

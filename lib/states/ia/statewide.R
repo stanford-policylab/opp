@@ -44,6 +44,7 @@ clean <- function(d, helpers) {
       location = OFFENSELOCATN,
       # NOTE: subject_age, officer_id, department_name are NA for all warnings.
       subject_age = LOCKAGE,
+      subject_drivers_license = LOCKDL,
       officer_id = BADGENUMBER,
       # NOTE: vehicle_* is NA for all warnings.
       vehicle_color = LOCKVEHICLECOLOR,

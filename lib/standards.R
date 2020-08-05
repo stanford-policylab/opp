@@ -175,6 +175,8 @@ schema <- c(
   subject_first_name            = as.character,
   subject_middle_name           = as.character,
   subject_last_name             = as.character,
+  subject_drivers_license       = as.character,
+  subject_drivers_license_state = as.character,
   officer_id                    = as.character,
   officer_id_hash               = as.character,
   officer_age                   = as.numeric,
@@ -222,6 +224,7 @@ schema <- c(
   use_of_force_description      = as.character,
   use_of_force_reason           = as.character,
   vehicle_color                 = as.character,
+  vehicle_license_plate         = as.character,
   vehicle_make                  = as.character,
   vehicle_model                 = as.character,
   vehicle_type                  = as.character,
@@ -299,5 +302,8 @@ redact_for_public_release <- c(
   "officer_last_name",
   "subject_first_name",
   "subject_middle_name",
-  "subject_last_name"
+  "subject_last_name",
+  "subject_drivers_license",
+  "subject_drivers_license_state",
+  "vehicle_license_plate"
 )
