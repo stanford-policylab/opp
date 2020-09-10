@@ -3,6 +3,8 @@ source("common.R")
 # VALIDATION: [YELLOW] auroragov.org was down (2018-12-13), so the annual
 # report couldn't be accessed for validation, but the data seems reasonable.
 load_raw <- function(raw_data_dir, n_max) {
+  # NOTE: Here, "old" means second-wave (Dan and Amy) OPP in 2018 and 2019, and
+  # "new" means the data update led by Phoebe in 2020.
   old_d <- load_regex(
     raw_data_dir,
     "^aurora_colorado_orr_3253_traf_tix_w_demos_sheet_",
