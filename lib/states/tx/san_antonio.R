@@ -5,7 +5,12 @@ source("common.R")
 # appear to issue annual reports or traffic statistics. That said, the number
 # of stops seems reasonable if not a little low for a state of 1.4M people.
 load_raw <- function(raw_data_dir, n_max) {
-  d <- load_years(raw_data_dir, n_max = n_max)
+  # NOTE: The 2018 data from second-wave OPP (Dan and Amy, in 2018 and 2019) is
+  # incomplete; we start with the 2018 data gathered by Phoebe in the 2020 data
+  # refresh.
+  csv_fns <- files_with_recent_year_in_name(raw_data_dir) %>%
+    str_subset("/2018_citations", negate = TRUE)
+  d <- load_similar_files(csv_fns, n_max = n_max)
   d$data <- make_ergonomic_colnames(d$data)
   bundle_raw(d$data, d$loading_problems)
 }
