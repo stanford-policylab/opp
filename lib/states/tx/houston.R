@@ -8,11 +8,12 @@ source("common.R")
 # of stops in 2017. New data for 2018 is the same as old 2018 data. 
 load_raw <- function(raw_data_dir, n_max) {
   
+  # should these be the csv files or the xlsx files? 
   old_2014 <- load_single_file(raw_data_dir, '2014.csv', n_max = n_max)
   old_2015 <- load_single_file(raw_data_dir, '2015.csv', n_max = n_max)
   old_2016 <- load_single_file(raw_data_dir, '2016.csv', n_max = n_max)
   old_2017 <- load_single_file(raw_data_dir, '2017.csv', n_max = n_max)
-  old_2018 <- load_single_file(raw_data_dir, '2018.csv', n_max = n_max)
+  new_2018 <- load_single_file(raw_data_dir, '2018.csv', n_max = n_max)
   new_2019 <- load_single_file(raw_data_dir, '2019.csv', n_max = n_max)
   new_2020 <- load_single_file(raw_data_dir, '2020.csv', n_max = n_max)
   
@@ -20,12 +21,13 @@ load_raw <- function(raw_data_dir, n_max) {
     old_2014$data,
     old_2015$data,
     old_2016$data,
-    old_2017$data,
-    old_2018$data,
+    old_2017$data
   )
   
   new_d <- bind_rows(
-    new_2019$data, new_2020$data %>% rename("DISPOTION" = "DISPOSITION_NAME")
+    new_2018$data, 
+    new_2019$data, 
+    new_2020$data %>% rename("DISPOTION" = "DISPOSITION_NAME")
   ) %>% 
     rename(`Case Number` = Case_Nbr,
            `Offense Date` = Offense_Dtm, 
@@ -55,7 +57,7 @@ load_raw <- function(raw_data_dir, n_max) {
       old_2015$loading_problems, 
       old_2016$loading_problems, 
       old_2017$loading_problems, 
-      old_2018$loading_problems, 
+      new_2018$loading_problems, 
       new_2019$loading_problems, 
       new_2020$loading_problems
     )
