@@ -13,7 +13,9 @@ load_raw <- function(raw_data_dir, n_max) {
   old_2015 <- load_single_file(raw_data_dir, '2015.csv', n_max = n_max)
   old_2016 <- load_single_file(raw_data_dir, '2016.csv', n_max = n_max)
   old_2017 <- load_single_file(raw_data_dir, '2017.csv', n_max = n_max)
-  new_2018 <- load_single_file(raw_data_dir, '2018.csv', n_max = n_max)
+  # rename when we figure out file issue -> because new 2018 data not being read in, 
+  # processing with 2019 and 2020 data was creating duplicated column names / causing issues
+  old_2018 <- load_single_file(raw_data_dir, '2018.csv', n_max = n_max) 
   new_2019 <- load_single_file(raw_data_dir, '2019.csv', n_max = n_max)
   new_2020 <- load_single_file(raw_data_dir, '2020.csv', n_max = n_max)
   
@@ -21,33 +23,34 @@ load_raw <- function(raw_data_dir, n_max) {
     old_2014$data,
     old_2015$data,
     old_2016$data,
-    old_2017$data
+    old_2017$data,
+    old_2018$data # remove when we figure out file issue
   )
   
   new_d <- bind_rows(
-    new_2018$data, 
-    new_2019$data, 
+    #new_2018$data, uncomment when we figure out fill issue
+    new_2019$data,
     new_2020$data %>% rename("DISPOTION" = "DISPOSITION_NAME")
-  ) %>% 
+  ) %>%
     rename(`Case Number` = Case_Nbr,
-           `Offense Date` = Offense_Dtm, 
+           `Offense Date` = Offense_Dtm,
            Block = VIO_STREET_NBR,
-           Street = VIO_STREET, 
+           Street = VIO_STREET,
            `Scnd Block` = Scnd_Blk_Mile,
            `Scnd Street` = Scnd_St_Name,
-           Race = RACE, 
-           Gender = GENDER, 
-           `Defendant Name` = DfndtName, 
+           Race = RACE,
+           Gender = GENDER,
+           `Defendant Name` = DfndtName,
            `Citataion Num` = CITATION_NUMBER,
-           Speed = Driving_Speed, 
+           Speed = Driving_Speed,
            `Posted Speed` = Posted_Speed,
-           `V Color` = Veh_Color, 
-           `V Make` = Veh_Make, 
+           `V Color` = Veh_Color,
+           `V Make` = Veh_Make,
            `V Model` = Veh_Model,
-           `Violation Description` = VioDesc, 
+           `Violation Description` = VioDesc,
            `Officer Name` = OFFICER_NAME,
     ) %>%
-    select(-VioCode, -Prim_Mile_Post_Number, -Scnd_Mile_Post_Number, 
+    select(-VioCode, -Prim_Mile_Post_Number, -Scnd_Mile_Post_Number,
            -CaseStatus, -DISPOSITION, -DISPOTION)
   
   bundle_raw(
@@ -57,7 +60,7 @@ load_raw <- function(raw_data_dir, n_max) {
       old_2015$loading_problems, 
       old_2016$loading_problems, 
       old_2017$loading_problems, 
-      new_2018$loading_problems, 
+      old_2018$loading_problems, 
       new_2019$loading_problems, 
       new_2020$loading_problems
     )
@@ -116,7 +119,7 @@ clean <- function(d, helpers) {
       # https://app.asana.com/0/456927885748233/663043550621573
       type = "vehicular",
       date = parse_date(date), 
-      time = parse_time(time),
+      time = parse_time(time), # time not getting processed correctly 
       # NOTE: either block and street are provided or two cross streets
       # NEW DATA NOTE: the above note is not true for the new data
       location = coalesce(
