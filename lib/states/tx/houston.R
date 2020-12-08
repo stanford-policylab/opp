@@ -5,7 +5,7 @@ source("common.R")
 # figures, but the stop counts don't appear unreasonable for a city of 2M
 # people. 2018 only has partial data. 
 # NEW DATA UPDATE: Number of stops on 2019 is roughly on par with number
-# of stops in 2017. New data for 2018 is the same as old 2018 data. 
+# of stops in 2017. New data for 2018 is the same as old 2018 data (need to fix). 
 load_raw <- function(raw_data_dir, n_max) {
   
   # should these be the csv files or the xlsx files? 
