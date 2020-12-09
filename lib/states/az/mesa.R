@@ -8,32 +8,58 @@ source("common.R")
 # a little unclear as to which charges are specifically pedestrian vs.
 # vehicular, so our categorization here is weak; see outstanding TODO
 load_raw <- function(raw_data_dir, n_max) {
-  d <- load_single_file(
+  old_d <- load_single_file(
     raw_data_dir,
     "2014-03-17_citations_data_prr.csv",
     n_max
   )
-  bundle_raw(d$data, d$loading_problems)
+  
+  # duplicates and near duplicates from overlapping time frame are
+  # not getting removed -> how to fix this? 
+  updated_d <- load_single_file(
+    raw_data_dir, 
+    "2017_-_2019-09-23_Cites_PRR.csv", 
+    n_max
+  ) 
+  
+  new_d <- updated_d$data %>% 
+    rename(
+      OFCR_LNME = OFCR_LNAME, 
+      OFCR_ID = OFFCR_ID
+    )
+  
+  bundle_raw(
+    bind_rows(old_d$data, new_d), 
+    c(old_d$loading_problems, 
+      updated_d$loading_problems)
+  )
 }
 
 
 clean <- function(d, helpers) {
-
+  
   tr_yn = c(
     YES = TRUE,
     NO = FALSE
   )
-
+  
   colnames(d$data) <- tolower(colnames(d$data))
-
-  # NOTE: INCIDENT_NO appears to refer to the same incident but can involve
+  
+  # OLD NOTE: INCIDENT_NO appears to refer to the same incident but can involve
   # multiple people, i.e. 20150240096, which appears to be an alcohol bust of
   # several underage teenagers; in other instances, the rows look nearly
   # identical, but given this information and checking several other seeming
   # duplicates, it appears as though there is one row per person per incident
   d$data %>%
     mutate(
-      location = str_trim(str_c(block, city, sep = ", "))
+      location = str_trim(str_c(block, city, sep = ", ")),
+      # is there a better way to do this? 
+      # in old data, format is %Y-%m-%d (e.g., 2014-01-01)
+      # in new data, format is %m/%d/%Y (e.g., 01/01/2017)
+      date = coalesce(
+        lubridate::mdy(date), 
+        lubridate::ymd(date)
+      )
     ) %>%
     helpers$add_lat_lng(
     ) %>%
@@ -49,6 +75,8 @@ clean <- function(d, helpers) {
       # TODO(phoebe): can we get clearer definitions of ped vs veh?
       # https://app.asana.com/0/456927885748233/571408593843006
       type = if_else(
+        # all of the parking charges with this prefix appear to be parking-related, 
+        # are these not considered vehicle? i guess we consider them NA?  
         charge_prefix == "28" & !str_detect(violation, "BICYC|PARK"),
         "vehicular",
         if_else(
