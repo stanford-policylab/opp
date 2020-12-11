@@ -31,6 +31,9 @@ load_raw <- function(raw_data_dir, n_max) {
     n_max
   )
 
+  ## NOTE: The new data starts in Jan. 2018 
+  ## and the old data covers through Sept. 2017, 
+  ## so we're still missing Oct.-Dec. 2017
   new_d <- bind_rows(
     cit_new$data,
     warn_new$data
