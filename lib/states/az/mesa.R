@@ -14,8 +14,11 @@ load_raw <- function(raw_data_dir, n_max) {
     n_max
   )
   
-  # duplicates and near duplicates from overlapping time frame are
-  # not getting removed -> how to fix this? 
+  # adding source variable to use in 
+  # filtering out duplicates later
+  old_d$data <- old_d$data %>%
+    mutate(source = "old_data")
+  
   updated_d <- load_single_file(
     raw_data_dir, 
     "2017_-_2019-09-23_Cites_PRR.csv", 
@@ -26,6 +29,10 @@ load_raw <- function(raw_data_dir, n_max) {
     rename(
       OFCR_LNME = OFCR_LNAME, 
       OFCR_ID = OFFCR_ID
+      # adding source variable to use in filtering
+      # out duplicates later 
+    ) %>% mutate(
+      source = "new_data"
     )
   
   bundle_raw(
@@ -61,6 +68,21 @@ clean <- function(d, helpers) {
         lubridate::ymd(date)
       )
     ) %>%
+    # NOTE, DEC. 2020: Between 01/01/2017 and 03/31/2017: 
+    # There are ~7000 rows in each df (old and new) for this time period
+    # ~6300 in the new data are exact duplicates of rows in the old data
+    # Of the remaining ~700 in the new data, ~673 are slightly different but clearly duplicates
+    # They are exactly the same on date, time, citation number, city, officer id, 
+    # charge description, but have slight variations here and there in the charge code, 
+    # address, officer name, etc. 3 more are duplicates that are either missing a letter 
+    # in the charge description or missing some data in the old version; 
+    # 18 remaining entries appear to be new entries in the new data not in the old data
+    # Because of this, we filter out data from the old data sources that are in this time frame 
+    filter(
+      (date < "2017-01-01") | 
+      (date > "2017-03-31") | 
+      (date >= "2017-01-01" & date <= "2017-03-31" & source=="new_data")
+    ) %>% 
     helpers$add_lat_lng(
     ) %>%
     rename(
