@@ -58,14 +58,17 @@ clean <- function(d, helpers) {
         "pedestrian",
         "vehicular"
       ),
+      citation_date_time = sub("\\+.*", "", citation_date_time), 
       datetime = coalesce(
         parse_datetime(citation_date_time, locale = locale(tz = "US/Central")),
+        parse_datetime(citation_date_time, "%Y-%m-%d %H:%M:%S"),
         parse_datetime(citation_date_time, "%Y/%m/%d %H:%M:%S"),
         parse_datetime(citation_date_time, "%Y/%m/%d")
       ),
       date = as.Date(datetime),
       time = format(datetime, "%H:%M:%S"),
-      # NOTE: all the files are named citations_<year>.csv
+      # OLD NOTE: all the files are named citations_<year>.csv
+      # NEW NOTE: the 2020 file has a different name, citations_20200518.csv
       citation_issued = TRUE,
       outcome = "citation",
       # TODO(phoebe): can we get other outcomes (warnings, arrests)?
