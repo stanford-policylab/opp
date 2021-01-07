@@ -58,6 +58,11 @@ clean <- function(d, helpers) {
         "pedestrian",
         "vehicular"
       ),
+      # NOTE: some of the date info in the new 2018-2020 data
+      # has what appears to be some sort of timezone info at the end
+      # of the string - e.g., "2018/01/01 10:48:00+00". All 
+      # entries with this format have "+00" at the end, which we remove 
+      # for processing
       citation_date_time = sub("\\+.*", "", citation_date_time), 
       datetime = coalesce(
         parse_datetime(citation_date_time, locale = locale(tz = "US/Central")),
