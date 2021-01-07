@@ -74,6 +74,9 @@ clean <- function(d, helpers) {
   ) %>%
   helpers$add_lat_lng(
   ) %>%
+  helpers$add_shapefiles_data(
+  ) %>%
+  rename(beat = NAME.x) %>%
   helpers$add_type(
     "violation"
   ) %>%

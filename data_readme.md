@@ -7759,7 +7759,11 @@ We’re excited to see what you come up with!
 - 2018 has only partial data, and it appears to be the same for early 2014
 
 ## Pittsburgh, PA
-### 2008-01-01 to 2018-04-29
+
+__NOTE:__ _Due to unexplained discrepancies in the raw data provided to us by
+Pittsburgh PD, we have temporarily removed this dataset from the site._
+
+### 2008-01-01 to 2018-04-29  
 <table>
  <thead>
   <tr>
