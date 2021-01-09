@@ -26,12 +26,13 @@ load_raw <- function(raw_data_dir, n_max) {
   ) 
   
   new_d <- updated_d$data %>% 
-    rename(
-      OFCR_LNME = OFCR_LNAME, 
-      OFCR_ID = OFFCR_ID
-      # adding source variable to use in filtering
-      # out duplicates later 
-    ) %>% mutate(
+    # rename(
+    #   OFCR_LNME = OFCR_LNAME, 
+    #   OFCR_ID = OFFCR_ID
+    # ) %>% 
+    # adding source variable to use in filtering
+    # out duplicates later 
+    mutate(
       source = "new_data"
     )
   
@@ -63,10 +64,13 @@ clean <- function(d, helpers) {
       # is there a better way to do this? 
       # in old data, format is %Y-%m-%d (e.g., 2014-01-01)
       # in new data, format is %m/%d/%Y (e.g., 01/01/2017)
-      date = coalesce(
-        lubridate::mdy(date), 
-        lubridate::ymd(date)
-      )
+      date = ymd(if_else(source == "old_data", lubridate::ymd(date), lubridate::mdy(date))),
+      # date = coalesce(
+      #   lubridate::mdy(date), 
+      #   lubridate::ymd(date)
+      # ), 
+      officer_last_name = coalesce(ofcr_lname, ofcr_lnme),
+      officer_id = coalesce(ofcr_id, offcr_id),
     ) %>%
     # NOTE, DEC. 2020: Between 01/01/2017 and 03/31/2017: 
     # There are ~7000 rows in each df (old and new) for this time period
@@ -87,8 +91,8 @@ clean <- function(d, helpers) {
     ) %>%
     rename(
       subject_age = age,
-      officer_id = ofcr_id,
-      officer_last_name = ofcr_lnme,
+      #officer_id = ofcr_id,
+      #officer_last_name = ofcr_lnme,
       violation = charge_desc
     ) %>%
     mutate(
