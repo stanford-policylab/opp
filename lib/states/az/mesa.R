@@ -26,12 +26,6 @@ load_raw <- function(raw_data_dir, n_max) {
   ) 
   
   new_d <- updated_d$data %>% 
-    # rename(
-    #   OFCR_LNME = OFCR_LNAME, 
-    #   OFCR_ID = OFFCR_ID
-    # ) %>% 
-    # adding source variable to use in filtering
-    # out duplicates later 
     mutate(
       source = "new_data"
     )
@@ -61,14 +55,9 @@ clean <- function(d, helpers) {
   d$data %>%
     mutate(
       location = str_trim(str_c(block, city, sep = ", ")),
-      # is there a better way to do this? 
       # in old data, format is %Y-%m-%d (e.g., 2014-01-01)
       # in new data, format is %m/%d/%Y (e.g., 01/01/2017)
       date = ymd(if_else(source == "old_data", lubridate::ymd(date), lubridate::mdy(date))),
-      # date = coalesce(
-      #   lubridate::mdy(date), 
-      #   lubridate::ymd(date)
-      # ), 
       officer_last_name = coalesce(ofcr_lname, ofcr_lnme),
       officer_id = coalesce(ofcr_id, offcr_id),
     ) %>%
