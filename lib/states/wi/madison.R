@@ -18,32 +18,27 @@ load_raw <- function(raw_data_dir, n_max) {
     "mpd_traffic_stop_request_warnings.csv",
     n_max
   )
-
+  
   cit_new <- load_single_file(
     raw_data_dir,
     "elcis_with_demographics.csv",
     n_max
   )
-
+  
   warn_new <- load_single_file(
     raw_data_dir,
     "warnings_with_demographics.csv",
     n_max
   )
-
+  
   ## NOTE: The new data starts in Jan. 2018 
   ## and the old data covers through Sept. 2017, 
   ## so we're still missing Oct.-Dec. 2017
   new_d <- bind_rows(
     cit_new$data,
     warn_new$data
-  ) %>%
-    rename(
-      State = `Reg State`,
-      Year = `Model Year`,
-      Ticketed = Type
-    )
-
+  )
+  
   bundle_raw(
     bind_rows(cit_old$data, warn_old$data, new_d),
     c(cit_old$loading_problems,
@@ -55,88 +50,92 @@ load_raw <- function(raw_data_dir, n_max) {
 
 
 clean <- function(d, helpers) {
-
+  
   # TODO(phoebe): can we get reason_for_stop/search/contraband data?
   # https://app.asana.com/0/456927885748233/595493946182539
   d$data %>%
-  merge_rows(
-    Date,
-    Time,
-    onStreet,
-    onStreetName,
-    OfficerName,
-    Race,
-    Sex,
-    Make,
-    Model,
-    Year,
-    State,
-    Limit,
-    OverLimit,
-    Ticketed
-  ) %>%
-  rename(
-    violation = `Statute Description`,
-    vehicle_make = Make,
-    vehicle_model = Model,
-    vehicle_year = Year,
-    vehicle_color = Color,
-    vehicle_registration_state = State,
-    posted_speed = Limit,
-    subject_age = Age, # new data has age, but for some reason, all are coerced to NA
-    time = Time
-  ) %>%
-  separate_cols(
-    OfficerName = c("officer_last_name", "officer_first_name")
-  ) %>%
-  mutate(
-    # OLD NOTE: Statute Descriptions are almost all vehicular, there are a few
-    # pedestrian related Statute Descriptions, but it's unclear whether
-    # the pedestrian or vehicle is failing to yield, but this represents a
-    # quarter of a percent maximum
-    # UPDATED NOTE: Similarly, there are a few pedestrian related Statute
-    # Descriptions, but they are extremely infrequent (~ < a quarter of a percent)
-    type = "vehicular",
-    speed = as.integer(posted_speed) + as.integer(OverLimit),
-    date = parse_date(Date, "%Y/%m/%d"),
-    location = coalesce(onStreet, onStreetName),
-    # logic: for old data, if ticket # is NA, it's a warning
-    # for new data, if Ticketed == "Warning", it's a warning
-    # new data doesn't have ticket # var; old data doesn't have ticketed var
-    # so if Ticketed is NA and Ticket # is NA, it's a warning
-    # if Ticketed == "Warning", it's a warning
-    # if Ticketed == "ELCI", its a ticket
-    # if Ticket # is not NA, it's a ticket
-    warning_issued = case_when(
-      Ticketed=="Warning" ~ TRUE,
-      is.na(Ticketed) & is.na(`Ticket #`) ~ TRUE,
-      # if anything else is the case, then its a ticket
-      TRUE ~ FALSE
-    ),
-    citation_issued = !warning_issued,
-    # TODO(phoebe): can we get arrests?
-    # https://app.asana.com/0/456927885748233/595493946182543
-    outcome = first_of(
-      citation = citation_issued,
-      warning = warning_issued
-    ),
-    # there are several thousand rows in the 
-    # new data where race and sex are switched
-    fixed_race = ifelse(Race %in% c("M","F"), Sex, Race), 
-    fixed_sex = ifelse(Race %in% c("M","F"), Race, Sex), 
-    subject_race = tr_race[fixed_race],
-    subject_sex = tr_sex[fixed_sex],
-  ) %>%
-  helpers$add_lat_lng(
-  ) %>%
-  helpers$add_shapefiles_data(
-  ) %>%
-  # NOTE: shapefiles don't appear to include district 2 and accompanying
-  # sectors
-  rename(
-    sector = Sector,
-    district = District,
-    raw_race = fixed_race
-  ) %>%
-  standardize(d$metadata)
+    mutate(
+      vehicle_registration_state = coalesce(`Reg State`, State),
+      vehicle_year = coalesce(`Model Year`, Year),
+    ) %>%
+    merge_rows(
+      Date,
+      Time,
+      onStreet,
+      onStreetName,
+      OfficerName,
+      Race,
+      Sex,
+      Make,
+      Model,
+      vehicle_year,
+      vehicle_registration_state,
+      Limit,
+      OverLimit,
+      Type
+    ) %>%
+    rename(
+      Ticketed = Type, 
+      violation = `Statute Description`,
+      vehicle_make = Make,
+      vehicle_model = Model,
+      vehicle_color = Color,
+      posted_speed = Limit,
+      subject_age = Age, 
+      time = Time
+    ) %>%
+    separate_cols(
+      OfficerName = c("officer_last_name", "officer_first_name")
+    ) %>%
+    mutate(
+      # OLD NOTE: Statute Descriptions are almost all vehicular, there are a few
+      # pedestrian related Statute Descriptions, but it's unclear whether
+      # the pedestrian or vehicle is failing to yield, but this represents a
+      # quarter of a percent maximum
+      # UPDATED NOTE: Similarly, there are a few pedestrian related Statute
+      # Descriptions, but they are extremely infrequent (~ < a quarter of a percent)
+      type = "vehicular",
+      speed = as.integer(posted_speed) + as.integer(OverLimit),
+      date = parse_date(Date, "%Y/%m/%d"),
+      location = coalesce(onStreet, onStreetName),
+      # logic: for old data, if ticket # is NA, it's a warning
+      # for new data, if Ticketed == "Warning", it's a warning
+      # new data doesn't have ticket # var; old data doesn't have ticketed var
+      # so if Ticketed is NA and Ticket # is NA (i.e., from the old data), it's a warning
+      # if Ticketed == "Warning", it's a warning
+      # if Ticketed == "ELCI", its a ticket
+      # if Ticket # is not NA, (i.e., from the new data and not a warning) it's a ticket
+      # warning formula: Ticketed == "Warning" OR (Ticketed is NA & Ticket # is NA)
+      warning_issued = case_when(
+        Ticketed == "Warning" ~ TRUE,
+        is.na(Ticketed) & is.na(`Ticket #`) ~ TRUE,
+        # if anything else is the case, then its a ticket
+        TRUE ~ FALSE
+      ),
+      citation_issued = !warning_issued,
+      # TODO(phoebe): can we get arrests?
+      # https://app.asana.com/0/456927885748233/595493946182543
+      outcome = first_of(
+        citation = citation_issued,
+        warning = warning_issued
+      ),
+      # there are several thousand rows in the 
+      # new data where race and sex are switched
+      fixed_race = ifelse(Race %in% c("M","F"), Sex, Race), 
+      fixed_sex = ifelse(Race %in% c("M","F"), Race, Sex), 
+      subject_race = tr_race[fixed_race],
+      subject_sex = tr_sex[fixed_sex],
+    ) %>%
+    helpers$add_lat_lng(
+    ) %>%
+    helpers$add_shapefiles_data(
+    ) %>%
+    # NOTE: shapefiles don't appear to include district 2 and accompanying
+    # sectors
+    rename(
+      sector = Sector,
+      district = District,
+      raw_race = fixed_race
+    ) %>%
+    standardize(d$metadata)
 }
