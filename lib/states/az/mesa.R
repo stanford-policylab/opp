@@ -80,8 +80,6 @@ clean <- function(d, helpers) {
     ) %>%
     rename(
       subject_age = age,
-      #officer_id = ofcr_id,
-      #officer_last_name = ofcr_lnme,
       violation = charge_desc
     ) %>%
     mutate(
