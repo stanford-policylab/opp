@@ -74,8 +74,8 @@ clean <- function(d, helpers) {
     # Because of this, we filter out data from the old data sources that are in this time frame 
     filter(
       (date < "2017-01-01") | 
-      (date > "2017-03-31") | 
-      (date >= "2017-01-01" & date <= "2017-03-31" & source=="new_data")
+        (date > "2017-03-31") | 
+        (date >= "2017-01-01" & date <= "2017-03-31" & source=="new_data")
     ) %>% 
     helpers$add_lat_lng(
     ) %>%
