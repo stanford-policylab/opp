@@ -25,13 +25,11 @@ load_raw <- function(raw_data_dir, n_max) {
     n_max
   ) 
   
-  new_d <- updated_d$data %>% 
-    mutate(
-      source = "new_data"
-    )
+  updated_d$data <- updated_d$data %>%
+    mutate(source = "new_data")
   
   bundle_raw(
-    bind_rows(old_d$data, new_d), 
+    bind_rows(old_d$data, updated_d$data), 
     c(old_d$loading_problems, 
       updated_d$loading_problems)
   )
@@ -45,19 +43,22 @@ clean <- function(d, helpers) {
     NO = FALSE
   )
   
-  colnames(d$data) <- tolower(colnames(d$data))
-  
   # OLD NOTE: INCIDENT_NO appears to refer to the same incident but can involve
   # multiple people, i.e. 20150240096, which appears to be an alcohol bust of
   # several underage teenagers; in other instances, the rows look nearly
   # identical, but given this information and checking several other seeming
   # duplicates, it appears as though there is one row per person per incident
   d$data %>%
+    rename_all(str_to_lower) %>%
     mutate(
       location = str_trim(str_c(block, city, sep = ", ")),
       # in old data, format is %Y-%m-%d (e.g., 2014-01-01)
       # in new data, format is %m/%d/%Y (e.g., 01/01/2017)
-      date = ymd(if_else(source == "old_data", lubridate::ymd(date), lubridate::mdy(date))),
+      date = ymd(if_else(
+        source == "old_data", 
+        lubridate::ymd(date), 
+        lubridate::mdy(date)
+      )),
       officer_last_name = coalesce(ofcr_lname, ofcr_lnme),
       officer_id = coalesce(ofcr_id, offcr_id),
     ) %>%
