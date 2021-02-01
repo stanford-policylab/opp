@@ -41,10 +41,12 @@ load_raw <- function(raw_data_dir, n_max) {
   
   bundle_raw(
     bind_rows(cit_old$data, warn_old$data, new_d),
-    c(cit_old$loading_problems,
+    c(
+      cit_old$loading_problems,
       warn_old$loading_problems,
       cit_new$loading_problems,
-      warn_new$loading_problems)
+      warn_new$loading_problems
+    )
   )
 }
 
@@ -75,7 +77,7 @@ clean <- function(d, helpers) {
       Type
     ) %>%
     rename(
-      Ticketed = Type, 
+      ticketed = Type, 
       violation = `Statute Description`,
       vehicle_make = Make,
       vehicle_model = Model,
@@ -99,16 +101,16 @@ clean <- function(d, helpers) {
       date = parse_date(Date, "%Y/%m/%d"),
       location = coalesce(onStreet, onStreetName),
       # logic: for old data, if ticket # is NA, it's a warning
-      # for new data, if Ticketed == "Warning", it's a warning
+      # for new data, if ticketed == "Warning", it's a warning
       # new data doesn't have ticket # var; old data doesn't have ticketed var
-      # so if Ticketed is NA and Ticket # is NA (i.e., from the old data), it's a warning
-      # if Ticketed == "Warning", it's a warning
-      # if Ticketed == "ELCI", its a ticket
+      # so if ticketed is NA and Ticket # is NA (i.e., from the old data), it's a warning
+      # if ticketed == "Warning", it's a warning
+      # if ticketed == "ELCI", its a ticket
       # if Ticket # is not NA, (i.e., from the new data and not a warning) it's a ticket
-      # warning formula: Ticketed == "Warning" OR (Ticketed is NA & Ticket # is NA)
+      # warning formula: ticketed == "Warning" OR (ticketed is NA & Ticket # is NA)
       warning_issued = case_when(
-        Ticketed == "Warning" ~ TRUE,
-        is.na(Ticketed) & is.na(`Ticket #`) ~ TRUE,
+        ticketed == "Warning" ~ TRUE,
+        is.na(ticketed) & is.na(`Ticket #`) ~ TRUE,
         # if anything else is the case, then its a ticket
         TRUE ~ FALSE
       ),
