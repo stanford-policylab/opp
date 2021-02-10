@@ -63,7 +63,7 @@ clean <- function(d, helpers) {
       # of the string - e.g., "2018/01/01 10:48:00+00". All 
       # entries with this format have "+00" at the end, which we remove 
       # for processing
-      citation_date_time = sub("\\+.*", "", citation_date_time), 
+      citation_date_time = sub("\\+.*$", "", citation_date_time), 
       datetime = coalesce(
         parse_datetime(citation_date_time, locale = locale(tz = "US/Central")),
         parse_datetime(citation_date_time, "%Y-%m-%d %H:%M:%S"),
