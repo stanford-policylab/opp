@@ -31,16 +31,17 @@ load_raw <- function(raw_data_dir, n_max) {
     n_max
   )
   
+  #new_d <- bind_rows(
+  #  cit_new$data,
+  #  warn_new$data
+  #)
+  
   ## NOTE: The new data starts in Jan. 2018 
   ## and the old data covers through Sept. 2017, 
   ## so we're still missing Oct.-Dec. 2017
-  new_d <- bind_rows(
-    cit_new$data,
-    warn_new$data
-  )
-  
   bundle_raw(
-    bind_rows(cit_old$data, warn_old$data, new_d),
+    bind_rows(cit_old$data, warn_old$data,
+              cit_new$data, warn_new$data),
     c(
       cit_old$loading_problems,
       warn_old$loading_problems,
@@ -123,8 +124,8 @@ clean <- function(d, helpers) {
       ),
       # there are several thousand rows in the 
       # new data where race and sex are switched
-      fixed_race = ifelse(Race %in% c("M","F"), Sex, Race), 
-      fixed_sex = ifelse(Race %in% c("M","F"), Race, Sex), 
+      fixed_race = if_else(Race %in% c("M","F"), Sex, Race), 
+      fixed_sex = if_else(Race %in% c("M","F"), Race, Sex), 
       subject_race = tr_race[fixed_race],
       subject_sex = tr_sex[fixed_sex],
     ) %>%
