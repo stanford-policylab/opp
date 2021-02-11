@@ -34,17 +34,6 @@ load_raw <- function(raw_data_dir, n_max) {
     n_max = n_max
   )
   new_d <- citations$data 
-  # %>%
-  #   # The contents of the columns are the same, but the column names have
-  #   # slightly different spellings in the updated data.
-  #   rename(
-  #     Citation_No = Citation_no,
-  #     DfndRace = Race,
-  #     DfndSex = Sex,
-  #     violDate = ViolDate,
-  #     violTime = ViolTime,
-  #     OffenseDesc = Offense_Desc
-  #   )
 
   bundle_raw(
     bind_rows(old_d, new_d),
