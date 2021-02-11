@@ -33,17 +33,18 @@ load_raw <- function(raw_data_dir, n_max) {
     "citationstops.csv",
     n_max = n_max
   )
-  new_d <- citations$data %>%
-    # The contents of the columns are the same, but the column names have
-    # slightly different spellings in the updated data.
-    rename(
-      Citation_No = Citation_no,
-      DfndRace = Race,
-      DfndSex = Sex,
-      violDate = ViolDate,
-      violTime = ViolTime,
-      OffenseDesc = Offense_Desc
-    )
+  new_d <- citations$data 
+  # %>%
+  #   # The contents of the columns are the same, but the column names have
+  #   # slightly different spellings in the updated data.
+  #   rename(
+  #     Citation_No = Citation_no,
+  #     DfndRace = Race,
+  #     DfndSex = Sex,
+  #     violDate = ViolDate,
+  #     violTime = ViolTime,
+  #     OffenseDesc = Offense_Desc
+  #   )
 
   bundle_raw(
     bind_rows(old_d, new_d),
@@ -68,6 +69,14 @@ clean <- function(d, helpers) {
   )
 
   d$data %>%
+    mutate(
+      violDate = coalesce(violDate, ViolDate), 
+      Citation_No = coalesce(Citation_No, Citation_no), 
+      DfndRace = coalesce(DfndRace, Race), 
+      DfndSex = coalesce(DfndSex, Sex), 
+      violTime = coalesce(violTime, ViolTime), 
+      OffenseDesc = coalesce(OffenseDesc, Offense_Desc)
+    ) %>%
   merge_rows(
     violDate,
     violTime,
