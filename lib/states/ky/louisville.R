@@ -85,7 +85,10 @@ clean <- function(d, helpers) {
     # or number_of_passengers or was_vehicle_searched columns, implying
     # it was a vehicle stop
     type = "vehicular",
-    date = parse_date(activity_date, "%m/%d/%Y"),
+    date = coalesce(
+      parse_date(activity_date, "%m/%d/%Y"),
+      parse_date(activity_date, "%Y/%m/%d")
+    ),
     time = parse_time(activity_time),
     subject_sex = tr_sex[driver_gender],
     subject_race = tr_race[str_to_lower(raw_driver_race)],
