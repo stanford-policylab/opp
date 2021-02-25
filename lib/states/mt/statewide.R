@@ -57,8 +57,14 @@ clean <- function(d, helpers) {
       vehicle_year = VehicleYear
     ) %>%
     mutate(
-      date = parse_date(StopTime, format = "%Y-%m-%dT%H:%M:%S"),
-      time = parse_time(StopTime, format = "%Y-%m-%dT%H:%M:%S"),
+      date = coalesce(
+        parse_date(StopTime, format = "%Y/%m/%d %H:%M:%S"),
+        parse_date(StopTime, format = "%Y-%m-%dT%H:%M:%S")
+      ), 
+      time = coalesce(
+        parse_time(StopTime, format = "%Y/%m/%d %H:%M:%S"),
+        parse_time(StopTime, format = "%Y-%m-%dT%H:%M:%S")
+      ),
       location = str_c_na(Location, City, sep=", "),
       county_name = str_c(str_to_title(County), " County"),
       subject_race = if_else(
