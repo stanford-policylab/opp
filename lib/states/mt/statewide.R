@@ -40,6 +40,16 @@ clean <- function(d, helpers) {
   d$data[d$data == "NULL"] <- NA
 
   d$data %>%
+    merge_rows(
+      StopTime, 
+      LinkedNumber, 
+      Location, 
+      City,
+      County, 
+      Age, 
+      Sex, 
+      Race
+    ) %>%
     add_raw_colname_prefix(
       Ethnicity,
       Race,
@@ -49,7 +59,6 @@ clean <- function(d, helpers) {
       lat = Latitude,
       lng = Longitude,
       subject_age = Age,
-      reason_for_stop = ReasonForStop,
       vehicle_make = VehicleMake,
       vehicle_model = VehicleModel,
       vehicle_type = VehicleStyle,
@@ -57,6 +66,8 @@ clean <- function(d, helpers) {
       vehicle_year = VehicleYear
     ) %>%
     mutate(
+      # remove dashed characters
+      reason_for_stop = str_replace_all(ReasonForStop, "--- - ",""),
       date = coalesce(
         parse_date(StopTime, format = "%Y/%m/%d %H:%M:%S"),
         parse_date(StopTime, format = "%Y-%m-%dT%H:%M:%S")
@@ -76,7 +87,7 @@ clean <- function(d, helpers) {
       # NOTE: The public records request for the data received in Feb 2017 were
       # vehicular stops by the Montana Highway Patrol.
       department_name = "Montana Highway Patrol",
-      type = "vehicular",
+      type = if_else(reason_for_stop=="PEDESTRIAN", "pedestrian", "vehicular"),
       violation = str_c_na(
         Violation1,
         Violation2,
@@ -102,7 +113,15 @@ clean <- function(d, helpers) {
         "NO SEARCH REQUESTED",
         "NO SEARCH / CONSENT DENIED"
       )),
-      search_basis = fast_tr(raw_SearchType, tr_search_basis)
+      search_basis = fast_tr(raw_SearchType, tr_search_basis),
+      raw_search_basis = str_c_na(
+        SearchRationale1,
+        SearchRationale2,
+        SearchRationale3,
+        SearchRationale4,
+        sep = "|"
+      )
+      
     ) %>%
     standardize(d$metadata)
 }
