@@ -5,8 +5,6 @@ source(here::here("lib", "opp.R"))
 # /share/data/opp/data/states/{state}/{city}/raw_csv
 path_to_file <- ""
 
-path_to_clean_rds <- ""
-
 # HELPERS
 
 # takes in city name, data frame with new data locations
@@ -14,7 +12,7 @@ path_to_clean_rds <- ""
 get_all_raw_files <- function(state, city) {
   
   # replace this with a path to the file 
-  list.files(glue(path_to_file), 
+  list.files(glue("/share/data/opp/data/states/{state}/{city}/raw_csv"), 
              full.names=TRUE)
 }
 
@@ -74,7 +72,7 @@ load_info <- function(tbl) {
 get_info_clean_data <- function(state, city) {
   state <- str_to_lower(state)
   clean_file_path <- glue(
-    path_to_clean_rds
+    "/share/data/opp/data/states/{state}/{city}/clean/{city}.rds"
     )
   df <- readRDS(clean_file_path)
   
@@ -91,6 +89,8 @@ get_info_clean_data <- function(state, city) {
 # REPORT VARIABLES
 state <- normalize_state(state)
 city <- normalize_city(city)
+
+path_to_clean_rds <- opp_clean_path(state, city)
 
 title <- create_title(state, city)
 
