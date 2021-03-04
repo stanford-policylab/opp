@@ -77,7 +77,7 @@ plot_prop_by_race <- function(col, pred_col = TRUE) {
 }
 
 stops_by_most_frequent_locations <- function(address_counts) {
-  address_counts %>% 
+  address_counts %>%
     mutate(
       n_stops = cumsum(n),
       p_stops = n_stops / max(n_stops),
@@ -87,7 +87,7 @@ stops_by_most_frequent_locations <- function(address_counts) {
 }
 
 plot_geocoding_cdf <- function(address_counts) {
-  d <- address_counts %>% stops_by_most_frequent_locations() 
+  d <- address_counts %>% stops_by_most_frequent_locations()
   segment_pts <-
     rbind(
       d %>%
@@ -98,14 +98,14 @@ plot_geocoding_cdf <- function(address_counts) {
         filter(abs(p_locations - .75) == min(abs(p_locations - .75))) %>%
         slice(1) %>%
         select(yend = p_stops, xend = p_locations)
-    ) %>% 
+    ) %>%
     slice(rep(1:n(), each = 2)) %>%
-    arrange(xend) %>% 
+    arrange(xend) %>%
     mutate(
       x = c(0, min(xend), 0, max(xend)),
       y = c(min(yend), 0, max(yend), 0)
     )
-  rbind(c(0, 0, 0, 0, 0, 0), d) %>% 
+  rbind(c(0, 0, 0, 0, 0, 0), d) %>%
     ggplot(aes(p_locations, p_stops)) +
     geom_line(size = 1) +
     theme_bw() +
