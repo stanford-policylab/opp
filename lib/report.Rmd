@@ -31,6 +31,10 @@ title: `r title`
 by_type_table
 ```
 
+```{r geocoding_tbl, fig.align = 'left'}
+display_if_exists("geocoding_tbl")
+```
+
 ```{r null_rates_tables}
 null_rates_table
 ```
@@ -83,6 +87,15 @@ display_if_exists("predicated_contraband_weapons_by_race_plot")
 
 ```{r outcome_by_race_plot, fig.height = 10}
 display_if_exists("outcome_by_race_plot")
+```
+
+Google Maps Geocoding Cost CDF 
+
+Interpretation: we can get X% of the stops by geocoding half the locations (so half the cost) and we can get X% of stops by geocoding 75% of the locations (so .75 of the cost). Replace X with the relevant y-intercepts. 
+
+```{r geocoded_cdf, fig.height = 10}
+display_if_exists("geocoded_cdf")
+display_if_exists("geocoding_tbl_fractional")
 ```
 
 \newpage

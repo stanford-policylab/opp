@@ -1,0 +1,37 @@
+---
+output:
+  html_document:
+    df_print: paged
+params:
+  city: ''
+  state: ''
+---
+
+
+```{r setup, echo = FALSE}
+opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+city <- params$city
+state <- params$state
+
+read_chunk("integration_report.R", labels = "integration_report")
+```
+
+```{r integration_report}
+```
+
+---
+title: `r title`
+---
+
+```{r date_info, fig.align = 'left'}
+date_info
+```
+
+```{r colname_heatmap, fig.align = 'left'}
+colname_heatmap
+```
+
+```{r similar_cols, fig.align = 'left'}
+similar_cols
+```

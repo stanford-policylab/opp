@@ -64,16 +64,58 @@ plot_prop_by_race <- function(col, pred_col = TRUE) {
 
   colname <- deparse(substitute(col))
   pred_colname <- deparse(substitute(pred_col))
-  pred_str <- "(all)" 
+  pred_str <- "(all)"
   if (pred_colname != "TRUE") {
     pred_str <- str_c("(", pred_colname, ")")
   }
   y_label <- str_c(colname, "rate", pred_str, sep = " ")
 
-  ggplot(tbl, aes(x = reorder(subject_race, -rate), y = rate)) + 
+  ggplot(tbl, aes(x = reorder(subject_race, -rate), y = rate)) +
     geom_bar(stat = "identity") +
     xlab("race") +
     ylab(y_label)
+}
+
+stops_by_most_frequent_locations <- function(address_counts) {
+  address_counts %>% 
+    mutate(
+      n_stops = cumsum(n),
+      p_stops = n_stops / max(n_stops),
+      n_locations = 1:n(),
+      p_locations = n_locations / max(n_locations)
+    )
+}
+
+plot_geocoding_cdf <- function(address_counts) {
+  d <- address_counts %>% stops_by_most_frequent_locations() 
+  segment_pts <-
+    rbind(
+      d %>%
+        filter(abs(p_locations - .5) == min(abs(p_locations - .5))) %>%
+        slice(1) %>%
+        select(yend = p_stops, xend = p_locations),
+      d %>%
+        filter(abs(p_locations - .75) == min(abs(p_locations - .75))) %>%
+        slice(1) %>%
+        select(yend = p_stops, xend = p_locations)
+    ) %>% 
+    slice(rep(1:n(), each = 2)) %>%
+    arrange(xend) %>% 
+    mutate(
+      x = c(0, min(xend), 0, max(xend)),
+      y = c(min(yend), 0, max(yend), 0)
+    )
+  rbind(c(0, 0, 0, 0, 0, 0), d) %>% 
+    ggplot(aes(p_locations, p_stops)) +
+    geom_line(size = 1) +
+    theme_bw() +
+    coord_fixed() +
+    geom_segment(
+      data = segment_pts,
+      aes(x=x, y=y, xend=xend, yend=yend),
+      linetype = "dotted",
+      color = "red", size = 1
+    ) 
 }
 
 
@@ -92,7 +134,9 @@ date_range <- range(data$date, na.rm = TRUE)
 start_date <- date_range[1]
 end_date <- date_range[2]
 
-by_type <- group_by(data, type) %>% count
+by_type <- group_by(data, type) %>% 
+  summarise(num = n()) %>%
+  mutate(pct = num/sum(num))
 
 by_type_table <- kable(by_type)
 
@@ -224,7 +268,7 @@ calculate_if_col("reason_for_stop", function() {
 })
 
 calculate_if_col("search_basis", function() {
-  search_bases_tbl <- filter(data, !is.na(search_basis)) %>% 
+  search_bases_tbl <- filter(data, !is.na(search_basis)) %>%
     group_by(search_basis) %>%
     summarize(n = n()) %>%
     mutate(pct = n / sum(n))
@@ -254,7 +298,7 @@ calculate_if_cols(c("subject_race", "contraband_found"), function() {
 calculate_if_cols(
   c("subject_race", "contraband_found", "search_conducted"),
   function() {
-    predicated_contraband_found_by_race_plot <<- 
+    predicated_contraband_found_by_race_plot <<-
       plot_prop_by_race(contraband_found, search_conducted)
   }
 )
@@ -262,7 +306,7 @@ calculate_if_cols(
 calculate_if_cols(
   c("subject_race", "contraband_drugs"),
   function() {
-    predicated_contraband_drugs_by_race_plot <<- 
+    predicated_contraband_drugs_by_race_plot <<-
       plot_prop_by_race(contraband_drugs, search_conducted)
   }
 )
@@ -270,7 +314,7 @@ calculate_if_cols(
 calculate_if_cols(
   c("subject_race", "contraband_weapons"),
   function() {
-    predicated_contraband_weapons_by_race_plot <<- 
+    predicated_contraband_weapons_by_race_plot <<-
       plot_prop_by_race(contraband_weapons, search_conducted)
   }
 )
@@ -297,6 +341,48 @@ calculate_if_cols(
   }
 )
 
+
+# Google Maps Geocoding
+
+## calculate everything geocoded
+## filter to exclude those locations
+## count the unique number
+
+calculate_if_col("location", function() {
+  geocoded_addresses <- data %>%
+    filter(!is.na(lat), !is.na(lng)) %>%
+    pull(location) 
+  
+  # exact matching
+  not_geocoded_addresses_exact <- data %>%
+    filter(!(location %in% geocoded_addresses), 
+           !is.na(location))
+  
+  exact_count <- not_geocoded_addresses_exact %>%
+    count(location) %>%
+    arrange(-n)
+  
+  geocoding_tbl_raw <<- 
+    tribble(~`Approx. Num. Locations to Geocode`, 
+            ~`Approximate $ Cost (assume $5/1000 calls)`, 
+            nrow(exact_count), (nrow(exact_count)/1000)*5)
+  
+  geocoding_tbl <<- kable(geocoding_tbl_raw)
+  
+  geocoding_tbl_fractional <<- geocoding_tbl_raw %>%
+    mutate(percent = 100) %>%
+    add_row(`Approx. Num. Locations to Geocode` = nrow(exact_count)*.5, 
+            `Approximate $ Cost (assume $5/1000 calls)` = 
+              (nrow(exact_count)/1000)*5*.5, 
+            percent = 50) %>%
+    add_row(`Approx. Num. Locations to Geocode` = nrow(exact_count)*.75, 
+            `Approximate $ Cost (assume $5/1000 calls)` = 
+              (nrow(exact_count)/1000*5*.75), 
+            percent = 75) %>%
+    kable()
+  
+  geocoded_cdf <<- plot_geocoding_cdf(exact_count)
+})
 
 
 # NOTE: convert to char because of weird print representation of some numbers
@@ -336,7 +422,7 @@ if (nrow(loading_problems) > 0) {
       col,
       expected,
       actual
-    )	
+    )
 
   loading_problems_random_sample_sorted_table <<- kable(
     loading_problems_random_sample_sorted,

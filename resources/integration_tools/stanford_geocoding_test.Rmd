@@ -1,0 +1,135 @@
+---
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+# Using the Stanford Geocoding Service
+
+#Tutorial [here](https://github.com/cengel/ArcGIS_geocoding)
+
+First we read in data from a city that has some addresses already geocoded, so we can compare the Stanford geocoding with this geocoding. We then choose a random sample of 500 addresses that have already been geocoded and that have zip codes.
+
+```{r}
+source("lib/opp.R")
+set.seed(27)
+
+# uncomment line below and replace with the path for the clean wichita file
+# wichita_df <- read_rds("")
+wichita_geocoded <- wichita_df %>% 
+  filter(!is.na(lat), !is.na(lng), 
+         grepl(".*KS, [0-9]{5}", location, ignore.case = TRUE)) %>%
+  count(location, lat, lng) %>%
+  select(location, old_lat = lat, old_lng = lng) %>%
+  sample_n(500)
+```
+
+We source a few functions that will be useful for using the Stanford geocoding service. We also generate an ArcGIS token, following the instructions [here](https://locator.stanford.edu/arcgis/tokens/generateToken).
+
+```{r}
+# source the R code
+source("https://raw.githubusercontent.com/cengel/ArcGIS_geocoding/master/SUL_gcFunctions.R")
+```
+
+We format the addresses for the Stanford Geocoding functions. 
+
+```{r}
+# make up a data frame with some addresses:
+adr_df <- wichita_geocoded %>% 
+  select(location) %>%
+  separate(col = location, 
+           into = c("street", "city", "state", "zip"), 
+           sep = ",") %>%
+  mutate(ID = 1:500, 
+         street = str_to_title(trimws(street)), 
+         city = str_to_title(trimws(city)), 
+         state = trimws(state), 
+         zip = trimws(zip)) %>%
+  # filter out a few ones that are improperly formatted
+  filter(city == "Wichita") 
+```
+
+We set the token and do the geocoding. 
+
+```{r}
+# set your token
+myToken <- ""
+
+# geocode with US Street Address
+adr_gc_street <- geocodeML_batch(adr_df$ID, adr_df$street, adr_df$city, adr_df$state, adr_df$zip, myToken, geocoder = "USA_Str")
+# join back with original data
+adr_gc_street <- merge(adr_df, adr_gc_street, by = "ID", all.x = T)
+```
+
+We see that about 90% of the addresses (all of which were previously geocoded) had a match. 
+
+```{r}
+adr_gc_street %>%
+  group_by(status) %>%
+  summarise(num = n()) %>%
+  mutate(pct = num/sum(num))
+```
+
+The accuracy scores are generally above 90. 
+
+```{r}
+adr_gc_street %>% count(score)
+```
+
+Finally, we join the old geocodings and new geocodings. There are some addresses that are difficult to perfectly line up, because the Stanford Geocoding service returns the matched address. For example, "drive" might become "street," or vice versa. We match some of these manually, but for time's sake do not deal with all of them. The lat/lngs for the addresses that do align never line up perfectly, but we compute haversine distance to see how close together they are. 
+
+```{r}
+old_geocoded <- wichita_geocoded %>%
+  mutate(location = str_to_lower(trimws(location)), 
+         location = str_replace(location, ", ks, ", ", kansas, "), 
+         location = str_replace(location, " st, ", " st/ave, "), 
+         location = str_replace(location, " ave, ", " st/ave, "))
+
+geocode_comparison <- adr_gc_street %>%
+  mutate(matchAddr = str_to_lower(matchAddr), 
+         matchAddr = str_replace(matchAddr, " st, ", " st/ave, "), 
+         matchAddr = str_replace(matchAddr, " ave, ", " st/ave, ")) %>%
+  full_join(old_geocoded, by = c("matchAddr" = "location"))
+```
+
+Computing distance between lat/lngs in meters, filtering to exactly matched addresses as described previously.
+
+```{r}
+library(geosphere)
+
+geocode_differences <- geocode_comparison %>%
+  filter(status == "M") %>%
+  filter(!is.na(lat), !is.na(lon), !is.na(old_lat), !is.na(old_lng)) %>%
+  mutate(
+    dist = distHaversine(cbind(old_lng, old_lat), cbind(lon, lat))
+  )
+```
+
+We see that about 3% have a distance greater than 200m. We filter these out and create a histogram of the remaining distances. 
+
+```{r}
+geocode_differences %>% 
+  group_by(dist > 200) %>%
+  summarise(num = n()) %>%
+  mutate(pct = num/sum(num))
+```
+
+We plot the density of distances less than 200m and see that 90% of them are less than 100m apart. 
+
+```{r}
+geocode_differences_90_pct <- geocode_differences %>%
+  arrange(dist) %>%
+  mutate(n_distances = 1:n(), 
+         p_distances = n_distances / max(n_distances)) %>%
+  filter(abs(p_distances-.90)==min(abs(p_distances-.90))) %>%
+  pull(dist) 
+
+ggplot(geocode_differences %>% filter(dist <= 200), 
+       aes(x = dist)) + 
+  geom_density() + 
+  geom_vline(xintercept = geocode_differences_90_pct, 
+             linetype = "dashed") + 
+  scale_x_continuous("distance in meters between old geocoded location and new geocoded location") + 
+  ggtitle("Geocoding differences for sample of data from Wichita, KS")
+```
