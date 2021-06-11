@@ -149,6 +149,7 @@ schema <- c(
   location                      = as.character,
   lat                           = as.numeric,
   lng                           = as.numeric,
+  geocoder_source               = as.character,
   county_name                   = as.character,
   neighborhood                  = as.character,
   beat                          = as.character,

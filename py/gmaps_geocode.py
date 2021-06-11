@@ -23,7 +23,26 @@ class GM(object):
 
     def _extract_lat_lng(self, data):
         coords = data[0]['geometry']['location']
-        return coords['lat'], coords['lng']
+        return coords['lat'], coords['lng'], "GM"
+        
+class SU(object):
+    # source:
+    # requirements: 
+    # - on stanford network or VPN
+    # - authenticate with WebAuth
+    # - get token from https://locator.stanford.edu/arcgis/tokens/:
+    # qs79znphXu-XDo_vcZVvwtQFK5WbeFEzgZC_oXHztinI4dH3cfSfqLVc0RpKZR7H
+    
+    def __init__(self, api_key):
+        self.c = googlemaps.Client(key=api_key)
+
+    def geocode(self, loc):
+        d = self.c.geocode(loc)
+        return self._extract_lat_lng(d)
+
+    def _extract_lat_lng(self, data):
+        coords = data[0]['geometry']['location']
+        return coords['lat'], coords['lng'], "SU"
 
 
 def get_key(args):
@@ -160,12 +179,12 @@ if __name__ == '__main__':
         output = csv.writer(ocsv)
         errors = csv.writer(ecsv)
         if not output_file_csv_already_exists:
-            output.writerow(['loc', 'lat', 'lng'])
+            output.writerow(['loc', 'lat', 'lng', 'geocode_source'])
         total = len(locs)
         for loc in locs:
             try:
-                lat, lng = gm.geocode(loc + args.address_suffix)
-                output.writerow([loc, lat, lng])
+                lat, lng, geocode_source = gm.geocode(loc + args.address_suffix)
+                output.writerow([loc, lat, lng, geocode_source])
                 ocsv.flush()
             except Exception as e:
                 errors.writerow([loc])
