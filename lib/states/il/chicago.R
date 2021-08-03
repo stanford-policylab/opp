@@ -14,6 +14,10 @@ source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
 
+  # Load old data (arrest and citations data from CPD)
+  # Includes both vehicle and pedestrian stops
+  # Date range: 1/1/2012 - 12/31/2016
+  # Variables: time, location, offense, offender and officer characteristics
   arrests <- load_single_file(raw_data_dir, "arrests.csv", n_max)
   citations <- load_single_file(raw_data_dir, "citations.csv", n_max)
 
@@ -44,6 +48,12 @@ load_raw <- function(raw_data_dir, n_max) {
     ) %>%
     mutate(source = "old_data")
 
+  # Load new data (ISR data from IDOT's Illinois Traffic Stop Statistical Study)
+  # Only includes traffic stops
+  # Date range: tsss_1 (1/1/2018 - 11/16/2019), tsss_2 (11/16/2019 - 05/16/2020)
+  # Variables: time, location, offense, offender and officer characteristics
+  # and search and contraband variables
+  
   tsss_1 <- load_single_file(
     raw_data_dir,
     "15327-p580999-traffic-isr_sheet_3.csv",
@@ -131,15 +141,18 @@ clean <- function(d, helpers) {
     rename(unit = cpd_unit_no) %>%
     mutate(
       violation = if_else(source == "old_data", statute_description, statute),
-      type = if_else(source == "old_data",
-                     if_else(
-                       str_detect(violation, "PEDEST")
-                       & !str_detect(violation, "FAILURE TO YIELD TO PEDESTRIAN")
-                       & !str_detect(violation, "PASS VEH STOPPED FOR PEDEST"),
-                       "pedestrian",
-                       "vehicular"
-                     ),
-                     "vehicular")
+      # assume pedestrian stop if offense is a pedestrian violation; 
+      # otherwise, assume vehicle stop (all new data is vehicular)
+      type = if_else(
+        source == "old_data",
+        if_else(
+          str_detect(violation, "PEDEST")
+          & !str_detect(violation, "FAILURE TO YIELD TO PEDESTRIAN")
+          & !str_detect(violation, "PASS VEH STOPPED FOR PEDEST"),
+          "pedestrian",
+          "vehicular"
+        ),
+        "vehicular")
     ) %>%
     # arrest_made, citation_issued, outcome
     rename(arrest = arrest_made, citation = citation_issued) %>%
