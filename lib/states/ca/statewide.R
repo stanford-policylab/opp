@@ -6,10 +6,16 @@ load_raw <- function(raw_data_dir, n_max) {
   bundle_raw(d$data, d$loading_problems)
 }
 
-
 clean <- function(d, helpers) {
-  tr_county <- json_to_tr(helpers$load_json("CA_counties.json"))
-  tr_district <- json_to_tr(helpers$load_json("CA_districts.json"))
+  tr_chp <- helpers$load_csv("CA_chp_lookup.csv") %>%
+    # if multiple rows with same code, keep the row with "Offices"
+    add_count(LocationCode) %>%
+    filter(n == 1 | (n > 1 & Type == "Offices")) %>%
+    transmute(
+      LocationCode = as.numeric(LocationCode), 
+      district = Name, 
+      county_name = County
+    )
   
   tr_race_raw <- c(
     A = "Other Asian",
@@ -102,6 +108,10 @@ clean <- function(d, helpers) {
   )
 
   d$data %>%
+    # standardize LocationCode (remove inconsistent leading 0s)
+    mutate(LocationCode = as.numeric(LocationCode)) %>%
+    # add district, county_name
+    left_join(tr_chp) %>% 
     mutate(
       # NOTE: The stop time is not provided; all times appearing in the Date
       # column are 00:00:00. The shift time is provided in the raw data but is
@@ -110,8 +120,6 @@ clean <- function(d, helpers) {
         parse_date(Date, "%m/%d/%Y"),
         parse_date(Date, "%m/%d/%Y %H:%M:%S")
       ),
-      county_name = fast_tr(LocationCode, tr_county),
-      district = fast_tr(LocationCode, tr_district),
       # NOTE: subject_age is provided, but only as an enum representing age
       # ranges: "0-14","15-25","25-32","33-39","40-48","49+".
       subject_race = fast_tr(Ethnicity, tr_race),
@@ -139,6 +147,7 @@ clean <- function(d, helpers) {
       search_person = frisk_performed,
       search_basis = fast_tr(Description, tr_search_basis),
       raw_search_basis = fast_tr(Reason, tr_search_basis_raw),
+      raw_location_code = LocationCode,
       reason_for_stop = violation
     ) %>%
     standardize(d$metadata)
