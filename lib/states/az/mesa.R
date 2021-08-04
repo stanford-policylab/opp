@@ -8,6 +8,9 @@ source("common.R")
 # a little unclear as to which charges are specifically pedestrian vs.
 # vehicular, so our categorization here is weak; see outstanding TODO
 load_raw <- function(raw_data_dir, n_max) {
+  
+  # Old data
+  # Date range: 01/01/2014 - 03/31/2017
   old_d <- load_single_file(
     raw_data_dir,
     "2014-03-17_citations_data_prr.csv",
@@ -19,6 +22,9 @@ load_raw <- function(raw_data_dir, n_max) {
   old_d$data <- old_d$data %>%
     mutate(source = "old_data")
   
+  # New data
+  # Date range: 01/01/2017 - 09/23/2019
+  # Variables: Identical to old data, with slightly different names
   updated_d <- load_single_file(
     raw_data_dir, 
     "2017_-_2019-09-23_Cites_PRR.csv", 
