@@ -5,12 +5,17 @@ source("common.R")
 # are very close to those in the data; the discrepancy is likely due to the
 # exclusion of warrants and other small filters.
 load_raw <- function(raw_data_dir, n_max) {
+  # Old data
+  # Date range: 01/01/2012 - 12/31/2017
   # NOTE: calls/incidents are also in the raw data, but aren't loaded here
   old_d <- load_single_file(raw_data_dir, "TrafficTicketsWarnings12_17.csv", n_max)
   old_d$data <- old_d$data %>%
     mutate(source = "old_data")
   colnames(old_d$data) <- make_ergonomic(colnames(old_d$data))
   
+  # New data
+  # Date range:  01/01/2018 - 05/27/2020
+  # Variables: missing search reason, department name, age/dob
   updated_d <- load_single_file(raw_data_dir, "2018-2020_traffic_calls.csv", n_max)
   updated_d$data <- updated_d$data %>%
     mutate(source = "new_data")
