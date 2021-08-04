@@ -7,6 +7,9 @@ source("common.R")
 # are around 200k each year. Given there are around 30k warnings and citations
 # each year, this seems reasonable.
 load_raw <- function(raw_data_dir, n_max) {
+  
+  # Old data:
+  # Date range: 09/28/2007 - 09/28/2017
   # NOTE: "IBM" is the officers department ID
   cit_old <- load_single_file(
     raw_data_dir,
@@ -19,6 +22,9 @@ load_raw <- function(raw_data_dir, n_max) {
     n_max
   )
   
+  # New data:
+  # Date range: 01/01/2018 - 06/16/2020
+  # Variables: missing IBM, added Age
   cit_new <- load_single_file(
     raw_data_dir,
     "elcis_with_demographics.csv",
@@ -30,11 +36,6 @@ load_raw <- function(raw_data_dir, n_max) {
     "warnings_with_demographics.csv",
     n_max
   )
-  
-  #new_d <- bind_rows(
-  #  cit_new$data,
-  #  warn_new$data
-  #)
   
   ## NOTE: The new data starts in Jan. 2018 
   ## and the old data covers through Sept. 2017, 
