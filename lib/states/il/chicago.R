@@ -189,5 +189,7 @@ clean <- function(d, helpers) {
       raw_race = race,
       raw_driver_race = driver_race
     ) %>%
+    helpers$add_lat_lng(
+    ) %>%
     standardize(d$metadata)
 }
