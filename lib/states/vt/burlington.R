@@ -21,12 +21,10 @@ load_raw <- function(raw_data_dir, n_max) {
     c(old_d$loading_problems,
       updated_d$loading_problems)
   )
-  
 }
 
 
 clean <- function(d, helpers) {
-  
   tr_race <- c( 
     tr_race,
     c("asian - a" = "asian/pacific islander",
@@ -37,7 +35,8 @@ clean <- function(d, helpers) {
       "other - u" = "other/unknown",
       "pacific is - a" = "asian/pacific islander",
       "unknown - u" = "unknown",
-      "white - w" = "white")
+      "white - w" = "white"
+    )
   )
   
   tr_sex <- c(
@@ -80,15 +79,20 @@ clean <- function(d, helpers) {
       raw_outcome_of_stop = coalesce(raw_outcome_of_stop, ticket_outcome),
       # NOTE: all violations appear to be vehicle related
       type = "vehicular",
-      datetime = if_else(source == "old_data",
-                         parse_datetime(issued_at, "%m/%d/%Y %H:%M"),
-                         parse_datetime(date_time, "%Y/%m/%d %H:%M:%S")),
+      datetime = if_else(
+        source == "old_data",
+        parse_datetime(issued_at, "%m/%d/%Y %H:%M"),
+        parse_datetime(date_time, "%Y/%m/%d %H:%M:%S")
+      ),
       date = as.Date(datetime),
       time = format(datetime, "%H:%M"),
       subject_race = tr_race[str_to_lower(raw_race)], 
       subject_sex = tr_sex[raw_gender],
       subject_dob = parse_date(dob, "%m/%d/%Y"),
-      search_conducted = replace_na(!str_detect(reason_for_search, "NS"), F),
+      search_conducted = replace_na(
+        !str_detect(reason_for_search, "NS"), 
+        FALSE
+      ),
       search_basis = first_of(
         "other" = str_detect(reason_for_search, "with warrant"),
         "probable cause" = search_conducted
