@@ -52,7 +52,7 @@ load_raw <- function(raw_data_dir, n_max) {
   # Only includes traffic stops
   # Date range: tsss_1 (1/1/2018 - 11/16/2019), tsss_2 (11/16/2019 - 05/16/2020)
   # Variables: time, location, offense, offender and officer characteristics
-  # and search and contraband variables
+  # and search and contraband variables. No stop outcomes (citation, arrest).
   
   tsss_1 <- load_single_file(
     raw_data_dir,
@@ -155,10 +155,9 @@ clean <- function(d, helpers) {
         "vehicular")
     ) %>%
     # arrest_made, citation_issued, outcome
-    rename(arrest = arrest_made, citation = citation_issued) %>%
     mutate(outcome = first_of(
-      arrest = arrest,
-      citation = citation
+      arrest = arrest_made,
+      citation = citation_issued
     )) %>%
     # contraband, search,
     # - convert char and NA into logical
