@@ -66,7 +66,6 @@ clean <- function(d, helpers) {
       lon
     ) %>%
     rename(
-      department_name = ori,
       vehicle_registration_state = license_state,
       reason_for_stop = stop_based_on,
       reason_for_search = search_based_on,
@@ -78,6 +77,7 @@ clean <- function(d, helpers) {
       raw_contraband_evidence = contraband_evidence
     ) %>%
     mutate(
+      department_name = if_else(is.na(ori), "Burlington Police Department", ori),
       raw_race = coalesce(raw_race, issued_to_race),
       raw_gender = coalesce(raw_gender, issued_to_gender),
       violation = coalesce(violation, ticket_violation),
