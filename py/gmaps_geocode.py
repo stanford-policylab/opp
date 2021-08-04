@@ -215,7 +215,6 @@ if __name__ == '__main__':
                 output.writerow([loc, lat, lng, geocode_source])
                 ocsv.flush()
             except Exception as e:
-                print(f"Error: {e}")
                 errors.writerow([loc])
                 ecsv.flush()
             count += 1
