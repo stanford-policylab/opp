@@ -87,7 +87,7 @@ clean <- function(d, helpers) {
       # NOTE: The public records request for the data received in Feb 2017 were
       # vehicular stops by the Montana Highway Patrol.
       department_name = "Montana Highway Patrol",
-      type = if_else(reason_for_stop=="PEDESTRIAN", "pedestrian", "vehicular"),
+      type = if_else(reason_for_stop == "PEDESTRIAN", "pedestrian", "vehicular"),
       violation = str_c_na(
         Violation1,
         Violation2,
@@ -121,7 +121,6 @@ clean <- function(d, helpers) {
         SearchRationale4,
         sep = "|"
       )
-      
     ) %>%
     standardize(d$metadata)
 }
