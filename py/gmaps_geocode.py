@@ -6,7 +6,7 @@ import math
 import os
 import sys
 
-# import googlemaps
+import googlemaps
 import pandas as pd
 
 from datetime import datetime
