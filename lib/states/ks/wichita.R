@@ -15,6 +15,14 @@ clean <- function(d, helpers) {
   # TODO(phoebe): can we get reason_for_stop/search/contraband fields?
   # https://app.asana.com/0/456927885748233/595493946182532
   d$data %>%
+    # race, sex, ethnicity vars stored in different variable for 2008
+    # e.g. "race" instead of "defendant race"
+    # race and sex missing from 2018, ethnicity missing from 2018-2020
+    mutate(
+      defendant_race = coalesce(defendant_race, race),
+      defendant_sex = coalesce(defendant_sex, sex),
+      defendant_ethnicity = coalesce(defendant_ethnicity, ethnicity)
+    ) %>%
     # TODO(phoebe): are citation numbers unique? sometimes it looks like the
     # represent the same stop, other times, there are two separate locations
     # for the same citation number, i.e. "07M000645"?
