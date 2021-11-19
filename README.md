@@ -33,43 +33,14 @@ Change into the repository's `lib` directory
 ```
 cd opp/lib
 ```
-Start R
-```
-R
-```
-From R, install the required packages
+
+We use the `renv` package and Rstudio to maintain our package dependencies, in particular, dplyr 0.8.5. To ensure the code runs properly, open the git repo in a new Rstudio project. `renv` should automatically install itself.
+
+In R, run `renv::restore()` to install the correct package versions. For more details, see the [`renv` package] (https://rstudio.github.io/renv/articles/collaborating.html)
 ```R
-install.packages(c(
-  "assertr",
-  "broom",
-  "digest",
-  "fs",
-  "functional",
-  "getopt",
-  "here",
-  "housingData",
-  "jsonlite",
-  "knitr",
-  "lubridate",
-  "lazyeval",
-  "lutz",
-  "magrittr",
-  "maps",
-  "parallel",
-  "patchwork",
-  "purrr",
-  "rlang",
-  "rmarkdown",
-  "rgdal",
-  "rstan",
-  "scales",
-  "sp",
-  "splines",
-  "suncalc",
-  "tidyverse",
-  "zoo"
-))
+renv::restore()
 ```
+
 All these packages must successfully install in order to load the following
 main library:
 ```R
