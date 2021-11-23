@@ -2,15 +2,26 @@ source(here::here("lib", "common.R"))
 
 
 load_raw <- function(raw_data_dir, n_max) {
-  d <- load_all_csvs(raw_data_dir, n_max = n_max)
-  # NOTE: Even though StopTime has the Z timezone indicating UTC, the timestamps
-  # are actually in local time America/Denver. So we strip the Z because it is
-  # technically incorrect.
-  d$data <- mutate(
-    d$data,
-    StopTime = str_replace(StopTime, 'Z$', '')
+  # load 2009-2016 warning/citations
+  d_old <- load_years(raw_data_dir, n_max = n_max)
+  # load 2017 mtdoj stops
+  d_new <- load_single_file(
+    raw_data_dir, 
+    fname = "mtdoj_data_sheet_1.csv", 
+    n_max = n_max
   )
-  bundle_raw(d$data, d$loading_problems)
+  
+  bundle_raw(
+    # NOTE: Even though StopTime has the Z timezone indicating UTC, the timestamps
+    # are actually in local time America/Denver. So we strip the Z because it is
+    # technically incorrect.
+    bind_rows(old_d$data, new_d$data) %>%
+      mutate(StopTime = str_replace(StopTime, 'Z$', '')),
+    c(
+      old_d$loading_problems,
+      new_d$loading_problems
+    )
+  )
 }
 
 
@@ -87,7 +98,12 @@ clean <- function(d, helpers) {
       # NOTE: The public records request for the data received in Feb 2017 were
       # vehicular stops by the Montana Highway Patrol.
       department_name = "Montana Highway Patrol",
-      type = if_else(reason_for_stop == "PEDESTRIAN", "pedestrian", "vehicular"),
+      type = if_else(
+        reason_for_stop == "PEDESTRIAN", 
+        "pedestrian", 
+        "vehicular",
+        missing = "vehicular"
+      ),
       violation = str_c_na(
         Violation1,
         Violation2,
