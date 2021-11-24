@@ -15,11 +15,11 @@ load_raw <- function(raw_data_dir, n_max) {
     # NOTE: Even though StopTime has the Z timezone indicating UTC, the timestamps
     # are actually in local time America/Denver. So we strip the Z because it is
     # technically incorrect.
-    bind_rows(old_d$data, new_d$data) %>%
+    bind_rows(d_old$data, d_new$data) %>%
       mutate(StopTime = str_replace(StopTime, 'Z$', '')),
     c(
-      old_d$loading_problems,
-      new_d$loading_problems
+      d_old$loading_problems,
+      d_new$loading_problems
     )
   )
 }
