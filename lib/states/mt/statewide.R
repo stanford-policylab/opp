@@ -5,6 +5,8 @@ load_raw <- function(raw_data_dir, n_max) {
   # load 2009-2016 warning/citations
   d_old <- load_years(raw_data_dir, n_max = n_max)
   # load 2017 mtdoj stops
+  # NOTE: we don't load 2009-2016 mtdoj as there are either equivalent or a 
+  # subset of the warning/citations data.
   d_new <- load_single_file(
     raw_data_dir, 
     fname = "mtdoj_data_sheet_1.csv", 
@@ -98,6 +100,7 @@ clean <- function(d, helpers) {
       # NOTE: The public records request for the data received in Feb 2017 were
       # vehicular stops by the Montana Highway Patrol.
       department_name = "Montana Highway Patrol",
+      # if `reason_for_stop` is missing, impute "vehicular" (assume traffic stop)
       type = if_else(
         reason_for_stop == "PEDESTRIAN", 
         "pedestrian", 
