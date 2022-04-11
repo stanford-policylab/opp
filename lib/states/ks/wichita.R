@@ -15,6 +15,16 @@ clean <- function(d, helpers) {
   # TODO(phoebe): can we get reason_for_stop/search/contraband fields?
   # https://app.asana.com/0/456927885748233/595493946182532
   d$data %>%
+    # race, sex, ethnicity vars named differently for 2008
+    # e.g. "race" instead of "defendant race"
+    # vehicle_color var named vehicle_top_color for 2018
+    # race and sex missing from 2018, ethnicity missing from 2018-2020
+    mutate(
+      defendant_race = coalesce(defendant_race, race),
+      defendant_sex = coalesce(defendant_sex, sex),
+      defendant_ethnicity = coalesce(defendant_ethnicity, ethnicity),
+      vehicle_color = coalesce(vehicle_color, vehicle_top_color)
+    ) %>%
     # TODO(phoebe): are citation numbers unique? sometimes it looks like the
     # represent the same stop, other times, there are two separate locations
     # for the same citation number, i.e. "07M000645"?
@@ -58,14 +68,22 @@ clean <- function(d, helpers) {
         "pedestrian",
         "vehicular"
       ),
+      # NOTE: some of the date info in the new 2018-2020 data
+      # has what appears to be some sort of timezone info at the end
+      # of the string - e.g., "2018/01/01 10:48:00+00". All 
+      # entries with this format have "+00" at the end, which we remove 
+      # for processing
+      citation_date_time = sub("\\+.*$", "", citation_date_time), 
       datetime = coalesce(
         parse_datetime(citation_date_time, locale = locale(tz = "US/Central")),
+        parse_datetime(citation_date_time, "%Y-%m-%d %H:%M:%S"),
         parse_datetime(citation_date_time, "%Y/%m/%d %H:%M:%S"),
         parse_datetime(citation_date_time, "%Y/%m/%d")
       ),
       date = as.Date(datetime),
       time = format(datetime, "%H:%M:%S"),
-      # NOTE: all the files are named citations_<year>.csv
+      # OLD NOTE: all the files are named citations_<year>.csv
+      # NEW NOTE: the 2020 file has a different name, citations_20200518.csv
       citation_issued = TRUE,
       outcome = "citation",
       # TODO(phoebe): can we get other outcomes (warnings, arrests)?
