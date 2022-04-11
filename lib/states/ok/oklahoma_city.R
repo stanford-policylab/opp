@@ -7,6 +7,10 @@ source("common.R")
 # (although crime is reported). That said, the figures for years where there
 # appears to be complete data, 2012-2016, the counts seem reasonable.
 load_raw <- function(raw_data_dir, n_max) {
+  # NOTE: Here, "new" means the updated data gathered by Phoebe in 2020.  This
+  # includes only information about citations, not arresting officers and
+  # vehicles, while "old" refers to second-wave OPP, led by Dan and Amy in 2018
+  # and 2019.
   stops <- load_single_file(
     raw_data_dir,
     'orr_20171017191427.csv',
@@ -18,12 +22,27 @@ load_raw <- function(raw_data_dir, n_max) {
     n_max = n_max
   )
   officer$data[["ID #"]] <- str_pad(officer$data[["ID #"]], 4, pad = "0")
-  left_join(
+  old_d <- left_join(
     stops$data,
     officer$data,
     by = c("ofc_badge_no" = "ID #")
-  ) %>%
-  bundle_raw(c(stops$loading_problems, officer$loading_problems))
+  )
+
+  citations <- load_single_file(
+    raw_data_dir,
+    "citationstops.csv",
+    n_max = n_max
+  )
+  new_d <- citations$data 
+
+  bundle_raw(
+    bind_rows(old_d, new_d),
+    c(
+      stops$loading_problems,
+      officer$loading_problems,
+      citations$loading_problems
+    )
+  )
 }
 
 
@@ -39,6 +58,14 @@ clean <- function(d, helpers) {
   )
 
   d$data %>%
+    mutate(
+      violDate = coalesce(violDate, ViolDate), 
+      Citation_No = coalesce(Citation_No, Citation_no), 
+      DfndRace = coalesce(DfndRace, Race), 
+      DfndSex = coalesce(DfndSex, Sex), 
+      violTime = coalesce(violTime, ViolTime), 
+      OffenseDesc = coalesce(OffenseDesc, Offense_Desc)
+    ) %>%
   merge_rows(
     violDate,
     violTime,
@@ -83,7 +110,13 @@ clean <- function(d, helpers) {
     citation_issued = TRUE,
     # TODO(phoebe): can we get other types of outcomes?
     # https://app.asana.com/0/456927885748233/739362458819581 
-    outcome = "citation",
+    # NOTE: For "new" data, arrest outcomes are available.
+    arrest_made = if_else(viol_arrest == "NULL", NA_character_, viol_arrest),
+    arrest_made = arrest_made == "Y",
+    outcome = first_of(
+      arrest = arrest_made,
+      citation = citation_issued
+    ),
     date = parse_date(date, "%Y%m%d"),
     time = parse_time_int(time),
     subject_race = tr_race[DfndRace],
