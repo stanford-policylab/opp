@@ -2,15 +2,28 @@ source(here::here("lib", "common.R"))
 
 
 load_raw <- function(raw_data_dir, n_max) {
-  d <- load_all_csvs(raw_data_dir, n_max = n_max)
-  # NOTE: Even though StopTime has the Z timezone indicating UTC, the timestamps
-  # are actually in local time America/Denver. So we strip the Z because it is
-  # technically incorrect.
-  d$data <- mutate(
-    d$data,
-    StopTime = str_replace(StopTime, 'Z$', '')
+  # load 2009-2016 warning/citations
+  d_old <- load_years(raw_data_dir, n_max = n_max)
+  # load 2017 mtdoj stops
+  # NOTE: we don't load 2009-2016 mtdoj as there are either equivalent or a 
+  # subset of the warning/citations data.
+  d_new <- load_single_file(
+    raw_data_dir, 
+    fname = "mtdoj_data_sheet_1.csv", 
+    n_max = n_max
   )
-  bundle_raw(d$data, d$loading_problems)
+  
+  bundle_raw(
+    # NOTE: Even though StopTime has the Z timezone indicating UTC, the timestamps
+    # are actually in local time America/Denver. So we strip the Z because it is
+    # technically incorrect.
+    bind_rows(d_old$data, d_new$data) %>%
+      mutate(StopTime = str_replace(StopTime, 'Z$', '')),
+    c(
+      d_old$loading_problems,
+      d_new$loading_problems
+    )
+  )
 }
 
 
@@ -40,6 +53,16 @@ clean <- function(d, helpers) {
   d$data[d$data == "NULL"] <- NA
 
   d$data %>%
+    merge_rows(
+      StopTime, 
+      LinkedNumber, 
+      Location, 
+      City,
+      County, 
+      Age, 
+      Sex, 
+      Race
+    ) %>%
     add_raw_colname_prefix(
       Ethnicity,
       Race,
@@ -49,7 +72,6 @@ clean <- function(d, helpers) {
       lat = Latitude,
       lng = Longitude,
       subject_age = Age,
-      reason_for_stop = ReasonForStop,
       vehicle_make = VehicleMake,
       vehicle_model = VehicleModel,
       vehicle_type = VehicleStyle,
@@ -57,8 +79,16 @@ clean <- function(d, helpers) {
       vehicle_year = VehicleYear
     ) %>%
     mutate(
-      date = parse_date(StopTime, format = "%Y-%m-%dT%H:%M:%S"),
-      time = parse_time(StopTime, format = "%Y-%m-%dT%H:%M:%S"),
+      # remove dashed characters
+      reason_for_stop = str_replace_all(ReasonForStop, "--- - ",""),
+      date = coalesce(
+        parse_date(StopTime, format = "%Y/%m/%d %H:%M:%S"),
+        parse_date(StopTime, format = "%Y-%m-%dT%H:%M:%S")
+      ), 
+      time = coalesce(
+        parse_time(StopTime, format = "%Y/%m/%d %H:%M:%S"),
+        parse_time(StopTime, format = "%Y-%m-%dT%H:%M:%S")
+      ),
       location = str_c_na(Location, City, sep=", "),
       county_name = str_c(str_to_title(County), " County"),
       subject_race = if_else(
@@ -70,7 +100,13 @@ clean <- function(d, helpers) {
       # NOTE: The public records request for the data received in Feb 2017 were
       # vehicular stops by the Montana Highway Patrol.
       department_name = "Montana Highway Patrol",
-      type = "vehicular",
+      # if `reason_for_stop` is missing, impute "vehicular" (assume traffic stop)
+      type = if_else(
+        reason_for_stop == "PEDESTRIAN", 
+        "pedestrian", 
+        "vehicular",
+        missing = "vehicular"
+      ),
       violation = str_c_na(
         Violation1,
         Violation2,
@@ -96,7 +132,14 @@ clean <- function(d, helpers) {
         "NO SEARCH REQUESTED",
         "NO SEARCH / CONSENT DENIED"
       )),
-      search_basis = fast_tr(raw_SearchType, tr_search_basis)
+      search_basis = fast_tr(raw_SearchType, tr_search_basis),
+      raw_search_basis = str_c_na(
+        SearchRationale1,
+        SearchRationale2,
+        SearchRationale3,
+        SearchRationale4,
+        sep = "|"
+      )
     ) %>%
     standardize(d$metadata)
 }
