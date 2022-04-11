@@ -11,6 +11,9 @@ import pandas as pd
 
 from datetime import datetime
 
+from urllib.parse import urlencode, quote
+import json
+import requests
 
 class GM(object):
     
@@ -23,8 +26,39 @@ class GM(object):
 
     def _extract_lat_lng(self, data):
         coords = data[0]['geometry']['location']
-        return coords['lat'], coords['lng']
+        return coords['lat'], coords['lng'], "GM"
+        
+class SU(object):
+    # Link: https://library.stanford.edu/research/stanford-geospatial-center/services
+    
+    # Steps:
+    # 1. Be on Stanford network or VPN
+    # 2. Authenticate with WebAuth (may happen automatically)
+    # 3. Find IP address of machine you're running from e.g. socket.gethostbyname(socket.gethostname())
+    # 4. Get token from: https://locator.stanford.edu/arcgis/tokens/generateToken using "IP"
+    
+    # Example form:
+    # - Username: WIN\{SUNet ID}
+    # - Password: {SUNet Password}
+    # - Client: IP
+    # - IP: 171.67.195.131 (for soal-1)
+    
+    def __init__(self, token):
+        self.token = token
+        self.gserver = "https://locator.stanford.edu/arcgis/rest/services/beta_geocoders/NorthAmerica/GeocodeServer/geocodeAddresses"
+        self.post = "&f=json"
 
+    def geocode(self, loc):
+        json_body = quote("{'records':[{'attributes':{'OBJECTID':1,'SingleLine':'%s'}}]}" % loc)
+        url = f"{self.gserver}?addresses={json_body}&token={self.token}{self.post}"
+        
+        response = requests.get(url)
+        d = response.json()
+        return self._extract_lat_lng(d)
+
+    def _extract_lat_lng(self, data):
+        coords = data['locations'][0]['location']
+        return coords['y'], coords['x'], "SU"
 
 def get_key(args):
     key = args.api_key
@@ -32,7 +66,6 @@ def get_key(args):
         with open(args.api_key_file) as f:
             key = f.read().strip()
     return key
-
 
 def extract_locations(
         csv_files,
@@ -68,7 +101,6 @@ def add_loc_col(df, location_column_names, location_column_sep):
         df['loc'] += location_column_sep + col_as_str(df, loc_col)
     df['loc'] = df['loc'].str.strip()
     return df
-
 
 def col_as_str(df, col):
     return df[col].fillna('').astype('str').str.strip()
@@ -120,11 +152,18 @@ def parse_args(argv):
              ' skipped and new errors appended;'
              ' default: ./geocoded_locations_errors.csv'
     )
+    parser.add_argument(
+        '-g',
+        "--geocoder",
+        default='su',
+        help='geocoding engine, either "su" (default) or "gm"'
+    )
     parser.add_argument('-api_key')
     parser.add_argument(
         '-api_key_file',
         default=path_relative_to_this_file('gmaps_api.key')
     )
+    parser.add_argument('-su_token')
     parser.add_argument(
         '-as',
         '--address_suffix',
@@ -142,7 +181,15 @@ def parse_args(argv):
 
 if __name__ == '__main__':
     args = parse_args(sys.argv)
-    gm = GM(get_key(args))
+
+    if args.geocoder == "su":
+        geocoder = SU(token = args.su_token)
+    elif args.geocoder == "gm":
+        geocoder = GM(get_key(args))
+    else:
+        print(f"Invalid geocoder: {args.geocoder}")
+        sys.exit()
+    
     locs = extract_locations(
         args.csv_files,
         args.location_column_names,
@@ -160,12 +207,12 @@ if __name__ == '__main__':
         output = csv.writer(ocsv)
         errors = csv.writer(ecsv)
         if not output_file_csv_already_exists:
-            output.writerow(['loc', 'lat', 'lng'])
+            output.writerow(['loc', 'lat', 'lng', 'geocode_source'])
         total = len(locs)
         for loc in locs:
             try:
-                lat, lng = gm.geocode(loc + args.address_suffix)
-                output.writerow([loc, lat, lng])
+                lat, lng, geocode_source = geocoder.geocode(loc + args.address_suffix)
+                output.writerow([loc, lat, lng, geocode_source])
                 ocsv.flush()
             except Exception as e:
                 errors.writerow([loc])
