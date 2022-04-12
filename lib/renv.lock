@@ -424,7 +424,7 @@
     },
     "here": {
       "Package": "here",
-      "Version": "1.0.1",
+      "Version": "0.1",
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "24b224366f9c2e7534d2344d10d59211"
@@ -837,7 +837,7 @@
     },
     "rprojroot": {
       "Package": "rprojroot",
-      "Version": "2.0.2",
+      "Version": "1.3-2",
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "249d8cd1e74a8f6a26194a91b47f21d1"

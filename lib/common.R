@@ -1,4 +1,4 @@
-source(here::here("renv", "activate.R"))
+source(here::here("lib", "renv", "renv", "activate.R"))
 
 library(assertr)
 library(broom)
