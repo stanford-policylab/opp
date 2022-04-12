@@ -106,7 +106,7 @@ opp_add_lat_lng_func <- function(state, city = "statewide") {
     names(join_on) <- c(join_col)
     locs <- opp_load_csv_func(state, city)(
       "geocoded_locations_sanitized.csv",
-      col_types = "cdd"
+      col_types = "cddc"
     ) %>%
     filter(!is.na(loc))
 
@@ -114,7 +114,7 @@ opp_add_lat_lng_func <- function(state, city = "statewide") {
       tbl,
       locs,
       join_on,
-      col_types = "cdd"
+      col_types = "cddc"
     )
   }
 }
