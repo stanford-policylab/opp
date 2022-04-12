@@ -1,3 +1,5 @@
+source(here::here("renv", "activate.R"))
+
 library(assertr)
 library(broom)
 library(digest)
