@@ -38,7 +38,7 @@ Start `R` and install the `renv` package. Then install required versions of the 
 install.packages("renv")
 renv::restore(lockfile="renv.lock")
 ```
-For more details, see the [`renv` package] (https://rstudio.github.io/renv/articles/collaborating.html)
+For more details, see the [`renv` package](https://rstudio.github.io/renv/articles/collaborating.html).
 
 All these packages must successfully install in order to load the following
 main library:
