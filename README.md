@@ -12,8 +12,8 @@ cd opp
 ./download -h                         # see help for all commands
 ./download -t csv -l                  # list all locations with csv files
 ./download -t csv                     # download all locations with csv files to /tmp/opp_data
-./download -t shapefiles -l            # list all locations with shapefiles
-./download -t shapefiles               # download all locations with shapefiles to /tmp/opp_data
+./download -t shapefiles -l           # list all locations with shapefiles
+./download -t shapefiles              # download all locations with shapefiles to /tmp/opp_data
 ./download -t rds -l                  # list all locations with rds files
 ./download -t rds                     # download all locations with rds files to /tmp/opp_data
 ./download -t csv -o ~/Documents/opp  # download all locations with csv files to ~/Documents/opp
@@ -33,43 +33,13 @@ Change into the repository's `lib` directory
 ```
 cd opp/lib
 ```
-Start R
-```
-R
-```
-From R, install the required packages
+Start `R` and install the `renv` package. Then install required versions of the packages.
 ```R
-install.packages(c(
-  "assertr",
-  "broom",
-  "digest",
-  "fs",
-  "functional",
-  "getopt",
-  "here",
-  "housingData",
-  "jsonlite",
-  "knitr",
-  "lubridate",
-  "lazyeval",
-  "lutz",
-  "magrittr",
-  "maps",
-  "parallel",
-  "patchwork",
-  "purrr",
-  "rlang",
-  "rmarkdown",
-  "rgdal",
-  "rstan",
-  "scales",
-  "sp",
-  "splines",
-  "suncalc",
-  "tidyverse",
-  "zoo"
-))
+install.packages("renv")
+renv::restore(lockfile="renv.lock")
 ```
+For more details, see the [`renv` package](https://rstudio.github.io/renv/articles/collaborating.html).
+
 All these packages must successfully install in order to load the following
 main library:
 ```R
