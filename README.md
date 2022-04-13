@@ -33,14 +33,14 @@ Change into the repository's `lib` directory
 ```
 cd opp/lib
 ```
-Start `R` and install the `renv` package. Then install required versions of the packages.
+Start `R`. The `renv` package should be automatically installed if not already
+available. Then, install the required packages using `renv`:
 ```R
-install.packages("renv")
 renv::restore()
 ```
 For more details, see the [`renv`
 package](https://rstudio.github.io/renv/articles/collaborating.html). (Note
-that this will override your local `.Rprofile`.)
+that using `renv` requires overriding your local `.Rprofile`.)
 
 All these packages must successfully install in order to load the following
 main library:
