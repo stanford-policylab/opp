@@ -12,8 +12,8 @@ cd opp
 ./download -h                         # see help for all commands
 ./download -t csv -l                  # list all locations with csv files
 ./download -t csv                     # download all locations with csv files to /tmp/opp_data
-./download -t shapefiles -l            # list all locations with shapefiles
-./download -t shapefiles               # download all locations with shapefiles to /tmp/opp_data
+./download -t shapefiles -l           # list all locations with shapefiles
+./download -t shapefiles              # download all locations with shapefiles to /tmp/opp_data
 ./download -t rds -l                  # list all locations with rds files
 ./download -t rds                     # download all locations with rds files to /tmp/opp_data
 ./download -t csv -o ~/Documents/opp  # download all locations with csv files to ~/Documents/opp
@@ -33,13 +33,12 @@ Change into the repository's `lib` directory
 ```
 cd opp/lib
 ```
-
-We use the `renv` package and Rstudio to maintain our package dependencies, in particular, dplyr 0.8.5. To ensure the code runs properly, open the git repo in a new Rstudio project. `renv` should automatically install itself.
-
-In R, run `renv::restore()` to install the correct package versions. For more details, see the [`renv` package] (https://rstudio.github.io/renv/articles/collaborating.html)
+Start `R` and install the `renv` package. Then install required versions of the packages.
 ```R
-renv::restore()
+install.packages("renv")
+renv::restore(lockfile="renv.lock")
 ```
+For more details, see the [`renv` package] (https://rstudio.github.io/renv/articles/collaborating.html)
 
 All these packages must successfully install in order to load the following
 main library:
