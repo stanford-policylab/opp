@@ -36,9 +36,10 @@ cd opp/lib
 Start `R`. The `renv` package should be automatically installed if not already
 available. Then, install the required packages using `renv`:
 ```R
-renv::restore()
+renv::restore(rebuild = TRUE)
 ```
-For more details, see the [`renv`
+This may take some time, as all packages must be rebuilt. For more details, see
+the [`renv`
 package](https://rstudio.github.io/renv/articles/collaborating.html). (Note
 that using `renv` requires overriding your local `.Rprofile`.)
 
