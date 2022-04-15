@@ -7,25 +7,8 @@ local({
   # the project directory
   project <- getwd()
 
-  # allow environment variable to control activation
-  activate <- Sys.getenv("RENV_AUTOLOADER_ENABLED")
-  if (!nzchar(activate))
-    activate <- Sys.getenv("RENV_ACTIVATE_PROJECT")
-
-  if (!nzchar(activate)) {
-
-    # don't auto-activate when R CMD INSTALL is running
-    if (nzchar(Sys.getenv("R_INSTALL_PKG")))
-      return(FALSE)
-
-  }
-
-  # bail if activation was explicitly disabled
-  if (tolower(activate) %in% c("false", "f", "0"))
-    return(FALSE)
-
   # avoid recursion
-  if (nzchar(Sys.getenv("RENV_R_INITIALIZING")))
+  if (!is.na(Sys.getenv("RENV_R_INITIALIZING", unset = NA)))
     return(invisible(TRUE))
 
   # signal that we're loading renv during R startup
@@ -87,10 +70,7 @@ local({
     repos <- getOption("repos")
   
     # ensure @CRAN@ entries are resolved
-    repos[repos == "@CRAN@"] <- getOption(
-      "renv.repos.cran",
-      "https://cloud.r-project.org"
-    )
+    repos[repos == "@CRAN@"] <- "https://cloud.r-project.org"
   
     # add in renv.bootstrap.repos if set
     default <- c(FALLBACK = "https://cloud.r-project.org")
@@ -154,75 +134,77 @@ local({
   
   renv_bootstrap_download_cran_latest <- function(version) {
   
-    spec <- renv_bootstrap_download_cran_latest_find(version)
+    repos <- renv_bootstrap_download_cran_latest_find(version)
   
     message("* Downloading renv ", version, " ... ", appendLF = FALSE)
   
-    type  <- spec$type
-    repos <- spec$repos
+    downloader <- function(type) {
   
-    info <- tryCatch(
-      utils::download.packages(
-        pkgs    = "renv",
-        destdir = tempdir(),
-        repos   = repos,
-        type    = type,
-        quiet   = TRUE
-      ),
-      condition = identity
-    )
+      tryCatch(
+        utils::download.packages(
+          pkgs = "renv",
+          destdir = tempdir(),
+          repos = repos,
+          type = type,
+          quiet = TRUE
+        ),
+        condition = identity
+      )
   
+    }
+  
+    # first, try downloading a binary on Windows + macOS if appropriate
+    binary <-
+      !identical(.Platform$pkgType, "source") &&
+      !identical(getOption("pkgType"), "source") &&
+      Sys.info()[["sysname"]] %in% c("Darwin", "Windows")
+  
+    if (binary) {
+      info <- downloader(type = "binary")
+      if (!inherits(info, "condition")) {
+        message("OK (downloaded binary)")
+        return(info[1, 2])
+      }
+    }
+  
+    # otherwise, try downloading a source tarball
+    info <- downloader(type = "source")
     if (inherits(info, "condition")) {
       message("FAILED")
       return(FALSE)
     }
   
     # report success and return
-    message("OK (downloaded ", type, ")")
+    message("OK (downloaded source)")
     info[1, 2]
   
   }
   
   renv_bootstrap_download_cran_latest_find <- function(version) {
   
-    # check whether binaries are supported on this system
-    binary <-
-      getOption("renv.bootstrap.binary", default = TRUE) &&
-      !identical(.Platform$pkgType, "source") &&
-      !identical(getOption("pkgType"), "source") &&
-      Sys.info()[["sysname"]] %in% c("Darwin", "Windows")
+    all <- renv_bootstrap_repos()
   
-    types <- c(if (binary) "binary", "source")
+    for (repos in all) {
   
-    # iterate over types + repositories
-    for (type in types) {
-      for (repos in renv_bootstrap_repos()) {
+      db <- tryCatch(
+        as.data.frame(
+          x = utils::available.packages(repos = repos),
+          stringsAsFactors = FALSE
+        ),
+        error = identity
+      )
   
-        # retrieve package database
-        db <- tryCatch(
-          as.data.frame(
-            utils::available.packages(type = type, repos = repos),
-            stringsAsFactors = FALSE
-          ),
-          error = identity
-        )
+      if (inherits(db, "error"))
+        next
   
-        if (inherits(db, "error"))
-          next
+      entry <- db[db$Package %in% "renv" & db$Version %in% version, ]
+      if (nrow(entry) == 0)
+        next
   
-        # check for compatible entry
-        entry <- db[db$Package %in% "renv" & db$Version %in% version, ]
-        if (nrow(entry) == 0)
-          next
+      return(repos)
   
-        # found it; return spec to caller
-        spec <- list(entry = entry, type = type, repos = repos)
-        return(spec)
-  
-      }
     }
   
-    # if we got here, we failed to find renv
     fmt <- "renv %s is not available from your declared package repositories"
     stop(sprintf(fmt, version))
   
