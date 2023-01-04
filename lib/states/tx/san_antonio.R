@@ -49,61 +49,66 @@ clean <- function(d, helpers) {
     )
 
   d$data %>%
-  helpers$add_type(
-    "offense"
-  ) %>%
-  merge_rows(
-    citation_number
-  ) %>%
-  left_join(
-    speeds
-  ) %>%
-  rename(
-    date = violation_date,
-    time = violation_time,
-    location = violation_location,
-    subject_age = age_at_time_of_violation,
-    vehicle_registration_state = license_plate_state,
-    raw_search_reason = search_reason,
-    raw_actual_speed = actual_speed,
-    raw_posted_speed = posted_speed,
-    speed = max_speed,
-    posted_speed = max_posted_speed,
-    violation = offense
-  ) %>%
-  mutate(
-    subject_race = tr_race[race],
-    subject_sex = tr_sex[gender],
-    search_conducted = str_detect_na(
-      raw_search_reason,
-      str_c(names(tr_search_basis), collapse = "|")
-    ),
-    search_basis = tr_search_basis[raw_search_reason],
-    contraband_found = replace_na(tr_yn[contraband_or_evidence], F),
-    arrest_made = replace_na(tr_yn[custodial_arrest_made], F),
-    citation_issued = !is.na(citation_number),
-    # NOTE: warnings are not recorded
-    outcome = first_of(
-      "arrest" = arrest_made,
-      "citation" = citation_issued
-    ),
-    # NOTE: 0 in vehicle year seems to indicate not recorded rather than 2000;
-    # this is set to NA in standardization
-  ) %>%
-  helpers$add_lat_lng(
-  ) %>%
-  helpers$add_shapefiles_data(
-  ) %>%
-  rename(
-    district = DISTRICT,
-    # NOTE: SUBCODE is just the first letter of SUBSTN
-    substation = SUBSTN.x,
-  ) %>%
-  add_raw_colname_prefix(
-    race,
-    search_reason,
-    contraband_or_evidence,
-    custodial_arrest_made
-  ) %>%
-  standardize(d$metadata)
+    mutate(
+      custodial_arrest_made = coalesce(custodial_arrest_made,
+                                       custodia_larrest_made)
+    ) %>%
+    helpers$add_type(
+      "offense"
+    ) %>%
+    merge_rows(
+      # NOTE: One citation number gets recycled between 2012 and 2018.
+      citation_number, year(violation_date)
+    ) %>%
+    left_join(
+      speeds
+    ) %>%
+    rename(
+      date = violation_date,
+      time = violation_time,
+      location = violation_location,
+      subject_age = age_at_time_of_violation,
+      vehicle_registration_state = license_plate_state,
+      raw_search_reason = search_reason,
+      raw_actual_speed = actual_speed,
+      raw_posted_speed = posted_speed,
+      speed = max_speed,
+      posted_speed = max_posted_speed,
+      violation = offense
+    ) %>%
+    mutate(
+      subject_race = tr_race[race],
+      subject_sex = tr_sex[gender],
+      search_conducted = str_detect_na(
+        raw_search_reason,
+        str_c(names(tr_search_basis), collapse = "|")
+      ),
+      search_basis = tr_search_basis[raw_search_reason],
+      contraband_found = replace_na(tr_yn[contraband_or_evidence], F),
+      arrest_made = replace_na(tr_yn[custodial_arrest_made], F),
+      citation_issued = !is.na(citation_number),
+      # NOTE: warnings are not recorded
+      outcome = first_of(
+        "arrest" = arrest_made,
+        "citation" = citation_issued
+      ),
+      # NOTE: 0 in vehicle year seems to indicate not recorded rather than 2000;
+      # this is set to NA in standardization
+    ) %>%
+    helpers$add_lat_lng(
+    ) %>%
+    helpers$add_shapefiles_data(
+    ) %>%
+    rename(
+      district = DISTRICT,
+      # NOTE: SUBCODE is just the first letter of SUBSTN
+      substation = SUBSTN.x,
+    ) %>%
+    add_raw_colname_prefix(
+      race,
+      search_reason,
+      contraband_or_evidence,
+      custodial_arrest_made
+    ) %>%
+    standardize(d$metadata)
 }
