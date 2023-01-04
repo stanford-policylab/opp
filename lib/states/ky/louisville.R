@@ -1,13 +1,30 @@
 source("common.R")
 
 load_raw <- function(raw_data_dir, n_max) {
+
+  # original data
   stops <- load_single_file(raw_data_dir, "LMPD_STOPS_DATA_12.csv", n_max)
   cits <- load_single_file(raw_data_dir, "UniformCitationData.csv", n_max)
+
+  # updated data 2020-08-31
+  # same format as LMPD_STOPS_DATA_12.csv above
+  stop_data <- load_single_file(raw_data_dir, "stops_data.csv", n_max)
+  # same format as UniformCitationData.csv above
+  arrests <- load_single_file(raw_data_dir, "arrests.csv", n_max)
+
   bundle_raw(
     make_ergonomic_colnames(
-      left_join(stops$data, cits$data, by = "CITATION_CONTROL_NUMBER")
+      bind_rows(
+        left_join(stops$data, cits$data, by = "CITATION_CONTROL_NUMBER"),
+        left_join(stop_data$data, arrests$data, by = "CITATION_CONTROL_NUMBER")
+      )
     ),
-    c(stops$loading_problems, cits$loading_problems)
+    c(
+      stops$loading_problems,
+      cits$loading_problems,
+      stop_data$loading_problems,
+      arrests$loading_problems
+    )
   )
 }
 
@@ -68,7 +85,10 @@ clean <- function(d, helpers) {
     # or number_of_passengers or was_vehicle_searched columns, implying
     # it was a vehicle stop
     type = "vehicular",
-    date = parse_date(activity_date, "%m/%d/%Y"),
+    date = coalesce(
+      parse_date(activity_date, "%m/%d/%Y"),
+      parse_date(activity_date, "%Y/%m/%d")
+    ),
     time = parse_time(activity_time),
     subject_sex = tr_sex[driver_gender],
     subject_race = tr_race[str_to_lower(raw_driver_race)],
