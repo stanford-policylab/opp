@@ -381,9 +381,9 @@ create_null_rates_tbl <- function(null_rates_list) {
   if (length(null_rates_list) == 0) {
     tibble()
   } else {
-    null_rates_matrix <- t(bind_rows(null_rates_list))
-    tbl <- as_tibble(rownames_to_column(as.data.frame(null_rates_matrix)))
-    colnames(tbl) <- c("col", "null_rate_before", "null_rate_after")
+    tbl <- map_dfr(null_rates_list, ~.) %>%
+      mutate(col = names(null_rates_list)) %>%
+      select(col, null_rate_before, null_rate_after)
     mutate(
       tbl,
       null_rate_after_less_before = null_rate_after - null_rate_before
