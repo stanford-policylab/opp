@@ -547,7 +547,7 @@ We’re excited to see what you come up with!
 
 ### 2023 Data Refresh
 
-We are releasing refreshed data for eleven locations:
+We are releasing 2.8 million additional stops for the following locations:
 * Mesa, AZ,
 * Aurora, CO,
 * Chicago, IL,
@@ -749,7 +749,7 @@ data (Statewide, CA), but have added no new data.
   translated to 'vehicular' or 'pedestrian' stops
 
 ## Mesa, AZ
-### 2014-01-01 to 2017-03-31
+### 2014-01-01 to 2019-09-23
 <table>
  <thead>
   <tr>
@@ -764,23 +764,27 @@ data (Statewide, CA), but have added no new data.
   </tr>
   <tr>
    <td style="text-align:left;"> time </td>
-   <td style="text-align:left;"> 99.8% </td>
+   <td style="text-align:left;"> 99.6% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> location </td>
-   <td style="text-align:left;"> 99.4% </td>
+   <td style="text-align:left;"> 99.6% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> lat </td>
-   <td style="text-align:left;"> 98.5% </td>
+   <td style="text-align:left;"> 99.3% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> lng </td>
-   <td style="text-align:left;"> 98.5% </td>
+   <td style="text-align:left;"> 99.3% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> geocode_source </td>
+   <td style="text-align:left;"> 99.3% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_age </td>
-   <td style="text-align:left;"> 98.5% </td>
+   <td style="text-align:left;"> 98.4% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
@@ -788,7 +792,7 @@ data (Statewide, CA), but have added no new data.
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
-   <td style="text-align:left;"> 98.7% </td>
+   <td style="text-align:left;"> 98.5% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_id </td>
@@ -804,7 +808,7 @@ data (Statewide, CA), but have added no new data.
   </tr>
   <tr>
    <td style="text-align:left;"> type </td>
-   <td style="text-align:left;"> 93.0% </td>
+   <td style="text-align:left;"> 93.7% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> violation </td>
@@ -851,6 +855,12 @@ data (Statewide, CA), but have added no new data.
   charge code in the raw data
 - subject_race was derived from ethnicity_fixed and race_fixed in the raw data,
   provided in the clean data with raw_*
+
+**2023 update**:
+- 60,394 new stops added.
+- More accurate data has been used for early 2017, resulting in modest changes
+  (e.g., one letter differences) in approximately 700 rows, as well as 18 new
+  rows corresponding to stops that were not previously represented.
 
 ## Statewide, AZ
 ### 2009-01-06 to 2017-12-31
@@ -2128,6 +2138,9 @@ data (Statewide, CA), but have added no new data.
 - Raw data contains shift time is included, but is not sufficiently granular 
   to yield reliable stop time. 
 
+**2023 update**:
+- District and county codes have been corrected.
+
 ## Stockton, CA
 ### 2012-01-01 to 2016-12-31
 <table>
@@ -2229,7 +2242,7 @@ data (Statewide, CA), but have added no new data.
 - 2012 has suspiciously little data
 
 ## Aurora, CO
-### 2012-01-01 to 2016-12-31
+### 2012-01-01 to 2020-07-31
 <table>
  <thead>
   <tr>
@@ -2252,39 +2265,47 @@ data (Statewide, CA), but have added no new data.
   </tr>
   <tr>
    <td style="text-align:left;"> lat </td>
-   <td style="text-align:left;"> 81.8% </td>
+   <td style="text-align:left;"> 96.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> lng </td>
-   <td style="text-align:left;"> 81.8% </td>
+   <td style="text-align:left;"> 96.9% </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> district </td>
-   <td style="text-align:left;"> 80.6% </td>
+   <td style="text-align:left;"> geocode_source </td>
+   <td style="text-align:left;"> 96.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_age </td>
-   <td style="text-align:left;"> 96.6% </td>
+   <td style="text-align:left;"> 64.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_dob </td>
-   <td style="text-align:left;"> 96.5% </td>
+   <td style="text-align:left;"> 64.8% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 100.0% </td>
+   <td style="text-align:left;"> 99.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
-   <td style="text-align:left;"> 98.9% </td>
+   <td style="text-align:left;"> 99.2% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> subject_first_name </td>
+   <td style="text-align:left;"> 67.1% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> subject_last_name </td>
+   <td style="text-align:left;"> 67.1% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> type </td>
-   <td style="text-align:left;"> 97.5% </td>
+   <td style="text-align:left;"> 95.7% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> violation </td>
-   <td style="text-align:left;"> 98.0% </td>
+   <td style="text-align:left;"> 98.2% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> citation_issued </td>
@@ -2296,7 +2317,7 @@ data (Statewide, CA), but have added no new data.
   </tr>
   <tr>
    <td style="text-align:left;"> raw_ethnicity </td>
-   <td style="text-align:left;"> 12.9% </td>
+   <td style="text-align:left;"> 8.7% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> raw_race </td>
@@ -2311,6 +2332,9 @@ data (Statewide, CA), but have added no new data.
   of records by ~1.0%
 - subject_race was based on Race and Ethnicity in the raw data, which are
   passed through
+
+**2023 update**:
+- 84,677 new stops added.
 
 ## Denver, CO
 ### 2010-12-31 to 2018-07-19
@@ -3588,7 +3612,7 @@ data (Statewide, CA), but have added no new data.
   requested, whether consent was given, who performed the search, etc. 
 
 ## Chicago, IL
-### 2012-01-01 to 2016-12-31
+### 2012-01-01 to 2020-05-16
 <table>
  <thead>
   <tr>
@@ -3607,23 +3631,35 @@ data (Statewide, CA), but have added no new data.
   </tr>
   <tr>
    <td style="text-align:left;"> location </td>
-   <td style="text-align:left;"> 91.6% </td>
+   <td style="text-align:left;"> 96.4% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> lat </td>
-   <td style="text-align:left;"> 75.7% </td>
+   <td style="text-align:left;"> 94.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> lng </td>
-   <td style="text-align:left;"> 75.7% </td>
+   <td style="text-align:left;"> 94.9% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> geocode_source </td>
+   <td style="text-align:left;"> 94.9% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> beat </td>
+   <td style="text-align:left;"> 59.9% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> district </td>
+   <td style="text-align:left;"> 59.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_age </td>
-   <td style="text-align:left;"> 25.1% </td>
+   <td style="text-align:left;"> 69.8% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 26.5% </td>
+   <td style="text-align:left;"> 68.5% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
@@ -3631,35 +3667,39 @@ data (Statewide, CA), but have added no new data.
   </tr>
   <tr>
    <td style="text-align:left;"> officer_id </td>
-   <td style="text-align:left;"> 18.0% </td>
+   <td style="text-align:left;"> 7.2% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_id_hash </td>
-   <td style="text-align:left;"> 18.0% </td>
+   <td style="text-align:left;"> 7.2% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_age </td>
-   <td style="text-align:left;"> 7.1% </td>
+   <td style="text-align:left;"> 2.8% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_race </td>
-   <td style="text-align:left;"> 93.0% </td>
+   <td style="text-align:left;"> 37.3% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_sex </td>
-   <td style="text-align:left;"> 93.0% </td>
+   <td style="text-align:left;"> 37.3% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_first_name </td>
-   <td style="text-align:left;"> 93.0% </td>
+   <td style="text-align:left;"> 37.3% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_last_name </td>
-   <td style="text-align:left;"> 93.0% </td>
+   <td style="text-align:left;"> 37.3% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_years_of_service </td>
-   <td style="text-align:left;"> 92.7% </td>
+   <td style="text-align:left;"> 37.2% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> unit </td>
+   <td style="text-align:left;"> 59.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> type </td>
@@ -3671,23 +3711,63 @@ data (Statewide, CA), but have added no new data.
   </tr>
   <tr>
    <td style="text-align:left;"> arrest_made </td>
-   <td style="text-align:left;"> 25.1% </td>
+   <td style="text-align:left;"> 10.1% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> citation_issued </td>
-   <td style="text-align:left;"> 75.6% </td>
+   <td style="text-align:left;"> 30.4% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> outcome </td>
+   <td style="text-align:left;"> 40.1% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> contraband_found </td>
    <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
+   <td style="text-align:left;"> contraband_drugs </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> contraband_weapons </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> contraband_alcohol </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> contraband_other </td>
+   <td style="text-align:left;"> 0.6% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> search_conducted </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> search_person </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> search_vehicle </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> vehicle_make </td>
+   <td style="text-align:left;"> 59.9% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> vehicle_model </td>
+   <td style="text-align:left;"> 59.9% </td>
+  </tr>
+  <tr>
    <td style="text-align:left;"> raw_race </td>
-   <td style="text-align:left;"> 25.1% </td>
+   <td style="text-align:left;"> 69.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> raw_driver_race </td>
-   <td style="text-align:left;"> 1.4% </td>
+   <td style="text-align:left;"> 0.6% </td>
   </tr>
 </tbody>
 </table>
@@ -3703,6 +3783,9 @@ data (Statewide, CA), but have added no new data.
 - violation represents statute_description in the raw data
 - subject_race is based on raw columns race and driver_race, which are passed
   through
+
+**2023 update*:
+- 1,261,642 new stops added.
 
 ## Fort Wayne, IN
 ### 2007-09-01 to 2017-09-30
@@ -3780,7 +3863,7 @@ data (Statewide, CA), but have added no new data.
   this column
 
 ## Wichita, KS
-### 2006-01-01 to 2016-12-31
+### 2006-01-01 to 2020-05-15
 <table>
  <thead>
   <tr>
@@ -3799,27 +3882,39 @@ data (Statewide, CA), but have added no new data.
   </tr>
   <tr>
    <td style="text-align:left;"> location </td>
-   <td style="text-align:left;"> 97.3% </td>
+   <td style="text-align:left;"> 97.4% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> lat </td>
-   <td style="text-align:left;"> 97.1% </td>
+   <td style="text-align:left;"> 97.3% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> lng </td>
-   <td style="text-align:left;"> 97.1% </td>
+   <td style="text-align:left;"> 97.3% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> geocode_source </td>
+   <td style="text-align:left;"> 97.3% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_age </td>
-   <td style="text-align:left;"> 81.1% </td>
+   <td style="text-align:left;"> 81.4% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 97.7% </td>
+   <td style="text-align:left;"> 93.4% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
-   <td style="text-align:left;"> 82.2% </td>
+   <td style="text-align:left;"> 78.7% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> subject_first_name </td>
+   <td style="text-align:left;"> 90.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> subject_last_name </td>
+   <td style="text-align:left;"> 90.7% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_first_name </td>
@@ -3835,7 +3930,7 @@ data (Statewide, CA), but have added no new data.
   </tr>
   <tr>
    <td style="text-align:left;"> disposition </td>
-   <td style="text-align:left;"> 97.5% </td>
+   <td style="text-align:left;"> 96.5% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> violation </td>
@@ -3851,31 +3946,31 @@ data (Statewide, CA), but have added no new data.
   </tr>
   <tr>
    <td style="text-align:left;"> posted_speed </td>
-   <td style="text-align:left;"> 30.6% </td>
+   <td style="text-align:left;"> 31.2% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> vehicle_color </td>
-   <td style="text-align:left;"> 93.8% </td>
+   <td style="text-align:left;"> 94.2% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> vehicle_make </td>
-   <td style="text-align:left;"> 95.2% </td>
+   <td style="text-align:left;"> 95.5% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> vehicle_model </td>
-   <td style="text-align:left;"> 46.5% </td>
+   <td style="text-align:left;"> 49.5% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> vehicle_year </td>
-   <td style="text-align:left;"> 27.7% </td>
+   <td style="text-align:left;"> 27.4% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> raw_defendant_race </td>
-   <td style="text-align:left;"> 97.7% </td>
+   <td style="text-align:left;"> 93.4% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> raw_defendant_ethnicity </td>
-   <td style="text-align:left;"> 69.0% </td>
+   <td style="text-align:left;"> 62.2% </td>
   </tr>
 </tbody>
 </table>
@@ -3893,8 +3988,11 @@ data (Statewide, CA), but have added no new data.
 - subject_race is based on the raw columns defendant_ethnicity and
   defendant_race, which are passed through
 
+**2023 update**:
+- 100,660 new stops added.
+
 ## Louisville, KY
-### 2015-01-01 to 2018-01-28
+### 2015-01-01 to 2020-06-16
 <table>
  <thead>
   <tr>
@@ -3917,27 +4015,31 @@ data (Statewide, CA), but have added no new data.
   </tr>
   <tr>
    <td style="text-align:left;"> lat </td>
-   <td style="text-align:left;"> 99.6% </td>
+   <td style="text-align:left;"> 92.2% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> lng </td>
-   <td style="text-align:left;"> 99.6% </td>
+   <td style="text-align:left;"> 92.2% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> geocode_source </td>
+   <td style="text-align:left;"> 92.2% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> beat </td>
-   <td style="text-align:left;"> 96.3% </td>
+   <td style="text-align:left;"> 96.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> division </td>
-   <td style="text-align:left;"> 96.2% </td>
+   <td style="text-align:left;"> 96.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_age </td>
-   <td style="text-align:left;"> 73.2% </td>
+   <td style="text-align:left;"> 76.4% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 100.0% </td>
+   <td style="text-align:left;"> 99.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
@@ -3957,7 +4059,7 @@ data (Statewide, CA), but have added no new data.
   </tr>
   <tr>
    <td style="text-align:left;"> violation </td>
-   <td style="text-align:left;"> 73.3% </td>
+   <td style="text-align:left;"> 76.5% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> citation_issued </td>
@@ -3985,35 +4087,35 @@ data (Statewide, CA), but have added no new data.
   </tr>
   <tr>
    <td style="text-align:left;"> reason_for_search </td>
-   <td style="text-align:left;"> 99.8% </td>
+   <td style="text-align:left;"> 98.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> raw_activity_division </td>
-   <td style="text-align:left;"> 96.2% </td>
+   <td style="text-align:left;"> 95.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> raw_division </td>
-   <td style="text-align:left;"> 69.4% </td>
+   <td style="text-align:left;"> 72.4% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> raw_activity_beat </td>
-   <td style="text-align:left;"> 96.1% </td>
+   <td style="text-align:left;"> 95.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> raw_beat </td>
-   <td style="text-align:left;"> 69.6% </td>
+   <td style="text-align:left;"> 72.5% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> raw_driver_race </td>
-   <td style="text-align:left;"> 100.0% </td>
+   <td style="text-align:left;"> 99.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> raw_persons_race </td>
-   <td style="text-align:left;"> 73.2% </td>
+   <td style="text-align:left;"> 76.3% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> raw_persons_ethnicity </td>
-   <td style="text-align:left;"> 71.2% </td>
+   <td style="text-align:left;"> 73.8% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> raw_driver_age_range </td>
@@ -4025,7 +4127,7 @@ data (Statewide, CA), but have added no new data.
   </tr>
   <tr>
    <td style="text-align:left;"> raw_citation_location </td>
-   <td style="text-align:left;"> 73.3% </td>
+   <td style="text-align:left;"> 76.5% </td>
   </tr>
 </tbody>
 </table>
@@ -4072,6 +4174,9 @@ data (Statewide, CA), but have added no new data.
 - frisk_performed is true with reason_for_search matches the pattern "TERRY|PAT",
   it is false otherwise (NA and no match)
 - 2018 has data only from January
+
+**2023 update**:
+- 35,601 new stops added.
 
 ## Owensboro, KY
 ### 2015-09-01 to 2017-09-01
@@ -5013,7 +5118,7 @@ data (Statewide, CA), but have added no new data.
   `elect` (E or NA), `disp` (G, P, D, S, N), `fine`.
 
 ## Statewide, MT
-### 2009-01-01 to 2016-12-31
+### 2009-01-01 to 2017-12-31
 <table>
  <thead>
   <tr>
@@ -5096,7 +5201,7 @@ data (Statewide, CA), but have added no new data.
   </tr>
   <tr>
    <td style="text-align:left;"> search_basis </td>
-   <td style="text-align:left;"> 96.6% </td>
+   <td style="text-align:left;"> 97.1% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> reason_for_stop </td>
@@ -5108,15 +5213,15 @@ data (Statewide, CA), but have added no new data.
   </tr>
   <tr>
    <td style="text-align:left;"> vehicle_model </td>
-   <td style="text-align:left;"> 97.1% </td>
+   <td style="text-align:left;"> 97.3% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> vehicle_type </td>
-   <td style="text-align:left;"> 92.1% </td>
+   <td style="text-align:left;"> 92.7% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> vehicle_registration_state </td>
-   <td style="text-align:left;"> 96.2% </td>
+   <td style="text-align:left;"> 96.3% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> vehicle_year </td>
@@ -5133,6 +5238,10 @@ data (Statewide, CA), but have added no new data.
   <tr>
    <td style="text-align:left;"> raw_SearchType </td>
    <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> raw_search_basis </td>
+   <td style="text-align:left;"> 1.8% </td>
   </tr>
 </tbody>
 </table>
@@ -5154,6 +5263,9 @@ data (Statewide, CA), but have added no new data.
   `CitationsThisRecord` (0-3 indicating how many citations were given),
   `EnforcementAction[1-3]` (gives slightly more detail than `stop_outcome`, 
   e.g., misdemeanor arrest vs felony arrest).
+
+**2023 update**:
+- 96,109 new stops added.
 
 ## Raleigh, NC
 ### 2002-01-01 to 2015-12-31
@@ -7435,7 +7547,7 @@ data (Statewide, CA), but have added no new data.
 - There are zero stops of Hispanic individuals reported after 2010.
 
 ## Oklahoma City, OK
-### 2011-01-01 to 2017-10-18
+### 2011-01-01 to 2020-11-19
 <table>
  <thead>
   <tr>
@@ -7458,55 +7570,63 @@ data (Statewide, CA), but have added no new data.
   </tr>
   <tr>
    <td style="text-align:left;"> lat </td>
-   <td style="text-align:left;"> 89.9% </td>
+   <td style="text-align:left;"> 97.5% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> lng </td>
-   <td style="text-align:left;"> 89.9% </td>
+   <td style="text-align:left;"> 97.5% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> geocode_source </td>
+   <td style="text-align:left;"> 97.5% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> beat </td>
-   <td style="text-align:left;"> 85.0% </td>
+   <td style="text-align:left;"> 93.8% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> division </td>
-   <td style="text-align:left;"> 85.0% </td>
+   <td style="text-align:left;"> 93.8% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> sector </td>
-   <td style="text-align:left;"> 85.0% </td>
+   <td style="text-align:left;"> 93.8% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_age </td>
-   <td style="text-align:left;"> 99.6% </td>
+   <td style="text-align:left;"> 76.5% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_dob </td>
-   <td style="text-align:left;"> 99.5% </td>
+   <td style="text-align:left;"> 76.5% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 99.8% </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> subject_sex </td>
    <td style="text-align:left;"> 99.7% </td>
   </tr>
   <tr>
+   <td style="text-align:left;"> subject_sex </td>
+   <td style="text-align:left;"> 99.6% </td>
+  </tr>
+  <tr>
    <td style="text-align:left;"> officer_id </td>
-   <td style="text-align:left;"> 100.0% </td>
+   <td style="text-align:left;"> 76.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_id_hash </td>
-   <td style="text-align:left;"> 100.0% </td>
+   <td style="text-align:left;"> 76.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> type </td>
-   <td style="text-align:left;"> 79.0% </td>
+   <td style="text-align:left;"> 79.6% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> violation </td>
    <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> arrest_made </td>
+   <td style="text-align:left;"> 23.1% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> citation_issued </td>
@@ -7518,35 +7638,35 @@ data (Statewide, CA), but have added no new data.
   </tr>
   <tr>
    <td style="text-align:left;"> speed </td>
-   <td style="text-align:left;"> 40.8% </td>
+   <td style="text-align:left;"> 31.3% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> posted_speed </td>
-   <td style="text-align:left;"> 40.8% </td>
+   <td style="text-align:left;"> 31.3% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> vehicle_color </td>
-   <td style="text-align:left;"> 86.3% </td>
+   <td style="text-align:left;"> 66.3% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> vehicle_make </td>
-   <td style="text-align:left;"> 86.2% </td>
+   <td style="text-align:left;"> 66.3% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> vehicle_model </td>
-   <td style="text-align:left;"> 46.2% </td>
+   <td style="text-align:left;"> 35.5% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> vehicle_registration_state </td>
-   <td style="text-align:left;"> 82.7% </td>
+   <td style="text-align:left;"> 63.5% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> vehicle_year </td>
-   <td style="text-align:left;"> 77.7% </td>
+   <td style="text-align:left;"> 59.7% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> raw_dfnd_race </td>
-   <td style="text-align:left;"> 99.8% </td>
+   <td style="text-align:left;"> 99.7% </td>
   </tr>
 </tbody>
 </table>
@@ -7560,6 +7680,11 @@ data (Statewide, CA), but have added no new data.
 - Search/contraband information is missing
 - subject_race is based on DfndRace, which is passed through as raw_dfnd_race;
   though the data do not include classification of drivers as Hispanic.
+
+**2023 update**:
+- 218,674 new stops added.
+- Individuals whose race was marked as `M` have been recoded to `other`, rather
+  than `hispanic`, as in the previous release.
 
 ## Tulsa, OK
 ### 2009-01-01 to 2016-12-31
@@ -9110,7 +9235,7 @@ Pittsburgh PD, we have temporarily removed this dataset from the site._
 - 2012 and 2018 have only partial data
 
 ## Houston, TX
-### 2014-01-01 to 2018-04-08
+### 2014-01-01 to 2020-11-04
 <table>
  <thead>
   <tr>
@@ -9124,32 +9249,52 @@ Pittsburgh PD, we have temporarily removed this dataset from the site._
    <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
+   <td style="text-align:left;"> time </td>
+   <td style="text-align:left;"> 36.8% </td>
+  </tr>
+  <tr>
    <td style="text-align:left;"> location </td>
-   <td style="text-align:left;"> 92.1% </td>
+   <td style="text-align:left;"> 91.3% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> lat </td>
-   <td style="text-align:left;"> 91.7% </td>
+   <td style="text-align:left;"> 91.1% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> lng </td>
-   <td style="text-align:left;"> 91.7% </td>
+   <td style="text-align:left;"> 91.1% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> geocode_source </td>
+   <td style="text-align:left;"> 91.1% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> beat </td>
-   <td style="text-align:left;"> 86.5% </td>
+   <td style="text-align:left;"> 85.8% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> district </td>
-   <td style="text-align:left;"> 86.5% </td>
+   <td style="text-align:left;"> 85.8% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 82.9% </td>
+   <td style="text-align:left;"> 79.8% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
-   <td style="text-align:left;"> 99.6% </td>
+   <td style="text-align:left;"> 99.8% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> subject_first_name </td>
+   <td style="text-align:left;"> 100.0% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> subject_middle_name </td>
+   <td style="text-align:left;"> 62.6% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> subject_last_name </td>
+   <td style="text-align:left;"> 100.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> type </td>
@@ -9173,23 +9318,23 @@ Pittsburgh PD, we have temporarily removed this dataset from the site._
   </tr>
   <tr>
    <td style="text-align:left;"> posted_speed </td>
-   <td style="text-align:left;"> 30.9% </td>
+   <td style="text-align:left;"> 30.8% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> vehicle_color </td>
-   <td style="text-align:left;"> 96.3% </td>
+   <td style="text-align:left;"> 96.6% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> vehicle_make </td>
-   <td style="text-align:left;"> 98.4% </td>
+   <td style="text-align:left;"> 98.6% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> vehicle_model </td>
-   <td style="text-align:left;"> 96.8% </td>
+   <td style="text-align:left;"> 97.1% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> raw_race </td>
-   <td style="text-align:left;"> 82.9% </td>
+   <td style="text-align:left;"> 79.8% </td>
   </tr>
 </tbody>
 </table>
@@ -9205,6 +9350,12 @@ Pittsburgh PD, we have temporarily removed this dataset from the site._
 - When speed and posted_speed were 0, we set them to NA, under the assumption
   that this was a default value and the stop was unrelated to speed
 - subject_race is based on the raw column Race, passed through as raw_race
+
+**2023 update**:
+- 670,052 new stops added.
+- 2018 has been updated to the full year, and a small number of rows not
+  corresponding to an actual stop contained in the previous release have been
+  removed.
 
 ## Lubbock, TX
 ### 2008-05-01 to 2018-04-30
@@ -9624,7 +9775,7 @@ Pittsburgh PD, we have temporarily removed this dataset from the site._
 - We did not receive any search information in the 2017 data.
 
 ## San Antonio, TX
-### 2012-01-01 to 2018-04-19
+### 2012-01-01 to 2020-06-30
 <table>
  <thead>
   <tr>
@@ -9654,12 +9805,16 @@ Pittsburgh PD, we have temporarily removed this dataset from the site._
    <td style="text-align:left;"> 99.8% </td>
   </tr>
   <tr>
+   <td style="text-align:left;"> geocode_source </td>
+   <td style="text-align:left;"> 99.8% </td>
+  </tr>
+  <tr>
    <td style="text-align:left;"> district </td>
-   <td style="text-align:left;"> 92.4% </td>
+   <td style="text-align:left;"> 92.5% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> substation </td>
-   <td style="text-align:left;"> 92.4% </td>
+   <td style="text-align:left;"> 92.5% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_age </td>
@@ -9667,7 +9822,7 @@ Pittsburgh PD, we have temporarily removed this dataset from the site._
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 100.0% </td>
+   <td style="text-align:left;"> 99.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
@@ -9675,7 +9830,7 @@ Pittsburgh PD, we have temporarily removed this dataset from the site._
   </tr>
   <tr>
    <td style="text-align:left;"> type </td>
-   <td style="text-align:left;"> 97.5% </td>
+   <td style="text-align:left;"> 97.6% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> violation </td>
@@ -9707,11 +9862,11 @@ Pittsburgh PD, we have temporarily removed this dataset from the site._
   </tr>
   <tr>
    <td style="text-align:left;"> speed </td>
-   <td style="text-align:left;"> 52.5% </td>
+   <td style="text-align:left;"> 52.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> posted_speed </td>
-   <td style="text-align:left;"> 52.5% </td>
+   <td style="text-align:left;"> 52.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> vehicle_color </td>
@@ -9735,7 +9890,7 @@ Pittsburgh PD, we have temporarily removed this dataset from the site._
   </tr>
   <tr>
    <td style="text-align:left;"> raw_race </td>
-   <td style="text-align:left;"> 100.0% </td>
+   <td style="text-align:left;"> 99.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> raw_posted_speed </td>
@@ -9747,15 +9902,15 @@ Pittsburgh PD, we have temporarily removed this dataset from the site._
   </tr>
   <tr>
    <td style="text-align:left;"> raw_search_reason </td>
-   <td style="text-align:left;"> 15.0% </td>
+   <td style="text-align:left;"> 15.1% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> raw_contraband_or_evidence </td>
-   <td style="text-align:left;"> 15.0% </td>
+   <td style="text-align:left;"> 15.1% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> raw_custodial_arrest_made </td>
-   <td style="text-align:left;"> 14.6% </td>
+   <td style="text-align:left;"> 14.7% </td>
   </tr>
 </tbody>
 </table>
@@ -9786,6 +9941,14 @@ Pittsburgh PD, we have temporarily removed this dataset from the site._
   through as raw_custodial_arrest made; arrest_made true when `Custodial Arrest
   Made` is true and false when it is false or NA
 - 2018 has only the first 4 months of data
+
+**2023 update**:
+- 260,675 new stops added.
+- Approximately thirty stops have been recoded from district 2330 have been
+  recoded as distrction 2360. These stops occurred exactly on the border
+  between these two districts.
+- Stops are now deduplicated on citation number *and* year, to reflect that one
+  citation number was recycled during the extended period.
 
 ## Statewide, VA
 ### 2006-01-07 to 2016-04-23
@@ -9871,7 +10034,7 @@ Pittsburgh PD, we have temporarily removed this dataset from the site._
 - Additional columns in raw data that may be of interest: officer name.
 
 ## Burlington, VT
-### 2012-01-01 to 2017-12-31
+### 2012-01-01 to 2020-05-27
 <table>
  <thead>
   <tr>
@@ -9894,27 +10057,27 @@ Pittsburgh PD, we have temporarily removed this dataset from the site._
   </tr>
   <tr>
    <td style="text-align:left;"> lat </td>
-   <td style="text-align:left;"> 98.7% </td>
+   <td style="text-align:left;"> 84.4% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> lng </td>
-   <td style="text-align:left;"> 98.7% </td>
+   <td style="text-align:left;"> 84.4% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_age </td>
-   <td style="text-align:left;"> 98.0% </td>
+   <td style="text-align:left;"> 83.8% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_dob </td>
-   <td style="text-align:left;"> 97.9% </td>
+   <td style="text-align:left;"> 83.8% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 96.6% </td>
+   <td style="text-align:left;"> 95.4% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
-   <td style="text-align:left;"> 97.5% </td>
+   <td style="text-align:left;"> 96.4% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> department_name </td>
@@ -9926,23 +10089,23 @@ Pittsburgh PD, we have temporarily removed this dataset from the site._
   </tr>
   <tr>
    <td style="text-align:left;"> violation </td>
-   <td style="text-align:left;"> 100.0% </td>
+   <td style="text-align:left;"> 98.7% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> arrest_made </td>
-   <td style="text-align:left;"> 99.2% </td>
+   <td style="text-align:left;"> 98.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> citation_issued </td>
-   <td style="text-align:left;"> 99.2% </td>
+   <td style="text-align:left;"> 98.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> warning_issued </td>
-   <td style="text-align:left;"> 99.2% </td>
+   <td style="text-align:left;"> 98.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> outcome </td>
-   <td style="text-align:left;"> 99.1% </td>
+   <td style="text-align:left;"> 98.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> contraband_found </td>
@@ -9962,27 +10125,27 @@ Pittsburgh PD, we have temporarily removed this dataset from the site._
   </tr>
   <tr>
    <td style="text-align:left;"> reason_for_stop </td>
-   <td style="text-align:left;"> 98.7% </td>
+   <td style="text-align:left;"> 84.4% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> vehicle_registration_state </td>
-   <td style="text-align:left;"> 17.5% </td>
+   <td style="text-align:left;"> 14.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> raw_race </td>
-   <td style="text-align:left;"> 96.7% </td>
+   <td style="text-align:left;"> 95.5% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> raw_gender </td>
-   <td style="text-align:left;"> 97.5% </td>
+   <td style="text-align:left;"> 96.5% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> raw_contraband_evidence </td>
-   <td style="text-align:left;"> 98.6% </td>
+   <td style="text-align:left;"> 97.5% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> raw_outcome_of_stop </td>
-   <td style="text-align:left;"> 99.2% </td>
+   <td style="text-align:left;"> 98.0% </td>
   </tr>
 </tbody>
 </table>
@@ -10000,6 +10163,9 @@ Pittsburgh PD, we have temporarily removed this dataset from the site._
   conducted is false
 - outcomes are based on raw column outcome_of_stop, which is passed through as
   raw_outcome_of_stop
+
+**2023 update**:
+- 5,332 new stops added.
 
 ## Statewide, VT
 ### 2010-07-01 to 2015-12-31
@@ -10513,7 +10679,7 @@ Pittsburgh PD, we have temporarily removed this dataset from the site._
   so it is hashed with the officer's last name to create officer\_id\_hash
 
 ## Madison, WI
-### 2007-09-28 to 2017-09-28
+### 2007-09-28 to 2020-06-16
 <table>
  <thead>
   <tr>
@@ -10532,39 +10698,47 @@ Pittsburgh PD, we have temporarily removed this dataset from the site._
   </tr>
   <tr>
    <td style="text-align:left;"> location </td>
-   <td style="text-align:left;"> 94.2% </td>
+   <td style="text-align:left;"> 92.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> lat </td>
-   <td style="text-align:left;"> 92.2% </td>
+   <td style="text-align:left;"> 91.4% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> lng </td>
-   <td style="text-align:left;"> 92.2% </td>
+   <td style="text-align:left;"> 91.4% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> geocode_source </td>
+   <td style="text-align:left;"> 91.4% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> district </td>
-   <td style="text-align:left;"> 85.5% </td>
+   <td style="text-align:left;"> 85.3% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> sector </td>
-   <td style="text-align:left;"> 85.5% </td>
+   <td style="text-align:left;"> 85.3% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> subject_age </td>
+   <td style="text-align:left;"> 16.1% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_race </td>
-   <td style="text-align:left;"> 98.8% </td>
+   <td style="text-align:left;"> 98.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> subject_sex </td>
-   <td style="text-align:left;"> 99.5% </td>
+   <td style="text-align:left;"> 99.6% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_first_name </td>
-   <td style="text-align:left;"> 100.0% </td>
+   <td style="text-align:left;"> 83.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> officer_last_name </td>
-   <td style="text-align:left;"> 100.0% </td>
+   <td style="text-align:left;"> 83.9% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> type </td>
@@ -10572,7 +10746,7 @@ Pittsburgh PD, we have temporarily removed this dataset from the site._
   </tr>
   <tr>
    <td style="text-align:left;"> violation </td>
-   <td style="text-align:left;"> 99.4% </td>
+   <td style="text-align:left;"> 99.5% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> citation_issued </td>
@@ -10588,35 +10762,35 @@ Pittsburgh PD, we have temporarily removed this dataset from the site._
   </tr>
   <tr>
    <td style="text-align:left;"> speed </td>
-   <td style="text-align:left;"> 24.6% </td>
+   <td style="text-align:left;"> 23.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> posted_speed </td>
-   <td style="text-align:left;"> 24.6% </td>
+   <td style="text-align:left;"> 23.0% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> vehicle_color </td>
-   <td style="text-align:left;"> 93.8% </td>
+   <td style="text-align:left;"> 94.4% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> vehicle_make </td>
-   <td style="text-align:left;"> 97.3% </td>
+   <td style="text-align:left;"> 97.5% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> vehicle_model </td>
-   <td style="text-align:left;"> 24.8% </td>
+   <td style="text-align:left;"> 20.8% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> vehicle_registration_state </td>
-   <td style="text-align:left;"> 98.7% </td>
+   <td style="text-align:left;"> 98.8% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> vehicle_year </td>
-   <td style="text-align:left;"> 97.8% </td>
+   <td style="text-align:left;"> 97.6% </td>
   </tr>
   <tr>
    <td style="text-align:left;"> raw_race </td>
-   <td style="text-align:left;"> 98.8% </td>
+   <td style="text-align:left;"> 98.9% </td>
   </tr>
 </tbody>
 </table>
@@ -10633,6 +10807,10 @@ Pittsburgh PD, we have temporarily removed this dataset from the site._
 - subject_race is based on raw column Race, passed through as raw_race
 - 2007 has partial data and looks suspect; 2017 is missing October, November,
   and December
+
+**2023 update**:
+- 53,526 new stops added.
+- We were did not obtain data covering the end of 2017.
 
 ## Statewide, WI
 ### 2010-01-01 to 2016-05-16
