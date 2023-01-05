@@ -84,6 +84,16 @@ basis within this readme), which have column names prefixed with "raw\_".
     <td>115.2808</td>
   </tr>
   <tr>
+    <td>geocode_source</td>
+    <td>The geocoding service used to geocode the address. Either <a
+    href="https://developers.google.com/maps/documentation/geocoding/overview">Google
+    Maps Geocoding API</a> or the <a
+    href="https://locator.stanford.edu">Stanford Geospatial Center's geocoding
+    serive</a>. This row is only present for locations that are part of the
+    2023 update. (See below for further details.)</td>
+    <td>GM</td>
+  </tr>
+  <tr>
     <td>county_name</td>
     <td>County name where provided</td>
     <td>"Allegheny County"</td>
@@ -545,7 +555,7 @@ reading prior to performing detailed analysis of a location.
 Our analysis only scratches the surface of what’s possible with these data.
 We’re excited to see what you come up with!
 
-### 2023 Data Refresh
+### 2023 Update
 
 We are releasing 2.8 million additional stops for the following locations:
 * Mesa, AZ,
@@ -570,7 +580,7 @@ Geospatial Center's geocoding service.
 In addition to the new data, the updating process has resulted in minor changes
 to the standardization of existing data in the locations listed above. Most of
 these changes are location-specific and minor, and are described in more detail
-in the entry for the corresponding city. However, two changes have effected
+in the entry for the corresponding city. However, two changes have affected
 data from existing periods more broadly:
 * Some addresses which were not previously geocoded were successfully geocoded
   in the data refresh. As a result, addresses corresponding to those locations
@@ -584,7 +594,7 @@ data from existing periods more broadly:
   exact source of the discrepancy, we think it may be the result of a change in
   how decimals are rounded into floats by the `readr` package's numerical
   parsing between the previous and current releases. (See
-  (here)[https://github.com/tidyverse/readr/issues/881] for some relevant
+  [here](https://github.com/tidyverse/readr/issues/881) for some relevant
   details.)
 
 Finally, we have corrected the county codes for the California Highway Patrol
@@ -3784,7 +3794,7 @@ data (Statewide, CA), but have added no new data.
 - subject_race is based on raw columns race and driver_race, which are passed
   through
 
-**2023 update*:
+**2023 update**:
 - 1,261,642 new stops added.
 
 ## Fort Wayne, IN
@@ -7684,7 +7694,7 @@ data (Statewide, CA), but have added no new data.
 **2023 update**:
 - 218,674 new stops added.
 - Individuals whose race was marked as `M` have been recoded to `other`, rather
-  than `hispanic`, as in the previous release.
+  than `hispanic`, as was the case in the previous release.
 
 ## Tulsa, OK
 ### 2009-01-01 to 2016-12-31
@@ -9948,7 +9958,9 @@ Pittsburgh PD, we have temporarily removed this dataset from the site._
   recoded as distrction 2360. These stops occurred exactly on the border
   between these two districts.
 - Stops are now deduplicated on citation number *and* year, to reflect that one
-  citation number was recycled during the extended period.
+  citation number was recycled during the extended period covered in the new
+  release. This does not affect any records of stops present in the previous
+  release.
 
 ## Statewide, VA
 ### 2006-01-07 to 2016-04-23
@@ -10810,7 +10822,8 @@ Pittsburgh PD, we have temporarily removed this dataset from the site._
 
 **2023 update**:
 - 53,526 new stops added.
-- We were did not obtain data covering the end of 2017.
+- Data from 2017 cover only the period January to September; we did not obtain
+  stops for October through December of that year.
 
 ## Statewide, WI
 ### 2010-01-01 to 2016-05-16
