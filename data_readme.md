@@ -107,98 +107,98 @@ basis within this readme), which have column names prefixed with "raw\_".
   <tr>
     <td>beat</td>
     <td>Police beat. If not provided, but we have retrieved police department
-    shapfiles and the location of the stop, we geocode the stop and find the
+    shapefiles and the location of the stop, we geocode the stop and find the
     beat using the shapefiles.</td>
     <td>8</td>
   </tr>
   <tr>
     <td>district</td>
     <td>Police district. If not provided, but we have retrieved police
-    department shapfiles and the location of the stop, we geocode the stop and
+    department shapefiles and the location of the stop, we geocode the stop and
     find the district using the shapefiles.</td>
     <td>8</td>
   </tr>
   <tr>
     <td>subdistrict</td>
     <td>Police subdistrict. If not provided, but we have retrieved police
-    department shapfiles and the location of the stop, we geocode the stop and
+    department shapefiles and the location of the stop, we geocode the stop and
     find the subdistrict using the shapefiles.</td>
     <td>8</td>
   </tr>
   <tr>
     <td>division</td>
     <td>Police division. If not provided, but we have retrieved police
-    department shapfiles and the location of the stop, we geocode the stop and
+    department shapefiles and the location of the stop, we geocode the stop and
     find the division using the shapefiles.</td>
     <td>8</td>
   </tr>
   <tr>
     <td>subdivision</td>
     <td>Police subdivision. If not provided, but we have retrieved police
-    department shapfiles and the location of the stop, we geocode the stop and
+    department shapefiles and the location of the stop, we geocode the stop and
     find the subdivision using the shapefiles.</td>
     <td>8</td>
   </tr>
   <tr>
     <td>police_grid_number</td>
     <td>Police grid number. If not provided, but we have retrieved police
-    department shapfiles and the location of the stop, we geocode the stop and
+    department shapefiles and the location of the stop, we geocode the stop and
     find the police grid number using the shapefiles.</td>
     <td>8</td>
   </tr>
   <tr>
     <td>precinct</td>
     <td>Police precinct. If not provided, but we have retrieved police
-    department shapfiles and the location of the stop, we geocode the stop and
+    department shapefiles and the location of the stop, we geocode the stop and
     find the precinct using the shapefiles.</td>
     <td>8</td>
   </tr>
   <tr>
     <td>region</td>
     <td>Police region. If not provided, but we have retrieved police
-    department shapfiles and the location of the stop, we geocode the stop and
+    department shapefiles and the location of the stop, we geocode the stop and
     find the region using the shapefiles.</td>
     <td>8</td>
   </tr>
   <tr>
     <td>reporing_area</td>
     <td>Police reporting area. If not provided, but we have retrieved police
-    department shapfiles and the location of the stop, we geocode the stop and
+    department shapefiles and the location of the stop, we geocode the stop and
     find the reporting area using the shapefiles.</td>
     <td>8</td>
   </tr>
   <tr>
     <td>sector</td>
     <td>Police sector. If not provided, but we have retrieved police
-    department shapfiles and the location of the stop, we geocode the stop and
+    department shapefiles and the location of the stop, we geocode the stop and
     find the sector using the shapefiles.</td>
     <td>8</td>
   </tr>
   <tr>
     <td>subsector</td>
     <td>Police subsector. If not provided, but we have retrieved police
-    department shapfiles and the location of the stop, we geocode the stop and
+    department shapefiles and the location of the stop, we geocode the stop and
     find the subsector using the shapefiles.</td>
     <td>8</td>
   </tr>
   <tr>
     <td>substation</td>
     <td>Police substation. If not provided, but we have retrieved police
-    department shapfiles and the location of the stop, we geocode the stop and
+    department shapefiles and the location of the stop, we geocode the stop and
     find the substation using the shapefiles.</td>
     <td>8</td>
   </tr>
   <tr>
     <td>service_area</td>
     <td>Police service area. If not provided, but we have retrieved police
-    department shapfiles and the location of the stop, we geocode the stop and
+    department shapefiles and the location of the stop, we geocode the stop and
     find the service area using the shapefiles.</td>
     <td>8</td>
   </tr>
   <tr>
     <td>zone</td>
     <td>Police zone. If not provided, but we have retrieved police
-    department shapfiles and the location of the stop, we geocode the stop and
+    department shapefiles and the location of the stop, we geocode the stop and
     find the zone using the shapefiles.</td>
     <td>8</td>
   </tr>
