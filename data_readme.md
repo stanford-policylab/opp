@@ -589,11 +589,11 @@ data from existing periods more broadly:
 * The latitudes and longitudes of a large number of records are no longer
   exactly equal (as double-precision floats) to their previous values. The
   discrepancy is confined to the two least significant bits. In particular, the
-  discrepancies are all at most $10^{-14}$ degrees of longitude or lattitude,
-  or roughly one nanometer of real-world distance. While we are unsure of the
-  exact source of these discrepancies, we think it may be they are likely the
-  result of a change the `readr` package's decimal parsing that occurred
-  between the previous and current releases. (See, e.g.,
+  discrepancies are all at most around $10^{-14}$ degrees of longitude or
+  lattitude, or roughly one nanometer of real-world distance. While we are
+  unsure of the exact source of these discrepancies, we think it they likely
+  resulted from a change to the `readr` package's decimal parsing that
+  occurred between the previous and current opp data releases. (See, e.g.,
   [here](https://github.com/tidyverse/readr/issues/881) for some relevant
   details.)
 
