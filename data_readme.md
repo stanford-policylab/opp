@@ -91,7 +91,7 @@ basis within this readme), which have column names prefixed with "raw\_".
     href="https://locator.stanford.edu">Stanford Geospatial Center's geocoding
     serive</a>. This row is only present for locations that are part of the
     2023 update. (See below for further details.)</td>
-    <td>GM</td>
+    <td>"GM"</td>
   </tr>
   <tr>
     <td>county_name</td>
