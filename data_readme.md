@@ -545,51 +545,6 @@ reading prior to performing detailed analysis of a location.
 Our analysis only scratches the surface of what’s possible with these data.
 We’re excited to see what you come up with!
 
-### 2023 Data Refresh
-
-We are releasing refreshed data for eleven locations:
-* Mesa, AZ,
-* Aurora, CO,
-* Chicago, IL,
-* Wichita, KS,
-* Louisville, KY
-* Oklahoma City, OK,
-* Statewide, MT,
-* Houston, TX,
-* San Antonio, TX,
-* Burlington, VT,
-* Madison, WI.
-
-The new data cover the period 2017–2020, as available on a location-by-location
-basis. We geocoded new addresses in the updated data through the [Stanford
-Geospatial Center](https://locator.stanford.edu). A new column, labelled
-`geocode_source`, indicates whether the address corresponding to a particular
-record was geocoded using the Google Maps geocoding service or the Stanford
-Geospatial Center's geocoding service.
-
-In addition to the new data, the updating process has resulted in minor changes
-to the standardization of existing data in the locations listed above. Most of
-these changes are location-specific and minor, and are described in more detail
-in the entry for the corresponding city. However, two changes have effected
-data from existing periods more broadly:
-* Some addresses which were not previously geocoded were successfully geocoded
-  in the data refresh. As a result, addresses corresponding to those locations
-  in existing data (i.e., data on stops up to and including early 2018) may now
-  have latitude and longitude designations that previously did not.
-* The latitudes and longitudes of a large number of records are no longer
-  exactly equal (as double-precision floats) to their previous values. The
-  discrepancy is confined to the least significant bit, meaning that the
-  discrepancies are all at most $10^{-14}$ degrees of longitude or lattitude,
-  or roughly one nanometer of real-world distance. While we are unsure of the
-  exact source of the discrepancy, we think it may be the result of a change in
-  how decimals are rounded into floats by the `readr` package's numerical
-  parsing between the previous and current releases. (See
-  (here)[https://github.com/tidyverse/readr/issues/881] for some relevant
-  details.)
-
-Finally, we have corrected the county codes for the California Highway Patrol
-data (Statewide, CA), but have added no new data.
-
 ## Little Rock, AR
 ### 2017-01-01 to 2017-11-03
 <table>
