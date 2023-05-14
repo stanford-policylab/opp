@@ -80,7 +80,11 @@ def to_regular_dict(dd):
 
 
 def info(url):
-    state, city = resolve_location(url)
+    terms = resolve_location(url)
+    # Temporary fix for resolve_location ValueError
+    if len(terms) != 2:
+        return "NA", "NA", resolve_file_type(url)
+    state, city = terms
     file_type = resolve_file_type(url)
     return state, city, file_type
 
