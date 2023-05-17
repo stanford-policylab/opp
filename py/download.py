@@ -8,8 +8,8 @@ import re
 import sys
 
 IFRAME_URL = "https://embed.stanford.edu/iframe?url="
-BASE_PURL = "https://purl.stanford.edu/yg821jf8611"
-URL = IFRAME_URL + BASE_PURL
+PURL_BASE = "https://purl.stanford.edu/"
+PURLS = ["yg821jf8611", "wb225bk3255"]
 
 
 def download(re_state, re_city, file_type, output_dir, list_only):
@@ -54,13 +54,16 @@ def _download(state, city, file_type, url, path):
 
 
 def get_urls():
-    data = urlopen(URL).read().decode('utf8')
-    urls = list(set(re.findall(r'href=[\'"]?([^\'" >]+)', data)) - {BASE_PURL})
-    urls = filter(lambda url: 'data_readme.md' not in url, urls)
     d = nested_default_dict(3, str)
-    for url in urls:
-        state, city, file_type = info(url)
-        d[state][city][file_type] = url
+    for purl in PURLS:
+        data = urlopen(IFRAME_URL + PURL_BASE + purl).read().decode('utf8')
+        bad_urls = {
+                PURL_BASE + purl, "https://stacks.stanford.edu/object/" + purl}
+        urls = list(set(re.findall(r'href=[\'"]?([^\'" >]+)', data)) - bad_urls)
+        urls = filter(lambda url: not re.search("(?i)readme", url), urls)
+        for url in urls:
+            state, city, file_type = info(url)
+            d[state][city][file_type] = url
     return to_regular_dict(d)
 
 
@@ -86,7 +89,7 @@ def info(url):
 
 
 def resolve_location(url):
-    loc = re.split('_shapefiles|_2020', file_name(url))[0]
+    loc = re.split('_shapefiles|_2020|_2023', file_name(url))[0]
     return loc.split('_', 1)
 
 
